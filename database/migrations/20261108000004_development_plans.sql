@@ -21,11 +21,15 @@ CREATE TABLE IF NOT EXISTS development_plans (
   steps          JSONB NOT NULL CHECK (jsonb_typeof(steps) = 'array' AND jsonb_array_length(steps) <= 8),
   -- [{ sectionId, digest }] — the saved text each step was made against; a changed digest marks a step stale
   basis          JSONB NOT NULL CHECK (jsonb_typeof(basis) = 'array'),
+  -- SHA-256 of the writer's settled decisions as MAIA was given them for this plan (the empty string's digest when none).
+  decisions_digest TEXT NOT NULL DEFAULT '',
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS development_plans_member_manuscript_idx ON development_plans (member_id, manuscript_id, created_at DESC);
+
+ALTER TABLE development_plans ADD COLUMN IF NOT EXISTS decisions_digest TEXT NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS development_plan_history (
   plan_id  UUID NOT NULL REFERENCES development_plans(id) ON DELETE CASCADE,
@@ -39,7 +43,7 @@ CREATE TABLE IF NOT EXISTS development_plan_history (
 CREATE OR REPLACE FUNCTION development_plans_keep_history() RETURNS trigger AS $$
 BEGIN
   IF NEW.member_id IS DISTINCT FROM OLD.member_id OR NEW.living_work_id IS DISTINCT FROM OLD.living_work_id
-     OR NEW.manuscript_id IS DISTINCT FROM OLD.manuscript_id OR NEW.ask IS DISTINCT FROM OLD.ask OR NEW.basis IS DISTINCT FROM OLD.basis THEN
+     OR NEW.manuscript_id IS DISTINCT FROM OLD.manuscript_id OR NEW.ask IS DISTINCT FROM OLD.ask OR NEW.basis IS DISTINCT FROM OLD.basis OR NEW.decisions_digest IS DISTINCT FROM OLD.decisions_digest THEN
     RAISE EXCEPTION '[PLAN] only a plan''s steps and summary may change';
   END IF;
   -- A step's anchor and chapter are fixed at creation, and no step is ever added afterwards: the writer edits wording, status or removes.

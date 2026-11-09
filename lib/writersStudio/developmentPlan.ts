@@ -108,7 +108,7 @@ export const PLAN_HANDOFF_KEY = (manuscriptId: string): string => `ws-plan-step:
 /** Every way a plan-step hand-off can end. Only `hold` touches anything, and only the held passage and (if open) the step's status. */
 export type HandoffDecision =
   | { kind: 'superseded' }
-  | { kind: 'refuse'; reason: 'no_plan' | 'no_step' | 'no_verdict' | 'not_ready' | 'unsaved' | 'changed' | 'unverified' | 'differs_here' | 'missing' | 'ambiguous'; focusSectionId: string | null }
+  | { kind: 'refuse'; reason: 'no_plan' | 'no_step' | 'no_verdict' | 'not_ready' | 'unsaved' | 'changed' | 'unverified' | 'differs_here' | 'decisions_changed' | 'missing' | 'ambiguous'; focusSectionId: string | null }
   | { kind: 'hold'; sectionId: string; start: number; end: number; text: string; markWorking: boolean };
 
 /**
@@ -118,7 +118,7 @@ export type HandoffDecision =
  */
 export function decideHandoff(i: {
   seq: number; latestSeq: number;
-  view: { plan: { steps: readonly PlanStep[]; basis: readonly { sectionId: string; digest: string }[] } | null; staleStepIds: readonly string[]; unverifiedStepIds: readonly string[]; verdict: boolean } | undefined;
+  view: { plan: { steps: readonly PlanStep[]; basis: readonly { sectionId: string; digest: string }[] } | null; staleStepIds: readonly string[]; unverifiedStepIds: readonly string[]; verdict: boolean; decisionsChanged?: boolean | null } | undefined;
   stepId: string;
   sectionIds: readonly string[];
   saveStateOf: (sectionId: string) => string | undefined;
@@ -137,6 +137,9 @@ export function decideHandoff(i: {
   if (save !== 'clean') return { kind: 'refuse', reason: 'unsaved', focusSectionId: sid };
   if (i.view.staleStepIds.includes(step.id)) return { kind: 'refuse', reason: 'changed', focusSectionId: sid };
   if (i.view.unverifiedStepIds.includes(step.id)) return { kind: 'refuse', reason: 'unverified', focusSectionId: sid };
+  // The plan was made against the writer's settled decisions as they were. Changed decisions refuse; unknown ones refuse too.
+  if (i.view.decisionsChanged === true) return { kind: 'refuse', reason: 'decisions_changed', focusSectionId: sid };
+  if (i.view.decisionsChanged !== false) return { kind: 'refuse', reason: 'unverified', focusSectionId: sid };
   // The server verified its SAVED copy. The text held here must be that same text, or offsets would be taken from another version.
   const was = i.view.plan!.basis.find((b) => b.sectionId === sid)?.digest;
   const here = i.localDigestOf(sid);
@@ -153,6 +156,7 @@ export const HANDOFF_REFUSAL_COPY: Record<Extract<HandoffDecision, { kind: 'refu
   no_step: 'That plan step could not be found in this Work. Nothing was changed.',
   no_verdict: 'I could not confirm this step against your saved chapter just now. The chapter is open; select the passage you mean. Nothing was changed.',
   not_ready: 'The chapter is still opening here. Choose Work on this passage again in a moment. Nothing was changed.',
+  decisions_changed: 'What you have settled about this book has changed since this plan was made, so the step may no longer fit what you decided. Ask MAIA for a fresh plan, or select the passage yourself. Nothing was changed.',
   differs_here: 'The copy of this chapter open here is not the version MAIA read for the plan (it may have changed on another device). Reload the page, then try again. Nothing was changed.',
   unsaved: 'This chapter has changes that are not saved yet, so I cannot be sure the step still matches it. Let it save, then choose Work on this passage again. Nothing was changed.',
   changed: 'This chapter has changed since the plan was made, so the step may no longer fit. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.',

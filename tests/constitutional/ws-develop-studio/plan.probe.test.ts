@@ -206,6 +206,29 @@ d('development plan · real database, real routes', () => {
     expect((await query<{ content: string }>(`SELECT content FROM manuscript_working_drafts WHERE id=$1`, [dr])).rows[0].content).toBe(text);
   });
 
+  it('a plan is bound to the decisions it read: unchanged → false; a new or withdrawn decision → true; asking to revisit changes no decision', async () => {
+    await scope('grant', 'work');
+    const { settleDecision, withdrawDecision } = await import('@/lib/writersStudio/decisionRecordWrite');
+    const first = await settleDecision({ memberId: A, livingWorkId: work, room: 'work_conversation', subjectKind: 'note', saidIn: 'Marta never says she misses her mother.' });
+    PLAN_INPUT = { summary: 's', steps: [{ chapterId: s2, anchor: 'Marta left a light on in the hallway', direction: 'd' }] };
+    const made = await call(A, 'POST', { ask: 'revisit whether Marta should say she misses her mother', sanctuary: false });
+    expect(made.status).toBe(200);
+    expect(systems.at(-1)).toContain('Marta never says she misses her mother');            // she was given the decision
+    const events = async () => Number((await query<{ n: string }>(`SELECT COUNT(*)::text n FROM writer_decision_events WHERE member_id=$1`, [A])).rows[0].n);
+    const before = await events();
+    expect((await call(A, 'GET')).json.decisionsChanged).toBe(false);
+    expect(await events()).toBe(before);                                                     // asking to revisit is discussion, never a recorded change
+    await settleDecision({ memberId: A, livingWorkId: work, room: 'work_conversation', subjectKind: 'note', saidIn: 'The lighthouse stays offstage.' });
+    expect((await call(A, 'GET')).json.decisionsChanged).toBe(true);
+    let frozen = false;
+    try { await query(`UPDATE development_plans SET decisions_digest='x' WHERE id=$1`, [made.json.plan.id]); } catch { frozen = true; }
+    expect(frozen).toBe(true);
+    await withdrawDecision({ memberId: A, livingWorkId: work, targetId: first! });
+    expect((await call(A, 'GET')).json.decisionsChanged).toBe(true);
+    await scope('revoke');
+    expect((await call(A, 'GET')).json.decisionsChanged).toBeNull();                        // cannot be known without permission
+  });
+
   it('deleting the Work removes its plans with it', async () => {
     const w2 = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Gone') RETURNING id`, [A])).rows[0].id;
     await query(`DELETE FROM living_works WHERE id=$1`, [w2]);

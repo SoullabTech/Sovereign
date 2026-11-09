@@ -2163,7 +2163,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   };
   const deletePlan = async () => {
     const id = planView?.plan?.id; if (!id || !stageManuscriptId) return;
-    if (await deletePlanClient(stageManuscriptId, id)) { setPlanView({ plan: null, staleStepIds: [], unverifiedStepIds: [], events: {}, verdict: true }); setPlanNote('The plan and its earlier versions are deleted. Your manuscript was not touched.'); }
+    if (await deletePlanClient(stageManuscriptId, id)) { setPlanView({ plan: null, staleStepIds: [], unverifiedStepIds: [], events: {}, verdict: true, decisionsChanged: false }); setPlanNote('The plan and its earlier versions are deleted. Your manuscript was not touched.'); }
     else setPlanNote('The plan could not be deleted just now. Nothing was changed.');
   };
   /** A plan step -> the passage desk. Leaves an id for Write and goes there. Changes nothing itself: no status, no manuscript. */
@@ -2172,6 +2172,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     // Say a known refusal HERE, beside the step, instead of sending the writer somewhere to find nothing. Write re-checks authoritatively.
     if (planView && !planView.verdict) { setPlanNote(HANDOFF_REFUSAL_COPY.no_verdict.replace(' The chapter is open; select the passage you mean.', '')); return; }
     if (planView?.staleStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.changed.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
+    if (planView?.decisionsChanged === true) { setPlanNote(HANDOFF_REFUSAL_COPY.decisions_changed); return; }
     if (planView?.unverifiedStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.unverified.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
     setPlanNote(null);
     try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }

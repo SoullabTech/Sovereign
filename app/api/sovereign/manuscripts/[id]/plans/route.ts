@@ -35,7 +35,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const workId = await livingWorkIdForManuscript(id, memberId);
   const grant = workId ? await loadActiveGrant(memberId, workId) : null;
   const now = grant ? new Map((await loadSuppliedSections(id, memberId, ids)).map((s) => [s.id, s.digest])) : new Map<string, string>();
-  return NextResponse.json({ plan, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
+  /* Were the writer's settled decisions the same when this plan was made? Same terms as reading: only with permission.
+     true = changed (the hand-off refuses), false = unchanged, null = cannot be known now (treated as unverified). */
+  const decisionsChanged = grant && workId ? digestOfText(await decisionContextForWork(memberId, workId, id)) !== plan.decisionsDigest : null;
+  return NextResponse.json({ plan, decisionsChanged, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
     unverifiedStepIds: plan.steps.filter((s) => stepStanding(s, plan.basis, now) === 'unverified').map((s) => s.id),
     events: await stepEvents(memberId, plan.id) });
 }
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const grounded = groundSteps(drafted.steps, chapters, randomUUID);
   const plan = await createPlan({ memberId, livingWorkId: workId, manuscriptId: id, ask, summary: drafted.summary, steps: grounded.steps,
-    basis: supplied.map((s) => ({ sectionId: s.id, digest: s.digest || digestOfText(s.body) })) });
+    basis: supplied.map((s) => ({ sectionId: s.id, digest: s.digest || digestOfText(s.body) })), decisionsDigest: digestOfText(settled) });
   if (!plan) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
-  return NextResponse.json({ plan, staleStepIds: [], unverifiedStepIds: [], events: {}, dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
+  return NextResponse.json({ plan, decisionsChanged: false, staleStepIds: [], unverifiedStepIds: [], events: {}, dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
 }

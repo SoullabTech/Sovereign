@@ -86,16 +86,16 @@ describe('the hand-off decision (review findings 1–4 on e410f9f06/c09b28986)',
   const body = 'She found the house. There was no key, and the hallway was dark.';
   const base = (over: Record<string, unknown> = {}) => ({
     seq: 1, latestSeq: 1, stepId: 'a', sectionIds: ['c2', 'c7'],
-    view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()], basis: [{ sectionId: 'c7', digest: 'D' }] }, staleStepIds: [] as string[], unverifiedStepIds: [] as string[], verdict: true },
+    view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()], basis: [{ sectionId: 'c7', digest: 'D' }] }, staleStepIds: [] as string[], unverifiedStepIds: [] as string[], verdict: true, decisionsChanged: false },
     saveStateOf: () => 'clean', bodyOf: () => body, localDigestOf: () => 'D', ...over,
   });
 
   it('holds the exact words, and only an OPEN step is marked working — and only on a successful hold', () => {
     expect(decideHandoff(base() as any)).toEqual({ kind: 'hold', sectionId: 'c7', start: body.indexOf('no key'), end: body.indexOf('no key') + 6, text: 'no key', markWorking: true });
-    expect(decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st({ status: 'done' })] }, staleStepIds: [], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ kind: 'hold', markWorking: false });
+    expect(decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st({ status: 'done' })] }, staleStepIds: [], unverifiedStepIds: [], verdict: true, decisionsChanged: false } }) as any)).toMatchObject({ kind: 'hold', markWorking: false });
   });
   it('#1 every refusal changes no status (there is no markWorking on a refusal)', () => {
-    for (const d of [decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any),
+    for (const d of [decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true, decisionsChanged: false } }) as any),
       decideHandoff(base({ bodyOf: () => 'Everything moved.' }) as any)]) {
       expect(d.kind).toBe('refuse'); expect('markWorking' in d).toBe(false);
     }
@@ -112,7 +112,7 @@ describe('the hand-off decision (review findings 1–4 on e410f9f06/c09b28986)',
     expect(decideHandoff(base({ seq: 1, latestSeq: 2 }) as any)).toEqual({ kind: 'superseded' });
   });
   it('changed and unverified chapters refuse; so do duplicated and missing words; and a step whose chapter is not in this Work', () => {
-    expect(decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'changed' });
+    expect(decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true, decisionsChanged: false } }) as any)).toMatchObject({ reason: 'changed' });
     expect(decideHandoff(base({ view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: [], unverifiedStepIds: ['a'], verdict: true } }) as any)).toMatchObject({ reason: 'unverified' });
     expect(decideHandoff(base({ bodyOf: () => 'no key here, no key there' }) as any)).toMatchObject({ reason: 'ambiguous' });
     expect(decideHandoff(base({ bodyOf: () => 'nothing like it' }) as any)).toMatchObject({ reason: 'missing' });
@@ -120,8 +120,8 @@ describe('the hand-off decision (review findings 1–4 on e410f9f06/c09b28986)',
     expect(decideHandoff(base({ stepId: 'zz' }) as any)).toMatchObject({ reason: 'no_step' });
   });
   it('the order of checks is the law: unsaved is reported before stale, and stale before the word search', () => {
-    expect(decideHandoff(base({ saveStateOf: () => 'dirty', view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'unsaved' });
-    expect(decideHandoff(base({ bodyOf: () => 'nothing', view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'changed' });
+    expect(decideHandoff(base({ saveStateOf: () => 'dirty', view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true, decisionsChanged: false } }) as any)).toMatchObject({ reason: 'unsaved' });
+    expect(decideHandoff(base({ bodyOf: () => 'nothing', view: { plan: { basis: [{ sectionId: 'c7', digest: 'D' }], steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true, decisionsChanged: false } }) as any)).toMatchObject({ reason: 'changed' });
   });
   it('every refusal tells the writer that nothing was changed', () => {
     for (const copy of Object.values(HANDOFF_REFUSAL_COPY)) expect(copy).toMatch(/Nothing was changed\.$/);
@@ -133,7 +133,7 @@ describe('review findings on 87cdf49e5 (independent correctness review)', () => 
   const body = 'She found the house. There was no key, and the hallway was dark.';
   const base = (over: Record<string, unknown> = {}) => ({
     seq: 1, latestSeq: 1, stepId: 'a', sectionIds: ['c7'],
-    view: { plan: { steps: [st()], basis: [{ sectionId: 'c7', digest: 'D' }] }, staleStepIds: [], unverifiedStepIds: [], verdict: true },
+    view: { plan: { steps: [st()], basis: [{ sectionId: 'c7', digest: 'D' }] }, staleStepIds: [], unverifiedStepIds: [], verdict: true, decisionsChanged: false },
     saveStateOf: () => 'clean', bodyOf: () => body, localDigestOf: () => 'D', ...over,
   });
   it('#1 the text held here must be the version MAIA read: a different local copy refuses; an unknown one refuses', () => {
@@ -154,5 +154,17 @@ describe('review findings on 87cdf49e5 (independent correctness review)', () => 
     const steps = [st({ status: 'done' })];
     expect(applyStepEdits(steps, [{ id: 'a', status: 'working', ifStatus: 'open' }])[0]!.status).toBe('done');
     expect(applyStepEdits([st()], [{ id: 'a', status: 'working', ifStatus: 'open' }])[0]!.status).toBe('working');
+  });
+});
+
+describe('a plan is bound to the decisions it read (founder-relayed review, 2026-11-09)', () => {
+  const st = (): PlanStep => ({ id: 'a', chapterId: 'c7', anchor: 'no key', direction: 'd', why: '', status: 'open' });
+  const v = (decisionsChanged: boolean | null | undefined) => ({ plan: { steps: [st()], basis: [{ sectionId: 'c7', digest: 'D' }] }, staleStepIds: [], unverifiedStepIds: [], verdict: true, decisionsChanged });
+  const base = (view: unknown) => ({ seq: 1, latestSeq: 1, stepId: 'a', sectionIds: ['c7'], view, saveStateOf: () => 'clean', bodyOf: () => 'There was no key.', localDigestOf: () => 'D' });
+  it('changed decisions refuse before any passage is held', () => { expect(decideHandoff(base(v(true)) as any)).toMatchObject({ kind: 'refuse', reason: 'decisions_changed' }); });
+  it('unknown decisions refuse as unverified; only "unchanged" holds', () => {
+    expect(decideHandoff(base(v(null)) as any)).toMatchObject({ kind: 'refuse', reason: 'unverified' });
+    expect(decideHandoff(base(v(undefined)) as any)).toMatchObject({ kind: 'refuse', reason: 'unverified' });
+    expect(decideHandoff(base(v(false)) as any)).toMatchObject({ kind: 'hold' });
   });
 });

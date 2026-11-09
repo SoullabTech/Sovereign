@@ -8,5 +8,9 @@ test('#2 an older or incomplete server answer has NO verdict; only both lists pr
   responses.push({ plan: { id: 'p', steps: [] }, staleStepIds: [] });                           // half an answer
   expect((await fetchPlan('m'))!.verdict).toBe(false);
   responses.push({ plan: { id: 'p', steps: [] }, staleStepIds: [], unverifiedStepIds: [] });
-  expect((await fetchPlan('m'))!.verdict).toBe(true);
+  expect((await fetchPlan('m'))!.verdict).toBe(false);                                       // no word on decisions = no verdict
+  responses.push({ plan: { id: 'p', steps: [] }, staleStepIds: [], unverifiedStepIds: [], decisionsChanged: null });
+  expect(await fetchPlan('m')).toMatchObject({ verdict: true, decisionsChanged: null });
+  responses.push({ plan: { id: 'p', steps: [] }, staleStepIds: [], unverifiedStepIds: [], decisionsChanged: false });
+  expect(await fetchPlan('m')).toMatchObject({ verdict: true, decisionsChanged: false });
 });

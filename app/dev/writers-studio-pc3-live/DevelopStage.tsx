@@ -48,7 +48,7 @@ export function DevelopStage(props: {
   /** the chapters MAIA was handed for her last answer (ids + headings); their text is shown here from the writer's own copy, in place */
   lastRead: readonly { sectionId: string; label: string | null }[] | null;
   /** the writer's plan (MAIA's grounded steps, edited by the writer). A plan never changes the manuscript. */
-  plan: { plan: StoredPlan | null; staleStepIds: readonly string[]; unverifiedStepIds?: readonly string[]; events?: Readonly<Record<string, StepEvent>> } | null;
+  plan: { plan: StoredPlan | null; staleStepIds: readonly string[]; unverifiedStepIds?: readonly string[]; events?: Readonly<Record<string, StepEvent>>; decisionsChanged?: boolean | null } | null;
   planBusy: boolean;
   planNote: string | null;
   onMakePlan: (ask: string) => void;
@@ -163,6 +163,7 @@ export function DevelopStage(props: {
               {' '}Removing a step takes it out of the plan; earlier versions of the plan keep it until you{' '}
               {props.onDeletePlan ? <button type="button" data-develop-plan-delete="true" onClick={() => { if (typeof window === 'undefined' || window.confirm('Delete this plan, its earlier versions and its record of changes you applied from it? Your manuscript is not touched.')) props.onDeletePlan!(); }}
                 style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}>delete the plan</button> : 'delete the plan'}.</p>
+            {props.plan.decisionsChanged === true ? <p role="status" data-develop-plan-decisions-changed="true" style={{ margin: '0 0 8px', fontSize: 12 }}>What you have settled about this book has changed since this plan was made. The steps may not fit your decisions now; ask MAIA for a fresh plan when you are ready.</p> : null}
             {props.plan.plan.steps.length === 0 ? <p style={{ margin: 0, opacity: .8 }}>MAIA could not ground a step in your text this time.</p> : null}
             <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {props.plan.plan.steps.map((st, i) => {
