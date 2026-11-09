@@ -65,3 +65,11 @@ describe('passing counts (WS-CRAFT-CONVENTIONS-01, founder: "Yes, add and measur
     for (const d of DEPTHS) expect(editorialDirective(d)).toContain(SENTENCE);
   });
 });
+
+describe('edit arithmetic (founder: "Yes, target it", 2026-11-09)', () => {
+  it('is part of the text-accuracy rule, at every depth', () => {
+    const LINE = 'When you say how many words a change adds or removes, count the exact words you are changing.';
+    expect(TEXT_ACCURACY_DIRECTIVE).toContain(LINE);
+    for (const d of DEPTHS) expect(editorialDirective(d)).toContain(LINE);
+  });
+});

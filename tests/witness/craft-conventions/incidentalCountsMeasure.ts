@@ -25,12 +25,19 @@ import { PASSAGES } from './conventionCases';
 
 const MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
 const TEXTS = [{ id: 'A', text: PASSAGE_A.text }, { id: 'B', text: PASSAGE_B.text }, { id: 'F', text: PASSAGES.fiction.text }];
-const ASKS = [
+/* EDIT_SET=1: an edit-focused set that tends to produce "N words shorter/leaner" remarks (§12.3). */
+const EDIT_ASKS = [
+  'Tighten the first sentence for me.',
+  'Tighten the second sentence for me.',
+  'How much shorter could the longest sentence get without losing what it does?',
+];
+const ASKS_DEFAULT = [
   'Tighten the last sentence for me.',
   'Is the rhythm of this paragraph too even?',
   'Which sentences feel short to you, and does that work?',
   'Could the third sentence be shorter?',
 ];
+const ASKS = process.env.EDIT_SET === '1' ? EDIT_ASKS : ASKS_DEFAULT;
 const ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
 const NUM: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
@@ -74,7 +81,9 @@ export function claims(reply: string, passage: string): Claim[] {
 
 async function focusReply(text: string, ask: string): Promise<string> {
   const system = ["You are MAIA, an editorial companion in a writer's studio. Reply to the writer in plain prose.",
-    editorialDirective('guided'), responsiveLengthDirective('guided'), conversationTurnInstruction()].filter(Boolean).join('\n\n');
+    editorialDirective('guided'), responsiveLengthDirective('guided'), conversationTurnInstruction()].filter(Boolean).join('\n\n')
+    /* WITHOUT_EDIT_LINE=1: baseline arm for §12.3, Passage Focus only (the Develop prompt is built inside askMaia). */
+    .replace(process.env.WITHOUT_EDIT_LINE === '1' ? ' When you say how many words a change adds or removes, count the exact words you are changing.' : '\u0000', '');
   const out = await runStructured({ model: MODEL, system, maxTokens: 4096,
     messages: [{ role: 'user', content: `The passage in view:\n"""\n${text}\n"""\n\n${ask}` }] });
   if (!out.ok) throw new Error(out.refusal);
@@ -94,7 +103,8 @@ async function main() {
   const outPath = process.argv[2]; const repeats = Number(process.argv[3] ?? 2);
   if (!outPath) throw new Error('usage: <out.json> [repeats]');
   const rows = [];
-  for (const path of ['focus', 'develop'] as const)
+  const paths = process.env.FOCUS_ONLY === '1' ? (['focus'] as const) : (['focus', 'develop'] as const);
+  for (const path of paths)
     for (const p of TEXTS) for (const ask of ASKS) for (let i = 0; i < repeats; i++) {
       const reply = path === 'focus' ? await focusReply(p.text, ask) : await developReply(p.text, ask);
       const c = claims(reply, p.text);

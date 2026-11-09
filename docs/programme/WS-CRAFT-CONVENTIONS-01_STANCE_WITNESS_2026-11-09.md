@@ -583,3 +583,44 @@ six, twelve, four, five, six, twelve").
 - (i) Keep it as is.
 - (ii) Add a targeted line: "When you say how many words a change adds or removes, count the exact
   words you are changing." Then measure again.
+
+### 12.3 Edit arithmetic, targeted and measured (founder: "Yes, target it", 2026-11-09)
+
+**Change.** One more sentence was appended to `TEXT_ACCURACY_DIRECTIVE`: "When you say how many words a
+change adds or removes, count the exact words you are changing." It reaches every depth and the
+Develop conversation, like the rest of that rule. Guard: `textAccuracyDirective.test.ts`.
+
+**Measurement.** Every "N words" or "N fewer" mention was read by hand against the true lengths.
+Estimates ("about", "maybe four") and ambiguous phrasings were excluded.
+
+| Set | Arm | Replies | Checkable counts | Wrong |
+|---|---|---|---|---|
+| Edit-focused (`EDIT_SET=1`: tighten the first or second sentence; how much shorter could the longest get) | **baseline**, Passage Focus, line stripped | 18 | ~17 | **7 (~40%)** |
+| Edit-focused | **with the line**, Passage Focus | 18 | ~45 | **2 (~4%)** |
+| Edit-focused | with the line, Develop | 18 | ~33 | 3 |
+| The usual 48 questions | with the line, both paths | 48 | ~71 | **3 (~4%)**, in 2 replies |
+
+**Slips remaining with the line:**
+- "Mara stood at the window" called **four** words (it is five). This appears in both arms and on both
+  paths: the only systematic miscount seen.
+- "Then a whisper on the slate" said to cut **two** words (it cuts three).
+- "Then it slowed…" called **eight** words (it is nine).
+- "The ferry pulled away" said to remove **three** words (it removes two).
+- One reply started from the wrong base: "from **eleven** words to eight" for a twelve-word
+  sentence.
+- "She would not cry." said to drop **three** words (it drops two). The same reply then said "loses
+  two words" correctly.
+
+**Reading.**
+- On the questions most likely to produce edit arithmetic, the line made a large difference on the
+  Passage Focus path: about 40% wrong to about 4%, on the same questions with the same composition
+  otherwise.
+- On the broader set, passing counts stay about 4–7% wrong across all three measurements, with no
+  meaningful change. That set has fewer edit claims.
+- Quotations stayed exact throughout, and direct count questions stayed 54/54.
+- Samples are small (18–48 replies per arm), so these are indications, not rates.
+
+**Recommendation.** Stop iterating the wording here. The remaining slips are small, never touch a
+quotation, and look like the limit of instruction alone. A further step would be mechanical, like
+the existing quote gate: a server-side check of "N words" claims against the passage. That would be
+its own design and its own founder act.

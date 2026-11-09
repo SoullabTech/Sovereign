@@ -190,6 +190,8 @@ export const TEXT_ACCURACY_DIRECTIVE = [
   // WS-CRAFT-CONVENTIONS-01 (founder: "Yes, add and measure", 2026-11-09): passing counts slipped ~7% (edit arithmetic,
   // unrequested lists of sentence lengths); counts asked for directly were 54/54. Witness record §12.2.
   'When a count or length is not what I asked about, leave it out, or say it only after checking it word by word.',
+  // Founder: "Yes, target it" (2026-11-09). The persisting slip was edit arithmetic ("four words leaner" for three). §12.3.
+  'When you say how many words a change adds or removes, count the exact words you are changing.',
 ].join(' ');
 
 export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
