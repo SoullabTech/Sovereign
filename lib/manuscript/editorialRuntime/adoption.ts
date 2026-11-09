@@ -69,6 +69,7 @@ import { authorizeVersion, type AuthorizeRefusal } from '../revisionAuthorizatio
 import { executeAuthorization, type ExecutionRefusal } from '../revisionAuthorization/execute';
 import { readAuthorizationStatus, type ChangeLocator } from '../revisionAuthorization/status';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
+import { threadOriginIsOrphaned } from '@/lib/writers-studio/orphanedEditorialOrigin';
 import type { VerifiedIdentity } from './turn';
 
 export interface AdoptVersionInput {
@@ -118,6 +119,9 @@ export type SystemRefusalReason =
 export type RelationshipRefusal =
   | 'thread_not_found'
   | 'not_editorial'
+  /** ⭐ The thread's origin names an editorial relationship that no longer exists (its Work was removed). Refused BEFORE act 1:
+      ⛔ no permission is minted, ⛔ nothing about the Work moved. See `lib/writers-studio/orphanedEditorialOrigin.ts`. */
+  | 'origin_unavailable'
   | 'chain_unknown'
   | 'version_unknown';
 
@@ -264,6 +268,16 @@ export async function adoptVersion(input: AdoptVersionInput): Promise<AdoptionOu
   const chainId = t.rows[0]!.proposal_chain_id;
   if (chainId === null) {
     return { kind: 'relationship_refusal', reason: 'not_editorial' };
+  }
+
+  /* ══ ⭐ THE ORIGIN GUARD — BEFORE ACT 1, AND BEFORE EVERY OTHER GUARD ═══════
+     A retained conversation whose Work was removed is not offered by any Work and is refused by the open, read, turn and version
+     paths; this gesture used to be the exception. ⛔ A BROWSER CHECK IS NOT A GUARD: the live client reads the bound thread before
+     it posts, but a stale tab or a direct request does not. Refused here, so no authorization row is written for it.
+     ⛔ Only a PROVABLY orphaned origin: a thread with no origin row (opened before origins existed) is untouched.
+     ⚠️ A pre-check, not the mutation boundary — see the module header for why that is stated rather than hidden. */
+  if (await threadOriginIsOrphaned(memberId, input.threadId)) {
+    return { kind: 'relationship_refusal', reason: 'origin_unavailable' };
   }
 
   /* ══ ⭐⭐ THE COMPATIBILITY GUARD — BEFORE ACT 1, DELIBERATELY ═══════════

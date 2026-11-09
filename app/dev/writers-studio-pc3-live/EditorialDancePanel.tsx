@@ -875,6 +875,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
                     title={props.revisionsPaused ? PAUSED_NOTE : undefined}
                     onClick={() => setStageChangeFor(stageChangeFor === version.id ? null : version.id)}>Change it</button>
                   <button type="button" data-stage-talk disabled={props.busy} onClick={talkAbout}>Talk about it</button>
+                  {/* WS-DECISION-CONTINUITY: a way to say no. Records nothing by itself; the controller offers (never assumes) to note it. */}
+                  <button type="button" data-stage-keep disabled={props.busy} onClick={props.onKeep}>Keep mine</button>
                 </div>
               )}
               {stageChangeFor === version.id ? (

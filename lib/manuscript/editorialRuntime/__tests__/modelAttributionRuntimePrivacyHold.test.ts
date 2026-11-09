@@ -29,6 +29,7 @@ jest.mock('@/lib/disclosure/contextDisclosureReceipt', () => ({
 jest.mock('@/lib/maia/teaching/TeachingRuntimeBridge', () => ({
   buildTeachingRuntimeBridge: () => ({active:false}),
 }));
+jest.mock('@/lib/writersStudio/decisionRecord', () => ({ decisionContextForManuscript: () => Promise.resolve('') }));
 jest.mock('@/lib/writersStudio/writerUnderstandingServer', () => ({
   writerUnderstandingContextForManuscript: () => Promise.resolve(null),
 }));

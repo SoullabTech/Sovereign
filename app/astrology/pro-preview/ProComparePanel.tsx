@@ -10,6 +10,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { usePanelState } from './panelMemory';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
 import { apiFetch } from '@/lib/http/apiBase';
 import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
@@ -148,6 +149,8 @@ export default function ProComparePanel({
               ))}
             </ul>
           )}
+          <ProAskMaiaPanel subjectLabel="the two charts together" readsWhose={`${chartLabel}’s and ${other.label}’s charts`}
+            request={{ section: 'biwheel', subject: currentSubjectId, other: other.id, houseSystem }} />
         </>
       )}
 
@@ -159,6 +162,8 @@ export default function ProComparePanel({
             </p>
             <CelestialChartWheel chart={composite} focusedBody={focus} onFocusBody={setFocus}
               showAspects showHouseLines />
+            <ProAskMaiaPanel subjectLabel="the composite" readsWhose={`${chartLabel}’s and ${other.label}’s charts`}
+              request={{ section: 'composite', subject: currentSubjectId, other: other.id, houseSystem }} />
           </>
         ) : <p className={styles.note}>A composite needs both charts’ Ascendant and MC.</p>
       )}

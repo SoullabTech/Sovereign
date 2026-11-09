@@ -38,7 +38,7 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { adminFetch } from '@/lib/admin/adminFetch';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
-import AdminManagementSection from '@/components/studio/AdminManagementSection';
+import MemberPermissionsSection from '@/components/admin/MemberPermissionsSection';
 import {
   MODULE_DEFINITIONS,
   ALL_MODULE_SLUGS,
@@ -1717,7 +1717,7 @@ function SettingsContent() {
           </div>
         )}
 
-        {activeSection === 'admin' && isOwner && <AdminManagementSection />}
+        {activeSection === 'admin' && isOwner && <MemberPermissionsSection />}
 
         {activeSection === 'data' && (
           <div className="space-y-6">

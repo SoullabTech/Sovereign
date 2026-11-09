@@ -67,6 +67,8 @@ import {
 import { readWorkingStyle, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 
 const REFUSAL_SAYS: Record<string, string> = {
+  sanctuary_not_kept: 'Sanctuary is on. This conversation is kept with its reading, so MAIA will not continue it now. Nothing was kept.',
+  posture_undeclared: 'Your Sanctuary setting could not be read, so nothing was sent or kept. Reload the page and try again.',
   unreachable: 'MAIA could not be reached. Nothing was lost — your question is held here.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
   anchor_requires_reading: 'The reading this observation belongs to could not be found.',

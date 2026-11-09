@@ -1,5 +1,6 @@
 'use client';
 
+import { withKeepPosture, keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
@@ -575,11 +576,14 @@ function PressManuscriptRoom() {
     const res = await apiFetch(`/api/sovereign/manuscripts/${active}/collections`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCollectionName }),
+      body: JSON.stringify(withKeepPosture({ name: newCollectionName })),
     });
     if (res.ok) {
       setNewCollectionName('');
       await loadDetail(active);
+    } else {
+      const refused = keepRefusalCopy(((await res.json().catch(() => ({}))) as { refusal?: string }).refusal);
+      if (refused) setKeepNotice(refused);
     }
   };
 
@@ -588,9 +592,13 @@ function PressManuscriptRoom() {
     const res = await apiFetch(`/api/sovereign/manuscripts/${active}/collections`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collectionId, keepId, op }),
+      body: JSON.stringify(withKeepPosture({ collectionId, keepId, op })),
     });
     if (res.ok) await loadDetail(active);
+    else {
+      const refused = keepRefusalCopy(((await res.json().catch(() => ({}))) as { refusal?: string }).refusal);
+      if (refused) setKeepNotice(refused);
+    }
   };
 
   const unkeep = async (keepId: string) => {

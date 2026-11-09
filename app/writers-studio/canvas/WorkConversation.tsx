@@ -1,7 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { parseStudioActions } from '@/lib/writersStudio/studioActions';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import ReadScopeControl from './ReadScopeControl';
+import SettledDecisions from './SettledDecisions';
+import { declaredSanctuaryPosture, readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { parseStudioActions, showLabel, SHOW_PLACES, type ShowPlace } from '@/lib/writersStudio/studioActions';
+import { readingProgressText } from '@/lib/writersStudio/readingProgress';
+import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
@@ -24,6 +29,7 @@ import {
 import type { LivingWork } from '../useLivingWorks';
 import { createWriterCorrection } from '@/lib/writersStudio/writerCorrectionsClient';
 import { readWorkingStyle, writeWorkingStyle } from '@/lib/writersStudio/workingStyle';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import {
   proposePresentationRequest, writeStudioPresentation,
   type SafePresentationProposal,
@@ -132,12 +138,16 @@ const REORIENTATION_PROMPT = [
   'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
 ].join('\n');
 
+/* Review (2026-11-09): a failed Teach me never touched the box, so it must not say the question is still there. */
+const TEACH_NOT_ANSWERED = 'MAIA couldn’t answer the Teach me this time. Nothing you wrote was changed; press it again when you’re ready.';
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
   question_too_long: 'That is longer than a question this room can carry.',
   unauthenticated: 'You are signed out. Sign in and your question will go through.',
   not_found: 'This Work could not be opened for conversation.',
+  /* Any other failure after the question arrived (e.g. the AI service refused or failed). Said plainly; never shown as one of her answers. */
+  not_answered: 'MAIA couldn’t answer this time. Nothing you wrote was lost — your question is still in the box; send it again when you’re ready.',
 };
 
 const when = (iso: string) => {
@@ -158,7 +168,38 @@ export interface WorkConversationProps {
   initialDraft?: string;
   /** Design 1B: open a Develop place MAIA offered (navigation only). Absent → no such button. */
   onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
+  /** The Develop stage keeps MAIA's holdings (reading permission, what you have settled) in its own column, so the conversation stays a conversation. */
+  hideHoldings?: boolean;
+  /** Develop stage: the secondary controls (Where are we?, new conversation, Focus, close, Keeps, Open in MAIA) sit behind one quiet “More”. */
+  quiet?: boolean;
+  /** Which saved sections MAIA was handed for the answer just received (ids + headings only). */
+  onRead?: (read: readonly { sectionId: string; label: string | null }[]) => void;
+  /** G4: MAIA offered "Read this chapter" and the writer clicked it. Absent → no such button. Only the click starts a reading. */
+  onReadChapter?: (lens: DevelopmentalLens) => Promise<{ ok: true; label: string } | { ok: false; message: string }>;
+  /** Design 1B amendment 2: the acting controls MAIA may offer (grant reading, make a plan, note a decision, open the desk). Absent →
+   *  no such buttons. ONLY the writer's click performs one; the host refuses in Sanctuary and says so. */
+  onStudioAct?: (act: StudioAct) => Promise<{ ok: true; text: string } | { ok: false; message: string }>;
+  /** The heading of a chapter id MAIA named, if it is in this Work; null → no "go to chapter" button. */
+  chapterLabel?: (sectionId: string) => string | null;
   onClose: () => void;
+}
+
+export type StudioAct =
+  | { id: 'grant-reading'; level: 'chapter' | 'work' }
+  | { id: 'make-plan'; ask: string }
+  | { id: 'note-settled'; words: string }
+  | { id: 'open-desk'; words: string | null }
+  | { id: 'show'; place: ShowPlace }
+  | { id: 'go-chapter'; sectionId: string };
+
+/* Offers the host performs (absent host → no button). The conversation's own controls (keeps, focus, close, open in MAIA) it does itself. */
+const ACTING = new Set(['grant-reading', 'make-plan', 'note-settled', 'open-desk', 'show', 'go-chapter']);
+const NAVIGATES = new Set(['show', 'go-chapter']);   // navigation within Develop: nothing is written, so no posture gate
+/** The writer's own words in their latest question, minus the "About “…”:" frame the stage places for a selection. */
+export function latestAuthorWords(turns: readonly { speaker: string; body: string }[]): { question: string; passage: string | null } {
+  const last = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? '';
+  const m = /^About “([\s\S]+?)”:\s*/.exec(last);
+  return { question: last.trim(), passage: m ? m[1] : null };
 }
 
 export default function WorkConversation(props: WorkConversationProps) {
@@ -173,15 +214,64 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const showSecondary = !quiet || moreOpen;
   const [focusMode, setFocusMode] = useState(false);
 
   const [decision, setDecision] = useState<ResumeDecision | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [thread, setThread] = useState<AskThreadView | null>(null);
+  /* Sanctuary exchanges: shown for this moment only, held in this component's memory, never stored anywhere. */
+  /* `after` = how many kept turns the conversation had when this exchange happened, so it is shown in its place in time. */
+  const [sanctuaryTurns, setSanctuaryTurns] = useState<{ question: string; answer: string; after: number }[]>([]);
+  /* ⭐ G4 isolation: every switch of conversation (adopt, start fresh) starts a new generation. An async result from an earlier
+     generation — a late thread load, a late reading — is dropped, never applied to the conversation now on screen. */
+  const conversationGenRef = useRef(0);
+  const nextConversation = () => { conversationGenRef.current += 1; return conversationGenRef.current; };
+  /* G4: a chapter reading the writer started from MAIA's offer. Shown here; MAIA is not asked anything until the writer asks. */
+  const [chapterReading, setChapterReading] = useState<{ phase: 'running'; startedAt: number; now: number } | { phase: 'done' | 'refused'; text: string } | null>(null);
+  useEffect(() => {
+    if (chapterReading?.phase !== 'running') return;
+    const t = window.setInterval(() => setChapterReading((r) => r?.phase === 'running' ? { ...r, now: Date.now() } : r), 1000);
+    return () => window.clearInterval(t);
+  }, [chapterReading?.phase]);
+  const startChapterReading = useCallback(async (lens: DevelopmentalLens) => {
+    if (!onReadChapter) return;
+    // Readings are kept (they are how MAIA remembers having read), so Sanctuary — which keeps nothing — never starts one.
+    const posture = readCurrentSanctuaryPosture();
+    if (posture.resolved && posture.sanctuary) {
+      setChapterReading({ phase: 'refused', text: 'Sanctuary is on, and a reading is kept, so MAIA will not read the chapter now. Turn Sanctuary off if you want her to. Nothing was read.' });
+      return;
+    }
+    const startedAt = Date.now();
+    const gen = conversationGenRef.current;
+    setChapterReading({ phase: 'running', startedAt, now: startedAt });
+    const result = await onReadChapter(lens);
+    if (gen !== conversationGenRef.current) return;   // the writer moved to another conversation; the reading is kept regardless
+    setChapterReading(result.ok
+      ? { phase: 'done', text: `MAIA has read ${result.label}. Ask her what she noticed. Nothing in your writing changed.` }
+      : { phase: 'refused', text: result.message });
+  }, [onReadChapter]);
+
+  /* Amendment 2 · what happened when the writer clicked one of MAIA's acting offers. */
+  const [actStatus, setActStatus] = useState<{ busy: boolean; text: string } | null>(null);
+  const [noteDraft, setNoteDraft] = useState<string | null>(null);
+  const performAct = useCallback(async (act: StudioAct) => {
+    if (!onStudioAct) return;
+    // Sanctuary keeps nothing and suspends permissions: none of these is performed there (the host refuses too). Navigation writes nothing.
+    const posture = readCurrentSanctuaryPosture();
+    if (!NAVIGATES.has(act.id) && (!posture.resolved || posture.sanctuary)) {
+      setActStatus({ busy: false, text: posture.resolved ? 'Sanctuary is on, so that is not done here. Nothing was changed.' : 'Your Sanctuary setting could not be read on this device, so nothing was done.' });
+      return;
+    }
+    setActStatus({ busy: true, text: act.id === 'make-plan' ? 'MAIA is making a plan…' : 'One moment…' });
+    const r = await onStudioAct(act);
+    setActStatus({ busy: false, text: r.ok ? r.text : r.message });
+  }, [onStudioAct]);
 
   const [draft, setDraft] = useState(initialDraft);
   // The Studio's starter, as placed; never sent on its own.
@@ -233,9 +323,14 @@ function ScopedWorkConversation({
   }, [thread, pending]);
 
   const adopt = useCallback(async (id: string) => {
+    // A not-kept Sanctuary exchange belongs to the moment it happened in, never to another conversation — cleared BEFORE loading.
+    const gen = nextConversation();
+    setSanctuaryTurns([]);
+    setChapterReading(null);
     const t = manuscriptId
       ? await loadThread(manuscriptId, id)
       : await loadLivingWorkAskThread(work.id, id);
+    if (gen !== conversationGenRef.current) return;   // a later choice superseded this one
     setThreadId(id);
     if (t) setThread(t);
   }, [manuscriptId, work.id]);
@@ -252,9 +347,12 @@ function ScopedWorkConversation({
     && (threadId !== null || decision?.kind === 'choose');
   const startFresh = () => {
     if (!canStartFresh || inFlightRef.current) return;
+    nextConversation();
     setThreadId(null);
     setThread(null);
     setDecision({ kind: 'fresh' });
+    setSanctuaryTurns([]);
+    setChapterReading(null);
     setRefusal(null);
     setCorrectingTurn(null);
     setCorrectionStatus(null);
@@ -338,11 +436,13 @@ function ScopedWorkConversation({
     setCorrectionStatus('Correction kept. MAIA will receive this as the current working understanding for this Work.');
   };
 
-  const send = async () => {
-    const question = draft.trim();
+  /* G-3: `teach` is a pressed Teach me (the writer's click on MAIA's offer). Its words are the button's own; the writer's draft is
+     neither sent nor cleared. */
+  const send = async (teach?: TeachingAnchor) => {
+    const question = teach ? teachingQuestion(teach) : draft.trim();
     // Synchronous guard: two send events can fire before pending state renders.
     if (!question || pending !== null || inFlightRef.current) return;
-    const requestedPresentation = proposePresentationRequest(question, readWorkingStyle());
+    const requestedPresentation = teach ? null : proposePresentationRequest(question, readWorkingStyle());
     if (requestedPresentation) {
       setPresentationConfirmation(requestedPresentation);
       setPresentationNotice(null);
@@ -351,6 +451,7 @@ function ScopedWorkConversation({
     if (mode.kind === 'blocked') return;
 
     const submittedRevision = draftRevisionRef.current;
+    const gen = conversationGenRef.current;
     inFlightRef.current = true;
     setReorientationOffered(false);
     setRefusal(null);
@@ -362,26 +463,44 @@ function ScopedWorkConversation({
             question,
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
             ...(sectionId ? { sectionId } : {}),
+            /* G-3: the writer's own working-style preference, as the observation dialogue sends it; and a pressed Teach me. */
+            responseStyle: readWorkingStyle().explanation,
+            ...(teach ? { teachingAnchor: teach } : {}),
+            /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
+            ...declaredSanctuaryPosture(),
           })
         : await askLivingWork({
             workId: work.id,
             question,
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
           });
+      if (gen !== conversationGenRef.current) {
+        // The conversation on screen is no longer the one this answer belongs to; its text stays where it was.
+        return;
+      }
       if (r.ok) {
         // Text can be edited away and retyped identically. Compare edit
         // ownership, not string equality; read the live ref in the updater.
-        setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
+        if (!teach) setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
+        if (r.sanctuary) {
+          // Not kept: nothing was stored, so there is no thread to reload. Show the exchange here only.
+          setSanctuaryTurns((list) => [...list, { question: r.sanctuary!.question, answer: r.sanctuary!.answer, after: thread?.turns.length ?? 0 }]);
+          if (r.threadId) { setThreadId(r.threadId); }
+          if (r.thread) setThread(r.thread);
+          if (onRead && manuscriptId) onRead([]);
+          return;
+        }
         setThreadId(r.threadId);
         setThread(r.thread);
+        if (onRead && manuscriptId) onRead(r.read ?? []);
         return;
       }
       // Refusals must retain literal text and any server-returned thread id.
       if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
-      setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.unreachable);
+      setRefusal(teach ? TEACH_NOT_ANSWERED : REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.not_answered);
     } catch {
       // A transport error is an ambiguous delivery, never an automatic retry.
-      setRefusal(REFUSAL_SAYS.unreachable);
+      setRefusal(teach ? TEACH_NOT_ANSWERED : REFUSAL_SAYS.unreachable);
     } finally {
       inFlightRef.current = false;
       setPending(null);
@@ -409,6 +528,24 @@ function ScopedWorkConversation({
   }
 
   const turns = thread?.turns ?? [];
+  /* Not-kept Sanctuary exchanges, each shown in its place in time among the kept turns (G4 isolation). */
+  const sanctuaryAt = (pick: (after: number) => boolean) => {
+    const items = sanctuaryTurns.filter((entry) => pick(entry.after));
+    if (items.length === 0) return null;
+    return (
+      <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base, marginBottom: SPACE.base }}>
+        <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
+        {items.map((entry, n) => (
+          <div key={`s${entry.after}-${n}`} style={{ marginBottom: SPACE.base }} data-sanctuary-turn={entry.after}>
+            <StudioText role="metadata" tone="quiet">You</StudioText>
+            <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{entry.question}</StudioText>
+            <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
+            <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(entry.answer, 'work-conversation').text}</StudioText>
+          </div>
+        ))}
+      </div>
+    );
+  };
   const latestMaiaIndex = [...turns].reverse().find((x) => x.speaker === 'maia')?.index ?? null;
 
   return (
@@ -417,8 +554,10 @@ function ScopedWorkConversation({
       data-maia-focus={focusMode ? 'true' : 'false'}
       style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
     >
+      {!hideHoldings && manuscriptId ? <ReadScopeControl manuscriptId={manuscriptId} /> : null}
+      {!hideHoldings ? <SettledDecisions workId={work.id} /> : null}
       {/* ── The Work this exchange is in, where the member can see it. ── */}
-      <div
+      {showSecondary && <div
         data-studio-conversation="situated"
         data-work-thread={threadId ?? undefined}
         style={{
@@ -487,7 +626,7 @@ function ScopedWorkConversation({
         >
           <StudioText role="metadata" as="span">✕</StudioText>
         </button>
-      </div>
+      </div>}
 
       {/* ── The exchange, as the server holds it ── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: SPACE.tight }}>
@@ -512,7 +651,7 @@ function ScopedWorkConversation({
         {decision?.kind === 'choose' && (
           <div data-discovery="choose" style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
             <StudioText role="maiaReading" style={{ color: INK.muted }}>
-              {`You have ${decision.threads.length} conversations about this Work.`}
+              {`You have ${decision.threads.length} conversations about this Work. Choose one to continue, or start a new one. Send waits until you do.`}
             </StudioText>
             {decision.threads.map((t) => (
               <button
@@ -545,8 +684,10 @@ function ScopedWorkConversation({
           </StudioText>
         )}
 
-        {turns.map((t) => (
-          <div key={t.index} style={{ marginBottom: SPACE.base }} data-turn={t.index}>
+        {turns.length > 0 ? sanctuaryAt((after) => after === 0) : null}
+        {turns.map((t, position) => (
+          <Fragment key={t.index}>
+          <div style={{ marginBottom: SPACE.base }} data-turn={t.index}>
             <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.hairline }}>
               {t.speaker === 'maia' ? 'MAIA' : 'You'}
             </StudioText>
@@ -565,15 +706,41 @@ function ScopedWorkConversation({
               /* Design 1B: only MAIA's latest reply may offer a control, and only
                  one this room can honour. Clicking only takes the writer there. */
               if (t.speaker !== 'maia' || t.index !== latestMaiaIndex) return null;
-              const offered = parseStudioActions(t.body, 'work-conversation').action;
+              const parsed = parseStudioActions(t.body, 'work-conversation');
+              /* Where the room cannot start a reading itself (no onReadChapter), MAIA's "Read this chapter" offer degrades to the
+                 Design 1B navigation that takes the writer to where they can start one — never to a button that silently does nothing. */
+              const offered = parsed.action?.id === 'read-chapter' && !onReadChapter
+                ? parseStudioActions('[[studio:develop-overview]]', 'work-conversation').action
+                : parsed.action;
               if (!offered) return null;
               const place = offered.id === 'develop-overview' || offered.id === 'editorial-pass' ? offered.id : null;
               if (place && !onStudioPlace) return null;
+              if (ACTING.has(offered.id) && !onStudioAct) return null;   // a room that cannot honour it shows no button
+              const chapterName = offered.id === 'go-chapter' && parsed.target ? chapterLabel?.(parsed.target) ?? null : null;
+              if (offered.id === 'go-chapter' && !chapterName) return null;   // ⛔ an id not in this Work is no button
+              if ((offered.id === 'show-keeps' || offered.id === 'open-in-maia' || offered.id === 'teach-me') && !manuscriptId) return null;
+              if (offered.id === 'teach-me' && !sectionId) return null;   // review: a passage teaching turn needs a passage in view
+              const mine = latestAuthorWords(thread?.turns ?? []);
               const run = () => {
+                if (offered.id === 'grant-reading') { void performAct({ id: 'grant-reading', level: parsed.level ?? 'chapter' }); return; }
+                if (offered.id === 'make-plan') { if (mine.question) void performAct({ id: 'make-plan', ask: mine.question }); return; }
+                if (offered.id === 'note-settled') { setNoteDraft(mine.question); setActStatus(null); return; }
+                if (offered.id === 'open-desk') { if (requestConversationDeparture()) void performAct({ id: 'open-desk', words: mine.passage }); return; }
+                if (offered.id === 'show' && parsed.target) { void performAct({ id: 'show', place: parsed.target as ShowPlace }); return; }
+                if (offered.id === 'go-chapter' && parsed.target) { void performAct({ id: 'go-chapter', sectionId: parsed.target }); return; }
+                if (offered.id === 'show-keeps') { setMoreOpen(true); setShowKeeps(true); return; }
+                if (offered.id === 'focus') { setFocusMode(true); return; }
+                if (offered.id === 'close-conversation') { if (requestConversationDeparture()) onClose(); return; }
+                if (offered.id === 'open-in-maia') { if (manuscriptId && requestConversationDeparture()) window.location.assign(handoffToMaia('/maia', { workId: work.id, manuscriptId })); return; }
                 if (offered.id === 'new-conversation') { startFresh(); return; }
+                if (offered.id === 'teach-me') { void send('passage'); return; }
+                if (offered.id === 'read-chapter') { void startChapterReading(parsed.lens ?? 'overview'); return; }
                 if (place && requestConversationDeparture()) onStudioPlace?.(place);
               };
-              const enabled = offered.id === 'new-conversation' ? canStartFresh : pending === null;
+              const enabled = offered.id === 'new-conversation' ? canStartFresh
+                : offered.id === 'read-chapter' ? pending === null && chapterReading?.phase !== 'running'
+                : ACTING.has(offered.id) ? pending === null && !actStatus?.busy
+                : pending === null;
               return (
                 <button
                   type="button"
@@ -586,7 +753,7 @@ function ScopedWorkConversation({
                     cursor: enabled ? 'pointer' : 'default', color: INK.secondary, opacity: enabled ? 1 : 0.5,
                   }}
                 >
-                  <StudioText role="metadata" as="span">{offered.label}</StudioText>
+                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? 'Let MAIA read this saved chapter' : offered.id === 'show' && (SHOW_PLACES as readonly string[]).includes(parsed.target ?? '') ? showLabel(parsed.target as ShowPlace) : offered.id === 'go-chapter' ? `Go to ${chapterName}` : offered.label}</StudioText>
                 </button>
               );
             })()}
@@ -671,7 +838,44 @@ function ScopedWorkConversation({
               </div>
             ) : null}
           </div>
+          {position + 1 < turns.length ? sanctuaryAt((after) => after === position + 1) : null}
+          </Fragment>
         ))}
+        {sanctuaryAt((after) => after >= turns.length)}
+
+        {chapterReading ? (
+          <div data-chapter-reading={chapterReading.phase} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
+            <StudioText role="metadata" tone="secondary">
+              {chapterReading.phase === 'running'
+                ? readingProgressText('MAIA is reading the chapter', chapterReading.now - chapterReading.startedAt)
+                : chapterReading.text}
+            </StudioText>
+          </div>
+        ) : null}
+
+        {noteDraft !== null ? (
+          /* A settled decision is the writer's own words: prefilled from what they said, editable, recorded only on "Note it". */
+          <div data-note-settled="true" style={{ marginTop: SPACE.tight, display: 'flex', flexDirection: 'column', gap: SPACE.tight }}>
+            <label htmlFor="ws-note-settled"><StudioText role="metadata" as="span">In your words, what have you settled about the book?</StudioText></label>
+            <textarea id="ws-note-settled" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={3} maxLength={1000}
+              style={{ font: 'inherit', fontSize: 14, padding: 8, borderRadius: RADIUS.sm, border: `1px solid ${RULE.soft}`, background: 'transparent', color: INK.primary }} />
+            <div style={{ display: 'flex', gap: SPACE.tight }}>
+              <button type="button" data-note-settled-confirm="true" disabled={!noteDraft.trim() || Boolean(actStatus?.busy)}
+                onClick={() => { const words = noteDraft.trim(); setNoteDraft(null); void performAct({ id: 'note-settled', words }); }}
+                style={{ background: 'transparent', border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`, cursor: 'pointer', color: INK.secondary }}>
+                <StudioText role="metadata" as="span">Note it</StudioText>
+              </button>
+              <button type="button" onClick={() => setNoteDraft(null)} style={{ background: 'transparent', border: 0, cursor: 'pointer', color: INK.quiet }}>
+                <StudioText role="metadata" as="span">Not now</StudioText>
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {actStatus ? (
+          <div data-studio-act-status={actStatus.busy ? 'busy' : 'done'} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
+            <StudioText role="metadata" tone="secondary">{actStatus.text}</StudioText>
+          </div>
+        ) : null}
 
         {correctionStatus ? (
           <StudioText role="metadata" data-correction-status="true">{correctionStatus}</StudioText>
@@ -690,7 +894,14 @@ function ScopedWorkConversation({
           </div>
         )}
 
-        {refusal && <StudioText role="metadata">{refusal}</StudioText>}
+        {/* A failed answer is unmistakable: never a quiet line the writer can miss. The question stays in the box; nothing is retried by itself. */}
+        {refusal && (
+          <div role="alert" data-maia-refusal="true"
+            style={{ margin: `${SPACE.snug}px 0`, padding: `${SPACE.tight}px ${SPACE.snug}px`, borderRadius: RADIUS.sm,
+              border: '1px solid color-mix(in srgb, #c0392b 55%, transparent)', background: 'color-mix(in srgb, #c0392b 10%, transparent)' }}>
+            <StudioText role="metadata" as="span">{refusal}</StudioText>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
@@ -815,7 +1026,7 @@ function ScopedWorkConversation({
         {presentationNotice ? <p role="status" data-maia-presentation-notice
           style={{fontSize:12,margin:'8px 0'}}>{presentationNotice}</p> : null}
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base, marginTop: SPACE.snug }}>
-          {manuscriptId ? (
+          {manuscriptId && showSecondary ? (
             <button
               type="button"
               data-keeps-toggle="true"
@@ -834,7 +1045,7 @@ function ScopedWorkConversation({
             </button>
           ) : null}
           {/* ⚠️ Cross-surface handoff still requires a manuscript return contract. */}
-          {manuscriptId ? (
+          {manuscriptId && showSecondary ? (
             <Link
               href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
               data-open-in-maia="true"
@@ -843,6 +1054,19 @@ function ScopedWorkConversation({
             >
               <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
             </Link>
+          ) : null}
+          {quiet && decision?.kind === 'choose' && !moreOpen ? (
+            /* The room is asking which conversation to continue: starting a new one must not hide behind More (walk 2026-11-09). */
+            <button type="button" data-start-fresh-quiet="true" onClick={startFresh} disabled={!canStartFresh}
+              style={{ background: 'transparent', border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`, cursor: 'pointer', color: INK.secondary }}>
+              <StudioText role="metadata" as="span">Start a new conversation</StudioText>
+            </button>
+          ) : null}
+          {quiet ? (
+            <button type="button" data-conversation-more="true" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: INK.secondary, padding: 0 }}>
+              <StudioText role="metadata" as="span">{moreOpen ? 'Fewer options' : 'More'}</StudioText>
+            </button>
           ) : null}
           <span style={{ flex: 1 }} />
           <button

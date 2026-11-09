@@ -29,6 +29,7 @@
  * than rendered as a finding about the Work.
  */
 
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -56,6 +57,8 @@ export async function POST(
 
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, await req.json().catch(() => ({}))); if (refused) return refused; }
 
   /* Ownership is enforced IN the query, not checked beside it. A row reaches
      this code only if it belongs to the authenticated member; a manuscript that

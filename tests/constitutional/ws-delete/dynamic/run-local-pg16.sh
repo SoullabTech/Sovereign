@@ -6,7 +6,7 @@
 # Two ways to run it:
 #   1. Container-class host with the postgres server binaries and no docker (run as root; the server must start as the
 #      'postgres' OS user): just run this script.
-#   2. Developer machine (the Mac Studio): provision a disposable LOOPBACK database yourself, apply the stub schema and the four
+#   2. Developer machine (the Mac Studio): provision a disposable LOOPBACK database yourself, apply the stub schema and the five
 #      migrations below, then run the jest line at the bottom with DATABASE_URL set. The probe refuses a non-loopback database.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -23,8 +23,10 @@ su postgres -s /bin/bash -c "$PGBIN/pg_ctl -D $D -o '-p $PORT -c listen_addresse
 PSQL="psql -X -v ON_ERROR_STOP=1 -q -h 127.0.0.1 -p $PORT -U fictional"
 $PSQL -d postgres -c "CREATE DATABASE ws_delete_fictional" >/dev/null
 # The witness script's own stub schema (first heredoc), extracted verbatim, then the real migrations the delete path touches.
+# The last one (R20 restore refusal) installs the BEFORE INSERT triggers on member_manuscripts and living_works that refuse to re-insert a
+# tombstoned id, so the probes can show a Work tombstone by BEHAVIOUR (a removed Work id cannot come back) and not only as a row.
 awk "/<<'SQL'/{f=1;next} /^SQL\$/{if(f){exit}} f" "$ROOT/scripts/witness/ws-encrypted-source-pg16.sh" | $PSQL -d ws_delete_fictional >/dev/null
-for m in 20260824000001_manuscript_source_custody 20260907000001_vault_erasure_queue 20261026000001_writer_source_encrypted_landing 20260907000004_living_work_visual; do
+for m in 20260824000001_manuscript_source_custody 20260907000001_vault_erasure_queue 20261026000001_writer_source_encrypted_landing 20260907000004_living_work_visual 20261021000001_writer_r20_restore_refusal; do
   $PSQL -d ws_delete_fictional -f "$ROOT/database/migrations/$m.sql" >/dev/null
 done
 echo "schema ready on loopback:$PORT ; results -> $OUT"

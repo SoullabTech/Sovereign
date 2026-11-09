@@ -15,6 +15,7 @@ import { mintAct, claimAct, recordCompletionWithClient } from '@/lib/disclosure/
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { transaction } from '@/lib/db/postgres';
 import { runReviewDiscuss, REVIEW_DISCUSS_READER_VERSION } from '@/lib/manuscript/ask/reviewDiscussReader';
 import { preflightRelationshipForManuscript } from '@/lib/writers-studio/relationshipCarriage';
@@ -84,6 +85,8 @@ export async function POST(
     return NextResponse.json({ refusal: 'sanctuary_unavailable' }, { status: 409 });
   }
   const posture = TurnPosture.resolve({ sanctuary: body.sanctuary });
+  /* Sanctuary closure: the store refuses any write without this; `body.sanctuary` is the checked, explicit `false` above. */
+  const keep = KeepWitness.fromDeclaration(body.sanctuary) as KeepWitness;
 
   if (relationshipId !== null) {
     const relationship = await preflightRelationshipForManuscript({
@@ -124,7 +127,7 @@ export async function POST(
   const now = await loadLiveWork(manuscriptId, memberId);
   const requestId = randomUUID();
 
-  const threadId = await openThread({
+  const threadId = await openThread({ keep,
     manuscriptId,
     memberId,
     anchor: check.anchor,
@@ -153,7 +156,7 @@ export async function POST(
     { state: 'unmeasured' },
   );
 
-  await appendTurn({
+  await appendTurn({ keep,
     threadId,
     memberId,
     speaker: 'author',
@@ -306,7 +309,7 @@ export async function POST(
         ? await prepareRelationshipForAppendWithClient(client, { memberId, relationshipId })
         : null;
 
-      const index = await appendTurnWithClient(client, {
+      const index = await appendTurnWithClient(client, { keep,
         threadId,
         memberId,
         speaker: 'maia',

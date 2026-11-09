@@ -17,6 +17,8 @@ surfaces:
   # auto-sent, never changes the Work anchor, and never creates another
   # conversation identity.
   - app/writers-studio/canvas/WorkConversation.tsx
+  - app/writers-studio/canvas/ReadScopeControl.tsx
+  - app/writers-studio/canvas/SettledDecisions.tsx
   # R1-1C, 2026-09-23 — Review navigation succession: the pure navigation law and the reading chooser.
   - app/writers-studio/rebuild/reviewNavigation.ts
   # R1-2, 2026-09-23 — exact Review → manuscript section return as data, and the live read-only Review mount (R1-1B) it navigates from.

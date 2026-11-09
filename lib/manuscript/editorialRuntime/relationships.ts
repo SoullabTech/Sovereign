@@ -38,6 +38,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
+import { orphanedOriginSql } from '@/lib/writers-studio/orphanedEditorialOrigin';
 import type { VerifiedIdentity } from './turn';
 
 /**
@@ -74,6 +75,12 @@ export interface EditorialRelationship {
 /**
  * ⭐ Every editorial relationship on one draft section, owned by this member.
  *
+ * ⭐ A thread whose Work was REMOVED is not listed (WS-DELETE-01): its origin names an editorial relationship that no longer
+ * exists, so it is no longer a relationship on this passage, and no surface can open it (the open, read, turn and version paths
+ * refuse it). Listing it only offered a card the next call would refuse. ⛔ This is not a ranking or a choice among the living:
+ * every thread that is still in a relationship, and every older thread that never had an origin, is returned whole as before.
+ * The history itself is untouched and is removed with the writing.
+ *
  * ⛔ ORDERED ASCENDING BY `opened_at`, AND THAT IS PRESENTATION ONLY. Ascending
  * deliberately: with `DESC` the newest exchange would sit at the top of the
  * list, and a surface — or a reader of this code — would be one careless step
@@ -108,6 +115,7 @@ export async function editorialRelationshipsForSection(
        LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
       WHERE th.member_id = $2
         AND c.target_section_id = $1
+        AND NOT ${orphanedOriginSql('th.id')}
       ORDER BY th.opened_at ASC`,
     [sectionId, identity.memberId]);
 
