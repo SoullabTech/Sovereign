@@ -42,6 +42,7 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings } from './DevelopStage';
+import { PLAN_HANDOFF_KEY } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import { fetchPlan, makePlanClient, editPlanClient, type PlanView } from '@/lib/writersStudio/planClient';
@@ -2160,6 +2161,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     const plan = await editPlanClient(stageManuscriptId, id, edits);
     if (plan) setPlanView((v) => (v ? { ...v, plan } : v)); else setPlanNote('That could not be saved just now. Your plan is as it was.');
   };
+  /** A plan step -> the passage desk. Marks the step "working" (status only), leaves an id for Write, and goes there. Nothing is written to the manuscript. */
+  const workOnStep = (stepId: string) => {
+    if (!stageManuscriptId) return;
+    try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }
+    const st = planView?.plan?.steps.find((x) => x.id === stepId);
+    if (st && st.status === 'open') editPlan([{ id: stepId, status: 'working' }]);
+    navigateMode('write');
+  };
   const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
@@ -3296,6 +3305,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       planNote={planNote}
       onMakePlan={makePlan}
       onEditPlan={editPlan}
+      onWorkOnStep={workOnStep}
       conversation={(
         <WorkConversation
           key={attentionConversationDraft || 'develop-stage-conversation'}

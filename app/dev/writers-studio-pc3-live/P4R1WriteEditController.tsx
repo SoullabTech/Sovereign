@@ -80,6 +80,8 @@ import {
   readRelationshipReturnClient,
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
+import { fetchPlan } from '@/lib/writersStudio/planClient';
+import { locateAnchor, PLAN_HANDOFF_KEY } from '@/lib/writersStudio/developmentPlan';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -1029,6 +1031,32 @@ export default function FlagshipWriteEditController() {
       replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, section.draftSectionId));
     }
   }, [context, focusId, clearEditorial, editorialThread, appliedVersionId, adoptionBusy, memberVersionBusy, work, workContext.kind, workGestureEpoch]);
+
+  /* A plan step opened from Develop. Develop leaves only a step id; the words come from the writer's saved plan and are located in the text AS IT IS NOW.
+     Exactly one match is held (the desk then does the rest: propose, Use it, Undo). Anything else opens the chapter and says so. Nothing is written here. */
+  const planHandoffDone = useRef(false);
+  useEffect(() => {
+    if (planHandoffDone.current || !context || !work || workContext.kind !== 'work' || workReentryRequired.current) return;
+    let stepId: string | null = null;
+    try { stepId = window.sessionStorage.getItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* none */ }
+    if (!stepId) return;
+    planHandoffDone.current = true;
+    try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* ignore */ }
+    let live = true;
+    void fetchPlan(context.manuscriptId).then((view) => {
+      if (!live) return;
+      const step = view?.plan?.steps.find((x) => x.id === stepId);
+      const section = step ? context.sections.find((x) => x.draftSectionId === step.chapterId) : undefined;
+      if (!step || !section) { setEditorialFailure('That plan step could not be found in this Work. Nothing was changed.'); return; }
+      const found = locateAnchor(writingRef.current?.bodyOf(section.draftSectionId) ?? section.body, step.anchor);
+      if (found.ok) { holdPassage(section, found.start, found.end, found.text); return; }
+      focusWritingSection(section.draftSectionId);
+      setEditorialFailure(found.reason === 'ambiguous'
+        ? 'Those words occur more than once in this chapter, so I have not chosen for you. Select the passage you mean. Nothing was changed.'
+        : 'Those words are no longer in this chapter as they were. The chapter is open; select the passage you mean. Nothing was changed.');
+    });
+    return () => { live = false; };
+  }, [context, work, workContext.kind, holdPassage, focusWritingSection]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     // The server-owned thread must belong to the active manuscript as well as

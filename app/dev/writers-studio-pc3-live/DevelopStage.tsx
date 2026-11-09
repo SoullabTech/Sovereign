@@ -53,6 +53,8 @@ export function DevelopStage(props: {
   planNote: string | null;
   onMakePlan: (ask: string) => void;
   onEditPlan: (edits: StepEdit[]) => void;
+  /** open the passage desk on this step's exact words; the writer decides there */
+  onWorkOnStep: (stepId: string) => void;
   conversation: ReactNode;
 }) {
   const { sections } = props;
@@ -180,6 +182,7 @@ export function DevelopStage(props: {
                     {st.why ? <p style={{ margin: '4px 0 0', fontSize: 12, opacity: .7 }}>Why: {st.why}</p> : null}
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4, fontSize: 12 }}>
                       {sec ? <button type="button" onClick={() => { props.onSelect(sec.draftSectionId); setFocusAnchor(st.anchor); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>Go to the passage</button> : null}
+                      {sec ? <button type="button" data-develop-plan-work={st.id} onClick={() => props.onWorkOnStep(st.id)} style={{ background: 'none', border: hair, borderRadius: 999, color: 'inherit', cursor: 'pointer', font: 'inherit', padding: '3px 12px' }}>Work on this passage</button> : null}
                       {stale ? <span role="status" style={{ opacity: .85 }}>This chapter has changed since the plan was made; check the step still fits.</span> : null}
                     </div>
                   </li>

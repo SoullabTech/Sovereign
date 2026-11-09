@@ -1,4 +1,4 @@
-import { groundSteps, applyStepEdits, staleStepIds, MAX_STEPS, type PlanChapter, type PlanStep } from '../developmentPlan';
+import { locateAnchor, PLAN_HANDOFF_KEY, groundSteps, applyStepEdits, staleStepIds, MAX_STEPS, type PlanChapter, type PlanStep } from '../developmentPlan';
 
 const chapters: PlanChapter[] = [
   { id: 'c2', heading: 'Salt', text: 'Marta left a light on in the hallway, as if someone might yet come home.' },
@@ -52,4 +52,20 @@ describe('a step goes stale when its chapter changes', () => {
     expect(staleStepIds(steps, basis, new Map([['c2', 'AAA'], ['c7', 'CHANGED']]))).toEqual(['b']);
     expect(staleStepIds(steps, basis, new Map())).toEqual([]);   // cannot be read ⇒ not claimed stale
   });
+});
+
+describe('opening a step in the passage desk: the words are found in the text as it is now, exactly once, or not at all', () => {
+  const body = 'Marta left a light on in the hallway. Later, the hallway was dark.';
+  it('holds an exact, unique passage with its offsets', () => {
+    const r = locateAnchor(body, 'a light on in the hallway');
+    expect(r).toMatchObject({ ok: true, text: 'a light on in the hallway' });
+    if (r.ok) expect(body.slice(r.start, r.end)).toBe(r.text);
+  });
+  it('ignores case, and returns the writer’s own spelling of it', () => {
+    const r = locateAnchor(body, 'A LIGHT ON IN THE HALLWAY'); expect(r.ok && r.text).toBe('a light on in the hallway');
+  });
+  it('refuses a passage that has moved or been rewritten', () => { expect(locateAnchor('Everything had been moved.', 'a light on')).toEqual({ ok: false, reason: 'missing' }); });
+  it('refuses a passage that occurs twice rather than choosing for the writer', () => { expect(locateAnchor(body, 'the hallway')).toEqual({ ok: false, reason: 'ambiguous' }); });
+  it('refuses empty words', () => { expect(locateAnchor(body, '   ')).toEqual({ ok: false, reason: 'missing' }); });
+  it('the hand-off carries an id only, keyed by manuscript', () => { expect(PLAN_HANDOFF_KEY('m1')).toBe('ws-plan-step:m1'); });
 });

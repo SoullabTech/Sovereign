@@ -58,3 +58,22 @@ export function staleStepIds(steps: readonly PlanStep[], basis: readonly { secti
   const made = new Map(basis.map((b) => [b.sectionId, b.digest]));
   return steps.filter((s) => { const now = currentDigests.get(s.chapterId); const was = made.get(s.chapterId); return now !== undefined && was !== undefined && now !== was; }).map((s) => s.id);
 }
+
+/**
+ * Find a step's anchor in the chapter's CURRENT text. Exactly one match or nothing: a passage that has moved, or that occurs twice, is never guessed.
+ * Exact match first; then the same words ignoring case. Returns offsets into `body`.
+ */
+export function locateAnchor(body: string, anchor: string): { ok: true; start: number; end: number; text: string } | { ok: false; reason: 'missing' | 'ambiguous' } {
+  const a = anchor.trim();
+  if (!a) return { ok: false, reason: 'missing' };
+  for (const [hay, needle] of [[body, a], [body.toLowerCase(), a.toLowerCase()]] as const) {
+    const first = hay.indexOf(needle);
+    if (first === -1) continue;
+    if (hay.indexOf(needle, first + 1) !== -1) return { ok: false, reason: 'ambiguous' };
+    return { ok: true, start: first, end: first + needle.length, text: body.slice(first, first + needle.length) };
+  }
+  return { ok: false, reason: 'missing' };
+}
+
+/** Develop notes which step the writer chose; Write reads it once. Only an id, never prose. */
+export const PLAN_HANDOFF_KEY = (manuscriptId: string): string => `ws-plan-step:${manuscriptId}`;

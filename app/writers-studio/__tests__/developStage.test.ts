@@ -22,7 +22,7 @@ beforeEach(() => { host = document.createElement('div'); document.body.append(ho
 afterEach(() => { act(() => root.unmount()); host.remove(); });
 
 function mount(over: Record<string, unknown> = {}) {
-  const props = { workTitle: 'The Long Harbour', sections, currentId: 's1', onSelect: jest.fn(), starters: ['What is Harbour doing in the book?'], onStarter: jest.fn(), onOpenWrite: jest.fn(), onMoreWays: jest.fn(), lastRead: null, plan: null, planBusy: false, planNote: null, onMakePlan: jest.fn(), onEditPlan: jest.fn(), conversation: React.createElement('div', { 'data-fake-convo': true }, 'convo'), ...over };
+  const props = { workTitle: 'The Long Harbour', sections, currentId: 's1', onSelect: jest.fn(), starters: ['What is Harbour doing in the book?'], onStarter: jest.fn(), onOpenWrite: jest.fn(), onMoreWays: jest.fn(), lastRead: null, plan: null, planBusy: false, planNote: null, onMakePlan: jest.fn(), onEditPlan: jest.fn(), onWorkOnStep: jest.fn(), conversation: React.createElement('div', { 'data-fake-convo': true }, 'convo'), ...over };
   act(() => root.render(React.createElement(DevelopStage, props as any)));
   return props as any;
 }
@@ -133,4 +133,13 @@ test('M4 a step whose chapter has changed says so, and the unchanged one does no
 test('M4 a plan with no grounded step says so plainly instead of inventing one', () => {
   mount({ plan: planOf([]) });
   expect(q('[data-develop-plan]')!.textContent).toMatch(/could not ground a step in your text/);
+});
+
+test('M4b “Work on this passage” hands over the step id only; it changes nothing by itself', () => {
+  const p = mount({ plan: planOf([step('a')]) });
+  const b = q('[data-develop-plan-work="a"]') as HTMLElement;
+  expect(b.textContent).toBe('Work on this passage');
+  act(() => b.click());
+  expect(p.onWorkOnStep).toHaveBeenCalledWith('a');
+  expect(p.onEditPlan).not.toHaveBeenCalled();             // the stage itself edits nothing
 });
