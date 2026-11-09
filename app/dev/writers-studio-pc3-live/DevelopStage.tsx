@@ -21,7 +21,7 @@ import SettledDecisions from '@/app/writers-studio/canvas/SettledDecisions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
-import type { WorkKind } from '@/lib/writersStudio/workKind';
+import type { WorkKind } from '@/lib/writersStudio/workKindShared';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 

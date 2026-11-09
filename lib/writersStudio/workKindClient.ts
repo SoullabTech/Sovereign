@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
-import type { WorkKind } from './workKind';
+import type { WorkKind } from './workKindShared';
 
 const url = (workId: string) => `/api/sovereign/living-works/${encodeURIComponent(workId)}/kind`;
 

@@ -48,7 +48,7 @@ import { setReadScope } from '@/lib/writersStudio/readScopeClient';
 import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
 import { encodePassageHandoff, PASSAGE_HANDOFF_EVENT, PASSAGE_HANDOFF_KEY } from '@/lib/writersStudio/passageHandoff';
 import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
-import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
+import { startersFor, type WorkKind } from '@/lib/writersStudio/workKindShared';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import { fetchPlan, makePlanClient, editPlanClient, type PlanView, deletePlanClient } from '@/lib/writersStudio/planClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';

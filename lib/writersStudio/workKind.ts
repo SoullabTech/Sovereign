@@ -4,8 +4,8 @@
  */
 import { query } from '@/lib/db/postgres';
 
-export type WorkKind = 'fiction' | 'nonfiction' | 'practitioner';
-export const WORK_KINDS: readonly WorkKind[] = ['fiction', 'nonfiction', 'practitioner'];
+import { WORK_KINDS, type WorkKind } from './workKindShared';
+export { WORK_KINDS, startersFor, type WorkKind } from './workKindShared';
 
 export async function livingWorkKind(memberId: string, livingWorkId: string): Promise<WorkKind | null> {
   try {
@@ -18,13 +18,3 @@ export async function livingWorkKind(memberId: string, livingWorkId: string): Pr
   }
 }
 
-/** Plain-language ways in, in the writer's own register, by DECLARED kind. They fill the composer; they never send. */
-export function startersFor(kind: WorkKind | null, label: string, nextLabel: string | null): string[] {
-  const end = nextLabel ? `How does ${label} lead into ${nextLabel}?` : `How does ${label} end?`;
-  switch (kind) {
-    case 'fiction': return [`What is ${label} doing in the story?`, `Where does ${label} lose you?`, end];
-    case 'nonfiction': return [`What is ${label} claiming?`, `Where does the argument in ${label} lose you?`, end];
-    case 'practitioner': return [`Which idea is ${label} teaching?`, `Where would a reader need more before ${label}?`, `Which story in ${label} earns its point?`];
-    default: return [`What is ${label} doing in the book?`, `Where does ${label} lose you?`, end];
-  }
-}
