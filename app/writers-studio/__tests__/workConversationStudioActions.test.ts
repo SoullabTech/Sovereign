@@ -233,3 +233,63 @@ describe('a not-kept exchange does not follow the writer into another conversati
     expect(host.textContent).not.toContain('private a');
   });
 });
+
+describe('G4 isolation: async results never land in the wrong conversation', () => {
+  afterEach(() => { try { localStorage.removeItem('maia_settings'); } catch { /* */ } });
+
+  it('a reading that finishes after the writer started a new conversation does not reappear there', async () => {
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    const d = deferred<{ ok: true; label: string }>();
+    await mountWith(maiaThread('t1', ['Shall I? [[studio:read-chapter]]']), jest.fn(), jest.fn(() => d.promise));
+    await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="read-chapter"]')!.click(); await flush(); });
+    expect(host.querySelector('[data-chapter-reading="running"]')).not.toBeNull();
+    // the latest reply still offers a fresh start; it is not blocked by a running reading
+    await act(async () => { startFreshButton().click(); await flush(); });
+    expect(host.querySelector('[data-chapter-reading]')).toBeNull();
+    await act(async () => { d.resolve({ ok: true, label: 'Return' }); await flush(); });
+    expect(host.querySelector('[data-chapter-reading]')).toBeNull();
+  });
+
+  it('switching Sanctuary off mid-conversation keeps the not-kept exchange in its place in time', async () => {
+    const first = maiaThread('t1', ['First kept answer.']);
+    await mountWith(first, jest.fn());
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    mockAsk.mockResolvedValueOnce({ ok: true, threadId: 't1', thread: first, staleness: 'current', sanctuary: { notKept: true, question: 'private q', answer: 'private a' } });
+    type('private q');
+    await act(async () => { enter(); await flush(); });
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    mockAsk.mockResolvedValueOnce({ ok: true, threadId: 't1', thread: maiaThread('t1', ['First kept answer.', 'Second kept answer.']), staleness: 'current' });
+    type('ordinary q');
+    await act(async () => { enter(); await flush(); });
+    const firstAnswer = host.querySelector('[data-turn="1"]')!;
+    const privateTurn = host.querySelector('[data-sanctuary-turn="2"]')!;
+    const laterKept = host.querySelector('[data-turn="3"]')!;
+    expect(privateTurn.textContent).toContain('private a');
+    expect(firstAnswer.compareDocumentPosition(privateTurn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(privateTurn.compareDocumentPosition(laterKept) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('a not-kept exchange is cleared the moment another conversation is adopted, not when it finishes loading', async () => {
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    await mountWith(maiaThread('t1', ['Kept answer.']), jest.fn());
+    mockAsk.mockResolvedValueOnce({ ok: true, threadId: 't1', thread: maiaThread('t1', ['Kept answer.']), staleness: 'current', sanctuary: { notKept: true, question: 'private q', answer: 'private a' } });
+    type('private q');
+    await act(async () => { enter(); await flush(); });
+    expect(host.textContent).toContain('private a');
+    // a refusal that names another conversation adopts it; its load is slow
+    const slow = deferred<any>();
+    mockLoadThread.mockImplementationOnce(() => slow.promise);
+    mockAsk.mockResolvedValueOnce({ ok: false, refusal: 'unreachable', threadId: 't2' });
+    type('another q');
+    await act(async () => { enter(); await flush(); });
+    expect(host.textContent).not.toContain('private a');
+    await act(async () => { slow.resolve(maiaThread('t2', ['Other.'])); await flush(); });
+    expect(host.textContent).not.toContain('private a');
+  });
+});
+
+function startFreshButton(): HTMLButtonElement {
+  const b = Array.from(host.querySelectorAll<HTMLButtonElement>('button')).find((x) => /new conversation/i.test(x.textContent ?? ''));
+  expect(b).toBeDefined();
+  return b!;
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import ReadScopeControl from './ReadScopeControl';
 import SettledDecisions from './SettledDecisions';
 import { declaredSanctuaryPosture, readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
@@ -194,7 +194,12 @@ function ScopedWorkConversation({
   const [threadId, setThreadId] = useState<string | null>(null);
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* Sanctuary exchanges: shown for this moment only, held in this component's memory, never stored anywhere. */
-  const [sanctuaryTurns, setSanctuaryTurns] = useState<{ question: string; answer: string }[]>([]);
+  /* `after` = how many kept turns the conversation had when this exchange happened, so it is shown in its place in time. */
+  const [sanctuaryTurns, setSanctuaryTurns] = useState<{ question: string; answer: string; after: number }[]>([]);
+  /* ⭐ G4 isolation: every switch of conversation (adopt, start fresh) starts a new generation. An async result from an earlier
+     generation — a late thread load, a late reading — is dropped, never applied to the conversation now on screen. */
+  const conversationGenRef = useRef(0);
+  const nextConversation = () => { conversationGenRef.current += 1; return conversationGenRef.current; };
   /* G4: a chapter reading the writer started from MAIA's offer. Shown here; MAIA is not asked anything until the writer asks. */
   const [chapterReading, setChapterReading] = useState<{ phase: 'running'; startedAt: number; now: number } | { phase: 'done' | 'refused'; text: string } | null>(null);
   useEffect(() => {
@@ -211,8 +216,10 @@ function ScopedWorkConversation({
       return;
     }
     const startedAt = Date.now();
+    const gen = conversationGenRef.current;
     setChapterReading({ phase: 'running', startedAt, now: startedAt });
     const result = await onReadChapter(lens);
+    if (gen !== conversationGenRef.current) return;   // the writer moved to another conversation; the reading is kept regardless
     setChapterReading(result.ok
       ? { phase: 'done', text: `MAIA has read ${result.label}. Ask her what she noticed. Nothing in your writing changed.` }
       : { phase: 'refused', text: result.message });
@@ -268,13 +275,16 @@ function ScopedWorkConversation({
   }, [thread, pending]);
 
   const adopt = useCallback(async (id: string) => {
+    // A not-kept Sanctuary exchange belongs to the moment it happened in, never to another conversation — cleared BEFORE loading.
+    const gen = nextConversation();
+    setSanctuaryTurns([]);
+    setChapterReading(null);
     const t = manuscriptId
       ? await loadThread(manuscriptId, id)
       : await loadLivingWorkAskThread(work.id, id);
+    if (gen !== conversationGenRef.current) return;   // a later choice superseded this one
     setThreadId(id);
     if (t) setThread(t);
-    // A not-kept Sanctuary exchange belongs to the moment it happened in, never to another conversation.
-    setSanctuaryTurns([]);
   }, [manuscriptId, work.id]);
 
   /* ⭐ Design 2A (founder ruling 2026-11-02): the writer may set this
@@ -289,6 +299,7 @@ function ScopedWorkConversation({
     && (threadId !== null || decision?.kind === 'choose');
   const startFresh = () => {
     if (!canStartFresh || inFlightRef.current) return;
+    nextConversation();
     setThreadId(null);
     setThread(null);
     setDecision({ kind: 'fresh' });
@@ -390,6 +401,7 @@ function ScopedWorkConversation({
     if (mode.kind === 'blocked') return;
 
     const submittedRevision = draftRevisionRef.current;
+    const gen = conversationGenRef.current;
     inFlightRef.current = true;
     setReorientationOffered(false);
     setRefusal(null);
@@ -409,13 +421,17 @@ function ScopedWorkConversation({
             question,
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
           });
+      if (gen !== conversationGenRef.current) {
+        // The conversation on screen is no longer the one this answer belongs to; its text stays where it was.
+        return;
+      }
       if (r.ok) {
         // Text can be edited away and retyped identically. Compare edit
         // ownership, not string equality; read the live ref in the updater.
         setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
         if (r.sanctuary) {
           // Not kept: nothing was stored, so there is no thread to reload. Show the exchange here only.
-          setSanctuaryTurns((list) => [...list, { question: r.sanctuary!.question, answer: r.sanctuary!.answer }]);
+          setSanctuaryTurns((list) => [...list, { question: r.sanctuary!.question, answer: r.sanctuary!.answer, after: thread?.turns.length ?? 0 }]);
           if (r.threadId) { setThreadId(r.threadId); }
           if (r.thread) setThread(r.thread);
           if (onRead && manuscriptId) onRead([]);
@@ -459,6 +475,24 @@ function ScopedWorkConversation({
   }
 
   const turns = thread?.turns ?? [];
+  /* Not-kept Sanctuary exchanges, each shown in its place in time among the kept turns (G4 isolation). */
+  const sanctuaryAt = (pick: (after: number) => boolean) => {
+    const items = sanctuaryTurns.filter((entry) => pick(entry.after));
+    if (items.length === 0) return null;
+    return (
+      <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base, marginBottom: SPACE.base }}>
+        <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
+        {items.map((entry, n) => (
+          <div key={`s${entry.after}-${n}`} style={{ marginBottom: SPACE.base }} data-sanctuary-turn={entry.after}>
+            <StudioText role="metadata" tone="quiet">You</StudioText>
+            <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{entry.question}</StudioText>
+            <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
+            <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(entry.answer, 'work-conversation').text}</StudioText>
+          </div>
+        ))}
+      </div>
+    );
+  };
   const latestMaiaIndex = [...turns].reverse().find((x) => x.speaker === 'maia')?.index ?? null;
 
   return (
@@ -597,8 +631,10 @@ function ScopedWorkConversation({
           </StudioText>
         )}
 
-        {turns.map((t) => (
-          <div key={t.index} style={{ marginBottom: SPACE.base }} data-turn={t.index}>
+        {turns.length > 0 ? sanctuaryAt((after) => after === 0) : null}
+        {turns.map((t, position) => (
+          <Fragment key={t.index}>
+          <div style={{ marginBottom: SPACE.base }} data-turn={t.index}>
             <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.hairline }}>
               {t.speaker === 'maia' ? 'MAIA' : 'You'}
             </StudioText>
@@ -731,7 +767,10 @@ function ScopedWorkConversation({
               </div>
             ) : null}
           </div>
+          {position + 1 < turns.length ? sanctuaryAt((after) => after === position + 1) : null}
+          </Fragment>
         ))}
+        {sanctuaryAt((after) => after >= turns.length)}
 
         {chapterReading ? (
           <div data-chapter-reading={chapterReading.phase} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
@@ -740,19 +779,6 @@ function ScopedWorkConversation({
                 ? readingProgressText('MAIA is reading the chapter', chapterReading.now - chapterReading.startedAt)
                 : chapterReading.text}
             </StudioText>
-          </div>
-        ) : null}
-        {sanctuaryTurns.length > 0 ? (
-          <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base }}>
-            <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
-            {sanctuaryTurns.map((t, i) => (
-              <div key={`s${i}`} style={{ marginBottom: SPACE.base }}>
-                <StudioText role="metadata" tone="quiet">You</StudioText>
-                <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{t.question}</StudioText>
-                <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
-                <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(t.answer, 'work-conversation').text}</StudioText>
-              </div>
-            ))}
           </div>
         ) : null}
 
