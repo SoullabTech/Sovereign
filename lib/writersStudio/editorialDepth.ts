@@ -228,7 +228,7 @@ export const EDITORIAL_LEVELS_DIRECTIVE = [
  */
 export const EDITING_NAMES_DIRECTIVE = [
   'The Studio describes how far an edit may reach as Touch, Line, Passage, Shape and Open, and calls a commissioned look at a whole chapter a reading.',
-  'Use those plain names unless I ask what an editor would call them or I have chosen the Direct depth.',
+  'Use those plain names unless I ask what an editor would call them, which holds at every depth, or you have been asked to use the full editorial vocabulary.',
   'Then you may say that Touch is close to proofreading or a light copyedit, Line is a line edit, Passage sits between line and substantive editing, Shape is substantive or structural editing, Open is a rewrite, a reading is close to developmental editing, and copyediting is the consistency pass;',
   'say too that these terms are used differently by different publishers and editors.',
 ].join(' ');

@@ -152,11 +152,13 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
-export function workAskPromptHash(responseStyle?: ExplanationDepth, teachingAnchor?: TeachingAnchor): string {
-  /* G-3: like developmentalAskPromptHash, the per-turn style and teaching shape are part of what the hash names. */
+export function workAskPromptHash(responseStyle?: ExplanationDepth, teachingAnchor?: TeachingAnchor, hasHistory = false): string {
+  /* G-3: like developmentalAskPromptHash, the per-turn style and teaching shape are part of what the hash names.
+     Independent review (2026-11-09): the integrity rules differ between a first turn and a later one, so the hash names
+     whichever actually ran. */
   const style = responseStyle ? `\n${explanationInstruction(responseStyle)}` : '';
   const teaching = teachingAnchor ? `\n${teachingTurnInstruction(teachingAnchor)}` : '';
-  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}${style}${teaching}`).digest('hex');
+  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${workIntegrityRules(hasHistory)}${style}${teaching}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -607,7 +609,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor) : askPromptHash(),
+        promptHash: ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },

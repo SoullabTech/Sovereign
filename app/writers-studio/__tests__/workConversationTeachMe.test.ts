@@ -91,3 +91,19 @@ it('teach-me: no button where there is no manuscript (the Living Work route take
   if (cont) await act(async () => (cont as HTMLElement).click());
   expect(btn('teach-me')).toBeNull();
 });
+
+it('teach-me: no button when no passage is in view (review finding 4)', async () => {
+  mockLoadThread.mockResolvedValue(threadWith('X.\n[[studio:teach-me]]'));
+  await act(async () => { root.render(React.createElement(WorkConversation, { work, manuscriptId: 'fictional-manuscript', sectionId: null, onClose: jest.fn() } as never)); });
+  const cont = Array.from(host.querySelectorAll('button')).find((b) => /continue|Continue/.test(b.textContent ?? ''));
+  if (cont) await act(async () => (cont as HTMLElement).click());
+  expect(btn('teach-me')).toBeNull();
+});
+
+it('teach-me: a failed teaching turn does not claim the question is in the box (review finding 6)', async () => {
+  mockAsk.mockResolvedValue({ ok: false, refusal: 'not_answered' });
+  await mount('X.\n[[studio:teach-me]]');
+  await act(async () => btn('teach-me')!.click());
+  expect(host.textContent).toContain('couldn’t answer the Teach me this time');
+  expect(host.textContent).not.toContain('your question is still in the box');
+});

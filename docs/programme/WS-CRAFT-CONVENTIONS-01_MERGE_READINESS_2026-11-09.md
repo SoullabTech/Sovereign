@@ -129,3 +129,30 @@ witness.
 - **Academy library:** ACAD-3 (the founder writes the ideas) and ACAD-4 (wiring) are not started.
 - **Mechanical count check:** not built (decision above). Revisit only if writers notice
   miscounts.
+
+## 7. Independent review (2026-11-09; founder: "Run the review")
+
+A separate reviewer was given the eight runtime files, the intent and the hard constraints, but not
+this session's conclusions. It made a read-only review of `git diff 6f91eda56..HEAD`. Each finding
+was then checked against the code by this session.
+
+| # | Finding | Verified | Disposition |
+|---|---|---|---|
+| 1 | `workAskPromptHash` always hashed the full integrity rule, while a first turn runs only text accuracy, so the hash named a prompt that did not run | **Real** (high) | **Fixed:** the hash takes `hasHistory` and names `workIntegrityRules(hasHistory)`; `askMaia` passes `history.length > 0`. Test: first and later turns carry different, matching hashes. |
+| 2 | "or I have chosen the Direct depth" can never fire: no prompt names a depth "Direct", and Develop uses a different depth vocabulary | **Real** (wording) | **Fixed:** the wording now says "…unless I ask what an editor would call them, which holds at every depth, or you have been asked to use the full editorial vocabulary". That matches Direct's own text ("Use the full editorial vocabulary"). It is drafted under the ruling-3 delegation. |
+| 3 | Guided ("no technical terms, do not define them") contradicts giving names on request | **Partly**: run 10 showed Guided giving "line edit" when asked | **Fixed with 2:** "which holds at every depth" states the precedence. |
+| 4 | Teach me can be offered with no passage in view (no `sectionId`), so MAIA is asked to teach "this passage" with none | **Real** | **Fixed:** no button without a passage in view. Test added. |
+| 5 | A Teach me button from before Sanctuary stays clickable after Sanctuary is turned on, and sends a teaching turn there | **Real, judged not a violation** | A teaching reply is ordinary conversation. Sanctuary keeps nothing, and nothing is granted, saved or read beyond what the turn already has. The same holds for other non-acting offers. Recorded, not changed. |
+| 6 | A failed Teach me showed "your question is still in the box", when the box holds the writer's unrelated draft | **Real** | **Fixed:** its own message ("…Nothing you wrote was changed; press it again…"). Test added. |
+| 7 | The Living Work route never sets `sanctuary`, so in Sanctuary MAIA is still told about grant-reading and the other offers there | **Real**, in the other session's Sanctuary fix | **Handed to that session** with the fix suggested. Not changed here (their file). |
+| 8 | Some prompt parts (Sanctuary text, the studio guide and actions instruction) are not in the hash | **Real, mostly pre-existing** | Recorded. Hashing the whole composed prompt would be its own change, coordinated with the hash's other users. |
+
+**Gates after the fixes.**
+- `lib/manuscript/ask`, the Teach-me and convention suites: the only failure is `askSourceCloseout`,
+  which was already failing.
+- Wider run (`app/writers-studio`, `app/dev`, `lib/writersStudio`): only suites already failing
+  before this lane.
+- Typecheck: 214 against a baseline of 214.
+
+**Effect on §5.** Gate 1 (independent review) is done for this lane's files, apart from finding 7 (the
+other lane's) and finding 8 (recorded). Gates 2–4 remain.

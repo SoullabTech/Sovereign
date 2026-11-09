@@ -138,6 +138,8 @@ const REORIENTATION_PROMPT = [
   'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
 ].join('\n');
 
+/* Review (2026-11-09): a failed Teach me never touched the box, so it must not say the question is still there. */
+const TEACH_NOT_ANSWERED = 'MAIA couldn’t answer the Teach me this time. Nothing you wrote was changed; press it again when you’re ready.';
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
@@ -495,10 +497,10 @@ function ScopedWorkConversation({
       }
       // Refusals must retain literal text and any server-returned thread id.
       if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
-      setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.not_answered);
+      setRefusal(teach ? TEACH_NOT_ANSWERED : REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.not_answered);
     } catch {
       // A transport error is an ambiguous delivery, never an automatic retry.
-      setRefusal(REFUSAL_SAYS.unreachable);
+      setRefusal(teach ? TEACH_NOT_ANSWERED : REFUSAL_SAYS.unreachable);
     } finally {
       inFlightRef.current = false;
       setPending(null);
@@ -717,6 +719,7 @@ function ScopedWorkConversation({
               const chapterName = offered.id === 'go-chapter' && parsed.target ? chapterLabel?.(parsed.target) ?? null : null;
               if (offered.id === 'go-chapter' && !chapterName) return null;   // ⛔ an id not in this Work is no button
               if ((offered.id === 'show-keeps' || offered.id === 'open-in-maia' || offered.id === 'teach-me') && !manuscriptId) return null;
+              if (offered.id === 'teach-me' && !sectionId) return null;   // review: a passage teaching turn needs a passage in view
               const mine = latestAuthorWords(thread?.turns ?? []);
               const run = () => {
                 if (offered.id === 'grant-reading') { void performAct({ id: 'grant-reading', level: parsed.level ?? 'chapter' }); return; }

@@ -57,7 +57,7 @@ describe('the Work conversation carries the convention rulings', () => {
     const { promptHash } = await systemFor(ctx(false));
     expect(promptHash).toBe(workAskPromptHash());
     const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
-    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_LEVELS_RULES}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}${style}${teaching}`)");
+    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_LEVELS_RULES}\\n${WORK_CONVENTION_RULES}\\n${workIntegrityRules(hasHistory)}${style}${teaching}`)");
   });
 
   it('defeat candidate: the Work prompt as it was before (no rules) fails the guard', async () => {
@@ -150,5 +150,22 @@ describe('the Work conversation takes the writer\'s working style and a Teach me
     expect(route).toContain('responseStyle, teachingAnchor });');
     expect(route).toContain('...(responseStyle ? { responseStyle } : {}),');
     expect(route).toContain('...(teachingAnchor ? { teachingAnchor } : {}) };');
+  });
+});
+
+/** Independent review (2026-11-09), finding 1: the hash must name the integrity rules that actually ran. */
+describe('the Work prompt hash follows the turn', () => {
+  it('a first turn and a later turn ran different prompts, so they carry different hashes', async () => {
+    mockRun.mockReset();
+    mockRun.mockResolvedValue({
+      ok: true,
+      result: { content: [{ type: 'text', text: 'A reply.' }] as never, stopReason: 'end_turn',
+        usage: { inputTokens: 1, outputTokens: 1 }, provenance: { provider: 'anthropic', model: 'm', latencyMs: 1 } },
+    } as never);
+    const first = await askMaia(ctx(false), [], 'Q');
+    const later = await askMaia(ctx(false), [{ speaker: 'author', body: 'Earlier.' }, { speaker: 'maia', body: 'Reply.' }], 'Q');
+    expect(first.ok && first.provenance.promptHash).toBe(workAskPromptHash(undefined, undefined, false));
+    expect(later.ok && later.provenance.promptHash).toBe(workAskPromptHash(undefined, undefined, true));
+    expect(workAskPromptHash(undefined, undefined, true)).not.toBe(workAskPromptHash(undefined, undefined, false));
   });
 });
