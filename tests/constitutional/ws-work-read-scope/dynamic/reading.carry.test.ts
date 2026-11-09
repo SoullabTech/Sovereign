@@ -139,6 +139,25 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     expect(turns.rows.at(-1)!.body).not.toContain('you wrote "the harbour keeps every name it is given"');   // but not present it as the writer's text
   });
 
+  it('FAILURE INJECTION: if her answer cannot be saved, its provenance is not saved either, and the writer is told — nothing is silently lost', async () => {
+    CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
+    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work' }) }), { params: Promise.resolve({ id: ms }) });
+    await query(`CREATE OR REPLACE FUNCTION g6_fail_maia() RETURNS trigger AS $$ BEGIN IF NEW.speaker = 'maia' THEN RAISE EXCEPTION 'injected'; END IF; RETURN NEW; END; $$ LANGUAGE plpgsql`);
+    await query(`CREATE TRIGGER g6_fail_maia_trigger BEFORE INSERT ON ask_turns FOR EACH ROW EXECUTE FUNCTION g6_fail_maia()`);
+    let status = 0; let threadId: string | undefined;
+    try {
+      const r = await post(A, { anchor: { on: 'work' }, question: 'Where does the hiker come back?', sectionId: sec[2], sanctuary: false }).catch(() => ({ status: 500, json: {} as Record<string, any> }));
+      status = r.status; threadId = r.json.threadId;
+    } finally {
+      await query(`DROP TRIGGER IF EXISTS g6_fail_maia_trigger ON ask_turns`);
+    }
+    expect(status).toBeGreaterThanOrEqual(500);                                                // the writer sees a failure, never a silent half-record
+    if (threadId) {
+      const rows = await query(`SELECT 1 FROM ask_turns WHERE thread_id=$1 AND speaker='maia' AND answer_provenance ? 'suppliedSections'`, [threadId]);
+      expect(rows.rows.length).toBe(0);                                                         // no orphan provenance: it exists only with an answer
+    }
+  });
+
   it('with reading permission she ALSO gets the text, as before; the reading stays labelled as her account', async () => {
     CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
     await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work' }) }), { params: Promise.resolve({ id: ms }) });
@@ -146,5 +165,8 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     expect(last()).toContain('THE WRITER HAS GIVEN YOU STANDING PERMISSION');
     expect(last()).toContain('YOUR EARLIER READINGS OF THIS WORK');
     expect(last()).toContain('When she returned, the hiker with the map was gone.');
+    const prov = await query<{ p: { suppliedSections?: { sectionId: string; digest: string }[] } }>(
+      `SELECT answer_provenance p FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1 AND t.speaker='maia' ORDER BY t.created_at DESC LIMIT 1`, [A]);
+    expect(prov.rows[0]!.p.suppliedSections?.some((x) => x.sectionId === sec[2])).toBe(true);   // what she was supplied is in her answer's own row
   });
 });

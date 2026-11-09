@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { query } from '@/lib/db/postgres';
 import { appendScopeEvent } from '@/lib/disclosure/workReadScopeWrite';
-import { loadActiveGrant, recordTurnReads, loadEarlierDigests } from '@/lib/disclosure/workReadScopeRead';
+import { loadActiveGrant, loadEarlierDigests } from '@/lib/disclosure/workReadScopeRead';
 import { mintDisclosureAttempt, confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import { randomUUID } from 'crypto';
 
@@ -81,15 +81,15 @@ d('Work reading scope · physical witness', () => {
     }
   });
 
-  it('what was supplied each turn is recorded, latest wins, member-scoped, append-only', async () => {
-    const s1 = { id: randomUUID(), label: null, body: 'x', digest: dig('a') };
-    await recordTurnReads(thread, A, 1, [s1]);
-    await recordTurnReads(thread, A, 3, [{ ...s1, digest: dig('b') }]);
-    expect((await loadEarlierDigests(thread, A)).get(s1.id)).toBe(dig('b'));
+  it('what was supplied each turn is read from her answers\' own rows: latest wins, member-scoped, immutable', async () => {
+    const sid = randomUUID();
+    const maia = (i: number, digest: string) => query(`INSERT INTO ask_turns (thread_id, turn_index, speaker, body, staleness, answer_provenance)
+      VALUES ($1,$2,'maia','an answer','{}'::jsonb,$3::jsonb)`, [thread, i, JSON.stringify({ suppliedSections: [{ sectionId: sid, digest }] })]);
+    await maia(1, dig('a'));
+    await maia(3, dig('b'));
+    expect((await loadEarlierDigests(thread, A)).get(sid)).toBe(dig('b'));
     expect((await loadEarlierDigests(thread, B)).size).toBe(0);                          // other member reads nothing
-    await recordTurnReads(thread, B, 5, [{ ...s1, digest: dig('c') }]);                  // other member cannot write
-    expect((await loadEarlierDigests(thread, A)).get(s1.id)).toBe(dig('b'));
-    expect(await rejects(`UPDATE ask_turn_reads SET body_digest='z' WHERE thread_id=$1`, [thread])).toBe(true);
+    expect(await rejects(`UPDATE ask_turns SET answer_provenance='{}'::jsonb WHERE thread_id=$1`, [thread])).toBe(true);   // immutable with the answer
   });
 
   it('REVIEW FIX · a Work that has a standing-read receipt can still be removed (the receipt may dangle; it must not block)', async () => {

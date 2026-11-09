@@ -18,10 +18,8 @@
 --      constituted value (a re-statement that omits one DROPS it).
 --   3. context_disclosure_receipts.scope_event_id — the authority a standing
 --      crossing was made under; present iff the basis is standing_authorization.
---   4. ask_turn_reads — which saved sections' text was supplied to MAIA on which
---      turn, with a digest of the bytes supplied, so a later turn can say "that
---      passage has changed since I quoted it". Conversation metadata owned by the
---      member; deliberately NOT on the receipt, which refuses digests.
+--   4. (no table) which saved sections were supplied on a turn is recorded in that answer's own row
+--      (ask_turns.answer_provenance.suppliedSections), saved with the answer or not at all, immutable like it.
 
 BEGIN;
 SET LOCAL lock_timeout = '5s';
@@ -156,27 +154,6 @@ DROP TRIGGER IF EXISTS context_disclosure_receipt_scope_immutable_trigger ON con
 CREATE TRIGGER context_disclosure_receipt_scope_immutable_trigger BEFORE UPDATE ON context_disclosure_receipts
   FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_scope_immutable();
 
--- ── 4 · what was supplied on which turn ─────────────────────────────────────
-CREATE TABLE IF NOT EXISTS ask_turn_reads (
-  thread_id    UUID NOT NULL REFERENCES ask_threads(id) ON DELETE CASCADE,
-  turn_index   INTEGER NOT NULL CHECK (turn_index >= 0),
-  section_id   UUID NOT NULL,
-  -- sha256 of the exact bytes supplied. A moved-text check, never a locator.
-  body_digest  TEXT NOT NULL,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (thread_id, turn_index, section_id)
-);
-
-CREATE OR REPLACE FUNCTION ask_turn_reads_no_update() RETURNS trigger AS $$
-BEGIN
-  RAISE EXCEPTION '[ASK] ask_turn_reads is append-only — UPDATE refused';
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS ask_turn_reads_no_update_trigger ON ask_turn_reads;
-CREATE TRIGGER ask_turn_reads_no_update_trigger
-  BEFORE UPDATE ON ask_turn_reads
-  FOR EACH ROW EXECUTE FUNCTION ask_turn_reads_no_update();
 
 COMMENT ON TABLE work_reading_scope_events IS
 'Append-only member grant/revoke of MAIA''s standing permission to read the saved text of a Work inside the Work conversation. State is derived from the latest event for (member, Work). Nothing inferred, no default grant. Distinct from, and does not mutate, the single-use S3 authorization.';
@@ -184,12 +161,11 @@ COMMENT ON TABLE work_reading_scope_events IS
 COMMENT ON COLUMN context_disclosure_receipts.scope_event_id IS
 'The standing reading-scope grant under which this crossing was made. Present if and only if participation_basis = standing_authorization. Immutable. Not a foreign key: it may dangle after the Work is removed, by design.';
 
-COMMENT ON TABLE ask_turn_reads IS
-'Which saved sections were supplied to MAIA on which Work-conversation turn, with a digest of the supplied bytes. Used only to tell the writer when a passage MAIA quoted earlier has since changed. Not a receipt and not a copy of the text.';
+
 
 COMMIT;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Migration 20261108000001: Work reading scope events, standing receipt vocabulary, ask_turn_reads';
+  RAISE NOTICE 'Migration 20261108000001: Work reading scope events, standing receipt vocabulary';
 END $$;

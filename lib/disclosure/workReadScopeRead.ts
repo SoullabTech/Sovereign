@@ -46,23 +46,17 @@ export async function loadSectionSizes(manuscriptId: string, memberId: string): 
 }
 
 /** Latest digest MAIA was given for each section earlier in this thread. */
+/**
+ * Latest digest MAIA was given for each section earlier in this thread. Read from her answers' own rows
+ * (answer_provenance.suppliedSections): what she was supplied is saved WITH the answer, so it cannot be silently lost.
+ */
 export async function loadEarlierDigests(threadId: string, memberId: string): Promise<Map<string, string>> {
   const r = await query<{ section_id: string; body_digest: string }>(
-    `SELECT DISTINCT ON (r.section_id) r.section_id, r.body_digest
-       FROM ask_turn_reads r JOIN ask_threads t ON t.id = r.thread_id
-      WHERE r.thread_id = $1 AND t.member_id = $2
-      ORDER BY r.section_id, r.turn_index DESC`, [threadId, memberId]);
+    `SELECT DISTINCT ON (x->>'sectionId') x->>'sectionId' AS section_id, x->>'digest' AS body_digest
+       FROM ask_turns tu JOIN ask_threads t ON t.id = tu.thread_id
+       CROSS JOIN LATERAL jsonb_array_elements(COALESCE(tu.answer_provenance->'suppliedSections', '[]'::jsonb)) x
+      WHERE tu.thread_id = $1 AND t.member_id = $2 AND tu.speaker = 'maia'
+      ORDER BY x->>'sectionId', tu.turn_index DESC`, [threadId, memberId]);
   return new Map(r.rows.map((x) => [x.section_id, x.body_digest]));
-}
-
-export async function recordTurnReads(
-  threadId: string, memberId: string, turnIndex: number, reads: readonly SuppliedSection[],
-): Promise<void> {
-  for (const s of reads) {
-    await query(
-      `INSERT INTO ask_turn_reads (thread_id, turn_index, section_id, body_digest)
-       SELECT t.id, $2, $3, $4 FROM ask_threads t WHERE t.id = $1 AND t.member_id = $5
-       ON CONFLICT DO NOTHING`, [threadId, turnIndex, s.id, s.digest, memberId]);
-  }
 }
 

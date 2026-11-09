@@ -53,7 +53,7 @@ import {
 import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manuscript/ask/askReader';
-import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
+import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests } from '@/lib/disclosure/workReadScopeRead';
 import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
 import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
@@ -745,12 +745,15 @@ async function workTurn(input: {
 
   const maiaIndex = await appendTurn({
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
-    staleness, answerProvenance: carriedReadings.readings.length > 0
-      ? { ...outcome.provenance, carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) }
-      : outcome.provenance,
+    /* ⭐ PROVENANCE IS PART OF THE ANSWER. What she was supplied and which readings she was given are saved in THIS row, atomically
+       with her words, and the row is immutable (ask_turns refuses UPDATE). If the row is not saved, neither is the answer: there is
+       no separate best-effort write that can fail silently after the answer exists. */
+    staleness, answerProvenance: {
+      ...outcome.provenance,
+      ...(carriedReadings.readings.length > 0 ? { carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) } : {}),
+      ...(supplied.length > 0 ? { suppliedSections: supplied.map((x) => ({ sectionId: x.id, digest: x.digest })) } : {}),
+    },
   });
-  /* The turn is already saved: a failed read-record must never turn a good answer into a 500 (a retry would duplicate the turn). */
-  if (supplied.length > 0) { try { await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied); } catch { console.error('[WORK-READ] could not record what was supplied this turn'); } }
 
   const thread = await loadThread(liveThreadId, memberId);
   /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */

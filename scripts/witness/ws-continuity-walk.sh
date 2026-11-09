@@ -113,7 +113,7 @@ up() {
     echo "  pass $pass: $ok clean, $bad refused"
   done
   P -d walk_fictional -c "ALTER TABLE members ADD COLUMN IF NOT EXISTS must_reset_password boolean DEFAULT false" >/dev/null
-  n=$(P -d walk_fictional -c "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('work_reading_scope_events','writer_decision_events','ask_turn_reads')")
+  n=$(P -d walk_fictional -c "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('work_reading_scope_events','writer_decision_events','development_plans')")
   [ "$n" = "3" ] || { echo "the three new tables are missing ($n/3) — stopping"; down; exit 3; }
 
   PWHASH='$2b$12$OawyGAFeyQo9AaRCCWqkNuYi6brcwutNJ6Mn.vAdghF54eMiIn75O'   # bcrypt of the fictional password shown below

@@ -120,6 +120,8 @@ export interface AskAnswerProvenance {
   answeredAt: string;
   /** G6 · which of her completed readings she was given for this answer (ids and revisions; never text). Saved with the answer, atomically. */
   carriedReadings?: readonly { readingId: string; revisionNumber: number }[];
+  /** Which saved sections' text she was supplied for this answer, with a digest of the exact bytes (never the text). Saved with the answer. */
+  suppliedSections?: readonly { sectionId: string; digest: string }[];
 }
 
 export type AskOutcome =
