@@ -17,6 +17,8 @@ export LC_ALL=en_US.UTF-8
 P() { "$PSQL_BIN" -X -q -At -h 127.0.0.1 -p "$PGPORT" -U fictional "$@"; }
 
 down() {
+  # The harness process, its own children (scoped by parent id, never by name), and the server it recorded.
+  [ -f "$STATE/app.pid" ]  && pkill -P "$(cat "$STATE/app.pid")" 2>/dev/null || true
   [ -f "$STATE/app.pid" ]  && kill "$(cat "$STATE/app.pid")"  2>/dev/null || true
   # Only processes this harness recorded itself (never a pattern match that could hit another project).
   [ -f "$STATE/next.pid" ] && kill "$(cat "$STATE/next.pid")" 2>/dev/null || true
