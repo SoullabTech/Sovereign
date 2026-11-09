@@ -288,3 +288,55 @@ are kept as written, and they are superseded as findings.
 
 The longer replies are the most organized ones. On the founder's terms, run 8 shows no
 organization or level-fit failure.
+
+## 10. Studio walk of the editorial levels (harness :3111, real model, fictional "The Long Harbour")
+
+Judged on level-fit and organization (§9.1).
+
+| Path | Writer asked | Level-fit | Organization |
+|---|---|---|---|
+| Develop | "Thinking about the book as a whole, what does this opening promise a reader?" | "At the level of the whole book…"; separates what the two sentences establish from what she infers; stays at the whole | Promise, then how it relates to the writer's stated purpose, then one open point, then one closing choice ("look at what the four sections, as a sequence, seem to promise… or stay with what the opening alone sets up?") |
+| Develop | "Can you help me tighten the first sentence? I might cut this whole chapter later, though." | Asks **once, first**: "is this chapter staying, or is that still open?", with the reason (work spent twice) | Short; states what she will do once the writer answers |
+| Develop | "It's staying. Is 'counting the boats that were not there' too neat?" | Does **not** ask again; answers at phrase level | Main point first (two things at once), then the two reader responses, then what keeps it from being too neat, then one choice |
+| Passage Focus | "How does this sentence move?" (second sentence selected) | Stays with the sentence | Three steps named, then why it lands, then what she would need to know, then one question |
+| Passage Focus | "Show me how to tighten it, though I might cut this scene later." | Asks **once**, then honours the request: "Taking the ask at face value…" | One change, with gain and cost, and a question; handed to the writer as "One change to your words" with Use it / Change it / Talk about it / Keep mine (not applied) |
+
+**Verdict:** the levels hold in both real paths. MAIA answers at the level asked and names it at
+the whole-book level. The single "is it staying?" question comes once, in both paths, and is not
+repeated after the writer answers. In Passage Focus the writer's request is still honoured after
+the question.
+
+**Accuracy slips again, in the real Studio:**
+- "counting the boats that were not there" called six words (it is seven), Develop.
+- "the two 'that' constructions stacking near the end" (there is one), Passage Focus. Her next
+  turn reworded this as "two small joining words".
+
+These are the same count and position problem as before. They should be measured repeatedly
+before any change.
+
+## 11. G-5 · the "where next" act (finding, not changed)
+
+`lib/writersStudio/passageActs.ts`, act `where-next`, reachable from the live Write view
+(`app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx`, "Ask MAIA where next"). Server
+instruction:
+
+> Which one or two exact passages should I consider next? / Use only the text already authorized
+> in this conversation. If that is insufficient, ask me to choose. / Do not move focus or propose a
+> revision.
+
+**Finding.** The writer asks for this, so it is solicited. But it asks MAIA to *choose* one or two
+next passages. The instruction does not say on what basis, and nothing stops the choice from being
+an importance ranking. Convergence §4 dissolved ranking and allows prioritization only as an
+"explicitly commissioned act"; the mentor research's T2/T3 (recommended, not ratified) say "MAIA
+asks where to begin rather than selecting a presumed priority". The text was moved under the F1
+custody ruling and "not reworded", so changing it is a founder ruling.
+
+**Options:**
+- **(a)** Keep it as the writer's explicit commission, with a basis stated: MAIA names passages
+  that relate to the writer's own focus in this conversation, in manuscript order, says how each
+  relates, and does not call either more important.
+- **(b)** T2: MAIA asks what the writer wants to work on and offers that as the choice, naming no
+  passage.
+- **(c)** Leave as is.
+
+Recommended: (a). It keeps the writer's act meaningful and removes the unstated ranking.
