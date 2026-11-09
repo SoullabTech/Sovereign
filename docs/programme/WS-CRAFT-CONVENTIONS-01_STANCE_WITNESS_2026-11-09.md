@@ -505,3 +505,43 @@ amendment-2 pattern.
 - The click sent "Teach me about the writing in this passage." MAIA replied in the teaching shape:
   one craft idea ("you let us see Marta's attention before we see Marta"), an exact quotation, and
   "Would you like to look at why that lands, or at what it costs?"
+
+### 12.1 Incidental counts, measured (no wording change)
+
+- **Instrument:** `tests/witness/craft-conventions/incidentalCountsMeasure.ts`.
+- **Cases:** four editorial questions that tend to produce side remarks about length ("Tighten the
+  last sentence", "Is the rhythm too even?", "Which sentences feel short?", "Could the third
+  sentence be shorter?") × three fictional passages × two repeats × both paths, making 48
+  replies. The run is `runs/2026-11-09-incidental-counts.json`.
+- **How it was scored:** the extractor recognised 19 claims. Of its 5 flagged misses, 4 were its
+  own errors (a pair "four and five", a range "six to eight", "the last one", "leaving two
+  words"). To capture what the patterns missed, all **44** "N words" mentions were then read by
+  hand against the true lengths.
+
+**Result: 3 genuine slips in 44 mentions (about 7%), in 3 of 48 replies.**
+
+| Path, passage | What MAIA said | True |
+|---|---|---|
+| Passage Focus, "Mara" · tighten the last sentence | cutting "the color of" is "four words out" | three |
+| Develop, rain passage · which sentences feel short | "Then it stopped." "— four words" | three |
+| Develop, "Mara" · is the rhythm too even | "roughly six, eight, seven, thirteen, four, five, six, thirteen" | 6, 8, 6, 12, 4, 5, 6, 12 |
+
+Every other passing count was right. That includes the long sentence ("twenty-eight"), the
+falling lengths ("twenty-two… nine… three… one"), the tie at twelve, and "the same as the
+opening sentence".
+
+**Where the slips cluster:**
+- (a) the arithmetic of what an edit removes;
+- (b) reeling off every sentence's length when nobody asked for the numbers.
+
+They are rare and small, and they never touched a quotation. Quotations stayed exact throughout
+§12.
+
+**Options (a founder decision; no change made):**
+- **(i)** Accept: 93% on side remarks, and 100% when the count is the question.
+- **(ii)** Add one sentence beside the text-accuracy rule, for example: "When a count or length
+  is not what I asked about, leave it out, or say it only after checking it word by word." This is
+  new wording, so it needs a ruling and a before/after measurement with this same instrument.
+
+Recommended: **(ii)**. It targets exactly the two clusters, it can be measured, and it removes
+numbers the writer did not ask for, which is in the spirit of ruling 8.
