@@ -57,7 +57,7 @@ describe('the Work conversation carries the convention rulings', () => {
     const { promptHash } = await systemFor(ctx(false));
     expect(promptHash).toBe(workAskPromptHash());
     const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
-    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_LEVELS_RULES}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}`)");
+    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_LEVELS_RULES}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}${style}${teaching}`)");
   });
 
   it('defeat candidate: the Work prompt as it was before (no rules) fails the guard', async () => {
@@ -104,5 +104,51 @@ describe('the Work conversation carries the accuracy and integrity rules', () =>
   it('defeat candidate: the Work prompt as it was before G-1 fails the guard', async () => {
     const system = await systemWith([]);
     expect(system.replace(TEXT_ACCURACY_DIRECTIVE, '').includes(TEXT_ACCURACY_DIRECTIVE)).toBe(false);
+  });
+});
+
+/** G-3 (founder: "whatever is best practice", 2026-11-09): the writer's working style and a Teach me reach the Work conversation. */
+describe('the Work conversation takes the writer\'s working style and a Teach me', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { explanationInstruction } = require('@/lib/writersStudio/workingStyle') as typeof import('@/lib/writersStudio/workingStyle');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { teachingTurnInstruction } = require('@/lib/writersStudio/teachingTurn') as typeof import('@/lib/writersStudio/teachingTurn');
+
+  async function run(extra: Record<string, unknown>) {
+    mockRun.mockReset();
+    mockRun.mockResolvedValue({
+      ok: true,
+      result: { content: [{ type: 'text', text: 'A reply.' }] as never, stopReason: 'end_turn',
+        usage: { inputTokens: 1, outputTokens: 1 }, provenance: { provider: 'anthropic', model: 'm', latencyMs: 1 } },
+    } as never);
+    const out = await askMaia({ ...ctx(false), ...extra } as AskContext, [], 'Teach me about this.');
+    return { system: String(mockRun.mock.calls[0]![0].system), hash: out.ok ? out.provenance.promptHash : null };
+  }
+
+  it('sends neither unless the writer chose them', async () => {
+    const { system, hash } = await run({});
+    expect(system).not.toContain(explanationInstruction('plain'));
+    expect(system).not.toContain(teachingTurnInstruction('passage'));
+    expect(hash).toBe(workAskPromptHash());
+  });
+
+  it('composes the writer\'s working style and names it in the hash', async () => {
+    const { system, hash } = await run({ responseStyle: 'plain' });
+    expect(system).toContain(explanationInstruction('plain'));
+    expect(hash).toBe(workAskPromptHash('plain'));
+    expect(hash).not.toBe(workAskPromptHash());
+  });
+
+  it('composes the teaching turn for a pressed Teach me and names it in the hash', async () => {
+    const { system, hash } = await run({ teachingAnchor: 'passage' });
+    expect(system).toContain(teachingTurnInstruction('passage'));
+    expect(hash).toBe(workAskPromptHash(undefined, 'passage'));
+  });
+
+  it('the route forwards both into the Work conversation', () => {
+    const route = fs.readFileSync(path.join(process.cwd(), 'app/api/sovereign/manuscripts/[id]/ask/route.ts'), 'utf8');
+    expect(route).toContain('responseStyle, teachingAnchor });');
+    expect(route).toContain('...(responseStyle ? { responseStyle } : {}),');
+    expect(route).toContain('...(teachingAnchor ? { teachingAnchor } : {}) };');
   });
 });

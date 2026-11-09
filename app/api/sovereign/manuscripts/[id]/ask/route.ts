@@ -423,7 +423,8 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ keep: studioPosture.witness, manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, posture: turnPosture, postureKnown: postureDeclared });
+                      question, sectionId: bodySectionId, posture: turnPosture, postureKnown: postureDeclared,
+                      responseStyle, teachingAnchor });
   }
 
   if (!reading) {
@@ -588,8 +589,11 @@ async function workTurn(input: {
   posture: TurnPosture;
   /** True only when the caller explicitly stated its Sanctuary posture. Unstated ⇒ the standing read fails closed. */
   postureKnown: boolean;
+  /** WS-CRAFT-CONVENTIONS-01 · G-3: the writer's working style and a pressed Teach me. */
+  responseStyle?: ExplanationDepth;
+  teachingAnchor?: TeachingAnchor;
 }): Promise<NextResponse> {
-  const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown } = input;
+  const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown, responseStyle, teachingAnchor } = input;
   const keep = input.keep as KeepWitness;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
@@ -735,7 +739,10 @@ async function workTurn(input: {
       return was !== undefined && was !== digestOf(built.facts.locus!.body); })());
   const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings, locusMovedSinceEarlier,
     /* Walk 2026-11-09: in Sanctuary she suggested granting reading permission. She is now told she is in Sanctuary (and what it refuses). */
-    sanctuary: posture.sanctuary === true };
+    sanctuary: posture.sanctuary === true,
+    /* WS-CRAFT-CONVENTIONS-01 · G-3: the writer's working style and a pressed Teach me reach the Work conversation, as they do the observation dialogue. */
+    ...(responseStyle ? { responseStyle } : {}),
+    ...(teachingAnchor ? { teachingAnchor } : {}) };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that

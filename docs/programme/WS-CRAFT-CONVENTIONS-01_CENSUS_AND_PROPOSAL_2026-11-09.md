@@ -242,8 +242,13 @@ depth texts byte-identical.
 | 2. Stance directive: content and wording | **APPROVED** ("Approve wording"), §4.2a rules 1–7 exactly as drafted | 2026-11-09 | The text is fixed. Changing it means a new ruling, not an edit. |
 | 2 (cont.) Implement and witness | **AUTHORIZED** ("Implement and witness") | 2026-11-09 | Implemented in `editorialDepth.ts` (commit `2a49e3a34`). The instruction-level witness is in `WS-CRAFT-CONVENTIONS-01_STANCE_WITNESS_2026-11-09.md`. Not merged, not deployed. |
 | 8. Writer-directed editorial attention | **APPROVED** (founder, 2026-11-09; §6b) | 2026-11-09 | A separate ruling. **The seven approved rules are unchanged, word for word.** |
+| 3. Professional-name map | **Best practice → recommended option** (founder: "whatever is best practice", 2026-11-09) | 2026-11-09 | Plain names stay. MAIA gives the professional name on request and at Direct. Implemented as `EDITING_NAMES_DIRECTIVE` (wording drafted by Claude under this delegation; witnessed, stance record §13). |
+| 4. Style sheet | **Best practice → hold** (same delegation) | 2026-11-09 | Direction kept, nothing built. A storage census comes first, after Jondi's walk. Rule 4 already works from choices visible in the passage. |
+| 5. Publishing reference | **Best practice → conversation only** (same delegation) | 2026-11-09 | No change needed: rules 1 and 5 already govern it (practice varies by publisher, market and date; no unsupported figure). No library entry until Door 2. |
+| 6. Claude drafting craft ideas | **Best practice → no drafting** (same delegation) | 2026-11-09 | The standing ACAD-1 ruling ("the founder authors"; "Claude drafts no craft idea unless asked") is not overridden by a general delegation. The founder can still ask for drafts. |
+| 7. Order against the Academy roadmap | **Best practice → no reorder** (same delegation) | 2026-11-09 | The stance changes add no capability and ran alongside the roadmap. Jondi's walk and the founder-written library keep their place. |
 
-Still open: items 3–7.
+Still open: none of items 1–8. The Academy library (ACAD-3) and its wiring (ACAD-4) remain separate founder acts.
 
 ## 6b. Ruling 8 — Writer-directed editorial attention (founder, 2026-11-09)
 

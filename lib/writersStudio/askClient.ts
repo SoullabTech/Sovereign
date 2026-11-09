@@ -98,6 +98,10 @@ export async function ask(input: {
   sectionId?: string;
   /** The member's CURRENT Sanctuary posture. When omitted, the client declares it from saved settings (none saved ⇒ ordinary); unreadable ⇒ undeclared. */
   sanctuary?: boolean | 'no_live_settings';
+  /** G-3: the writer's working-style preference (as the observation dialogue sends it). */
+  responseStyle?: ExplanationDepth;
+  /** G-3: the Teach me pressed. The server owns the teaching shape. */
+  teachingAnchor?: TeachingAnchor;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -109,6 +113,8 @@ export async function ask(input: {
           : { anchor: input.anchor }),
         question: input.question,
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+        ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+        ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
         // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
         ...(input.sanctuary !== undefined ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),

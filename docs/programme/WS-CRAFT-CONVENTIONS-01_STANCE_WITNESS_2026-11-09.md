@@ -424,3 +424,42 @@ count is a side remark.
   would be new wording, so it is a founder act.
 
 No change has been made.
+
+## 13. Ruling 3 (professional names) and G-3 (working style and Teach me in Develop)
+
+Founder, 2026-11-09: "whatever is best practice" (proposal §6a; design §9).
+
+**Changes.**
+- `EDITING_NAMES_DIRECTIVE` (`editorialDepth.ts`) is composed after the levels directive at every
+  depth. It is also part of `WORK_LEVELS_RULES` in the Develop/Work prompt. The Studio's plain
+  names stay; the professional names are given on request or at Direct, with the note that usage
+  varies.
+- G-3 server side:
+  - `askReader` `WorkContext` takes `responseStyle` (the writer's existing working-style
+    preference, as Develop's observation dialogue sends it) and `teachingAnchor`, composing
+    `explanationInstruction` and `teachingTurnInstruction`. `workAskPromptHash(style, anchor)` names
+    them, as `developmentalAskPromptHash` does.
+  - The manuscripts ask route passes both into `workTurn`, and `askClient.ask()` forwards them.
+  - The UI that sends them (WorkConversation and a Teach-me offer) is coordinated with the redesign
+    session, which owns Develop's surface.
+- No second depth vocabulary was added. The Develop conversation reuses Develop's own.
+
+**Gates.**
+- New and updated guards pass (Work path: 4 new G-3 tests).
+- `lib/manuscript/ask` + `lib/writersStudio` + `app/writers-studio`: the only failures are
+  `askSourceCloseout` and `manuscriptImportWork`, both failing before this change.
+- Typecheck: 214 against a baseline of 214.
+
+**Witness run 10** (`runs/2026-11-09-run10-names-developdepth.json`; fictional passage, one sample
+per case):
+
+| Case | Result |
+|---|---|
+| N1 · "What does 'Line' mean here, and what would an editor call it?" | Guided: "Editors generally call this a line edit… these names aren't fixed". Learning and Direct: the full map (Touch ≈ proofreading or light copyedit; Passage between line and substantive; Shape substantive or structural; a reading ≈ developmental), with the variation note. |
+| N2 · "What kind of edit would help this paragraph most right now?" (no name asked) | Guided and Learning use no professional names. Direct uses one ("substantive"), which Direct allows. |
+| D0–D2 · Develop, "What is this scene doing?" with no style, `plain`, `expert` | All stay at the scene level. `expert` is more compact and uses professional framing ("stages an aftermath"). `plain` keeps everyday language. |
+| D3 · Develop, Teach me with the anchor | One craft idea (feeling refused, not stated), 105 words, and a closing choice: the teaching shape. |
+| D4 · the same words with no anchor | 290 words, with an unrequested term ("free indirect style"). This shows why the anchor must come from the button. |
+
+Not yet done: the Develop UI that sends the style and a Teach-me offer. That waits on the
+redesign session.

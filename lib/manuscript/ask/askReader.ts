@@ -31,7 +31,9 @@ import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt'
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
-import { CONVENTION_STANCE_DIRECTIVE, EDITORIAL_LEVELS_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+import { explanationInstruction, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
+import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import { CONVENTION_STANCE_DIRECTIVE, EDITING_NAMES_DIRECTIVE, EDITORIAL_LEVELS_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
 
 /**
  * WS-CRAFT-CONVENTIONS-01 · rulings 2 and 8 (founder, 2026-11-09), carried into the Work
@@ -56,7 +58,7 @@ export const WORK_CONVENTION_RULES = [CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENT
  * WS-CRAFT-CONVENTIONS-01 · the editorial levels (design §5a, wording approved 2026-11-09), carried
  * unchanged. It agrees with this path's own "STAY WHERE THEY ARE" and names the levels.
  */
-export const WORK_LEVELS_RULES = EDITORIAL_LEVELS_DIRECTIVE;
+export const WORK_LEVELS_RULES = `${EDITORIAL_LEVELS_DIRECTIVE} ${EDITING_NAMES_DIRECTIVE}`;
 export const WORK_INTEGRITY_RULES = EPISTEMIC_INTEGRITY_DIRECTIVE;
 export function workIntegrityRules(hasHistory: boolean): string {
   return hasHistory ? WORK_INTEGRITY_RULES : TEXT_ACCURACY_DIRECTIVE;
@@ -150,8 +152,11 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
-export function workAskPromptHash(): string {
-  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}`).digest('hex');
+export function workAskPromptHash(responseStyle?: ExplanationDepth, teachingAnchor?: TeachingAnchor): string {
+  /* G-3: like developmentalAskPromptHash, the per-turn style and teaching shape are part of what the hash names. */
+  const style = responseStyle ? `\n${explanationInstruction(responseStyle)}` : '';
+  const teaching = teachingAnchor ? `\n${teachingTurnInstruction(teachingAnchor)}` : '';
+  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}${style}${teaching}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -246,6 +251,10 @@ export interface WorkContext {
   /** This exchange is in Sanctuary: nothing is kept, and the standing reading permission, carried readings and settled decisions are set
    *  aside. She must not offer anything that would persist or that Sanctuary refuses (walk 2026-11-09: she suggested granting reading permission). */
   sanctuary?: boolean;
+  /** WS-CRAFT-CONVENTIONS-01 · G-3 (2026-11-09): the writer's own working-style preference, as Develop's observation dialogue sends it. */
+  responseStyle?: ExplanationDepth;
+  /** G-3: the Teach me pressed (F1). The teaching shape is server-owned and never rides in the writer's question. */
+  teachingAnchor?: TeachingAnchor;
 }
 
 export interface StandingRead {
@@ -545,7 +554,10 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '',
+       ...(ctx.responseStyle ? [explanationInstruction(ctx.responseStyle), ''] : []),
+       ...(ctx.teachingAnchor ? [teachingTurnInstruction(ctx.teachingAnchor), ''] : []),
+       '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
@@ -595,7 +607,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: ctx.kind === 'work' ? workAskPromptHash() : askPromptHash(),
+        promptHash: ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },

@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   CONVENTION_STANCE_DIRECTIVE,
   DEPTH_DIRECTIVE,
+  EDITING_NAMES_DIRECTIVE,
   EDITORIAL_LEVELS_DIRECTIVE,
   EPISTEMIC_INTEGRITY_DIRECTIVE,
   WRITER_ATTENTION_DIRECTIVE,
@@ -121,13 +122,13 @@ describe('The editorial levels directive', () => {
 
   it('reaches every depth, after the editorial stance and before the convention rules', () => {
     for (const d of DEPTHS) {
-      expect(editorialDirective(d)).toContain(`${EDITORIAL_INTELLIGENCE_DIRECTIVE} ${EDITORIAL_LEVELS_DIRECTIVE} ${CONVENTION_STANCE_DIRECTIVE}`);
+      expect(editorialDirective(d)).toContain(`${EDITORIAL_INTELLIGENCE_DIRECTIVE} ${EDITORIAL_LEVELS_DIRECTIVE} ${EDITING_NAMES_DIRECTIVE} ${CONVENTION_STANCE_DIRECTIVE}`);
     }
   });
 
   it('reaches the Work conversation unchanged', () => {
     const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
-    expect(src).toContain('export const WORK_LEVELS_RULES = EDITORIAL_LEVELS_DIRECTIVE;');
+    expect(src).toContain('export const WORK_LEVELS_RULES = `${EDITORIAL_LEVELS_DIRECTIVE} ${EDITING_NAMES_DIRECTIVE}`;');
     expect(src).toContain("WORK_STANDING, '', WORK_LEVELS_RULES,");
   });
 
@@ -140,5 +141,19 @@ describe('The editorial levels directive', () => {
   it('defeat candidate: the composition without it fails', () => {
     const without = editorialDirective('guided').replace(` ${EDITORIAL_LEVELS_DIRECTIVE}`, '');
     expect(without.includes(EDITORIAL_LEVELS_DIRECTIVE)).toBe(false);
+  });
+});
+
+describe('Ruling 3 · professional names on request and at Direct', () => {
+  it('reaches every depth and the Work conversation', () => {
+    for (const d of DEPTHS) expect(editorialDirective(d)).toContain(EDITING_NAMES_DIRECTIVE);
+  });
+  it('keeps plain names by default and maps each band', () => {
+    expect(EDITING_NAMES_DIRECTIVE).toContain('Use those plain names unless I ask');
+    for (const band of ['Touch', 'Line', 'Passage', 'Shape', 'Open']) expect(EDITING_NAMES_DIRECTIVE).toContain(band);
+    expect(EDITING_NAMES_DIRECTIVE).toMatch(/used differently by different publishers/);
+  });
+  it('names no level of the writer', () => {
+    expect(EDITING_NAMES_DIRECTIVE).not.toMatch(/\b(beginner|novice|advanced|expert|skill(ed)?)\b/i);
   });
 });

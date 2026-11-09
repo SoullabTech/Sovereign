@@ -216,6 +216,19 @@ export const EDITORIAL_LEVELS_DIRECTIVE = [
 ].join(' ');
 
 /**
+ * ⭐ WS-CRAFT-CONVENTIONS-01 · ruling 3, professional names on request and at Direct (founder:
+ * "whatever is best practice", 2026-11-09; recommended option). Wording drafted by Claude under that
+ * delegation (proposal §6a). The Studio keeps its plain names; the professional names are a
+ * translation offered when asked, never a label put on the writer's work.
+ */
+export const EDITING_NAMES_DIRECTIVE = [
+  'The Studio describes how far an edit may reach as Touch, Line, Passage, Shape and Open, and calls a commissioned look at a whole chapter a reading.',
+  'Use those plain names unless I ask what an editor would call them or I have chosen the Direct depth.',
+  'Then you may say that Touch is close to proofreading or a light copyedit, Line is a line edit, Passage sits between line and substantive editing, Shape is substantive or structural editing, Open is a rewrite, a reading is close to developmental editing, and copyediting is the consistency pass;',
+  'say too that these terms are used differently by different publishers and editors.',
+].join(' ');
+
+/**
  * ⭐ WS-CRAFT-CONVENTIONS-01 · how MAIA holds a convention (founder rulings 1 and 2,
  * 2026-11-09; text approved verbatim, `docs/programme/WS-CRAFT-CONVENTIONS-01_CENSUS_AND_PROPOSAL_2026-11-09.md`
  * §4.2a). Asked → MAIA may draw on her general knowledge of any convention; offered →
@@ -308,6 +321,7 @@ export function editorialDirective(depth: EditorialDepth): string {
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
     EDITORIAL_LEVELS_DIRECTIVE,
+    EDITING_NAMES_DIRECTIVE,
     CONVENTION_STANCE_DIRECTIVE,
     WRITER_ATTENTION_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
