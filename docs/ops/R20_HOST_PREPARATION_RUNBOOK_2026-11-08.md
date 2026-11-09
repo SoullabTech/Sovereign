@@ -6,7 +6,13 @@ STATUS:    Candidate document, on branch claude/ops-r20-host-preflight-20261108.
            2026-11-08 by PR-C (a draft candidate, branch claude/ops-r20-compose-wiring-20261108,
            stacked on the branch above) to carry the decided names (section 0a) and the
            witness step (step 4b). Those names are decisions TAKEN UNDER DELEGATION, NOT
-           FOUNDER RULINGS, and are revisable.
+           FOUNDER RULINGS, and are revisable. Edited a second time on 2026-11-08 after an
+           independent review of PR-C: decision D3 was REVISED (the one-shot initialise flag
+           now travels in a separate, optional, untracked, maia-only file, `.env.r20-once`,
+           and no longer in the shared `.env.production`; section 0a, step 4c, step 6), and
+           the statements that a red check makes a merge impossible were made conditional
+           (section 0, point 2; step 4b). The revised D3 is again a decision taken under
+           delegation, NOT a founder ruling, and is revisable.
 STANDING:  R20 was reported NOT configured on the app container (REPORTED: founder readout of
            2026-11-06, names only; not re-read since; .env.production is not in the repository,
            so its contents are not established). Register line C1
@@ -25,8 +31,9 @@ in code or a tracked file at a named commit), **RECORD** (stated in a programme 
 cited by path), **REPORTED** (said by the founder or another session; not located in source). A
 claim about the live host carries one of these labels or is marked **not established**. Angle
 brackets are placeholders, never values. The only host paths in this document are the three
-decided host-side names of section 0a (and the two directories that hold them), which are
-names and not secrets. It contains no host name, key or secret, and nothing recorded from its
+decided host-side names of section 0a (and the two directories that hold them), plus the
+relative file name `.env.r20-once` (also section 0a), which are names and not secrets. It
+contains no host name, key or secret, and nothing recorded from its
 steps may contain a key, a member, Work or file identifier, or any path other than those names.
 
 ## 0. Read this first
@@ -59,8 +66,18 @@ steps may contain a key, a member, Work or file identifier, or any path other th
    must not merge until the preflight has passed on the host under the exact host-side names
    that PR-C's compose binds (step 4), and until that run is recorded as the witness file of
    step 4b. While the witness is absent or does not match, PR-C's own check fails, so its CI is
-   red by design (where that check runs in a gate pull requests must pass) and the change cannot
-   be merged, or auto-merged, by mistake. The witness is a
+   red by design. **Whether a red check stops a merge depends on the target branch's
+   protection, and that was not read.** It does only if the `sovereignty` job of
+   `.github/workflows/sovereignty-gate.yml` (the job that runs `npm run ci:sovereignty`, where
+   the check is wired) is a REQUIRED status check, without bypass, on the branch PR-C targets,
+   and only if auto-merge is not enabled on PR-C. The repository's own record points the other
+   way for the canonical branch: `CLAUDE.md` records pushes to `clean-main-no-secrets` that
+   reported "Bypassed rule violations" for required status checks (the 2026-09-07 entry) and a
+   server-side ruleset with required checks and no bypass, admins included, that is still owed
+   (the 2026-10-01 entry). Until the protection or ruleset has been read and shown to hold,
+   the red check is a signal and a gate on a deliberate act, not a barrier (lane record 6.13,
+   merge procedure step 0). *Corrected 2026-11-08: this sentence said, without a condition,
+   that the change "cannot be merged, or auto-merged, by mistake".* The witness is a
    gate on a deliberate act, not proof of the host (step 4b). Merging is not applying, but it is
    latent deploy authorization: a later full `deploy` or `update` of a commit that carries the
    compose applies it without a further act (lane record sections 6.11 and 6.13; the 2026-09-07
@@ -91,6 +108,21 @@ steps may contain a key, a member, Work or file identifier, or any path other th
    every host prerequisite below must be true BEFORE the wiring is deployed, and today the only
    thing that checks is a person running the preflight.
 
+   Four other paths compose from the shared checkout's `docker-compose.production.yml` and not
+   from a snapshot, so once the checkout carries the PR-C compose each of them meets the same
+   two binds and the same optional flag file (step 6): `rollback` (`scripts/deploy-production.sh`
+   line 1134, `up -d --force-recreate --no-deps maia`), `safe-mode` on and off (lines 1194 and
+   1217, `up -d maia`), and the recovery step of each schema-first runbook
+   (`scripts/writer-schema-first-runbook.sh` lines 362-363 and `scripts/s3-schema-first-runbook.sh`
+   lines 369-370, `up -d maia` with `--env-file .env.production`). The swap step of each of
+   those two runbooks, by contrast, is a bare `deploy_ctx_compose up -d` from the snapshot
+   (lines 521 and 499), which recreates every service whose definition changed. **What state a
+   failed `up -d` leaves behind, and whether any of the four can bring `maia` back from it, is
+   not established**: none was run here, and no observation of a missing `create_host_path:
+   false` source is recorded. A missing source can therefore stop the very commands that would
+   be used to recover from it (an inference). This is why the host prerequisites are checked
+   before the deploy and not after.
+
 4. **Labels.** This document was written from a repository checkout, with no access to the host
    or to production. Every host-facing line below says what to run and what to record. Record
    **names, counts, modes and owner uids only**: no path, no key, no key length beyond a check's
@@ -112,11 +144,17 @@ because the witness binds the names.
 | Ledger file, `R20_LEDGER_FILE` | `/home/soullab/.config/soullab-r20/authority/ledger.json` | `/run/r20/ledger.json` | Not a bind source. Must not exist before the first seal creates it (step 2) |
 | High-water file, `R20_HIGH_WATER_FILE` | `/home/soullab/.config/soullab-r20/authority/high-water.json` | `/run/r20/high-water.json` | Not a bind source. Same rule as the ledger |
 | Key file, `R20_LEDGER_KEY_FILE` | `/home/soullab/.config/soullab-r20/ledger.key` | `/run/secrets/r20_ledger_key`, read-only | The bind source. A sibling of the authority directory, never inside it. Mode 0600, owner uid 1000 |
+| One-shot initialise flag file (decision D3, revised 2026-11-08) | `<project-dir>/.env.r20-once`, untracked and optional | Not mounted. Compose reads it as the second `env_file` entry of `maia` only (`required: false`) and puts its one line in `maia`'s environment | Does not exist until the operator creates it for the first seal (step 6, item 1): exactly one line, mode 0600. Deleted afterwards (step 6, item 5). `<project-dir>` is the host directory the deploy lane passes as `--project-directory` (`scripts/deploy-context.sh` line 389), a placeholder here. Not a name the preflight or the witness binds |
 
 - The precedent in the compose file is the SMTP and KMS binds of `maia`: long-form binds with
   `create_host_path: false` under `/home/soullab/.config/soullab-*/`.
-- `R20_LEDGER_ALLOW_INITIALIZE` is **never** in the tracked compose. It is a one-shot line in the
-  untracked `.env.production`, set and removed in step 6.
+- `R20_LEDGER_ALLOW_INITIALIZE` is **never** in the tracked compose and **never** in
+  `.env.production`. For the first seal only, it is the single line of a separate, optional,
+  untracked, maia-only file, `.env.r20-once`, created and deleted in step 6. No other service names
+  that file, so the flag reaches no other container. *Corrected 2026-11-08: this bullet said the
+  flag was "a one-shot line in the untracked `.env.production`". An independent review measured
+  that a single added line in that shared file changes the configuration hash of ten services
+  (step 6, "Why a file of its own"), which this revision of decision D3 avoids.*
 - **The compose is the authority for these names.** `node scripts/check-compose-r20-wiring.mjs
   --print-preflight-command` prints the preflight command with the three host paths derived from
   the compose, and `--print-names-digest` prints the digest of the same three paths. If the
@@ -207,8 +245,9 @@ read it with `grep -a`, or a search will skip it.
 Do these on the host, in your own terminal, as the person who will own the files. The key in
 step 3 must never pass through a chat or a session: generate it where it will live, and do not
 run step 3 through any tool that records its output. Each step says what to run, what to record,
-and when to stop. Every command only reads, except steps 2, 3 and 6, the delete in step 7, and the
-preflight in step 4, which changes nothing that persists: it creates and removes one probe file.
+and when to stop. Every command only reads, except steps 2, 3 and 6, the delete in step 7, the
+preflight in step 4, which changes nothing that persists: it creates and removes one probe file, and
+the Compose probe of step 4c, which creates and removes one temporary directory.
 
 **Step 0. Discover what already exists (read-only).** The October 2026 live override
 `docker-compose.r20-v5.override.yml` is not in Git (RECORD: R104 line 7), and R104 (dated
@@ -257,8 +296,19 @@ test -e /home/soullab/.config/soullab-r20 && echo home-present || echo home-abse
 stat -c '%F %a %u' /home/soullab/.config/soullab-r20      # prints an error and nothing else if absent
 ```
 
+And look for a flag file left by an earlier attempt (section 0a; `<project-dir>` is the directory the
+deploy lane runs compose from, and it is yours to know, not this document's):
+
+```
+if test -e <project-dir>/.env.r20-once || test -L <project-dir>/.env.r20-once; then echo flag-file-present; else echo flag-file-absent; fi
+```
+
 On a clean host all of them are absent. Anything present at those names is a finding that goes
-through the table below; none of them is yours to reuse silently. Because the names are decided,
+through the table below; none of them is yours to reuse silently. (A flag file found here is a
+finding of its own: if no pair exists it is the first seal's switch, already armed, and you did not
+know; if a pair exists it is a stale switch that would re-initialise generation 1 should both files
+ever be lost. Either way, record it, do not delete it yourself, and take it to the founder.)
+Because the names are decided,
 "a new directory and a new key" in the table's second row means a new directory and a new key at
 **different names**, and that is a change to PR-C, a rerun of step 4 and a new witness (section 0a),
 not something to do on the host by yourself.
@@ -271,7 +321,7 @@ the table below. Do not go on to step 2 on an unreadable reading.
 
 Record: the R20 names found (or none); the compose file names; whether a candidate directory
 exists; its entry count; ledger present or absent; high-water present or absent; key present or
-absent with its mode and owner uid. REPORTED, and relevant only to the container: the founder's
+absent with its mode and owner uid; flag file present or absent. REPORTED, and relevant only to the container: the founder's
 read-only readout of 2026-11-06 found no `R20_` variable names on `maia-sovereign` (lane record
 6.9.2). That says nothing about the host filesystem.
 
@@ -429,6 +479,18 @@ mail the key, and never put it in `.env.production` or any environment value. Wh
 the key is copied for safekeeping is a founder decision this document does not make: the key is
 the only thing that can verify the ledger, and there is no rotation path (step 8).
 
+**Do not replace the key file by renaming another file over it.** The compose binds the key as a
+single FILE, and a single-file bind refers to the file (the inode) that existed when the container was
+created (an inference from how file bind mounts behave; not tested here). If the host file is later
+replaced by a rename (an editor's atomic save, `mv new ledger.key`, a restore by a tool that writes a
+temporary file and renames it), the running container goes on seeing the old file until it is
+recreated, and the next recreate silently takes the new one. Since there is no rotation path (step 8),
+replacing the key is not a sanctioned act at all; if a restore or a repair must put the same key back,
+rewrite the existing file in place and recreate `maia` through a lane act (step 6, item 2), and do not
+expect the running container to notice. The authority directory is a directory bind, so renaming files
+inside it, which is what the module itself does, is not affected; deleting and recreating the
+directory itself would have the same problem for the directory.
+
 **Step 4. Run the preflight.** `scripts/ops/check-r20-host-prerequisites.sh` is part of the same
 change as this document. The command line, exit codes and output below were read from the script's
 own header and source; the script was **not run** when this runbook was written, and where its
@@ -459,6 +521,22 @@ runbook is stale, so stop and correct it):
 ```
 bash scripts/ops/check-r20-host-prerequisites.sh --ledger /home/soullab/.config/soullab-r20/authority/ledger.json --high-water /home/soullab/.config/soullab-r20/authority/high-water.json --key-file /home/soullab/.config/soullab-r20/ledger.key
 ```
+
+**Check which script you are about to run.** The witness of step 4b binds the git blob hash of the
+preflight script *on the machine where you compute the digests* (step 4b, item 2), not the hash of the
+copy that runs on the host; nothing else ties the two together. So, before you run it, hash the host's
+copy and compare it with the 40-character value that `git hash-object
+scripts/ops/check-r20-host-prerequisites.sh` prints on the PR-C checkout:
+
+```
+git hash-object scripts/ops/check-r20-host-prerequisites.sh
+# if git is not on the host, the same value (checked on this script to equal git's):
+{ printf 'blob %s\0' "$(wc -c < scripts/ops/check-r20-host-prerequisites.sh)"; cat scripts/ops/check-r20-host-prerequisites.sh; } | sha1sum
+```
+
+If the two values differ, stop and do not run it: the run would be of a script the witness does not
+name. If they are equal, the run and the witness name the same bytes (that is all this establishes;
+it says nothing about the host).
 
 Run **exactly the printed line**, as the host-side uid of the container user and not as root:
 
@@ -543,16 +621,29 @@ in step 6: a pass is a reading at a time.
 `exit=0`: the clean-host reading. Any other combination is step 4's table, not a witness, and
 `result=PASS` beside `both_present` is a stop. The witness is a committed file,
 `docs/ops/R20_HOST_PREFLIGHT_WITNESS.json`, which PR-C's check requires (its law W8). While the file
-is absent or does not match, that check fails, so PR-C's CI is red by design and the change cannot be
-merged, or auto-merged, by mistake. (That holds only where the check runs in a gate that pull
-requests must pass and the merger honours; whether it does is lane record section 6.13's to say,
-and a check that runs in no gate fails nothing.)
+is absent or does not match, that check fails, so PR-C's CI is red by design. That makes the change
+visible and makes a merge a deliberate act; it is not a barrier on its own. A red check stops a merge
+only where the `sovereignty` job is a required check, without bypass, on the target branch and
+auto-merge is not enabled on PR-C, and neither was read (section 0, point 2; lane record section 6.13,
+merge procedure step 0). A check that runs in no required gate fails nothing. *Corrected 2026-11-08:
+this paragraph said that the change "cannot be merged, or auto-merged, by mistake", with the
+condition only in a parenthesis.*
 
-1. Copy the three lines named above, the exit code and the time of the run. They are the script's own
-   vocabulary: they contain no path and no key, and nothing else from the run is to be kept.
-2. On a machine with the PR-C commit checked out and the preflight script unmodified (the next
-   command hashes the working-tree file, and the checker hashes the committed bytes, so they agree
-   only on a clean tree), compute the two values the file binds:
+1. Copy the three lines named above and the time of the run (UTC). They are the script's own
+   vocabulary: they contain no path and no key, and nothing else from the run is to be kept. The exit
+   code is a precondition of this step (it must have been `0`) and has no field in the file: it is
+   not recorded there, and the checker does not look for it. *Corrected 2026-11-08: this item said to
+   copy "the exit code", which neither the file nor the checker has a place for.*
+2. On a machine with the PR-C commit checked out and the preflight script unmodified, compute the
+   two values the file binds. Both commands, and the checker, hash the bytes of the files as they are
+   in the working tree they are run in (the checker reads the file with the filesystem and does not
+   consult git), so on the same working tree they agree; CI checks out the committed bytes, so a
+   witness computed on a tree whose script differs from the commit fails there. (Plain
+   `git hash-object` applies the repository's line-ending filters, which change nothing for this
+   script on a Linux checkout with no such setting; `git hash-object --no-filters` hashes the raw
+   bytes the checker hashes.) *Corrected 2026-11-08: this item said the checker "hashes the committed
+   bytes", so that the two agree "only on a clean tree". It hashes the working-tree bytes it is
+   given.*
 
    ```
    node scripts/check-compose-r20-wiring.mjs --print-names-digest     # names_digest: SHA-256, 64 hex characters
@@ -584,16 +675,24 @@ and a check that runs in no gate fails nothing.)
    The file contains no path and no key: `names_digest` is a hash of three paths, not a path, and the
    `output` lines are the three above and nothing else.
 
-   The checker requires, beyond the digest and the blob hash: `result` `PASS`; `output` containing the
-   exact lines `ledger_pair_state both_absent`, `key_form hex64` and `r20_host_preflight result=PASS` (the
-   clean first-configuration reading; a pair that already exists is a step 0 stop, not a witness);
-   `expect_uid` an integer of at least 1 (uid 0 bypasses the permission checks the preflight exists to
-   make); and `run_at` an ISO-8601 UTC timestamp such as `2026-11-08T12:00:00Z`. It does not judge `run_by`
-   and cannot tell a real run from a typed one.
+   The checker requires, beyond the digest and the blob hash: `result` `PASS`; `output` an array of
+   strings containing the exact lines `ledger_pair_state both_absent`, `key_form hex64` and
+   `r20_host_preflight result=PASS` (the clean first-configuration reading; a pair that already exists is
+   a step 0 stop, not a witness) and **no other line that is an `r20_host_preflight result=` line**, so a
+   `result=FAIL` or `result=UNKNOWN` line beside the PASS is refused (do not add one to "show the
+   whole run"; the file holds the three lines and nothing else); `expect_uid` an integer of at least 1
+   (uid 0 bypasses the permission checks the preflight exists to make); and `run_at` an ISO-8601 UTC
+   timestamp, a real date, such as `2026-11-08T12:00:00Z`. It does not judge `run_by`, it does not
+   cross-check the per-check lines the script prints (so they are not copied into the file), and it
+   cannot tell a real run from a typed one. The check's header is the authority where this paragraph
+   differs from it.
 
 **What the witness is, and is not.** It is evidence for a deliberate act: someone ran the
 preflight under the names the compose binds, saw a clean PASS, and wrote that down in a form the
-checker compares with the compose and with the script. It is a plain file that anyone can write or
+checker compares with the compose and with the script. The script it names is the one on the
+machine that computed the digests (item 2), not the copy that ran on the host: the comparison in
+step 4, "Check which script you are about to run", is what ties the two, and it is the operator's
+to make. It is a plain file that anyone can write or
 edit by hand, and the checker cannot tell a real run from a typed one. It proves nothing about the
 host at deploy time: a pass is a reading at a time, the directory and the key can change the next
 minute, and the container may not see what the preflight saw. It is not host state, not a
@@ -602,6 +701,28 @@ requires on the day of the deploy. Committing it does not authorize the merge, w
 founder's decision, and merging is latent deploy authorization (section 0, point 2). If the compose
 changes a name, or the preflight script changes by a byte, the file stops matching and this step is
 done again from step 4.
+
+**Step 4c. Check that the host's Compose accepts the optional flag file** (read-only; fictional data;
+do it before the decision to merge PR-C, because every compose command that parses PR-C's compose
+meets this syntax: a full `deploy` or `update` of a commit that carries it, and also `rollback` and
+`safe-mode`, which compose from the shared checkout). PR-C's compose lists `.env.r20-once` as an
+`env_file` entry in the long form with `required: false` (decision D3, revised 2026-11-08; step 6).
+The long form with `required` is a feature of a recent Compose (stated from memory as 2.24 or later,
+not checked here). The server's Compose was seen at v5.1.1 (RECORD: R104, line 22); every Compose
+statement in this runbook was measured on a client v5.6.1 and none on the server's. If the host's
+Compose did not understand the entry, it would reject PR-C's compose at parse time, whatever the host
+holds. In a throwaway directory, with nothing real in it:
+
+```
+docker compose version
+d="$(mktemp -d)" && printf 'services:\n  probe:\n    image: scratch\n    env_file:\n      - path: ./absent-optional-env\n        required: false\n' > "$d/compose.yml" && ( cd "$d" && docker compose -f compose.yml config >/dev/null 2>&1; echo "compose-exit=$?" ); rm -rf "$d"
+```
+
+Record the version line and the literal `compose-exit=`. Expect `compose-exit=0`: the entry is accepted and
+the absent optional file is not an error. Anything else is a stop: PR-C's compose must not be merged for
+this host until the founder has seen it. (On the client measured here the same probe with a plain, required
+entry for the absent file exits 1, so the probe tells the two apart; that is not a measurement of an older
+Compose.) The probe reads none of the project's files and prints no value.
 
 **Step 5. Read-only counts before the first seal.** When R20 is configured the two
 unfinished-upload discard paths stop answering 202 `removal_pending` and start destroying bytes
@@ -631,58 +752,191 @@ is old and was a different observation. The count of `vault_erasure_queue` rows 
 C2 and is not part of this step.
 
 **Step 6. The first seal** (the host and the deploy lane change here; only after the witness of
-step 4b is committed and PR-C's CI is green, after the preflight has been run again that same day
-with the same printed command, and only with PR-C reviewed and merged by the person who owns that
-decision). The container-side names are decision D1 (section 0a) and PR-C's compose carries them.
-**The initialise flag is one-shot, and it lives only in the untracked `.env.production`, never in
-the tracked compose (decision D3).** Its whole life is: set it (item 1); recreate `maia` through a
-lane deploy (item 2); wait for the first successful seal (item 4 and step 7); **remove it** (item
-5); recreate `maia` again through a lane deploy (item 5); read back that it is gone (item 5). Do
-items 1 to 4, then step 7, then items 5 and 6.
+step 4b is committed and PR-C's CI is green, after the Compose check of step 4c, after the preflight
+has been run again that same day with the same printed command, and only with PR-C reviewed and
+merged by the person who owns that decision). The container-side names are decision D1 (section 0a)
+and PR-C's compose carries them.
 
-1. Put exactly one line in `.env.production` (untracked; the `maia` service reads it as
-   `env_file`, `docker-compose.production.yml` lines 107-108): `R20_LEDGER_ALLOW_INITIALIZE=true`.
-   Edit it on the host, with an editor, and do not paste the file. The other services that read
-   the same file (the workers) will carry the name too; only the app calls the seal (in
-   `lib/manuscript/source/`: `eraseManuscript.ts`, `discardUnclaimedArrival.ts`,
-   `discardIncompleteLanding.ts`, and `legacyRetirement.ts`, which only a witness script calls).
-2. Take it through **one lane deploy** of the PR-C commit: `scripts/deploy-production.sh deploy
-   <SHA>`, or the pair `scripts/pre-deploy-gate.sh prepare-maia <SHA>` then `cutover-maia <SHA>`
-   when only `maia` is meant to change (`deploy-maia` is retired in this tree,
-   `scripts/pre-deploy-gate.sh` lines 319-324; `cutover-maia` recreates only `maia`, line 305).
-   The full `deploy` runs a bare `up -d`, which recreates every service whose definition or
-   image changed (RECORD: nine containers in `docs/programme/S3-O1_PRODUCTION_OBSERVATIONS_2026-09-14.md`
-   lines 18-30). ⚠️ **Never recreate `maia` by hand** with `docker compose` to pick up the new
-   values; that bypasses the lane (the KMS runbook cited in step 5, section 4 step 2; the 2026-09-07
-   finding).
-3. Read back, names only: `docker exec <app-container> sh -c 'env | cut -d= -f1 | grep
-   "^R20_"'` should show the three names (`R20_LEDGER_FILE`, `R20_HIGH_WATER_FILE`,
-   `R20_LEDGER_KEY_FILE`) and the flag; the step 0b command should show `/run/r20` read-write
-   (`rw=true`) and `/run/secrets/r20_ledger_key` read-only (`rw=false`). Then three literals, which
-   print no path content: `docker exec <app-container> sh -c 'test -d /run/r20 && echo dir-present;
-   test -w /run/r20 && echo dir-writable; test -r /run/secrets/r20_ledger_key && echo key-readable'`
-   should print all three (`test -w` only asks; it writes nothing). If a name, a mount or a literal
-   is absent, the deploy did not apply it, or the container user cannot use what it was given:
-   stop. Do not hand-edit the container.
+**The initialise flag is one-shot, and it has a file of its own (decision D3, revised 2026-11-08;
+taken under delegation, NOT a founder ruling, revisable).** It is never in the tracked compose and
+never in `.env.production`. It is the single line of `.env.r20-once`, an untracked, optional file in
+the project directory, which PR-C's compose lists as the second `env_file` entry of `maia` and of no
+other service. Its whole life is: create the file (item 1); recreate `maia` through a lane act
+(item 2); read back (item 3); wait for the first successful seal (item 4 and step 7); **delete the
+file** (item 5); recreate `maia` again through a lane act and read back that the flag and the file
+are gone (item 5). Do items 1 to 4, then step 7, then items 5 and 6. *Corrected 2026-11-08: this step
+used to put the flag as one line in `.env.production` and said the workers would carry it too; neither
+is any longer so.*
+
+**Why a file of its own.** The first version of this decision put the flag in `.env.production`. An
+independent review measured what that does. Rendered offline with `docker compose config --hash='*'`
+(a Compose client v5.6.1 with no daemon, this branch's compose, a fictional two-line
+`.env.production` and the fictional values the compose needs in order to parse), adding that one line
+changed the configuration hash of TEN services: `caddy`, `demo`, `maia`, `maia-api`,
+`maia-comms-worker`, `maia-media-worker`, `maia-summary-worker`, `oldhead`, `postgres` and `rlm`.
+That includes the Postgres service, the replication primary (its standby is register line O2,
+reported down on 2026-10-01), and the public TLS edge. Compose recreates a service whose hash changed, so a full `deploy` would be expected to bounce
+all ten, once to add the line and once to remove it; that the recreate happens is an INFERENCE from
+the hash, not an observation: nothing was run against a daemon and nothing about the live host was
+read. The earlier text of this runbook and of lane record 6.13 said only "the workers". With the flag
+in `.env.r20-once`, the same measurement on the same client changes ONE hash, `maia`'s, when the file
+appears or disappears, and no hash at all while the file is absent (the optional entry by itself
+changes nothing). The server's Compose (v5.1.1, R104 line 22) was not measured; step 4c is the check
+that it accepts the entry. Not chosen: a line in the tracked compose, which would stay set, the
+opposite of one-shot (law W6 of PR-C's check refuses it).
+
+**The same-commit rule (read it before items 2 and 5).** Two lane paths recreate `maia`:
+the pair `scripts/pre-deploy-gate.sh prepare-maia <SHA>` then `cutover-maia <SHA>`, and a full
+`scripts/deploy-production.sh deploy <SHA>`. They are not equivalent when `<SHA>` is the commit that
+`maia` already runs (`docker exec <app-container> printenv GIT_COMMIT`):
+
+- The full `deploy` path rotates the rollback tags through `tag_images_for_rollback`
+  (`scripts/deploy-production.sh` lines 757 and 844), which recognises a redeploy of the commit that
+  is already `:current` and then keeps `:previous` as the last DIFFERENT commit
+  (`scripts/deploy-tag.sh`; its comment records why: on 2026-10-01 two redeploys of one commit moved
+  `:previous` onto a rebuild of that commit).
+- The prepared-reader path has no such guard (SOURCE: read, not run). `prepare-maia` retags
+  `:<sha>` onto the new build (`scripts/deploy-reader-artifact.sh` line 118) even when `<sha>` is the
+  commit that is live, so the tag that names the image now running is moved onto a rebuild of the same
+  commit. What follows depends on whether that rebuild is the same image, which was not established (the
+  Dockerfile stamps a `BUILD_DATE` into the image, lines 94 and 107, so it may not be). If it is a
+  different image, `cutover-maia` refuses at its own check that `:<live sha>` still names the live image
+  (`deploy_reader_verify_prepared`, lines 185-187), but the tag has already been moved and the operator
+  is left to repair it. If it is the same image, every check passes, and `cutover-maia` sets
+  `:previous` to the image that is live and `:current` to the candidate (lines 211-212) and retags
+  `:<sha>` again (line 214): `:previous` is no longer the last different commit, and a later `rollback`
+  would swap that commit for itself, which is the 2026-10-01 case above. The image that really preceded
+  it is then left with only its own SHA tag, which pruning may remove (it protects only the images
+  `:current` and `:previous` name, and the newest three tags; `scripts/deploy-tag.sh`). The ancestry
+  check stops neither case: it accepts the target being the running commit
+  (`scripts/deploy-context.sh` lines 328-330).
+
+Plainly: on the commit that is already live, `prepare-maia` and `cutover-maia` can move the live
+commit's rollback tag onto a rebuild, or leave the rollback point (`:previous`) equal to the version
+you are running, so that `rollback` goes nowhere; the lane's own check catches only the first of the
+two, and then after the tag has already moved.
+
+So: **if `<SHA>` is the commit `maia` already runs, use the full `deploy <SHA>` or take a later
+commit; never `prepare-maia` and `cutover-maia` on the same commit.** The rule always binds the second
+act (item 5), because the file is deleted after the commit carrying the wiring has been live. It
+binds the first act (item 2) as well whenever the wiring is already running, which is possible
+because merging is latent deploy authorization and any later deploy of a commit that carries the compose
+applies it (section 0, point 2). For the first act on a commit that is not live yet, either path is
+acceptable.
+
+1. **Create the flag file.** The Compose check of step 4c has passed. On the host, in the project
+   directory, as the host user that runs the deploy lane (Compose reads the file as that user), create
+   the file with exactly one line and mode 0600, refusing to overwrite an existing path (`<project-dir>`
+   is a placeholder you replace):
+
+   ```
+   f=<project-dir>/.env.r20-once
+   if test -e "$f" || test -L "$f"; then echo "REFUSED: the flag file already exists. Stop."; else ( umask 077; set -C; printf 'R20_LEDGER_ALLOW_INITIALIZE=true\n' > "$f" ) && echo created; fi
+   ```
+
+   Only if that printed `created`, check it; these print a type, a mode and an owner uid, and two
+   counts, never the content:
+
+   ```
+   stat -c '%F %a %u' "$f"                              # expect: regular file, 600, the uid that runs the lane
+   wc -l < "$f"                                         # expect: 1
+   grep -cx 'R20_LEDGER_ALLOW_INITIALIZE=true' "$f"     # expect: 1
+   ```
+
+   Put nothing else in the file: no comment, no second name. Whatever it holds becomes `maia`'s
+   environment, and the lane's one collision check, `deploy_ctx_refuse_env_collision`
+   (`scripts/deploy-context.sh` line 434), reads `.env.production` alone for a `GIT_COMMIT` line, so a
+   `GIT_COMMIT` placed here would not be refused before the build; only the post-swap provenance verify
+   would notice it, after the swap. The file is not passed to Compose as `--env-file`
+   (`deploy_ctx_compose` passes `.env.production` only), so it does not feed `${VAR}` interpolation of
+   any service: it reaches `maia`'s container environment and nothing else. Edit it on the host and do
+   not paste it anywhere.
+2. **Take it through one lane act that recreates `maia`**, under the same-commit rule above: the full
+   `scripts/deploy-production.sh deploy <SHA>`, or, only when `<SHA>` is not the commit `maia` runs,
+   `scripts/pre-deploy-gate.sh prepare-maia <SHA>` then `cutover-maia <SHA>` (`deploy-maia` is retired
+   in this tree, `scripts/pre-deploy-gate.sh` lines 319-324; `cutover-maia` recreates only `maia`,
+   line 305). What each recreates: `cutover-maia` recreates `maia` alone. A full `deploy` runs a bare
+   `up -d`, which recreates every service whose definition or image changed. With the flag file the
+   definition change is `maia`'s alone (the measurement above), but a full deploy also rebuilds, and the
+   recorded full deploy of 2026-09-14 recreated nine containers for a change to one (RECORD:
+   `docs/programme/S3-O1_PRODUCTION_OBSERVATIONS_2026-09-14.md` lines 18-30), so budget for more than
+   `maia` on that path. That is the lane's behaviour, not the flag's. ⚠️ **Never recreate `maia` by hand**
+   with `docker compose` to pick up the file; that bypasses the lane (the KMS runbook cited in step 5,
+   section 4 step 2; the 2026-09-07 finding).
+3. **Read back, names and one literal.** In the app container:
+
+   ```
+   docker exec <app-container> sh -c 'env | cut -d= -f1 | grep "^R20_"'
+   # expect four names: R20_HIGH_WATER_FILE, R20_LEDGER_ALLOW_INITIALIZE, R20_LEDGER_FILE, R20_LEDGER_KEY_FILE
+   docker exec <app-container> sh -c 'test "$R20_LEDGER_ALLOW_INITIALIZE" = true && echo flag-is-exactly-true'
+   ```
+
+   The module honours the flag only when its value is exactly `true`, and `env | cut` shows names and
+   not values, so the second command is the check that it is; it prints a literal and nothing else.
+   The step 0b command should show `/run/r20` read-write (`rw=true`) and `/run/secrets/r20_ledger_key`
+   read-only (`rw=false`). Then three literals, which print no path content: `docker exec
+   <app-container> sh -c 'test -d /run/r20 && echo dir-present; test -w /run/r20 && echo
+   dir-writable; test -r /run/secrets/r20_ledger_key && echo key-readable'` should print all three
+   (`test -w` only asks; it writes nothing). In every OTHER container that reads `.env.production`
+   (the workers, `maia-api` and the rest, where the image has a shell) the flag must be absent: `docker exec <other-container> sh -c
+   'env | cut -d= -f1 | grep -c "^R20_LEDGER_ALLOW_INITIALIZE$"'` prints `0` (and exits 1, which is the
+   count being zero and not a failure). If a name, a mount or a literal is missing, or the flag is
+   present anywhere but `maia`, the deploy did not do what this step expects: stop. Do not hand-edit
+   a container.
+
+   **What this read-back proves, and what it does not.** It proves that this container was created
+   with these names, that value and these mounts. It does not prove that the first seal will succeed:
+   nothing has been written yet, and `test -w` only asks. It does not show the flag doing anything: the
+   flag is not "consumed" by the seal, it is honoured only while both files are absent and ignored once
+   the pair exists, so it stays in the container's environment until the container is recreated without
+   it. It does not show that the mounts still name what the preflight saw: they name the host paths as
+   they were when the container was created (a key replaced by renaming another file over it is not
+   seen, step 3). And it says nothing about the host file, which is a different fact from the container's
+   environment and is checked separately (item 5).
 4. **The first seal happens at the next member deletion that reaches it.** No operator command
    seals on demand (SOURCE: the only callers of `sealR20DeletionLedger` are the four named
    above and two witness scripts under `scripts/witness/`; the only callers of
    `importR20DeletionLedger` and `verifyR20DeletionLedger` are witness scripts). Until a
-   deletion happens, no pair exists. A real member's deletion may be that first seal, and that
-   is lawful. **Do not remove the flag before the pair exists:** with both files absent and the
-   flag unset, every seal throws `R20_HIGH_WATER_MISSING`.
-5. After step 7 shows the pair, **remove the flag**: delete the line from `.env.production` and
-   take **a second lane deploy**. It is read from `process.env` at call time and cannot be unset
-   without a container recreate; while it stays set, a loss of both files makes the next seal
-   silently re-initialise at generation 1, which defeats the high-water record without any
-   error. Read back with `docker exec <app-container> sh -c 'env | cut -d= -f1 | grep -c
-   "^R20_LEDGER_ALLOW_INITIALIZE$"'`; the answer must be 0. Whether Compose recreates a service
-   whose `env_file` content changed is Compose behaviour not witnessed here, so verify it; if the
-   name is still present the container was not recreated. `cutover-maia` forces the recreate
-   (`up -d --force-recreate --no-deps maia`, `scripts/pre-deploy-gate.sh` line 305), so it does not
-   depend on Compose noticing a changed `env_file`; the read-back is decisive either way.
-6. ⚠️ If a deploy fails on a missing bind source, do not assume `rollback` rescues it: it
-   composes from the shared checkout (section 0, point 3).
+   deletion happens, no pair exists, so item 5 cannot be scheduled and this wait can last as long as no
+   member deletes a writing; while it lasts the armed flag does no harm, because both files are absent,
+   which is the one state in which it does anything. A real member's deletion may be that first seal,
+   and that is lawful. **Do not delete the flag file before the pair exists:** with both files absent
+   and the flag unset, every seal throws `R20_HIGH_WATER_MISSING`.
+5. **After step 7 shows the pair on the host, delete the file and recreate `maia` once more.**
+   First the file, then the proof that it is gone (set `f` again as in item 1 if this is a new shell):
+
+   ```
+   rm -f "$f"
+   if test -e "$f" || test -L "$f"; then echo flag-file-PRESENT; else echo flag-file-absent; fi
+   ```
+
+   Deleting the file removes the flag from the host and not from the running container: the module reads
+   `process.env` at call time, and a container's environment is fixed when it is created. So take **a
+   second lane act, and it must be the full `deploy <SHA>` or a later commit, never `prepare-maia` and
+   `cutover-maia` on the same commit** (the same-commit rule above). Then read back that the flag is gone:
+
+   ```
+   docker exec <app-container> sh -c 'env | cut -d= -f1 | grep -c "^R20_LEDGER_ALLOW_INITIALIZE$"'
+   # the answer must be 0 (the command also exits 1 on a count of 0; that is not a failure)
+   ```
+
+   Whether a full `deploy` recreates `maia` when only the disappearance of that file changed its
+   definition is Compose behaviour inferred from the configuration hash and not witnessed, so the
+   read-back is what decides. If the name is still present the container was not recreated: do not
+   hand-edit it, and take another lane act on a later commit. The host file and the container's
+   environment are two facts; both must read as absent.
+
+   **Why the file must not stay.** Its presence re-arms initialisation. If both ledger files were ever
+   lost (a restore, a disk loss, a mistaken delete), the next seal in a `maia` created while the file
+   exists would initialise generation 1 without any error and discard the high-water history. Any
+   recreate of `maia` that finds the file picks the flag up again, `rollback` and `safe-mode` included,
+   because they compose from the shared checkout (section 0, point 3). So the deletion is part of the
+   procedure and not a tidy-up, and its absence is checked here, and again after any restore of the
+   host and after any `rollback`.
+6. ⚠️ If a deploy fails on a missing bind source or on a compose parse error, do not assume `rollback`
+   rescues it: it composes from the shared checkout, as do `safe-mode` and the recovery step of each
+   schema-first runbook (section 0, point 3). What a failed `up -d` leaves behind, and whether any of
+   those can bring `maia` back from it, is not established.
 
 **Step 7. Witness (fictional data only).** With a test member and a fictional writing created for
 this purpose (no original file and no image, so the seal is the only obligation that can fail),
@@ -707,6 +961,11 @@ This is the first half of C1's closure condition: a production writing delete an
 the pair advancing, witnessed. It does not cover the second half (a failed seal retried or raised
 to a human). It does not exercise the two discard doors. A 200 whose pair is missing on the host
 would mean the ledger went into the container's own layer; that is why the host is checked.
+
+Step 7 does not finish the first seal. While the flag file is still on the host, the one-shot switch
+is armed (step 6, item 5, "Why the file must not stay"), so the procedure is complete only when
+item 5 has been done and read back: the file absent on the host and the flag absent in the
+container.
 
 **Step 8. What this does NOT give you.**
 
@@ -739,8 +998,18 @@ would mean the ledger went into the container's own layer; that is why the host 
   CI red until someone records a run. It is hand-editable, it is checked only against the compose
   and the script, and it says nothing about the host when the deploy runs. The deploy tooling still
   has no host-prerequisite preflight (section 0, point 3); a failed `up -d` after the build, the
-  migrations and the rollback-tag rotation, and a `rollback` that composes from the shared
-  checkout, leave a state this runbook cannot establish or repair.
+  migrations and the rollback-tag rotation, and the `rollback`, `safe-mode` and schema-first
+  recovery paths that compose from the shared checkout (section 0, point 3), leave a state this
+  runbook cannot establish or repair.
+- **A witness for the script that ran on the host.** The witness names the preflight script on the
+  machine that computed its digests. Only the hash comparison of step 4 ties that to the copy that
+  ran, and nothing but the operator makes it.
+- **A proof from the read-backs.** The read-backs of step 6 show how a container was created and
+  what the host file system held when you looked. They do not show that a seal will succeed, that the
+  flag has done anything, or that the mounts will keep naming what the preflight saw (step 6, item 3).
+- **A key file that follows a replacement.** A single-file bind keeps the file that existed at
+  creation, so a key replaced by renaming another file over it is not seen by the running container
+  until it is recreated (step 3). There is no key rotation in any case.
 - **A cleaned authority directory.** A failed write leaves its temp file behind; it is harmless to
   correctness and accumulates.
 
@@ -769,6 +1038,8 @@ to 48 characters (`r20LedgerErrorCode`, lines 81-85).
 | A valid 32-byte key that did not seal the existing pair | Every seal | `R20_LEDGER_HMAC_INVALID` (or `R20_HIGH_WATER_HMAC_INVALID`) | The custody notice |
 | Only one of the pair present, or empty or garbage files pre-created | Every seal | `R20_HIGH_WATER_MISSING` or `R20_LEDGER_MISSING`; `..._INVALID` for a file that is not JSON | The custody notice |
 | First seal with the flag unset (or not exactly `true`) | The first seal | `R20_HIGH_WATER_MISSING` | The custody notice |
+| The flag file left on the host after the pair exists, then both files lost (a restore, a disk loss, a mistaken delete), then `maia` recreated | At the first seal in a container created while the file exists | None: the seal initialises generation 1 and the high-water history is gone | Nothing wrong is shown |
+| The flag file present but malformed (a line that is not `NAME=value`) | At the first compose command that parses `maia`'s env files, which a deploy runs before the swap (the build step); measured only as `docker compose config` exiting 1 on a client v5.6.1 | Compose's own error, not the app's | Nothing: the deploy stops early (an inference from the order of the lane's steps; not run) |
 | Crash or failed fsync between the two writes | Every later seal | `R20_LEDGER_STALE_GENERATION` | The custody notice, permanently |
 | Names unset or not absolute (today's state) | Every seal | `R20_LEDGER_FILE_MISSING`, `R20_HIGH_WATER_FILE_MISSING` or `R20_LEDGER_KEY_FILE_MISSING` | The custody notice |
 
@@ -796,10 +1067,17 @@ to 48 characters (`r20LedgerErrorCode`, lines 81-85).
   is a gate on a merge, not a check at deploy time (step 4b; lane record section 6.13).
 - Do the decided names stand (section 0a)? They are decisions D1 to D4 taken under delegation, not
   founder rulings; the founder may change any of them, at the cost of a compose change, a rerun of
-  step 4 and a new witness.
+  step 4 and a new witness. D3 was revised on 2026-11-08 (the flag file) and is, again, a decision
+  taken under delegation.
+- Does the host's Compose accept the optional `env_file` entry of D3? Step 4c asks it; the server's
+  Compose was seen at v5.1.1 and every Compose statement here was measured on a client v5.6.1.
+- Does Compose recreate `maia`, and only `maia`, when `.env.r20-once` appears or disappears? The
+  configuration hashes say so (a fictional offline render); no recreate was run or witnessed.
+- Is the branch PR-C targets protected so that a red `sovereignty` check blocks a merge, and is
+  auto-merge off on PR-C? Not read (section 0, point 2; lane record 6.13, merge procedure step 0).
 
 ⛔ Not authorized by this document: running any step on the host, creating the directory or the
-key, editing `.env.production`, setting or removing the initialise flag, merging PR-C or any
+key, editing `.env.production`, creating or deleting the flag file `.env.r20-once`, merging PR-C or any
 compose change, committing a witness that was not produced by a run of the preflight, deploying or
 recreating any container, claiming that R20 is independent, lifting
 the R105 hold on worker deployment or any upload hold, or closing register line C1, C2 or C4. It

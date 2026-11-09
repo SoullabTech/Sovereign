@@ -104,8 +104,15 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+    # R20 one-shot initialise flag (decision D3, revised): R20_LEDGER_ALLOW_INITIALIZE reaches THIS service only, through the second entry below: an OPTIONAL, UNTRACKED
+    # file in the project directory (resolved from --project-directory), created by the operator for the first seal and deleted afterwards. It is deliberately not
+    # in .env.production, because that file is shared: one added line there changes the config hash of every service that reads it (ten, measured 2026-11-08, Postgres and the TLS edge among them).
+    # `required: false` makes the file's absence the normal state (it must render without it). It must stay untracked: .gitignore already covers it (the `.env*` pattern), and the lane
+    # builds from a git archive of tracked files, so it never enters a lane build context (a hand `docker build` from the project directory is outside the lane); no other service may name it, and scripts/check-compose-r20-wiring.mjs (law W9) pins this list exactly. Procedure and the same-commit rule: docs/ops/R20_HOST_PREPARATION_RUNBOOK_2026-11-08.md.
     env_file:
       - .env.production
+      - path: .env.r20-once
+        required: false
 
     environment:
       NODE_ENV: production
@@ -125,8 +132,12 @@ services:
       # each a required absolute path. Container-side names are decision D1 of the PR-C wiring change (a delegated, revisable decision, not a founder ruling):
       # the authority DIRECTORY is bind-mounted read-write at /run/r20 and the key FILE read-only at /run/secrets/r20_ledger_key, both below.
       # Both host sources must exist BEFORE this service is recreated (decision D2); the ledger and high-water FILES are not host sources and must not exist before
-      # the first seal. See docs/ops/R20_HOST_PREPARATION_RUNBOOK_2026-11-08.md. R20_LEDGER_ALLOW_INITIALIZE is deliberately NOT set in this file (decision D3):
-      # the first seal is a one-shot step through .env.production, removed again afterwards. scripts/check-compose-r20-wiring.mjs enforces all of this.
+      # the first seal. See docs/ops/R20_HOST_PREPARATION_RUNBOOK_2026-11-08.md. R20_LEDGER_ALLOW_INITIALIZE is deliberately NOT set in this file (decision D3, revised):
+      # the first seal is a one-shot step through the separate, optional, untracked, maia-only env file named in env_file above, removed again afterwards.
+      # scripts/check-compose-r20-wiring.mjs enforces the wiring TEXT of this service (the three names, the two mounts and their options, the env_file list), that no other service
+      # carries or reaches any of it, the PR-A vault mount on the media worker, and a recorded host-preflight witness for these exact host names. It CANNOT enforce that the host
+      # sources exist, that the ledger and high-water files are absent before the first seal, or the host's owners and modes (the preflight speaks to those, once, when it ran),
+      # nor what .env.production or .env.r20-once contain.
       R20_LEDGER_FILE: "/run/r20/ledger.json"
       R20_HIGH_WATER_FILE: "/run/r20/high-water.json"
       R20_LEDGER_KEY_FILE: "/run/secrets/r20_ledger_key"
@@ -242,7 +253,8 @@ services:
         bind:
           create_host_path: false
       # R20 ledger key (decisions D1 and D2): host FILE, read-only, owner uid 1000, mode 0600, a sibling of the authority directory above and never inside it.
-      # Never an env value, never committed. Must exist on the host BEFORE this service is recreated.
+      # Never an env value, never committed. Must exist on the host BEFORE this service is recreated. A single-FILE bind pins the inode that existed when the container was
+      # created: replacing the host file afterwards (rename-over, an atomic-save editor) is not seen by the running container until this service is recreated.
       - type: bind
         source: /home/soullab/.config/soullab-r20/ledger.key
         target: /run/secrets/r20_ledger_key

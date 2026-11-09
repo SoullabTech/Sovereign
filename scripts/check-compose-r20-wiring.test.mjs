@@ -17,7 +17,9 @@ import { fileURLToPath } from "node:url";
 import {
   checkCompose, checkWitness, deriveHostNames, namesDigest, blobSha1, failingLaws, parseCompose, preflightCommand, CannotCheck,
   LAW_IDS, ENV_PATHS, PREFLIGHT_PASS_LINE, PREFLIGHT_SCRIPT, AUTHORITY_TARGET, KEY_TARGET,
+  ONCE_ENV_FILE, BASE_ENV_FILE, resolveSource, parseShortMount,
 } from "./check-compose-r20-wiring.mjs";
+import { parseMount } from "./check-compose-vault-mount-parity.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..");
@@ -36,8 +38,11 @@ const A = "/home/soullab/.config/soullab-r20/authority";
 const K = "/home/soullab/.config/soullab-r20/ledger.key";
 const HEX64 = "0123456789abcdef".repeat(4);
 const WORKER = "maia-media-worker";
+const PARENT = "/home/soullab/.config/soullab-r20"; // the directory that holds both host paths (D2)
+const ONCE_ENTRY = () => ({ path: ONCE_ENV_FILE, required: false });
 
 // ── anchors in the real compose text (each must occur exactly once) ───────────────────────────────────────────────────────────
+const ONCE_ENTRY_TEXT = `      - path: ${ONCE_ENV_FILE}\n        required: false\n`;
 const ENV_BLOCK = '      R20_LEDGER_FILE: "/run/r20/ledger.json"\n      R20_HIGH_WATER_FILE: "/run/r20/high-water.json"\n      R20_LEDGER_KEY_FILE: "/run/secrets/r20_ledger_key"\n';
 const AUTH_BIND = `      - type: bind\n        source: ${A}\n        target: /run/r20\n        bind:\n          create_host_path: false\n`;
 const KEY_BIND = `      - type: bind\n        source: ${K}\n        target: /run/secrets/r20_ledger_key\n        read_only: true\n        bind:\n          create_host_path: false\n`;
@@ -60,6 +65,8 @@ const addEnv = (svc, name, value) => {
   else { svc.environment ??= {}; svc.environment[name] = value; }
 };
 const toListEnv = (svc) => { svc.environment = Object.entries(svc.environment).map(([k, v]) => `${k}=${v}`); };
+const withTop = (c, field, name, body) => { c[field] = { ...(c[field] ?? {}), [name]: body }; };
+const bindEntry = (source, target, extra = {}) => ({ type: "bind", source, target, ...extra });
 
 /** A conforming witness for `compose`; a compose whose names cannot be derived gets the BASE digest, so W8 must fail on it. */
 const conformingWitness = (compose, over = {}) => ({
@@ -242,6 +249,9 @@ const CANDIDATES = [
   // ── text-level candidates (real YAML syntax; run under both parsers) ─────────────────────────────────────────────────────────
   dc("DC-R102", "the authority bind is only commented out (YAML ignores it)", () => fromText(AUTH_BIND, commented(AUTH_BIND)), ["W2"], { W8: W8_UNDERIVABLE }),
   dc("DC-R103", "the key bind loses its read_only line in the text", () => fromText(KEY_BIND, KEY_BIND.replace("        read_only: true\n", "")), ["W3"]),
+  dc("DC-R192", "the optional env_file entry is only commented out (YAML ignores it)", () => fromText(ONCE_ENTRY_TEXT, commented(ONCE_ENTRY_TEXT)), ["W9"]),
+  dc("DC-R193", "the optional env_file entry loses its required line in the text (Compose then requires the file)", () => fromText(ONCE_ENTRY_TEXT, `      - path: ${ONCE_ENV_FILE}\n`), ["W9"]),
+  dc("DC-R194", "the optional env_file entry says required: true in the text", () => fromText(ONCE_ENTRY_TEXT, ONCE_ENTRY_TEXT.replace("required: false", "required: true")), ["W9"]),
   dc("DC-R104", "the authority bind in text form with create_host_path flipped", () => fromText(AUTH_BIND, AUTH_BIND.replace("create_host_path: false", "create_host_path: true")), ["W2"]),
 
   // ── added after the mutation sweep of the checker itself (branches the first corpus reached only through another check) ──────
@@ -249,6 +259,112 @@ const CANDIDATES = [
   dc("DC-R106", "the authority is a volume-type mount whose source LOOKS like an absolute host path", obj((c) => { replaceMount(c, AUTHORITY_TARGET, { type: "volume", source: A, target: AUTHORITY_TARGET }); }), ["W2", "W4"], { W8: W8_UNDERIVABLE }),
   dc("DC-R107", "a key-material name with a suffix other than _FILE, in a command (not an env name, so only the token rule sees it)", obj((c) => { c.services["maia-comms-worker"].command = ["sh", "-c", "echo R20_LEDGER_KEY_BASE64"]; }), ["W6"]),
   dc("DC-R108", "R20_LEDGER_KEY_FILE_EXTRA in a command (a longer name must not hide behind the _FILE exemption)", obj((c) => { c.services["maia-comms-worker"].command = ["sh", "-c", "echo R20_LEDGER_KEY_FILE_EXTRA"]; }), ["W6"]),
+
+  // ── W9: delivery of the one-shot initialise flag (decision D3, revised): maia.env_file is exactly two entries, and only maia names the once-file ──
+  dc("DC-R116", "another service lists the once-file in its env_file (map form, optional)", obj((c) => { c.services["maia-comms-worker"].env_file = [BASE_ENV_FILE, ONCE_ENTRY()]; }), ["W9"]),
+  dc("DC-R117", "another service lists the once-file as a bare env_file string", obj((c) => { c.services["maia-api"].env_file = ONCE_ENV_FILE; }), ["W9"]),
+  dc("DC-R118", "maia's env_file lacks the optional entry", obj((c, m) => { m.env_file = [BASE_ENV_FILE]; }), ["W9"]),
+  dc("DC-R119", "the optional entry says required: true", obj((c, m) => { m.env_file[1].required = true; }), ["W9"]),
+  dc("DC-R120", "the optional entry has no required key (Compose then requires the file)", obj((c, m) => { delete m.env_file[1].required; }), ["W9"]),
+  dc("DC-R121", 'the optional entry says required: "false" (a string is not the boolean)', obj((c, m) => { m.env_file[1].required = "false"; }), ["W9"]),
+  dc("DC-R122", "the optional entry comes BEFORE the shared file", obj((c, m) => { m.env_file = [m.env_file[1], m.env_file[0]]; }), ["W9"]),
+  dc("DC-R123", "a third env_file entry on maia", obj((c, m) => { m.env_file.push(".env.extra"); }), ["W9"]),
+  dc("DC-R124", "the once-file as a bare string on maia (Compose would then require it)", obj((c, m) => { m.env_file = [BASE_ENV_FILE, ONCE_ENV_FILE]; }), ["W9"]),
+  dc("DC-R125", "maia's env_file is a bare string, not a list", obj((c, m) => { m.env_file = BASE_ENV_FILE; }), ["W9"]),
+  dc("DC-R126", "maia has no env_file at all", obj((c, m) => { delete m.env_file; }), ["W9"]),
+  dc("DC-R127", "an extra key (format) on the optional entry", obj((c, m) => { m.env_file[1].format = "raw"; }), ["W9"]),
+  dc("DC-R128", "the optional entry's path has a ./ prefix", obj((c, m) => { m.env_file[1].path = `./${ONCE_ENV_FILE}`; }), ["W9"]),
+  dc("DC-R129", "the optional entry's path is a different file", obj((c, m) => { m.env_file[1].path = `${ONCE_ENV_FILE}.bak`; }), ["W9"]),
+  dc("DC-R130", "the shared file is not the first entry's exact string (./.env.production)", obj((c, m) => { m.env_file[0] = `./${BASE_ENV_FILE}`; }), ["W9"]),
+  dc("DC-R131", "maia names the once-file in its environment, outside env_file", obj((c, m) => { addEnv(m, "NOTE", ONCE_ENV_FILE); }), ["W9"]),
+  dc("DC-R132", "a worker's command names the once-file", obj((c) => { c.services["maia-comms-worker"].command = ["sh", "-c", `cat ${ONCE_ENV_FILE}`]; }), ["W9"]),
+  dc("DC-R133", "a worker's label VALUE names the once-file", obj((c) => { c.services["maia-comms-worker"].labels = { note: ONCE_ENV_FILE }; }), ["W9"]),
+  dc("DC-R134", "a worker's label KEY names the once-file", obj((c) => { c.services["maia-comms-worker"].labels = { [ONCE_ENV_FILE]: "x" }; }), ["W9"]),
+  dc("DC-R135", "a worker's environment value names the once-file", obj((c) => { addEnv(c.services["maia-comms-worker"], "NOTE", ONCE_ENV_FILE); }), ["W9"]),
+  dc("DC-R136", "a worker bind-mounts the once-file (a relative source that stays in the project directory)", obj((c) => { (c.services["maia-comms-worker"].volumes ??= []).push(`./${ONCE_ENV_FILE}:/x:ro`); }), ["W9"]),
+  dc("DC-R137", "a worker names the once-file in upper case", obj((c) => { c.services["maia-comms-worker"].env_file = [BASE_ENV_FILE, { path: ONCE_ENV_FILE.toUpperCase(), required: false }]; }), ["W9"]),
+  dc("DC-R138", "a top-level x- block names the once-file", obj((c) => { c["x-r20-note"] = { flag_file: ONCE_ENV_FILE }; }), ["W9"]),
+  dc("DC-R139", "a service is NAMED after the once-file", obj((c) => { c.services[ONCE_ENV_FILE] = { image: "example/none:1" }; }), ["W9"]),
+
+  // ── W5: top-level secrets, configs and volume drivers that hand a host path to a service ────────────────────────────────────────────
+  dc("DC-R140", "the key file as a top-level secret used by a worker", obj((c, m, w) => { withTop(c, "secrets", "r20key", { file: K }); w.secrets = ["r20key"]; }), ["W5"]),
+  dc("DC-R141", "the key file as a top-level secret used by maia at a different target", obj((c, m) => { withTop(c, "secrets", "r20key", { file: K }); m.secrets = [{ source: "r20key", target: "/run/secrets/elsewhere" }]; }), ["W5"]),
+  dc("DC-R142", "the authority directory as a top-level config used by a worker", obj((c, m, w) => { withTop(c, "configs", "r20dir", { file: A }); w.configs = ["r20dir"]; }), ["W5"]),
+  dc("DC-R143", "an UNUSED top-level secret pointing at the key (one line away from an exposure)", obj((c) => { withTop(c, "secrets", "r20key", { file: K }); }), ["W5"]),
+  dc("DC-R144", "an unused top-level secret pointing at the parent directory of both host paths", obj((c) => { withTop(c, "secrets", "r20all", { file: PARENT }); }), ["W5"]),
+  dc("DC-R145", "an unused top-level config pointing inside the authority directory", obj((c) => { withTop(c, "configs", "r20led", { file: `${A}/ledger.json` }); }), ["W5"]),
+  dc("DC-R146", "a top-level secret whose file starts with ~", obj((c) => { withTop(c, "secrets", "r20key", { file: "~/.config/soullab-r20/ledger.key" }); }), ["W5"]),
+  dc("DC-R147", "a top-level secret whose file is interpolated from ${HOME}", obj((c) => { withTop(c, "secrets", "r20key", { file: "${HOME}/.config/soullab-r20/ledger.key" }); }), ["W5"]),
+  dc("DC-R148", "a top-level secret whose absolute file reaches the key through '..'", obj((c) => { withTop(c, "secrets", "r20key", { file: "/home/soullab/MAIA-SOVEREIGN/../.config/soullab-r20/ledger.key" }); }), ["W5"]),
+  dc("DC-R149", "a top-level secret whose relative file leaves the project directory", obj((c) => { withTop(c, "secrets", "r20key", { file: "../.config/soullab-r20/ledger.key" }); }), ["W5"]),
+  dc("DC-R150", "a top-level secret whose file has duplicate slashes, '.' segments and a trailing slash", obj((c) => { withTop(c, "secrets", "r20key", { file: "/home/soullab//.config/./soullab-r20//ledger.key/" }); }), ["W5"]),
+  dc("DC-R151", "a named volume bound to the authority directory by driver_opts.device, used by a worker", obj((c, m, w) => {
+    withTop(c, "volumes", "r20dev", { driver: "local", driver_opts: { type: "none", o: "bind", device: A } }); w.volumes.push("r20dev:/x");
+  }), ["W5"]),
+  dc("DC-R152", "an unused named volume bound to the parent directory by driver_opts.device", obj((c) => { withTop(c, "volumes", "r20dev", { driver: "local", driver_opts: { type: "none", o: "bind", device: PARENT } }); }), ["W5"]),
+  dc("DC-R153", "a named volume whose driver_opts.device is interpolated from ${HOME}", obj((c) => { withTop(c, "volumes", "r20dev", { driver: "local", driver_opts: { type: "none", o: "bind", device: "${HOME}/.config/soullab-r20/authority" } }); }), ["W5"]),
+
+  // ── W5: another service's bind source, judged after normalisation, and sources that cannot be judged at all ───────────────────────
+  dc("DC-R154", "a worker's absolute source reaches the authority directory through '..'", obj((c, m, w) => { w.volumes.push("/home/soullab/MAIA-SOVEREIGN/../.config/soullab-r20/authority:/x:ro"); }), ["W5"]),
+  dc("DC-R155", "a worker's source starts with ~", obj((c, m, w) => { w.volumes.push("~/.config/soullab-r20/authority:/x:ro"); }), ["W5"]),
+  dc("DC-R156", "a worker's short-form source is interpolated from ${HOME} (parseMount calls it a named volume)", obj((c, m, w) => { w.volumes.push("${HOME}/.config/soullab-r20/authority:/x:ro"); }), ["W5"]),
+  dc("DC-R157", "a worker's relative source leaves the project directory", obj((c, m, w) => { w.volumes.push("../.config/soullab-r20/authority:/x:ro"); }), ["W5"]),
+  dc("DC-R158", "the build-context prefix followed by a '..' that leaves it", obj((c, m, w) => { w.volumes.push("${MAIA_BUILD_CONTEXT:-.}/../.config/soullab-r20/authority:/x:ro"); }), ["W5"]),
+  dc("DC-R159", "the build-context variable WITHOUT its default is not the one read as a place", obj((c, m, w) => { w.volumes.push("${MAIA_BUILD_CONTEXT}/x:/y:ro"); }), ["W5"]),
+  dc("DC-R160", "another interpolation with a default", obj((c, m, w) => { w.volumes.push("${OTHER_DIR:-.}/x:/y:ro"); }), ["W5"]),
+  dc("DC-R161", "a long-form bind whose source is interpolated", obj((c, m, w) => { w.volumes.push(bindEntry("${HOME}/.config/soullab-r20/authority", "/x")); }), ["W5"]),
+  dc("DC-R162", "duplicate slashes and '.' segments in a path that is the authority directory", obj((c, m, w) => { w.volumes.push("/home/soullab//.config/./soullab-r20//authority:/x:ro"); }), ["W5"]),
+  dc("DC-R163", "a trailing slash on a path that is the authority directory", obj((c, m, w) => { w.volumes.push(`${A}/:/x:ro`); }), ["W5"]),
+  dc("DC-R164", "an interpolated source hides the target /run/r20 (only a correct short-form split sees it)", obj((c, m, w) => { w.volumes.push("${MAIA_BUILD_CONTEXT:-.}/x:/run/r20:ro"); }), ["W5"]),
+  dc("DC-R165", "an interpolated source hides the key target (only a correct short-form split sees it)", obj((c, m, w) => { w.volumes.push("${MAIA_BUILD_CONTEXT:-.}/k:/run/secrets/r20_ledger_key:ro"); }), ["W5"]),
+  dc("DC-R166", "a long-form bind with no source at all", obj((c, m, w) => { w.volumes.push({ type: "bind", target: "/x" }); }), ["W5"]),
+  dc("DC-R167", "an absolute source with a '..' that does not reach R20 (the daemon resolves '..' on the live filesystem)", obj((c, m, w) => { w.volumes.push("/srv/a/../b:/x:ro"); }), ["W5"]),
+  dc("DC-R168", "a worker mounts /home/soullab, which contains both host paths", obj((c, m, w) => { w.volumes.push("/home/soullab:/x:ro"); }), ["W5"]),
+
+  // ── W5: nothing hides a service's definition, maia included ──────────────────────────────────────────────────────────────────────
+  dc("DC-R169", "maia extends an external definition (its inherited mounts cannot be seen)", obj((c, m) => { m.extends = { file: "other.yml", service: "base" }; }), ["W5"]),
+  dc("DC-R170", "the media worker extends another service", obj((c, m, w) => { w.extends = { service: "maia-api" }; }), ["W5"]),
+
+  // ── W3: the key source names a file; W2/W3: the host paths are not handed out a second time by maia ─────────────────────────────
+  dc("DC-R171", "the key source ends with a slash (the derived name, and so the witness digest, would not change)", obj((c) => { mountAt(c, KEY_TARGET).source = `${K}/`; }), ["W3"]),
+  dc("DC-R172", "maia mounts the key file a second time at another target (short form)", obj((c, m) => { m.volumes.push(`${K}:/tmp/key:ro`); }), ["W3"]),
+  dc("DC-R173", "maia mounts the key file a second time at another target (long form)", obj((c, m) => { m.volumes.push(bindEntry(K, "/tmp/key", { read_only: true, bind: { create_host_path: false } })); }), ["W3"]),
+  dc("DC-R174", "maia mounts the parent directory of both host paths at another target", obj((c, m) => { m.volumes.push(`${PARENT}:/tmp/r20:ro`); }), ["W2", "W3"]),
+  dc("DC-R175", "maia mounts the authority directory a second time, read-only, at another target", obj((c, m) => { m.volumes.push(`${A}:/tmp/authority:ro`); }), ["W2"]),
+  dc("DC-R176", "maia mounts the grandparent /home/soullab/.config at another target", obj((c, m) => { m.volumes.push("/home/soullab/.config:/tmp/cfg:ro"); }), ["W2", "W3"]),
+  dc("DC-R177", "maia mounts a file inside the authority directory at another target", obj((c, m) => { m.volumes.push(`${A}/ledger.json:/tmp/ledger.json:ro`); }), ["W2"]),
+  dc("DC-R178", "maia mounts / at another target", obj((c, m) => { m.volumes.push("/:/host:ro"); }), ["W2", "W3"]),
+  dc("DC-R179", "maia: a second mount whose source starts with ~", obj((c, m) => { m.volumes.push("~/.config/soullab-r20/ledger.key:/tmp/k:ro"); }), ["W5"]),
+  dc("DC-R180", "maia: a second mount whose source is interpolated from ${HOME}", obj((c, m) => { m.volumes.push("${HOME}/.config/soullab-r20/ledger.key:/tmp/k:ro"); }), ["W5"]),
+  dc("DC-R181", "maia: a second mount whose relative source leaves the project directory", obj((c, m) => { m.volumes.push("../.config/soullab-r20/ledger.key:/tmp/k:ro"); }), ["W5"]),
+  dc("DC-R182", "maia: a second mount reaches the key through '..' (it reaches it, and the daemon resolves '..' on the live filesystem)", obj((c, m) => { m.volumes.push("/home/soullab/MAIA-SOVEREIGN/../.config/soullab-r20/ledger.key:/tmp/k:ro"); }), ["W3", "W5"]),
+  dc("DC-R183", "maia: an interpolated long-form source", obj((c, m) => { m.volumes.push(bindEntry("${HOME}/.config/soullab-r20/ledger.key", "/tmp/k", { read_only: true })); }), ["W5"]),
+
+  // ── W8: a record that contradicts itself, and output that is not a list of lines ────────────────────────────────────────────────
+  dc("DC-R184", "a FAIL result line beside the PASS line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", "r20_host_preflight result=FAIL", PREFLIGHT_PASS_LINE] }) }),
+  dc("DC-R185", "an UNKNOWN result line beside the PASS line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", "r20_host_preflight result=UNKNOWN", PREFLIGHT_PASS_LINE] }) }),
+  dc("DC-R186", "a FAIL result line with leading whitespace beside the PASS line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE, "  r20_host_preflight result=FAIL"] }) }),
+  dc("DC-R187", "a lower-case pass variant beside the PASS line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE, "r20_host_preflight result=pass"] }) }),
+  dc("DC-R188", "a result line with spaces around the equals sign beside the PASS line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE, "r20_host_preflight result = FAIL"] }) }),
+  dc("DC-R189", "an output element that is not a string, beside every required line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE, 5] }) }),
+  dc("DC-R190", "an output element that is null, beside every required line", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE, null] }) }),
+  dc("DC-R191", "output is a map holding the required lines, not an array", () => edit(() => {}), ["W8"], {}, { witness: conformingWitness(REAL_PARSED, { output: { a: "ledger_pair_state both_absent", b: "key_form hex64", c: PREFLIGHT_PASS_LINE } }) }),
+  // ── added after the mutation sweep of the new law code (each closes a mutant that the first corpus left alive) ──────────────────────
+  dc("DC-R195", "the optional entry says required: null", obj((c, m) => { m.env_file[1].required = null; }), ["W9"]),
+  dc("DC-R196", "the optional entry says required: 0 (falsy, and loosely equal to false)", obj((c, m) => { m.env_file[1].required = 0; }), ["W9"]),
+  dc("DC-R197", 'the optional entry says required: "" (falsy, and loosely equal to false)', obj((c, m) => { m.env_file[1].required = ""; }), ["W9"]),
+  dc("DC-R198", "the second env_file entry is a list holding the file name, not the map form", obj((c, m) => { m.env_file[1] = [ONCE_ENV_FILE]; }), ["W9"]),
+  dc("DC-R199", "a top-level KEY names the once-file", obj((c) => { c[ONCE_ENV_FILE] = "x"; }), ["W9"]),
+  dc("DC-R200", "a top-level secret whose absolute file has a '..' that does not reach R20 (the daemon resolves '..' on the live filesystem)", obj((c) => { withTop(c, "secrets", "plain", { file: "/srv/a/../b.secret" }); }), ["W5"]),
+  dc("DC-R201", "the authority is a volume-type mount whose source LOOKS like a host path, and a worker bind-mounts that path", obj((c, m, w) => {
+    replaceMount(c, AUTHORITY_TARGET, { type: "volume", source: A, target: AUTHORITY_TARGET }); w.volumes.push(`${A}:/x:ro`);
+  }), ["W2", "W4", "W5"], { W8: W8_UNDERIVABLE }),
+  dc("DC-R202", "the authority source has a '..' (W4), and a worker mounts the normalised path (the host path is compared normalised)", obj((c, m, w) => {
+    mountAt(c, AUTHORITY_TARGET).source = "/home/soullab/.config/soullab-r20/../soullab-r20/authority"; w.volumes.push(`${A}:/x:ro`);
+  }), ["W4", "W5"]),
+  dc("DC-R203", "the authority source climbs out of another directory with '..' (W4), and a worker mounts the normalised path", obj((c, m, w) => {
+    mountAt(c, AUTHORITY_TARGET).source = "/home/soullab/MAIA-SOVEREIGN/../.config/soullab-r20/authority"; w.volumes.push(`${A}:/x:ro`);
+  }), ["W4", "W5"]),
 ];
 
 /** Candidates whose reason must also be SAID to the operator, not only decided: a redundant branch that only changed the wording would otherwise go unnoticed. */
@@ -261,6 +377,33 @@ const SAYS = {
   "DC-R106": [["W2", /not a host bind/], ["W4", /named volume/]],
   "DC-R107": [["W6", /key-material/]],
   "DC-R108": [["W6", /key-material/]],
+  "DC-R93": [["W8", /array of strings/]],
+  "DC-R118": [["W9", /exactly two/]],
+  "DC-R119": [["W9", /required: false/]],
+  "DC-R122": [["W9", /first maia\.env_file entry/], ["W9", /second maia\.env_file entry is not the map form/]],
+  "DC-R131": [["W9", /outside its env_file/]],
+  "DC-R136": [["W9", /only maia may name it/]],
+  "DC-R140": [["W5", /top-level secret/], ["W5", /uses the top-level secret/]],
+  "DC-R141": [["W5", /maia: uses the top-level secret r20key/]],
+  "DC-R143": [["W5", /is, contains or lies inside an R20 host path/]],
+  "DC-R147": [["W5", /interpolation/]],
+  "DC-R149": [["W5", /leaves the project directory/]],
+  "DC-R151": [["W5", /driver_opts\.device/]],
+  "DC-R155": [["W5", /home-directory shorthand/]],
+  "DC-R156": [["W5", /interpolation/]],
+  "DC-R164": [["W5", /has a mount at \/run\/r20/]],
+  "DC-R165": [["W5", /has a mount at \/run\/secrets\/r20_ledger_key/]],
+  "DC-R167": [["W5", /'\.\.' segment/]],
+  "DC-R169": [["W5", /maia: uses extends/]],
+  "DC-R171": [["W3", /ends with a slash/]],
+  "DC-R172": [["W3", /key host path/]],
+  "DC-R175": [["W2", /authority host path/]],
+  "DC-R179": [["W5", /maia: a mount source cannot be resolved/]],
+  "DC-R184": [["W8", /other than the PASS line/]],
+  "DC-R189": [["W8", /not a string/]],
+  "DC-R198": [["W9", /second maia\.env_file entry is not the map form/]],
+  "DC-R200": [["W5", /'\.\.' segment/]],
+  "DC-R191": [["W8", /not an array of strings/]],
 };
 
 const expectedSet = (cand) => [...new Set([...cand.named, ...Object.keys(cand.collateral)])].sort();
@@ -286,7 +429,10 @@ const FORBIDDEN = (() => {
   }
   return [...out];
 })();
-const assertNoLeak = (text, where) => { for (const f of FORBIDDEN) assert.ok(!text.includes(f), `${where}: output contains a value that must never be printed`); };
+// The checker deliberately names two fixed env file names (W9). Both are authored text, and ".env.production" contains the word "production", which is also the
+// value of NODE_ENV; they are removed before the substring check so that the check still bites on every real value.
+const stripFixedNames = (text) => text.split(BASE_ENV_FILE).join("").split(ONCE_ENV_FILE).join("");
+const assertNoLeak = (text, where) => { const t = stripFixedNames(text); for (const f of FORBIDDEN) assert.ok(!t.includes(f), `${where}: output contains a value that must never be printed`); };
 
 // ── the reference ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 test("the real compose with a conforming in-test witness holds every law (the reference the candidates are edits of)", async () => {
@@ -299,7 +445,7 @@ test("the real compose with a conforming in-test witness holds every law (the re
   }
 });
 
-test("the real compose with NO witness fails exactly W8 and holds W0-W7 (the state this change is merged in, red by design)", async () => {
+test("the real compose with NO witness fails exactly W8 and holds W0-W7 and W9 (the state this change is merged in, red by design)", async () => {
   const r = run(REAL_PARSED, { witness: undefined });
   assert.deepEqual(failingLaws(r), ["W8"], dump(r));
   assert.match(r.failures[0].message, /no witness/);
@@ -337,7 +483,8 @@ for (const cand of CANDIDATES) {
 }
 
 test("the candidate corpus is large enough and every law is both killed and discriminated", () => {
-  assert.ok(CANDIDATES.length >= 24, `at least 24 defeat candidates (have ${CANDIDATES.length})`);
+  assert.ok(CANDIDATES.length >= 180, `at least 180 defeat candidates (have ${CANDIDATES.length})`);
+  assert.deepEqual([...LAW_IDS], ["W0", "W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9"], "ten laws, W0 to W9");
   assert.equal(new Set(CANDIDATES.map((c) => c.id)).size, CANDIDATES.length, "ids are unique");
   for (const id of LAW_IDS) assert.ok(CANDIDATES.some((c) => c.named.includes(id)), `${id} is named by at least one candidate`);
   // W0 cannot fail alone: with no maia the laws about maia cannot hold either. Every other law has a candidate that fails ONLY it.
@@ -368,6 +515,118 @@ test("lawful variants hold: list-form env, read_only: false on the authority, a 
   }
 });
 
+test("lawful variants of the strengthened laws hold: unrelated and in-project sources, sibling names, harmless secrets, configs and volume drivers, extra preflight lines", async () => {
+  const lawful = [
+    ["an unrelated absolute top-level secret used by a worker", edit((c, m, w) => { withTop(c, "secrets", "other", { file: "/srv/other.secret" }); w.secrets = ["other"]; })],
+    ["a relative top-level secret and config", edit((c) => { withTop(c, "secrets", "rel", { file: "./secrets/x" }); withTop(c, "configs", "cfg", { file: "./config/y.conf" }); })],
+    ["a top-level secret that is external (no file)", edit((c) => { withTop(c, "secrets", "ext", { external: true }); })],
+    ["a null top-level secret body", edit((c) => { withTop(c, "secrets", "empty", null); })],
+    ["a tmpfs-driver named volume, used by a worker", edit((c, m, w) => { withTop(c, "volumes", "scratch", { driver: "local", driver_opts: { type: "tmpfs", device: "tmpfs" } }); w.volumes.push("scratch:/scratch"); })],
+    ["a named volume whose device is an unrelated absolute path", edit((c) => { withTop(c, "volumes", "elsewhere", { driver: "local", driver_opts: { type: "none", o: "bind", device: "/srv/data" } }); })],
+    ["a relative source that collapses to inside the project directory", edit((c, m, w) => { w.volumes.push("./a/../b:/x:ro"); })],
+    ["the deploy lane's build-context prefix with an in-project path", edit((c, m, w) => { w.volumes.push("${MAIA_BUILD_CONTEXT:-.}/database/migrations:/x:ro"); })],
+    ["a worker mounts a SIBLING name that merely starts like the R20 directory", edit((c, m, w) => { w.volumes.push("/home/soullab/.config/soullab-r20-backup:/x:ro"); })],
+    ["maia mounts that sibling name at a second target", edit((c, m) => { m.volumes.push("/home/soullab/.config/soullab-r20-backup:/x:ro"); })],
+    ["maia mounts an unrelated absolute path at a second target", edit((c, m) => { m.volumes.push("/srv/other:/x:ro"); })],
+    ["maia mounts an in-project relative path at a second target", edit((c, m) => { m.volumes.push("./data:/x"); })],
+    ["maia: a long-form NAMED volume whose name is interpolated (a name cannot be a host path)", edit((c, m) => { m.volumes.push({ type: "volume", source: "${EXTRA_VOLUME_NAME}", target: "/x" }); })],
+    ["a worker's anonymous volume (one field)", edit((c, m, w) => { w.volumes.push("/scratch"); })],
+    ["a worker lists its own optional env file", edit((c) => { c.services["maia-comms-worker"].env_file = [BASE_ENV_FILE, { path: ".env.worker-once", required: false }]; })],
+    ["the optional entry's keys in the other order", edit((c, m) => { m.env_file[1] = { required: false, path: ONCE_ENV_FILE }; })],
+  ];
+  for (const [label, compose] of lawful) {
+    const r = run(compose);
+    assert.deepEqual(failingLaws(r), [], `${label}\n${dump(r)}`);
+  }
+  // A witness that repeats the exact PASS line and carries the preflight's own per-check and advisory lines is not contradictory.
+  const real = conformingWitness(REAL_PARSED, {
+    output: ["ledger_pair_state both_absent", "key_form hex64", "dir_exists true", "key_mode_ok true", "authority_dir_under_docker_data_root false", "key_under_docker_data_root false", PREFLIGHT_PASS_LINE, PREFLIGHT_PASS_LINE],
+  });
+  assert.deepEqual(failingLaws(run(REAL_PARSED, { witness: real })), []);
+  // The once-file may be named in a YAML comment (the real compose does): comments are not part of the parsed document.
+  assert.ok(REAL.includes(`# R20 one-shot initialise flag`), "the real compose does mention the flag file in prose, so this test is not vacuous");
+  const withProse = mutate(REAL, ENV_BLOCK, `${ENV_BLOCK}      # see ${ONCE_ENV_FILE} and ${BASE_ENV_FILE}\n`);
+  for (const prefer of ["yaml", "js-yaml"]) assert.deepEqual(failingLaws(run(await parseCompose(withProse, { prefer }))), [], prefer);
+});
+
+test("resolveSource: normalisation, the one pinned interpolation, and what cannot be judged", () => {
+  const cases = [
+    ["/a/b", { abs: "/a/b", dotDot: false }],
+    ["/a//b/./c/", { abs: "/a/b/c", dotDot: false }],
+    ["/a/b/../c", { abs: "/a/c", dotDot: true }],
+    ["/a/../../b", { abs: "/b", dotDot: true }],
+    ["/", { abs: "/", dotDot: false }],
+    ["/..", { abs: "/", dotDot: true }],
+    ["./Caddyfile", { inside: true, dotDot: false }],
+    ["beta", { inside: true, dotDot: false }],
+    ["a/../b", { inside: true, dotDot: true }],
+    [".", { inside: true, dotDot: false }],
+    ["${MAIA_BUILD_CONTEXT:-.}/database/migrations", { inside: true, dotDot: false }],
+    ["${MAIA_BUILD_CONTEXT:-.}", { inside: true, dotDot: false }],
+    ["${MAIA_BUILD_CONTEXT:-.}/a/../b", { inside: true, dotDot: true }],
+    ["../x", { unjudgeable: "relative path that leaves the project directory" }],
+    ["a/../../x", { unjudgeable: "relative path that leaves the project directory" }],
+    ["${MAIA_BUILD_CONTEXT:-.}/../x", { unjudgeable: "relative path that leaves the project directory" }],
+    ["~/x", { unjudgeable: "home-directory shorthand" }],
+    ["~root/x", { unjudgeable: "home-directory shorthand" }],
+    ["${HOME}/x", { unjudgeable: "interpolation" }],
+    ["$HOME/x", { unjudgeable: "interpolation" }],
+    ["/srv/$X", { unjudgeable: "interpolation" }],
+    ["${MAIA_BUILD_CONTEXT}/x", { unjudgeable: "interpolation" }],
+    ["${MAIA_BUILD_CONTEXT:-.}x", { unjudgeable: "interpolation" }],
+    ["${MAIA_BUILD_CONTEXT:-.}/${X}", { unjudgeable: "interpolation" }],
+    ["${OTHER:-.}/x", { unjudgeable: "interpolation" }],
+    ["/srv/${MAIA_BUILD_CONTEXT:-.}/x", { unjudgeable: "interpolation" }],
+    ["x${MAIA_BUILD_CONTEXT:-.}", { unjudgeable: "interpolation" }],
+    ["", { unjudgeable: "no usable source" }],
+    [undefined, { unjudgeable: "no usable source" }],
+    [5, { unjudgeable: "no usable source" }],
+  ];
+  for (const [input, want] of cases) assert.deepEqual(resolveSource(input), want, `resolveSource(${JSON.stringify(input)})`);
+});
+
+test("parseShortMount: a source with an interpolation default keeps its target (parseMount does not), and agrees with parseMount on every plain entry of the real compose", () => {
+  const mig = parseShortMount("${MAIA_BUILD_CONTEXT:-.}/database/migrations:/app/database/migrations:ro");
+  assert.deepEqual(mig, { kind: "bind", source: "${MAIA_BUILD_CONTEXT:-.}/database/migrations", target: "/app/database/migrations", readOnly: true, options: [] });
+  assert.notEqual(parseMount("${MAIA_BUILD_CONTEXT:-.}/database/migrations:/app/database/migrations:ro").target, "/app/database/migrations", "the shared parser reads the wrong target; that is why this check has its own");
+  assert.equal(parseShortMount("${HOME}/x:/y").kind, "bind", "an interpolated source may be a path, and parseMount calls it a named volume");
+  assert.equal(parseMount("${HOME}/x:/y").kind, "volume");
+  assert.deepEqual(parseShortMount("/scratch"), { kind: "volume", source: undefined, target: "/scratch", readOnly: false, options: [] }, "one field is an anonymous volume at that target");
+  assert.deepEqual(parseShortMount("vault_data:/app/data/vault"), { kind: "volume", source: "vault_data", target: "/app/data/vault", readOnly: false, options: [] });
+  assert.equal(parseShortMount("./a:/b:ro,z").readOnly, true);
+  assert.equal(parseShortMount("./a:/b:rw").readOnly, false);
+  let seen = 0;
+  for (const [name, svc] of Object.entries(REAL_PARSED.services)) {
+    for (const entry of svc.volumes ?? []) {
+      if (typeof entry !== "string" || entry.includes("${")) continue;
+      const a = parseShortMount(entry);
+      const b = parseMount(entry);
+      assert.deepEqual({ kind: a.kind, source: a.source, target: a.target, readOnly: a.readOnly }, { kind: b.kind, source: b.source, target: b.target, readOnly: b.readOnly }, `${name}: ${entry}`);
+      seen++;
+    }
+  }
+  assert.ok(seen >= 10, `the agreement test looked at ${seen} real entries`);
+});
+
+test("checkWitness: contradictory result lines and non-list output are W8 alone, and a record without them is clean", () => {
+  const ctx = { compose: REAL_PARSED, scriptBytes: SCRIPT_BYTES };
+  const base = ["ledger_pair_state both_absent", "key_form hex64", PREFLIGHT_PASS_LINE];
+  assert.deepEqual(checkWitness(conformingWitness(REAL_PARSED, { output: base }), ctx), { failures: [] });
+  for (const extra of ["r20_host_preflight result=FAIL", "r20_host_preflight result=UNKNOWN", "r20_host_preflight result=", "\tr20_host_preflight result=PASS-ish", "R20_HOST_PREFLIGHT RESULT=FAIL", "r20_host_preflight  result=FAIL", "r20_host_preflight\tresult=FAIL"]) {
+    const r = checkWitness(conformingWitness(REAL_PARSED, { output: [...base, extra] }), ctx);
+    assert.equal(r.failures.length, 1, JSON.stringify(extra));
+    assert.match(r.failures[0].message, /other than the PASS line/);
+  }
+  for (const bad of ["a string", 5, null, { a: 1 }]) {
+    const r = checkWitness(conformingWitness(REAL_PARSED, { output: bad }), ctx);
+    assert.equal(r.failures.length, 1, JSON.stringify(bad));
+    assert.match(r.failures[0].message, /not an array of strings/);
+  }
+  const r = checkWitness(conformingWitness(REAL_PARSED, { output: [...base, 7] }), ctx);
+  assert.equal(r.failures.length, 1);
+  assert.match(r.failures[0].message, /not a string/);
+});
+
 test("a trailing slash on the authority source derives the same names and the same digest as the bare path", () => {
   const slashed = edit((c) => { mountAt(c, AUTHORITY_TARGET).source = `${A}///`; });
   assert.deepEqual(deriveHostNames(slashed), deriveHostNames(REAL_PARSED));
@@ -382,6 +641,10 @@ x-r20-env: &r20env
   R20_LEDGER_KEY_FILE: "/run/secrets/r20_ledger_key"
 services:
   maia:
+    env_file:
+      - ${BASE_ENV_FILE}
+      - path: ${ONCE_ENV_FILE}
+        required: false
     environment:
       <<: *r20env
       NODE_ENV: production
@@ -429,6 +692,13 @@ test("shapes the check cannot read throw CannotCheck (exit 2), never a pass and 
     ["another service's volumes_from a map", { services: { maia: {}, other: { volumes_from: { a: 1 } } } }],
     ["another service's volumes_from entry a number", { services: { maia: {}, other: { volumes_from: [5] } } }],
     ["another service's environment malformed", { services: { maia: {}, other: { environment: 7 } } }],
+    ["top-level secrets a list", { services: { maia: {} }, secrets: [] }],
+    ["top-level configs a string", { services: { maia: {} }, configs: "nope" }],
+    ["a top-level secret that is a string", { services: { maia: {} }, secrets: { a: "nope" } }],
+    ["a top-level config that is a list", { services: { maia: {} }, configs: { a: [] } }],
+    ["top-level volumes a list", { services: { maia: {} }, volumes: [] }],
+    ["maia's secrets not a list", { services: { maia: { secrets: "nope" } } }],
+    ["another service's secrets a map", { services: { maia: {}, other: { secrets: { a: 1 } } } }],
   ];
   for (const [label, doc] of bad) assert.throws(() => checkCompose(doc, {}), CannotCheck, label);
 });
@@ -448,17 +718,31 @@ test("the three names are exactly the names lib/recovery/r20DeletionLedger.ts re
   assert.deepEqual([...read].sort(), [...Object.keys(ENV_PATHS), "R20_LEDGER_ALLOW_INITIALIZE"].sort());
 });
 
-test("package.json wires the check into ci:sovereignty and preflight right after the R20 host preflight, and defines the script", () => {
+test("package.json wires the check as the LAST check of ci:sovereignty and of preflight (so a red W8 stops nothing before it), and defines the script", () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(REPO, "package.json"), "utf8"));
   // The unit tests run first so that they still report while the witness gate (W8) is red by design; the CLI check then fails the chain.
   assert.equal(pkg.scripts["check:compose-r20-wiring"], "node --test scripts/check-compose-r20-wiring.test.mjs && node scripts/check-compose-r20-wiring.mjs");
-  const link = "npm run check:r20-host-preflight && npm run check:compose-r20-wiring && ";
+  const leg = "npm run check:compose-r20-wiring";
   for (const chain of ["ci:sovereignty", "preflight"]) {
-    const s = pkg.scripts[chain];
-    assert.equal(s.split(link).length - 1, 1, `${chain}: the new step sits immediately after the R20 host preflight, once`);
-    assert.equal(s.split("npm run check:compose-r20-wiring").length - 1, 1, `${chain}: and appears only once`);
-    assert.ok(s.includes("npm run check:compose-vault-parity && npm run check:r20-host-preflight"), `${chain}: the PR-A and PR-B steps are unchanged and in order`);
+    const legs = pkg.scripts[chain].split(" && ");
+    assert.equal(legs.filter((l) => l === leg).length, 1, `${chain}: the leg appears exactly once`);
+    assert.equal(pkg.scripts[chain].split(leg).length - 1, 1, `${chain}: and its name appears nowhere else in the chain`);
+    const at = legs.indexOf(leg);
+    // The leg is the last thing in ci:sovereignty; in preflight only the success banner (an echo that is not a check) may follow it, because a banner printed
+    // before a failing leg would say "passed" and then fail.
+    if (chain === "ci:sovereignty") assert.equal(at, legs.length - 1, `${chain}: the R20 wiring leg is the final leg`);
+    else {
+      assert.equal(at, legs.length - 2, `${chain}: the R20 wiring leg is the last leg before the banner`);
+      assert.match(legs[legs.length - 1], /^echo '/, `${chain}: and the banner is an echo`);
+    }
+    // Every leg after the PR-A and PR-B steps keeps its place relative to them: parity, then the R20 host preflight, then (later) everything else.
+    const parity = legs.indexOf("npm run check:compose-vault-parity");
+    assert.ok(parity >= 0 && legs[parity + 1] === "npm run check:r20-host-preflight", `${chain}: the PR-A and PR-B steps are unchanged and adjacent`);
+    assert.ok(at > parity + 1, `${chain}: the R20 wiring leg comes after both`);
   }
+  // The final leg of ci:sovereignty is a bare npm run, so the `--silent` arguments of the test leg before it stay attached to that leg.
+  const ci = pkg.scripts["ci:sovereignty"].split(" && ");
+  assert.match(ci[ci.length - 2], /^npm run test -- .* --silent$/);
 });
 
 // ── the CLI ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -473,14 +757,14 @@ const absentWitness = () => path.join(sandbox, "no-such-witness.json");
 test("CLI: the real compose and a conforming witness exit 0; with the witness absent it exits 1 and names exactly W8", () => {
   const ok = cli(["--compose", COMPOSE_PATH, "--witness", goodWitnessFile()]);
   assert.equal(ok.status, 0, out(ok));
-  assert.match(ok.stdout, /9 of 9 laws hold/);
-  assert.equal(ok.stdout.split("\n").filter((l) => l.startsWith("PASS ")).length, 9);
+  assert.match(ok.stdout, /10 of 10 laws hold/);
+  assert.equal(ok.stdout.split("\n").filter((l) => l.startsWith("PASS ")).length, 10);
 
   const red = cli(["--compose", COMPOSE_PATH, "--witness", absentWitness()]);
   assert.equal(red.status, 1, out(red));
   assert.deepEqual(red.stdout.split("\n").filter((l) => l.startsWith("FAIL ")).map((l) => l.split(" ")[1]), ["W8"]);
-  assert.equal(red.stdout.split("\n").filter((l) => l.startsWith("PASS ")).length, 8);
-  assert.match(red.stdout, /8 of 9 laws hold/);
+  assert.equal(red.stdout.split("\n").filter((l) => l.startsWith("PASS ")).length, 9);
+  assert.match(red.stdout, /9 of 10 laws hold/);
 });
 
 test("CLI: a defeat candidate exits 1 and names its law; a stale witness exits 1 on W8", () => {
