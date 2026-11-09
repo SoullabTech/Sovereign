@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { toAudioResponsePayload } from '@/lib/voice/audioResponsePayload';
 import { detectMaiaCommands } from '@/lib/voice/VoiceCommandDetector';
+import { isAuthenticatedMusicCommandOnlyRequest } from '@/lib/listening/maiaMusicCommand';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
@@ -497,9 +498,16 @@ export async function POST(req: NextRequest) {
     // turn without paying for or fabricating an ordinary MAIA response.
     const commandOnlyClassification =
       commandOnly === true ? detectMaiaCommands(message) : null;
+    // LISTEN-56: this is a server-side *classification*, never sound authority.
+    // Only the existing authenticated actor can take the lightweight F1 route.
+    // Exact text and F1 durability still bind the real member turn.
+    const verifiedMusicCommandOnly = isAuthenticatedMusicCommandOnlyRequest(
+      message, commandOnly, isRecognizedUser,
+    );
     const isValidatedCommandOnly =
-      commandOnlyClassification?.disposition === 'EXECUTE' &&
-      commandOnlyClassification.onlyCommands === true;
+      (commandOnlyClassification?.disposition === 'EXECUTE' &&
+       commandOnlyClassification.onlyCommands === true) ||
+      verifiedMusicCommandOnly;
 
     if (isValidatedCommandOnly) {
       const commandAcceptanceCanonHeaders = makeCanonHeaders({

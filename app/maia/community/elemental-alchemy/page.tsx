@@ -635,7 +635,7 @@ export default function ElementalAlchemyBookPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <button
                   onClick={() => router.push('/maia/community/elemental-alchemy/assessment')}
                   className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10
@@ -672,6 +672,19 @@ export default function ElementalAlchemyBookPage() {
                   <div className="text-left">
                     <div className="text-sm font-medium text-green-300">Elemental Journal</div>
                     <div className="text-xs text-white/50">Reflect on your journey</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => router.push('/maia/community/elemental-alchemy/reader')}
+                  className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-violet-500/10
+                           border border-blue-500/20 hover:border-blue-500/40 transition-all
+                           flex items-center gap-3"
+                >
+                  <Volume2 className="w-5 h-5 text-blue-300" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-blue-200">Read &amp; Listen</div>
+                    <div className="text-xs text-white/50">Member-started audiobook narration</div>
                   </div>
                 </button>
               </div>
