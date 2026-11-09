@@ -3409,7 +3409,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       mode="develop"
       appearance={props.appearance}
       geometry={useStage
-        ? { ...STATE_GEOMETRY['develop-manuscript'], manuscriptWidth: 0, manuscriptFloor: 0, gapLeft: 0, maiaWidth: 440, maiaFloor: 320 }
+        ? { ...STATE_GEOMETRY['develop-manuscript'], manuscriptWidth: 0, manuscriptFloor: 0, gapLeft: 0, maiaWidth: 440, maiaFloor: 320, bottom: 52 }   /* a strip below the panels for Report a bug / Beta journey, so they cover nothing (founder 2026-11-09) */
         : props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
       workTitle={props.workTitle || undefined}
       memberInitial=""
