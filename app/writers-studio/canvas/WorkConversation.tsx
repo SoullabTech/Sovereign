@@ -143,6 +143,8 @@ const REFUSAL_SAYS: Record<string, string> = {
   question_too_long: 'That is longer than a question this room can carry.',
   unauthenticated: 'You are signed out. Sign in and your question will go through.',
   not_found: 'This Work could not be opened for conversation.',
+  /* Any other failure after the question arrived (e.g. the AI service refused or failed). Said plainly; never shown as one of her answers. */
+  not_answered: 'MAIA couldn’t answer this time. Nothing you wrote was lost — your question is still in the box; send it again when you’re ready.',
 };
 
 const when = (iso: string) => {
@@ -165,6 +167,8 @@ export interface WorkConversationProps {
   onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
   /** The Develop stage keeps MAIA's holdings (reading permission, what you have settled) in its own column, so the conversation stays a conversation. */
   hideHoldings?: boolean;
+  /** Develop stage: the secondary controls (Where are we?, new conversation, Focus, close, Keeps, Open in MAIA) sit behind one quiet “More”. */
+  quiet?: boolean;
   /** Which saved sections MAIA was handed for the answer just received (ids + headings only). */
   onRead?: (read: readonly { sectionId: string; label: string | null }[]) => void;
   /** G4: MAIA offered "Read this chapter" and the writer clicked it. Absent → no such button. Only the click starts a reading. */
@@ -184,10 +188,12 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, onRead, onReadChapter, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const showSecondary = !quiet || moreOpen;
   const [focusMode, setFocusMode] = useState(false);
 
   const [decision, setDecision] = useState<ResumeDecision | null>(null);
@@ -444,7 +450,7 @@ function ScopedWorkConversation({
       }
       // Refusals must retain literal text and any server-returned thread id.
       if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
-      setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.unreachable);
+      setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.not_answered);
     } catch {
       // A transport error is an ambiguous delivery, never an automatic retry.
       setRefusal(REFUSAL_SAYS.unreachable);
@@ -504,7 +510,7 @@ function ScopedWorkConversation({
       {!hideHoldings && manuscriptId ? <ReadScopeControl manuscriptId={manuscriptId} /> : null}
       {!hideHoldings ? <SettledDecisions workId={work.id} /> : null}
       {/* ── The Work this exchange is in, where the member can see it. ── */}
-      <div
+      {showSecondary && <div
         data-studio-conversation="situated"
         data-work-thread={threadId ?? undefined}
         style={{
@@ -573,7 +579,7 @@ function ScopedWorkConversation({
         >
           <StudioText role="metadata" as="span">✕</StudioText>
         </button>
-      </div>
+      </div>}
 
       {/* ── The exchange, as the server holds it ── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: SPACE.tight }}>
@@ -799,7 +805,14 @@ function ScopedWorkConversation({
           </div>
         )}
 
-        {refusal && <StudioText role="metadata">{refusal}</StudioText>}
+        {/* A failed answer is unmistakable: never a quiet line the writer can miss. The question stays in the box; nothing is retried by itself. */}
+        {refusal && (
+          <div role="alert" data-maia-refusal="true"
+            style={{ margin: `${SPACE.snug}px 0`, padding: `${SPACE.tight}px ${SPACE.snug}px`, borderRadius: RADIUS.sm,
+              border: '1px solid color-mix(in srgb, #c0392b 55%, transparent)', background: 'color-mix(in srgb, #c0392b 10%, transparent)' }}>
+            <StudioText role="metadata" as="span">{refusal}</StudioText>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
@@ -924,7 +937,7 @@ function ScopedWorkConversation({
         {presentationNotice ? <p role="status" data-maia-presentation-notice
           style={{fontSize:12,margin:'8px 0'}}>{presentationNotice}</p> : null}
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base, marginTop: SPACE.snug }}>
-          {manuscriptId ? (
+          {manuscriptId && showSecondary ? (
             <button
               type="button"
               data-keeps-toggle="true"
@@ -943,7 +956,7 @@ function ScopedWorkConversation({
             </button>
           ) : null}
           {/* ⚠️ Cross-surface handoff still requires a manuscript return contract. */}
-          {manuscriptId ? (
+          {manuscriptId && showSecondary ? (
             <Link
               href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
               data-open-in-maia="true"
@@ -952,6 +965,12 @@ function ScopedWorkConversation({
             >
               <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
             </Link>
+          ) : null}
+          {quiet ? (
+            <button type="button" data-conversation-more="true" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: INK.secondary, padding: 0 }}>
+              <StudioText role="metadata" as="span">{moreOpen ? 'Fewer options' : 'More'}</StudioText>
+            </button>
           ) : null}
           <span style={{ flex: 1 }} />
           <button

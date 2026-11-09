@@ -10,7 +10,7 @@ jest.mock('@/app/writers-studio/canvas/SettledDecisions', () => ({ __esModule: t
 jest.mock('@/lib/writersStudio/workKindClient', () => ({ setWorkKindClient: jest.fn(async (_w: string, k: unknown) => k) }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-import { DevelopStage, DevelopHoldings } from '@/app/dev/writers-studio-pc3-live/DevelopStage';
+import { DevelopStage, DevelopHoldings, DevelopCompanion } from '@/app/dev/writers-studio-pc3-live/DevelopStage';
 
 const sections = [
   { draftSectionId: 's1', heading: 'Harbour', body: 'Harbour\n\nMarta held the key by the harbour. It was cold.', position: 0 },
@@ -22,17 +22,54 @@ beforeEach(() => { host = document.createElement('div'); document.body.append(ho
 afterEach(() => { act(() => root.unmount()); host.remove(); });
 
 function mount(over: Record<string, unknown> = {}) {
-  const props = { workTitle: 'The Long Harbour', sections, currentId: 's1', onSelect: jest.fn(), starters: ['What is Harbour doing in the book?'], onStarter: jest.fn(), onOpenWrite: jest.fn(), onMoreWays: jest.fn(), lastRead: null, plan: null, planBusy: false, planNote: null, onMakePlan: jest.fn(), onEditPlan: jest.fn(), onWorkOnStep: jest.fn(), conversation: React.createElement('div', { 'data-fake-convo': true }, 'convo'), ...over };
+  const props = { workTitle: 'The Long Harbour', sections, currentId: 's1', onSelect: jest.fn(), starters: ['What is Harbour doing in the book?'], onStarter: jest.fn(), onOpenWrite: jest.fn(), onMoreWays: jest.fn(), lastRead: null, plan: null, planBusy: false, planNote: null, onMakePlan: jest.fn(), onEditPlan: jest.fn(), onWorkOnStep: jest.fn(), onAskAbout: jest.fn(), ...over };
   act(() => root.render(React.createElement(DevelopStage, props as any)));
+  // Everything that is not the chapter lives behind the one quiet "More" control; most tests below are about what is behind it.
+  if (!(over as any).closed) act(() => q('[data-develop-more]')!.click());
   return props as any;
 }
 const q = (s: string) => host.querySelector<HTMLElement>(s);
 
-test('D1/D2 the chapter’s actual text is the centre, with the conversation under it', () => {
+test('founder walk 2026-11-09: the whole chapter is the centre, and nothing else competes with it until the writer asks', () => {
+  mount({ closed: true });
+  const ch = q('[data-develop-chapter="s1"]')!;
+  expect(ch.textContent).toContain('Marta held the key by the harbour.');
+  expect(ch.hidden).toBe(false);
+  // one chapter control, Edit in Write, and one quiet More: no plan, ribbon, chips or starters on the face of the stage
+  expect(q('[data-develop-plan]')).toBeNull(); expect(q('[data-develop-ribbon]')).toBeNull();
+  expect(q('[data-develop-starters]')).toBeNull(); expect(q('[data-develop-threads]')).toBeNull();
+  expect(host.querySelectorAll('button').length).toBe(2);
+  expect((q('[data-develop-chapter-select]') as HTMLSelectElement).options.length).toBe(3);
+});
+
+test('the chapter control moves to the chosen chapter and nowhere else', () => {
+  const p = mount({ closed: true });
+  const sel = q('[data-develop-chapter-select]') as HTMLSelectElement;
+  act(() => { sel.value = 's3'; sel.dispatchEvent(new Event('change', { bubbles: true })); });
+  expect(p.onSelect).toHaveBeenCalledWith('s3');
+});
+
+test('shared attention: selected words are offered to MAIA exactly, and only when the writer chooses; nothing is sent', () => {
+  const p = mount({ closed: true });
+  const ch = q('[data-develop-chapter="s1"]')!;
+  const textNode = ch.querySelectorAll('p')[0]!.firstChild!.firstChild as Text;
+  const range = document.createRange(); range.setStart(textNode, 0); range.setEnd(textNode, 'Marta held the key'.length);
+  const s = window.getSelection()!; s.removeAllRanges(); s.addRange(range);
+  act(() => { ch.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); });
+  expect(q('[data-develop-picked]')!.textContent).toContain('Marta held the key');
+  expect(p.onAskAbout).not.toHaveBeenCalled();
+  act(() => q('[data-develop-ask-about]')!.click());
+  expect(p.onAskAbout).toHaveBeenCalledWith('Marta held the key');
+  expect(q('[data-develop-picked]')).toBeNull();
+});
+
+test('More leads back to the chapter', () => {
   mount();
-  expect(q('[data-develop-chapter="s1"]')!.textContent).toContain('Marta held the key by the harbour.');
-  expect(q('[data-develop-chapter="s1"]')!.textContent).not.toContain('Salt');            // the heading is not repeated as body
-  expect(q('[data-develop-conversation] [data-fake-convo]')).not.toBeNull();
+  expect(q('[data-develop-more-panel]')).not.toBeNull();
+  expect(q('[data-develop-chapter]')!.hidden).toBe(true);
+  act(() => q('[data-develop-more]')!.click());
+  expect(q('[data-develop-more-panel]')).toBeNull();
+  expect(q('[data-develop-chapter]')!.hidden).toBe(false);
 });
 
 test('the shape of the book: one segment per chapter; choosing one moves there and nowhere else', () => {
@@ -79,11 +116,17 @@ test('no chapters read yet: no excerpt section; the work is still the centre', (
   mount({ lastRead: null }); expect(q('[data-develop-excerpts]')).toBeNull(); expect(q('[data-develop-chapter]')).not.toBeNull();
 });
 
-test('the holdings column says what she read, and says so honestly before the first answer', () => {
-  act(() => root.render(React.createElement(DevelopHoldings, { manuscriptId: 'm', workId: 'w', lastRead: null, kind: null, onKind: jest.fn() } as any)));
-  expect(q('[data-develop-she-read]')!.textContent).toContain('Nothing yet');
-  act(() => root.render(React.createElement(DevelopHoldings, { manuscriptId: 'm', workId: 'w', lastRead: [{ sectionId: 's1', label: 'Harbour' }, { sectionId: 's3', label: 'Return' }], kind: null, onKind: jest.fn() } as any)));
+test('beside the conversation, what she read stays visible (L8), and says so honestly before the first answer', () => {
+  const convo = React.createElement('div', { 'data-fake-convo': true }, 'convo');
+  act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: null } as any)));
+  expect(q('[data-develop-conversation] [data-fake-convo]')).not.toBeNull();
+  expect(q('[data-develop-she-read]')!.textContent).toContain('Nothing read yet');
+  act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: [{ sectionId: 's1', label: 'Harbour' }, { sectionId: 's3', label: 'Return' }] } as any)));
   expect(q('[data-develop-she-read]')!.textContent).toContain('Harbour · Return');
+});
+
+test('behind More: the book’s kind is asked, never guessed', () => {
+  act(() => root.render(React.createElement(DevelopHoldings, { manuscriptId: 'm', workId: 'w', kind: null, onKind: jest.fn() } as any)));
   expect(q('[data-develop-kind]')!.textContent).toContain('What kind of book is this?');
 });
 

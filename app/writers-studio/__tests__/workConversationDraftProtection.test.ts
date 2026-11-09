@@ -243,3 +243,27 @@ it('does not overwrite a draft newly composed by choosing a Keep during a pendin
   await act(async () => resolve(response));
   expect(input().value).toBe(newDraft);
 });
+
+/* Founder walk 2026-11-09: a provider 401 left the page saying nothing the writer noticed. A failed answer must be unmistakable. */
+it('a failed answer from the AI service is shown as an alert, in plain words, with the question kept in the box', async () => {
+  mockAsk.mockResolvedValue({ ok: false, refusal: 'provider_error', threadId: 'thread-a' });
+  await mount('Can you show me an edited version?'); await click('Send');
+  const alert = host.querySelector('[role="alert"][data-maia-refusal]')!;
+  expect(alert.textContent).toContain('MAIA couldn’t answer this time');
+  expect(alert.textContent).not.toContain('didn’t reach her');            // it did reach the server; the answer failed
+  expect(input().value).toBe('Can you show me an edited version?');
+  expect(mockAsk).toHaveBeenCalledTimes(1);                                // never retried by itself
+});
+it('quiet (Develop stage): secondary controls sit behind one More; all of them are still reachable', async () => {
+  await act(async () => { root.render(React.createElement(WorkConversation, {
+    work, manuscriptId: 'fictional-manuscript', sectionId: 'section-a', initialDraft: '', onClose: mockClose, quiet: true,
+  })); });
+  expect(host.querySelector('[data-reorient-work]')).toBeNull();
+  expect(host.querySelector('[data-keeps-toggle]')).toBeNull();
+  expect(host.querySelector('[data-open-in-maia]')).toBeNull();
+  await act(async () => (host.querySelector('[data-conversation-more]') as HTMLElement).click());
+  expect(host.querySelector('[data-reorient-work]')).not.toBeNull();
+  expect(host.querySelector('[data-keeps-toggle]')).not.toBeNull();
+  expect(host.querySelector('[data-open-in-maia]')).not.toBeNull();
+  expect(host.querySelector('[data-close-conversation]')).not.toBeNull();
+});

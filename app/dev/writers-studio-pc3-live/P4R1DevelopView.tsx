@@ -42,7 +42,7 @@ import { DevelopAddToWork } from './DevelopAddToWork';
 import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
-import { DevelopStage, DevelopHoldings } from './DevelopStage';
+import { DevelopStage, DevelopHoldings, DevelopCompanion } from './DevelopStage';
 import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
@@ -3293,8 +3293,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
-  /* ⭐ THE DEVELOP STAGE. The work is the centre and the conversation sits under it; the right column holds what MAIA may read, what she has
-     read, and what the writer has settled. Used for the plain overview with a Work declared. Observations, the Full view, themes and the
+  /* ⭐ THE DEVELOP STAGE. The whole chapter is the centre; MAIA's conversation sits beside it in the right column, with what she read
+     always visible; everything else is behind the stage's one "More" control (design: docs/research/writers-studio/MENTOR_PRESENCE_UX_RESEARCH_2026-11-09.md). Used for the plain overview with a Work declared. Observations, the Full view, themes and the
      other fields keep their existing rooms. */
   /* Behind a flag until the draft-protection guards are re-expressed for the stage and the founder has accepted it (design doc §6, M1). */
   /* Founder walk 2026-11-09: "I want to see my work. I want it to be center, not 50 buttons and options." A remembered "Full" depth
@@ -3323,32 +3323,37 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onEditPlan={editPlan}
       onWorkOnStep={workOnStep}
       onDeletePlan={deletePlan}
-      conversation={(
-        <WorkConversation
-          key={attentionConversationDraft || 'develop-stage-conversation'}
-          work={props.work}
-          manuscriptId={props.manuscriptId}
-          sectionId={props.currentSectionId}
-          initialDraft={attentionConversationDraft}
-          onStudioPlace={onStudioPlace}
-          hideHoldings
-          onRead={setLastRead}
-          onReadChapter={props.onCommissionChapterReading}
-          onClose={() => setAttentionConversationDraft('')}
-        />
-      )}
+      onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
+      holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
     />
   ) : null;
-  const stageHoldings = useStage && props.work ? (
+  /* MAIA beside the work, not beneath it: the writer never scrolls away from the words to speak with her. */
+  const stageCompanion = useStage && props.work ? (
     <div className="fr-maia-inner">
       <div className="fr-maia-head">
         <div className="fr-orb" aria-hidden="true" />
-        <div className="fr-maia-name"><h2>MAIA</h2><span>What she holds</span></div>
+        <div className="fr-maia-name"><h2>MAIA</h2><span>Editorial companion</span></div>
       </div>
-      <div className="fr-mbody">
-        <DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} lastRead={lastRead} kind={workKind} onKind={setWorkKind} />
+      <div className="fr-mbody" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <DevelopCompanion
+          lastRead={lastRead}
+          conversation={(
+            <WorkConversation
+              key={attentionConversationDraft || 'develop-stage-conversation'}
+              work={props.work}
+              manuscriptId={props.manuscriptId}
+              sectionId={props.currentSectionId}
+              initialDraft={attentionConversationDraft}
+              onStudioPlace={onStudioPlace}
+              hideHoldings
+              quiet
+              onRead={setLastRead}
+              onReadChapter={props.onCommissionChapterReading}
+              onClose={() => setAttentionConversationDraft('')}
+            />
+          )}
+        />
       </div>
-      <div className="fr-foot">MAIA reads with you, not ahead of you.</div>
     </div>
   ) : null;
 
@@ -3357,14 +3362,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       mode="develop"
       appearance={props.appearance}
       geometry={useStage
-        ? { ...STATE_GEOMETRY['develop-manuscript'], maiaWidth: 320, maiaFloor: 270 }
+        ? { ...STATE_GEOMETRY['develop-manuscript'], manuscriptWidth: 0, manuscriptFloor: 0, gapLeft: 0, maiaWidth: 440, maiaFloor: 320 }
         : props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
       workTitle={props.workTitle || undefined}
       memberInitial=""
       onSelectMode={props.onMode}
-      manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
+      manuscript={useStage ? undefined : <ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
       work={stageCenter ?? center}
-      maia={stageHoldings ?? maia}
+      maia={stageCompanion ?? maia}
     />
   );
 }
