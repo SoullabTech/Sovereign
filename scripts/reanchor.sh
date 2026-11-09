@@ -27,7 +27,8 @@ sed -n '1,80p' PROJECT_CONTEXT.md
 echo ""
 echo "— CURRENT PRIORITY THREAD —"
 echo ""
-grep -A 10 "## Current priority thread" CLAUDE.md
+# The thread lives in docs/PRIORITY_THREAD_LOG.md since 2026-11-09; CLAUDE.md keeps a pointer.
+grep -A 10 "## Current priority thread" docs/PRIORITY_THREAD_LOG.md
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
