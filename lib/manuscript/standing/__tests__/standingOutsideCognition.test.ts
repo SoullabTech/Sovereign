@@ -215,7 +215,8 @@ function exceptionIsNarrow(code: string): { ok: boolean; why: string[] } {
 
 /* Independent review (2026-11-08): a regex over the module cannot stop `OR TRUE`, an extra selected column, or a different returned field, and
    the exemption in `reachesStanding` applies to EVERY cognition root. So the exception is held by BYTES and by a closed list of readers. */
-const NARROW_EXCEPTION_BLOB = 'ce124973c87e4b8166da0791ad3c301fe8d18219';
+/* Re-pinned by founder ruling 2026-11-09 ("Yes, as recommended", G6 × D5): one more dismiss-only read, bounded to the readings being carried. */
+const NARROW_EXCEPTION_BLOB = '12b81c96839ecb78ccd4602093f1e8a420ce5ea8';
 const DECISION_RECORD = 'lib/writersStudio/decisionRecord.ts';
 /** The only runtime modules that may import the shared decision read (and so, transitively, the exception). */
 const DECISION_RECORD_IMPORTERS = [

@@ -56,7 +56,7 @@ import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manusc
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, loadEarlierLocusDigests } from '@/lib/disclosure/workReadScopeRead';
 import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
 import { selectSections, movedSince, digestOf, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
-import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
+import { decisionContextForWork, dismissedObservationKeys } from '@/lib/writersStudio/decisionRecord';
 import { livingWorkKind } from '@/lib/writersStudio/workKind';
 import { ANONYMISE_OFFER_INSTRUCTION, anonymiseOfferAlreadyMade } from '@/lib/writersStudio/practiceOffers';
 import { checkQuoteFidelity, NO_TEXT_ANSWER, CORRECTION_NOTE } from '@/lib/manuscript/ask/quoteFidelity';
@@ -726,7 +726,8 @@ async function workTurn(input: {
   /* ⭐ G6 · her own completed readings (founder ruling 2026-11-09): latest per lens, for the chapters in play, labelled by revision and by
      whether each chapter changed since. Carried on the commission's consent; never chapter text; nothing in Sanctuary or an unstated posture. */
   const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? { readings: [], relevant: 0, searchFull: false }
-    : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections);
+    : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections,
+        (readingIds) => dismissedObservationKeys(memberId, readingIds));
   /* Walk finding (2026-11-09): when the passage the writer is at changed between turns, nothing told her, so she concluded her own
      earlier quotation had been wrong. Compare with the digest recorded the last time she was given this passage in this conversation. */
   const locusMovedSinceEarlier = Boolean(existing && built.facts.locus

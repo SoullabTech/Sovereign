@@ -7,7 +7,7 @@
  */
 import { query } from '@/lib/db/postgres';
 import { livingWorkIdForManuscript } from '@/lib/manuscript/ask/workOfManuscript';
-import { loadDismissedObservations } from '@/lib/manuscript/standing/dismissedForConversation';
+import { loadDismissedKeysIn, loadDismissedObservations } from '@/lib/manuscript/standing/dismissedForConversation';
 
 export type DecisionRoom = 'work_conversation' | 'passage_desk' | 'develop';
 export type DecisionSubjectKind = 'note' | 'observation' | 'wording' | 'proposal';
@@ -80,4 +80,9 @@ export async function decisionContextForManuscript(memberId: string, manuscriptI
 
 export async function listActiveDecisions(memberId: string, livingWorkId: string): Promise<ActiveDecision[]> {
   return activeDecisions(await loadDecisionEvents(memberId, livingWorkId));
+}
+
+/** G6 × D5 (founder ruling 2026-11-09): which observations in these readings the writer dismissed — so carried readings leave them out. */
+export async function dismissedObservationKeys(memberId: string, readingIds: readonly string[]): Promise<ReadonlySet<string>> {
+  return new Set(await loadDismissedKeysIn(memberId, readingIds));
 }

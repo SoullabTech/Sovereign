@@ -99,8 +99,11 @@ d('decision record · physical witness + Ask route', () => {
     const sys = systems.at(-1) ?? '';
     expect(sys).toContain('The storm scene carries too much of the middle.');
     expect(sys).toContain('your words, not theirs');
+    /* Narrowed to D5's law by founder ruling 2026-11-09 ("Yes, as recommended"): the writer's keep / unresolved STANDING never reaches
+       MAIA. Her own observation text may (G6 carries her readings); this fixture reading read no chapter text, so it is not carried. */
     expect(sys).not.toContain('The ending returns to the harbour image.');
     expect(sys).not.toContain('The second chapter drifts');
+    expect(sys).not.toMatch(/\b(kept|left unresolved|still open)\b[^\n]*(harbour image|second chapter drifts)/i);
     await ask({ anchor: { on: 'work' }, question: 'Again?', sanctuary: true });
     expect(systems.at(-1)).not.toContain('The storm scene carries');
   });

@@ -44,7 +44,9 @@ type Row = { id: string; commissioned_lens: string; revision_number: number; rea
 /** PURE: which readings to carry. Latest per lens, among those that read (in full) one of the chapters in play; max three. */
 export function pickCarried<T extends { lens: string; frozenAt: string; bodySectionIds: readonly string[] }>(readings: readonly T[], inPlay: readonly string[]): T[] {
   const want = new Set(inPlay);
-  const relevant = want.size === 0 ? readings : readings.filter((r) => r.bodySectionIds.some((id) => want.has(id)));
+  // A reading that read no chapter text is not a reading of the writing (G6 × D5 ruling 2026-11-09): never carried.
+  const read = readings.filter((r) => r.bodySectionIds.length > 0);
+  const relevant = want.size === 0 ? read : read.filter((r) => r.bodySectionIds.some((id) => want.has(id)));
   const byLens = new Map<string, T>();
   for (const r of [...relevant].sort((a, b) => b.frozenAt.localeCompare(a.frozenAt))) if (!byLens.has(r.lens)) byLens.set(r.lens, r);
   return [...byLens.values()].sort((a, b) => b.frozenAt.localeCompare(a.frozenAt)).slice(0, MAX_CARRIED_READINGS);
@@ -57,7 +59,10 @@ export function chaptersInPlay(question: string, locusId: string | null, section
 
 export const READINGS_SEARCHED = 30;
 
-export async function loadCarriedReadings(manuscriptId: string, memberId: string, inPlay: readonly string[], sections: readonly SectionHeadLite[]): Promise<CarriedSet> {
+/** Which observations (`readingId:key`) the writer dismissed, for the given readings. Supplied by the caller; this module reads no standing. */
+export type SetAsideLookup = (readingIds: readonly string[]) => Promise<ReadonlySet<string>>;
+
+export async function loadCarriedReadings(manuscriptId: string, memberId: string, inPlay: readonly string[], sections: readonly SectionHeadLite[], setAside?: SetAsideLookup): Promise<CarriedSet> {
   let rows: Row[];
   try {
     rows = (await query<Row>(
@@ -71,11 +76,14 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
     bodySectionIds: Object.entries(r.coverage?.sections ?? {}).filter(([, d]) => d === 'body').map(([id]) => id),
   }));
   const want = new Set(inPlay);
-  const relevant = want.size === 0 ? shaped.length : shaped.filter((r) => r.bodySectionIds.some((id) => want.has(id))).length;
+  const withText = shaped.filter((r) => r.bodySectionIds.length > 0);
+  const relevant = want.size === 0 ? withText.length : withText.filter((r) => r.bodySectionIds.some((id) => want.has(id))).length;
   const searchFull = rows.length >= READINGS_SEARCHED;
   const picked = pickCarried(shaped, inPlay);
   if (picked.length === 0) return { readings: [], relevant, searchFull };
 
+  /* G6 × D5: an observation the writer dismissed is left out of her reading here; it reaches her only as set aside (D5 exception). */
+  const dismissed = setAside ? await setAside(picked.map((p) => p.row.id)) : new Set<string>();
   const ids = [...new Set(picked.flatMap((p) => p.bodySectionIds))];
   const now = new Map((await query<{ id: string; digest: string }>(
     `SELECT s.id, encode(sha256(convert_to(s.text, 'UTF8')), 'hex') AS digest
@@ -86,8 +94,9 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
   const readings = picked.map((p) => {
     /* The contract's field is `observation` (DevelopmentalObservation, "the reader's claim text, VERBATIM"). A real walk found the
        loader reading `text`, which no real reading has: she would have been told she read a chapter, with none of what she noticed. */
-    const obs = Array.isArray(p.row.observations) ? (p.row.observations as { observation?: unknown; doesNotEstablish?: unknown }[]) : [];
-    const real = obs.filter((o) => typeof o.observation === 'string' && (o.observation as string).trim());
+    const obs = Array.isArray(p.row.observations) ? (p.row.observations as { key?: unknown; observation?: unknown; doesNotEstablish?: unknown }[]) : [];
+    const real = obs.filter((o) => typeof o.observation === 'string' && (o.observation as string).trim()
+      && !(typeof o.key === 'string' && dismissed.has(`${p.row.id}:${o.key}`)));
     return {
       id: p.row.id, lens: p.lens, revisionNumber: p.row.revision_number, frozenAt: p.frozenAt,
       chapters: p.bodySectionIds.map((id) => {
