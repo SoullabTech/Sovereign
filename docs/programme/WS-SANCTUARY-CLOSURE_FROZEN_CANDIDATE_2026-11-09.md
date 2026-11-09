@@ -4,6 +4,8 @@ Lane: Writer's Studio (#1800, SOULLAB-CONTINUITY #1982). Founder rulings 2026-11
 Evidence class: local, disposable PostgreSQL 16 (production-derived baseline 2026-09-01 + 90 migrations, 0 errors), fictional rows, provider-off (scripted model). ⛔ Not production, not Class A/R20, not the founder walk. Merge, migration, deploy and release stay HOLD.
 
 ## Frozen candidate
+**SUPERSEDED as the review candidate by `0c55564b862f324e4a62122359f7f9154e81b27a`** (adds the G6 × D5 ruling: carried readings leave out dismissed observations; readings with no chapter text are not carried). The negative suite was re-run against it, clean tree: **8/8 in three consecutive runs** (N3 ordinary successes 2/4/4, turns added always 2 × successes — no half-written turn). Database suites at that SHA: 130/130. The text below records the earlier freeze as it was.
+
 **Product source frozen at `94175aff4f4fcfec0c7c917bc47f69085ddf3605`** (branch `feature/ws-work-continuity-part-a-suite`, clean tree = remote at freeze). The suite and this record were added afterwards in test/doc-only commits: `git diff --name-only 94175aff4 -- . ':!tests' ':!docs'` is empty.
 Commits in the closure, in order: `92ad371db` routes fail closed · `cb5f33a37` account default · `52cacca95` store witness · `fafa31bd2` every MAIA-kept write · `9bfef81e2` reading permission + collections · `94175aff4` G4 isolation (with `e16149e3b` clearing not-kept exchanges, `a5ac8929f` G4 offer).
 
