@@ -56,6 +56,8 @@ import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
 import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
+import { livingWorkKind } from '@/lib/writersStudio/workKind';
+import { ANONYMISE_OFFER_INSTRUCTION, anonymiseOfferAlreadyMade } from '@/lib/writersStudio/practiceOffers';
 import { checkQuoteFidelity, NO_TEXT_ANSWER, CORRECTION_NOTE } from '@/lib/manuscript/ask/quoteFidelity';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
@@ -692,7 +694,12 @@ async function workTurn(input: {
     ? { ...built.facts, writerUnderstanding: [built.facts.writerUnderstanding, decisionsText].filter(Boolean).join('\n\n') }
     : built.facts;
   const workHistory = historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question);
-  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead };
+  /* ⭐ A helper's book (DECLARED by the writer, never inferred) gets ONE gentle note about case stories, once ever, never in Sanctuary. */
+  const practiceOffer = (!posture.sanctuary && postureKnown
+    && (await livingWorkKind(memberId, built.facts.work.id)) === 'practitioner'
+    && !(await anonymiseOfferAlreadyMade(memberId, manuscriptId)))
+    ? ANONYMISE_OFFER_INSTRUCTION : undefined;
+  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that

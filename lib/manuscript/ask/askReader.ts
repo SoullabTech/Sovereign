@@ -185,6 +185,8 @@ export interface WorkContext {
    * `facts`: it is authority-bearing and arrives only through the receipted path.
    */
   standingRead?: StandingRead;
+  /** A helper's book, not yet offered: add the one gentle, once-only note about case stories (see practiceOffers). */
+  practiceOffer?: string;
 }
 
 export interface StandingRead {
@@ -276,6 +278,7 @@ function workSays(ctx: WorkContext): string {
       'Do not reassert the superseded interpretation as though the correction never happened.',
     ].join('\n'));
   }
+  if (ctx.practiceOffer) parts.push(ctx.practiceOffer);
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
   } else if (!locus) {

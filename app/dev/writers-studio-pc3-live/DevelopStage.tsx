@@ -14,6 +14,9 @@
 import type { ReactNode } from 'react';
 import ReadScopeControl from '@/app/writers-studio/canvas/ReadScopeControl';
 import SettledDecisions from '@/app/writers-studio/canvas/SettledDecisions';
+import { useState } from 'react';
+import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
+import type { WorkKind } from '@/lib/writersStudio/workKind';
 
 export interface StageSection { draftSectionId: string; heading: string | null; body: string | null; position: number }
 
@@ -116,12 +119,51 @@ export function DevelopStage(props: {
   );
 }
 
+const KIND_LABEL: Record<WorkKind, string> = { fiction: 'Fiction', nonfiction: 'Nonfiction', practitioner: 'A helper’s book' };
+
+/** The writer says what kind of book this is. One quiet line; "Not now" is always there; nothing is guessed from the text. */
+function KindControl(props: { workId: string; kind: WorkKind | null | undefined; onKind: (k: WorkKind | null) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const choose = async (k: WorkKind | null) => {
+    setBusy(true); setFailed(false);
+    const r = await setWorkKindClient(props.workId, k);
+    if (r === undefined) setFailed(true); else props.onKind(r);
+    setBusy(false);
+  };
+  const btn = { background: 'transparent', border: '1px solid currentColor', borderRadius: 6, padding: '2px 8px', font: 'inherit', cursor: 'pointer', opacity: busy ? 0.5 : 1 } as const;
+  if (props.kind === undefined) return <span style={{ opacity: .75 }}>Could not check this just now.</span>;
+  return (
+    <div data-develop-kind="true" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+      {props.kind ? (
+        <>
+          <span>{KIND_LABEL[props.kind]}</span>
+          <button type="button" disabled={busy} style={btn} onClick={() => void choose(null)}>Change</button>
+        </>
+      ) : (
+        <>
+          <span style={{ width: '100%', opacity: .8 }}>What kind of book is this? It shapes the questions MAIA asks.</span>
+          {(['fiction', 'nonfiction', 'practitioner'] as const).map((k) => (
+            <button key={k} type="button" disabled={busy} style={btn} onClick={() => void choose(k)}>{KIND_LABEL[k]}</button>
+          ))}
+        </>
+      )}
+      {failed ? <span role="status">That could not be saved just now.</span> : null}
+    </div>
+  );
+}
+
 /** The right-hand column: what MAIA may read, what she has just read, and what the writer has settled. An instrument panel, not a chat. */
 export function DevelopHoldings(props: {
   manuscriptId: string; workId: string; lastRead: readonly { sectionId: string; label: string | null }[] | null;
+  kind: WorkKind | null | undefined; onKind: (k: WorkKind | null) => void;
 }) {
   return (
     <div data-develop-holdings="true" style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '4px 2px', fontSize: 13 }}>
+      <div>
+        <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>Your book</div>
+        <KindControl workId={props.workId} kind={props.kind} onKind={props.onKind} />
+      </div>
       <div>
         <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>What MAIA can read</div>
         <ReadScopeControl manuscriptId={props.manuscriptId} />

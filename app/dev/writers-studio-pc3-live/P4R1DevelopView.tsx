@@ -42,6 +42,8 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings } from './DevelopStage';
+import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
+import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -2119,6 +2121,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       ? previous : { scope: workConversationScope, open: false, starter: '' });
   }, [workConversationScope]);
   /* what MAIA was handed for the last answer on the Develop stage (ids + headings only); null until the first answer */
+  /* the kind the WRITER declared (null = not declared, undefined = could not be read); never inferred */
+  const [workKind, setWorkKind] = useState<WorkKind | null | undefined>(null);
+  const stageWorkId = props.work?.id ?? null;
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE !== '1' || !stageWorkId) return;
+    let live = true;
+    void getWorkKindClient(stageWorkId).then((k) => { if (live) setWorkKind(k); });
+    return () => { live = false; };
+  }, [stageWorkId]);
   const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
@@ -3238,11 +3249,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
   const stageLabel = stageSection?.heading?.trim() || 'this chapter';
   const stageNext = props.sections[props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1];
-  const stageStarters = [
-    `What is ${stageLabel} doing in the book?`,
-    `Where does ${stageLabel} lose you?`,
-    stageNext ? `How does ${stageLabel} lead into ${stageNext.heading?.trim() || 'what comes next'}?` : `How does ${stageLabel} end?`,
-  ];
+  const stageStarters = startersFor(workKind ?? null, stageLabel, stageNext ? (stageNext.heading?.trim() || 'what comes next') : null);
   const stageCenter = useStage && props.work ? (
     <DevelopStage
       workTitle={props.workTitle || null}
@@ -3275,7 +3282,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name"><h2>MAIA</h2><span>What she holds</span></div>
       </div>
       <div className="fr-mbody">
-        <DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} lastRead={lastRead} />
+        <DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} lastRead={lastRead} kind={workKind} onKind={setWorkKind} />
       </div>
       <div className="fr-foot">MAIA reads with you, not ahead of you.</div>
     </div>
