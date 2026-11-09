@@ -263,3 +263,28 @@ honest step, not another wording change.
 
 **Standing.** Implemented and witnessed at instruction level. A Studio walk of the levels on the
 harness is owed. Not merged, not deployed.
+
+### 9.1 Founder correction on how replies are judged (2026-11-09)
+
+> "the length of response is far less important than the level of writer response and organization"
+
+**From here on, witnesses score MAIA's replies on two things:**
+- **Level-fit:** does the reply meet the writer at the level they engaged, and in the way they are
+  responding?
+- **Organization:** is the main point first, is there a clear sequence, and does it end with one
+  choice for the writer?
+
+Length is reported only where it gets in the way of either. The length remarks in §4, §5.2 and §9
+are kept as written, and they are superseded as findings.
+
+**Run 8 re-read on these terms** (the replies read in full):
+
+| Case | Level-fit | Organization |
+|---|---|---|
+| L1, whole (Guided, 471 words) | Names the level and stays at the whole | Clear: names the level, then three promises in order ("the clearest one", "the second", "Third"), then "the actual engine", what she would need, and one closing choice |
+| L2, scene (Guided) | Names the level and stays at the scene's shape | Main observation first (the scene opens after the parting), then the consequence, then one question |
+| L4, sentence + "might cut" (all depths) | Works at the sentence; the upward question comes once | Sentence analysis, then options each with a cost, then one consideration, then the staying question last |
+| L5, "tighten" (Guided) | Stays at the sentence; asks what "tighten" means | The clarifying point first, then what the line does, two options with costs, keeping it as an option, and one question |
+
+The longer replies are the most organized ones. On the founder's terms, run 8 shows no
+organization or level-fit failure.
