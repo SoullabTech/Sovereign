@@ -27,6 +27,8 @@ import {
   relationshipIdFrom,
 } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
+import KeepNotePrompt from './KeepNotePrompt';
+import { QUOTE_NOT_IN_TEXT_DETAIL } from '@/lib/manuscript/editorialRuntime/editorialQuoteGate';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
@@ -78,6 +80,15 @@ import {
   readRelationshipReturnClient,
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
+import { editPlanClient, fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
+
+/** SHA-256 hex in the browser, matching the server's digest of the same projected text. */
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+import { decideHandoff, HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
+import { decidePassageHandoff, decodePassageHandoff, PASSAGE_HANDOFF_EVENT, PASSAGE_HANDOFF_KEY, PASSAGE_HANDOFF_REFUSAL_COPY } from '@/lib/writersStudio/passageHandoff';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -149,6 +160,8 @@ export default function FlagshipWriteEditController() {
   const [wayInId, setWayInId] = useState<string | null>(null);
   const [context, setContext] = useState<ContextReady | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  /* WS-DECISION-CONTINUITY: after "Keep mine", offer (never assume) to note the decision. */
+  const [keepNoteFor, setKeepNoteFor] = useState<{ sectionId: string; label: string | null } | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -157,6 +170,8 @@ export default function FlagshipWriteEditController() {
   const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  /* A plan hand-off that has chosen the chapter to show. Restoring the writer's last place must not override it. */
+  const planHandoffPlace = useRef<string | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
   const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
@@ -505,6 +520,7 @@ export default function FlagshipWriteEditController() {
       manuscriptId: context.manuscriptId,
     }).then((saved) => {
       if (cancelled || !saved.ok || !saved.sectionId) return;
+      if (planHandoffPlace.current) return;   // a plan hand-off already chose where the writer is
       if (!context.sections.some((section) => section.draftSectionId === saved.sectionId)) return;
       setFocusId(saved.sectionId);
       writingRef.current?.goToSection(saved.sectionId);
@@ -1026,6 +1042,144 @@ export default function FlagshipWriteEditController() {
     }
   }, [context, focusId, clearEditorial, editorialThread, appliedVersionId, adoptionBusy, memberVersionBusy, work, workContext.kind, workGestureEpoch]);
 
+  /* A plan step opened from Develop. Develop leaves only a step id; the words come from the writer's saved plan and are located in the text AS IT IS NOW.
+     Exactly one match is held (the desk then does the rest: propose, Use it, Undo). Anything else opens the chapter and says so. Nothing is written here. */
+  /* The plan step that brought the writer to this passage. Only a pointer: when the desk records an apply on this section,
+     its authorization is offered to the plan, and the SERVER decides whether it belongs to the step. Never marks a step resolved. */
+  const [planStepHere, setPlanStepHere] = useState<{ planId: string; stepId: string; sectionId: string; start: number; end: number; preexisting: string | null } | null>(null);
+  const offeredLinks = useRef(new Set<string>());
+  const [openDeskForHeld, setOpenDeskForHeld] = useState(false);
+  useEffect(() => {
+    if (!openDeskForHeld || !planStepHere) return;
+    if (selectedPassage?.draftSectionId !== planStepHere.sectionId || selectedPassage.start !== planStepHere.start) return;
+    setOpenDeskForHeld(false);
+    openWorkspaceRef.current?.();
+  }, [openDeskForHeld, planStepHere, selectedPassage]);
+  /* Design 1B amendment 2 · open-desk: the passage handed over from the Develop conversation opens the desk once it is actually held. */
+  const [deskForPassage, setDeskForPassage] = useState<{ sectionId: string; start: number } | null>(null);
+  useEffect(() => {
+    if (!deskForPassage) return;
+    if (selectedPassage?.draftSectionId !== deskForPassage.sectionId || selectedPassage.start !== deskForPassage.start) return;
+    setDeskForPassage(null);
+    openWorkspaceRef.current?.();
+  }, [deskForPassage, selectedPassage]);
+  const handoffSeq = useRef(0);
+  useEffect(() => { if (planStepHere && focusId && focusId !== planStepHere.sectionId) setPlanStepHere(null); }, [focusId, planStepHere]);
+  useEffect(() => {
+    const app = editorialThread?.application;
+    if (!planStepHere || !context || !app || app.undone || focusId !== planStepHere.sectionId) return;
+    if (app.authorizationId === planStepHere.preexisting) return;
+    const key = `${planStepHere.planId}:${planStepHere.stepId}:${app.authorizationId}`;
+    if (offeredLinks.current.has(key)) return;
+    offeredLinks.current.add(key);
+    void linkStepClient(context.manuscriptId, planStepHere.planId, planStepHere.stepId, app.authorizationId)
+      .then((r) => { if (r === 'unreachable') offeredLinks.current.delete(key); });   // retried on the next change; a refusal is final
+  }, [editorialThread, planStepHere, context, focusId]);
+
+  // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
+  // The listener is stable for the manuscript; everything that changes between renders is read through refs, so an unrelated
+  // re-render can never cancel a pending hand-off. Only the writer's LATEST hand-off may act (decideHandoff: superseded).
+  const openWorkspaceRef = useRef<(() => void) | null>(null);
+  // The hand-off's own notice. Not the shared editorialFailure, which Work arrival and thread restoration clear.
+  const [planHandoffNotice, setPlanHandoffNotice] = useState<string | null>(null);   // assigned where openWorkspace is declared, further down
+  const handoffLive = useRef({ context, work, workKind: workContext.kind, holdPassage, focusWritingSection });
+  handoffLive.current = { context, work, workKind: workContext.kind, holdPassage, focusWritingSection };
+  const handoffManuscriptId = context?.manuscriptId ?? null;
+  useEffect(() => {
+    if (!handoffManuscriptId) return;
+    let mounted = true;
+    const consume = () => {
+      const L = handoffLive.current;
+      if (!L.context || L.context.manuscriptId !== handoffManuscriptId || !L.work || L.workKind !== 'work' || workReentryRequired.current) return;
+      let stepId: string | null = null;
+      try { stepId = window.sessionStorage.getItem(PLAN_HANDOFF_KEY(handoffManuscriptId)); } catch { /* none */ }
+      if (!stepId) return;
+      try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(handoffManuscriptId)); } catch { /* ignore */ }
+      const mine = ++handoffSeq.current;
+      const sid = stepId;
+      void fetchPlan(handoffManuscriptId).then(async (view) => {
+        if (!mounted) return;
+        const C = handoffLive.current;
+        if (!C.context || C.context.manuscriptId !== handoffManuscriptId) return;
+        const ctx = C.context;
+        // The text THIS editor holds — never a fallback copy. No editor yet means "not ready", not "clean".
+        const bodyHere = (id: string) => writingRef.current?.bodyOf(id);
+        const stepChapter = view?.plan?.steps.find((x) => x.id === sid)?.chapterId;
+        const localDigests = new Map<string, string>();
+        /* The editor already holds each section WITHOUT its stored heading prefix (RebuildSection.body: "exact stored prefix removed"),
+           which is exactly the server's projection (splitStoredSection(...).body). Fingerprint it as it is; splitting it again fails. */
+        if (stepChapter && bodyHere(stepChapter) !== undefined) localDigests.set(stepChapter, await sha256Hex(bodyHere(stepChapter)!));
+        if (!mounted) return;
+        const d = decideHandoff({
+          seq: mine, latestSeq: handoffSeq.current, view, stepId: sid,
+          sectionIds: ctx.sections.map((x) => x.draftSectionId),
+          saveStateOf: (id) => writingRef.current?.statusOf(id),
+          bodyOf: (id) => bodyHere(id) ?? '',
+          localDigestOf: (id) => localDigests.get(id),
+        });
+        if (d.kind === 'superseded') return;
+        if (d.kind === 'refuse') {
+          if (d.focusSectionId) {
+            // The editor follows its OWN active section: move it too, exactly as a rail click does (focus + goToSection).
+            planHandoffPlace.current = d.focusSectionId;
+            C.focusWritingSection(d.focusSectionId);
+            if (writingRef.current && writingRef.current.activeId !== d.focusSectionId) writingRef.current.goToSection(d.focusSectionId);
+          }
+          setPlanHandoffNotice(HANDOFF_REFUSAL_COPY[d.reason]);
+          return;
+        }
+        setPlanHandoffNotice(null);
+        const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
+        planHandoffPlace.current = d.sectionId;
+        if (writingRef.current && writingRef.current.activeId !== d.sectionId) writingRef.current.goToSection(d.sectionId);
+        C.holdPassage(section, d.start, d.end, d.text);
+        // A change already applied on this thread before the hand-off is not this step's change.
+        setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId, start: d.start, end: d.end,
+          preexisting: editorialThreadRef.current?.application?.authorizationId ?? null });
+        // The writer asked to WORK ON this passage: the desk opens once the held passage is in state (see the effect below).
+        setOpenDeskForHeld(true);
+        // Only after the passage is actually held may an open step become 'working'; the server applies it only if still open.
+        if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working', ifStatus: 'open' }]);
+      });
+    };
+    /* Design 1B amendment 2 · `open-desk`: the passage the writer was discussing with MAIA in Develop. Held only if its exact words occur
+       once in a saved chapter here; otherwise the chapter opens and says why. Nothing changes until the writer acts at the desk. */
+    const consumePassage = () => {
+      const L = handoffLive.current;
+      if (!L.context || L.context.manuscriptId !== handoffManuscriptId || !L.work || L.workKind !== 'work' || workReentryRequired.current) return;
+      let raw: string | null = null;
+      try { raw = window.sessionStorage.getItem(PASSAGE_HANDOFF_KEY(handoffManuscriptId)); } catch { /* none */ }
+      const handoff = decodePassageHandoff(raw);
+      if (!raw) return;
+      const ctx = L.context;
+      const d = handoff
+        ? decidePassageHandoff({ handoff, sectionIds: ctx.sections.map((x) => x.draftSectionId),
+            saveStateOf: (id) => writingRef.current?.statusOf(id), bodyOf: (id) => writingRef.current?.bodyOf(id) })
+        : { kind: 'refuse' as const, reason: 'missing' as const };
+      if (d.kind === 'refuse' && d.reason === 'not_ready') return;          // the editor is still opening: keep the key, try on the next signal
+      try { window.sessionStorage.removeItem(PASSAGE_HANDOFF_KEY(handoffManuscriptId)); } catch { /* ignore */ }
+      const focus = d.kind === 'hold' ? d.sectionId : d.focusSectionId;
+      if (focus) {
+        planHandoffPlace.current = focus;
+        L.focusWritingSection(focus);
+        if (writingRef.current && writingRef.current.activeId !== focus) writingRef.current.goToSection(focus);
+      }
+      if (d.kind === 'refuse') { setPlanHandoffNotice(PASSAGE_HANDOFF_REFUSAL_COPY[d.reason]); return; }
+      setPlanHandoffNotice(null);
+      const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
+      L.holdPassage(section, d.start, d.end, d.text);
+      setDeskForPassage({ sectionId: d.sectionId, start: d.start });
+    };
+    consume();
+    consumePassage();
+    window.addEventListener(PLAN_HANDOFF_EVENT, consume);
+    window.addEventListener(PASSAGE_HANDOFF_EVENT, consumePassage);
+    window.addEventListener(PLAN_HANDOFF_EVENT, consumePassage);
+    return () => { mounted = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); window.removeEventListener(PASSAGE_HANDOFF_EVENT, consumePassage); window.removeEventListener(PLAN_HANDOFF_EVENT, consumePassage); };
+  }, [handoffManuscriptId]);
+  // A Work that becomes ready AFTER the id was left (context/work load late) still receives it.
+  useEffect(() => { if (context && work && workContext.kind === 'work') { try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* ignore */ } } }, [context, work, workContext.kind]);
+
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     // The server-owned thread must belong to the active manuscript as well as
     // its section. Matching paragraph text and a URL thread ID are insufficient.
@@ -1496,6 +1650,9 @@ export default function FlagshipWriteEditController() {
           setEditorialFailure('Editorial revision is unavailable in Sanctuary. Nothing was changed.');
         } else if (outcome.reason === 'accountability_unresolved') {
           setEditorialFailure('MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld. Nothing was applied, and this request will not be retried automatically.');
+        } else if (outcome.detail === 'quote_not_in_text') {
+          // A CODE from the server, never prose: the copy below is this client's own.
+          setEditorialFailure(QUOTE_NOT_IN_TEXT_DETAIL);
         } else {
           // Server detail is for developers, never the writer (design pass 2026-11-05: a raw
           // "unknown field(s) … carry no standing here" reached the screen).
@@ -2028,6 +2185,8 @@ export default function FlagshipWriteEditController() {
   }, [workspaceOpen, focusId, selectedPassage, scopedEditorialThread, suggestedVersionId,
     currentLivingWorkScope, workGestureEpoch]);
 
+  openWorkspaceRef.current = () => openWorkspace();
+
   const closeWorkspace = useCallback(() => {
     const awaitingChoice = conversationChoices.length > 1;
     if (!currentWorkGesture() || (editorialBusy && !awaitingChoice) || adoptionBusy || memberVersionBusy) return;
@@ -2349,6 +2508,15 @@ export default function FlagshipWriteEditController() {
   }
 
   return (
+    <>
+    {keepNoteFor && work ? (
+      <KeepNotePrompt
+        workId={work.id}
+        sectionId={keepNoteFor.sectionId}
+        passageLabel={keepNoteFor.label}
+        onDone={() => setKeepNoteFor(null)}
+      />
+    ) : null}
     <RebuildWritingBoundary
       key={`${context.manuscriptId}:p4r1-pc3`}
       manuscriptId={context.manuscriptId}
@@ -2420,6 +2588,8 @@ export default function FlagshipWriteEditController() {
             editorialBusy={editorialBusy && !workReentryRequired.current}
             adoptionBusy={adoptionBusy && !workReentryRequired.current}
             memberVersionBusy={memberVersionBusy && !workReentryRequired.current}
+            planHandoffNotice={planHandoffNotice}
+            onDismissPlanHandoffNotice={() => setPlanHandoffNotice(null)}
             editorialFailure={workReentryRequired.current
               ? 'This Living Work has its own MAIA context. Earlier manuscript conversations are not shared automatically.'
               : editorialFailure}
@@ -2469,6 +2639,7 @@ export default function FlagshipWriteEditController() {
               setSuggestedVersionId(null);
               setAdoptionOutcome(null);
               setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.');
+              if (focusId) setKeepNoteFor({ sectionId: focusId, label: focusSection?.heading ?? null });
             }}
             onLatitude={setEditLatitude}
             onMayRemoveParagraphs={setMayRemoveParagraphs}
@@ -2488,5 +2659,6 @@ export default function FlagshipWriteEditController() {
         );
       }}
     </RebuildWritingBoundary>
+    </>
   );
 }

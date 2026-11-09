@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
@@ -109,6 +110,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, raw); if (refused) return refused; }
   const stray = Object.keys(body).filter((key) => !exactKeys.has(key));
   if (stray.length) {
     return NextResponse.json({ error: 'unknown_fields' }, { status: 400 });

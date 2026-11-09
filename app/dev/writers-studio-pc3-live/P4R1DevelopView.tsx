@@ -1,5 +1,6 @@
 'use client';
 
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { STUDIO_PLACE_HASH, type StudioPlace } from '@/lib/writersStudio/studioActions';
 import { GUIDED_STARTERS, OBSERVATION_STARTERS, placeStarter, type ObservationStarter } from '@/lib/writersStudio/developStarters';
@@ -41,6 +42,16 @@ import { DevelopAddToWork } from './DevelopAddToWork';
 import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
+import { DevelopStage, DevelopHoldings, DevelopCompanion } from './DevelopStage';
+import type { StudioAct } from '@/app/writers-studio/canvas/WorkConversation';
+import { setReadScope } from '@/lib/writersStudio/readScopeClient';
+import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
+import { encodePassageHandoff, PASSAGE_HANDOFF_EVENT, PASSAGE_HANDOFF_KEY } from '@/lib/writersStudio/passageHandoff';
+import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
+import { startersFor, type WorkKind } from '@/lib/writersStudio/workKindShared';
+import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
+import { fetchPlan, makePlanClient, editPlanClient, type PlanView, deletePlanClient } from '@/lib/writersStudio/planClient';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -247,6 +258,8 @@ export interface P4R1DevelopViewProps {
   onCheckpointAndCommission: () => void;
   onReadChapter: () => void;
   onCheckpointAndReadChapter: () => void;
+  /** G4: the writer clicked MAIA's "Read this chapter" offer in the conversation. */
+  onCommissionChapterReading?: (lens: import('@/lib/manuscript/developmentalReader/contract').DevelopmentalLens) => Promise<{ ok: true; label: string } | { ok: false; message: string }>;
   onReadChapterInBook: () => void;
   onReadChapterMovement: () => void;
   onScoreChapter: () => void;
@@ -2117,6 +2130,104 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setWorkConversationState(previous => previous.scope === workConversationScope
       ? previous : { scope: workConversationScope, open: false, starter: '' });
   }, [workConversationScope]);
+  /* what MAIA was handed for the last answer on the Develop stage (ids + headings only); null until the first answer */
+  /* the kind the WRITER declared (null = not declared, undefined = could not be read); never inferred */
+  const [workKind, setWorkKind] = useState<WorkKind | null | undefined>(null);
+  const stageWorkId = props.work?.id ?? null;
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE !== '1' || !stageWorkId) return;
+    let live = true;
+    void getWorkKindClient(stageWorkId).then((k) => { if (live) setWorkKind(k); });
+    return () => { live = false; };
+  }, [stageWorkId]);
+  /* the writer's plan for this manuscript: loaded on return, made only by the writer's gesture */
+  const [planView, setPlanView] = useState<PlanView | null>(null);
+  const [planBusy, setPlanBusy] = useState(false);
+  const [planNote, setPlanNote] = useState<string | null>(null);
+  const stageManuscriptId = props.manuscriptId;
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE !== '1' || !stageManuscriptId) return;
+    let live = true;
+    void fetchPlan(stageManuscriptId).then((v) => { if (live && v) setPlanView(v); });
+    return () => { live = false; };
+  }, [stageManuscriptId]);
+  const makePlan = async (ask: string): Promise<boolean> => {
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setPlanNote(posture.resolved ? 'Sanctuary is on, so MAIA is not reading your work and cannot make a plan.' : 'Your Sanctuary setting could not be read on this device, so no plan was made. Open MAIA here once, then try again.');
+      return false;
+    }
+    setPlanBusy(true); setPlanNote(null);
+    const r = await makePlanClient(stageManuscriptId, ask);
+    setPlanBusy(false);
+    if (r.ok) { setPlanView(r.view); setLastRead(r.read); if (r.dropped > 0) setPlanNote(`${r.dropped} suggested step${r.dropped === 1 ? ' was' : 's were'} left out because ${r.dropped === 1 ? 'it' : 'they'} did not point at wording actually in your chapter.`); return true; }
+    setPlanNote(keepRefusalCopy(r.refusal) ?? (r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” under More → What MAIA can read, or ask MAIA, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.'));
+    return false;
+  };
+  /* Design 1B amendment 2 · the writer clicked one of MAIA's acting offers in the stage conversation. Only that click lands here. */
+  const studioAct = async (act: StudioAct): Promise<{ ok: true; text: string } | { ok: false; message: string }> => {
+    // Navigation inside Develop: nothing is written, so it is not a Sanctuary question.
+    if (act.id === 'show') { setStageOpenAt({ place: act.place, n: Date.now() }); return { ok: true, text: 'Opened under More.' }; }
+    if (act.id === 'go-chapter') {
+      const sec = props.sections.find((x) => x.draftSectionId === act.sectionId);
+      if (!sec) return { ok: false, message: 'That chapter is not in this Work. Nothing was changed.' };
+      selectManuscriptLocus(sec.draftSectionId);
+      return { ok: true, text: `You are at ${sec.heading?.trim() || 'that chapter'}.` };
+    }
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) return { ok: false, message: 'Sanctuary is on, so that is not done here. Nothing was changed.' };
+    if (!props.work || !stageManuscriptId) return { ok: false, message: 'This Work is not ready for that yet. Nothing was changed.' };
+    if (act.id === 'grant-reading') {
+      const r = await setReadScope(stageManuscriptId, { action: 'grant', level: act.level });
+      if (r && 'refused' in r) return { ok: false, message: keepRefusalCopy(r.refused) ?? 'That permission could not be given just now. Nothing was changed.' };
+      if (!r) return { ok: false, message: 'That permission could not be given just now. Nothing was changed.' };
+      return { ok: true, text: `MAIA may now read your saved ${r.level === 'work' ? 'work' : 'chapter'} while you talk. Ask her again. You can stop it any time under More → What MAIA can read.` };
+    }
+    if (act.id === 'make-plan') {
+      return (await makePlan(act.ask))
+        ? { ok: true, text: 'Your plan is ready under More. Nothing in your writing changed.' }
+        : { ok: false, message: 'No plan was made. Under More you can see why.' };
+    }
+    if (act.id === 'note-settled') {
+      const r = await settleDecisionNote(props.work.id, act.words, { room: 'develop' });
+      return r.ok ? { ok: true, text: 'Noted, in your words. You can see or withdraw it under More → What you have settled.' }
+        : { ok: false, message: keepRefusalCopy(r.refusal) ?? 'That could not be noted just now. Nothing was recorded.' };
+    }
+    // open-desk: navigation only. The exact words go to Write, which holds them only if they occur once in the saved chapter.
+    const sid = stageSection?.draftSectionId ?? props.currentSectionId;
+    if (act.words && sid) {
+      try { window.sessionStorage.setItem(PASSAGE_HANDOFF_KEY(stageManuscriptId), encodePassageHandoff({ sectionId: sid, text: act.words })); } catch { /* Write then opens the chapter only */ }
+      try { window.dispatchEvent(new Event(PASSAGE_HANDOFF_EVENT)); } catch { /* a fresh mount reads the key */ }
+    }
+    navigateMode('write');
+    return { ok: true, text: act.words ? 'Opening the passage desk in Write.' : 'Opening the chapter in Write; select the passage you want to work on.' };
+  };
+  const editPlan = async (edits: import('@/lib/writersStudio/developmentPlan').StepEdit[]) => {
+    const id = planView?.plan?.id; if (!id) return;
+    const plan = await editPlanClient(stageManuscriptId, id, edits);
+    if (plan) setPlanView((v) => (v ? { ...v, plan } : v)); else setPlanNote('That could not be saved just now. Your plan is as it was.');
+  };
+  const deletePlan = async () => {
+    const id = planView?.plan?.id; if (!id || !stageManuscriptId) return;
+    if (await deletePlanClient(stageManuscriptId, id)) { setPlanView({ plan: null, staleStepIds: [], unverifiedStepIds: [], events: {}, verdict: true, decisionsChanged: false }); setPlanNote('The plan and its earlier versions are deleted. Your manuscript was not touched.'); }
+    else setPlanNote('The plan could not be deleted just now. Nothing was changed.');
+  };
+  /** A plan step -> the passage desk. Leaves an id for Write and goes there. Changes nothing itself: no status, no manuscript. */
+  const workOnStep = (stepId: string) => {
+    if (!stageManuscriptId) return;
+    // Say a known refusal HERE, beside the step, instead of sending the writer somewhere to find nothing. Write re-checks authoritatively.
+    if (planView && !planView.verdict) { setPlanNote(HANDOFF_REFUSAL_COPY.no_verdict.replace(' The chapter is open; select the passage you mean.', '')); return; }
+    if (planView?.staleStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.changed.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
+    if (planView?.decisionsChanged === true) { setPlanNote(HANDOFF_REFUSAL_COPY.decisions_changed); return; }
+    if (planView?.unverifiedStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.unverified.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
+    setPlanNote(null);
+    try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }
+    // ⛔ No status change here: only a hand-off Write actually completes may mark the step 'working'.
+    try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* fresh mount reads the key */ }
+    navigateMode('write');
+  };
+  const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
+  const [stageOpenAt, setStageOpenAt] = useState<{ place: string; n: number } | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
 
@@ -3226,17 +3337,86 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
+  /* ⭐ THE DEVELOP STAGE. The whole chapter is the centre; MAIA's conversation sits beside it in the right column, with what she read
+     always visible; everything else is behind the stage's one "More" control (design: docs/research/writers-studio/MENTOR_PRESENCE_UX_RESEARCH_2026-11-09.md). Used for the plain overview with a Work declared. Observations, the Full view, themes and the
+     other fields keep their existing rooms. */
+  /* Behind a flag until the draft-protection guards are re-expressed for the stage and the founder has accepted it (design doc §6, M1). */
+  /* Founder walk 2026-11-09: "I want to see my work. I want it to be center, not 50 buttons and options." A remembered "Full" depth
+     silently hid the whole stage, so the stage no longer depends on it: Develop opens on the work itself; lens tools stay one choice away. */
+  const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && props.field === 'overview' && !selectedObservation
+    && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
+  const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
+  const stageLabel = stageSection?.heading?.trim() || 'this chapter';
+  const stageNext = props.sections[props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1];
+  const stageStarters = startersFor(workKind ?? null, stageLabel, stageNext ? (stageNext.heading?.trim() || 'what comes next') : null);
+  const stageCenter = useStage && props.work ? (
+    <DevelopStage
+      workTitle={props.workTitle || null}
+      sections={props.sections}
+      currentId={stageSection?.draftSectionId ?? null}
+      onSelect={selectManuscriptLocus}
+      starters={stageStarters}
+      onStarter={(words) => setAttentionConversationDraft(words)}
+      onOpenWrite={() => navigateMode('write')}
+      onMoreWays={() => chooseDevelopView('full')}
+      lastRead={lastRead}
+      plan={planView}
+      planBusy={planBusy}
+      planNote={planNote}
+      onMakePlan={makePlan}
+      onEditPlan={editPlan}
+      onWorkOnStep={workOnStep}
+      onDeletePlan={deletePlan}
+      onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
+      openAt={stageOpenAt}
+      holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
+    />
+  ) : null;
+  /* MAIA beside the work, not beneath it: the writer never scrolls away from the words to speak with her. */
+  const stageCompanion = useStage && props.work ? (
+    <div className="fr-maia-inner">
+      <div className="fr-maia-head">
+        <div className="fr-orb" aria-hidden="true" />
+        <div className="fr-maia-name"><h2>MAIA</h2><span>Editorial companion</span></div>
+      </div>
+      <div className="fr-mbody" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <DevelopCompanion
+          lastRead={lastRead}
+          conversation={(
+            <WorkConversation
+              key={attentionConversationDraft || 'develop-stage-conversation'}
+              work={props.work}
+              manuscriptId={props.manuscriptId}
+              sectionId={props.currentSectionId}
+              initialDraft={attentionConversationDraft}
+              onStudioPlace={onStudioPlace}
+              hideHoldings
+              quiet
+              onRead={setLastRead}
+              onReadChapter={props.onCommissionChapterReading}
+              onStudioAct={studioAct}
+              chapterLabel={(id) => { const sec = props.sections.find((x) => x.draftSectionId === id); return sec ? (sec.heading?.trim() || `Section ${sec.position + 1}`) : null; }}
+              onClose={() => setAttentionConversationDraft('')}
+            />
+          )}
+        />
+      </div>
+    </div>
+  ) : null;
+
   return (
     <Shell
       mode="develop"
       appearance={props.appearance}
-      geometry={props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
+      geometry={useStage
+        ? { ...STATE_GEOMETRY['develop-manuscript'], manuscriptWidth: 0, manuscriptFloor: 0, gapLeft: 0, maiaWidth: 440, maiaFloor: 320, bottom: 52 }   /* a strip below the panels for Report a bug / Beta journey, so they cover nothing (founder 2026-11-09) */
+        : props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
       workTitle={props.workTitle || undefined}
       memberInitial=""
       onSelectMode={props.onMode}
-      manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
-      work={center}
-      maia={maia}
+      manuscript={useStage ? undefined : <ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
+      work={stageCenter ?? center}
+      maia={stageCompanion ?? maia}
     />
   );
 }

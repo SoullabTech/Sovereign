@@ -25,6 +25,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
@@ -432,7 +433,7 @@ export async function POST(request: NextRequest) {
     arrivalOrigin = resolved;
   }
 
-  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act! });
+  const act = await persistMemberEditorialAct({ keep: KeepWitness.fromDeclaration(parsed.sanctuary), memberId, threadId: parsed.threadId, act: parsed.act! });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
     return NextResponse.json({ error: act.reason }, { status });
@@ -493,8 +494,12 @@ export async function POST(request: NextRequest) {
        and nothing was sent. ⛔ 502 would blame the provider for a line this
        system drew before reaching it. */
     const disclosureRefused = turn.reason === 'disclosure_unavailable';
+    /* WS-CONTINUITY A2: MAIA quoted wording that is not in the text she was given. A line this system drew, nothing was written — ⛔ not a provider fault. */
+    const quoteRefused = turn.reason === 'quote_not_in_text';
     const accountabilityUnresolved = turn.reason === 'disclosure_confirmation_unresolved';
-    const safeDetail = scopeRefused || disclosureRefused
+    const safeDetail = quoteRefused
+      ? 'quote_not_in_text'
+      : scopeRefused || disclosureRefused
       ? turn.detail
       : turn.reason === 'structured_refused'
         ? turn.detail
@@ -560,7 +565,7 @@ export async function POST(request: NextRequest) {
           wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
         },
       } : {}),
-    }, { status: scopeRefused || disclosureRefused ? 409 : accountabilityUnresolved ? 500 : 502 });
+    }, { status: scopeRefused || disclosureRefused || quoteRefused ? 409 : accountabilityUnresolved ? 500 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no

@@ -102,3 +102,26 @@ describe('Work conversation: MAIA is told the truth about what she has', () => {
       .toBe('71281b74a73e4215d4da05d3fe28c38153a64bbbaefa6766d497873ddfd44bc6');
   });
 });
+
+/* Founder walk 2026-11-09, defects 3 and 5. */
+describe('walk defects: a changed passage and Sanctuary', () => {
+  it('in any conversation (not only the one that quoted it), she is told a changed passage is not her mistake', async () => {
+    const system = await systemFor(workCtx(true));
+    expect(system).toContain('THE TEXT CHANGES AS THEY WRITE');
+    expect(system).toMatch(/do not say you were mistaken or that you misquoted/);
+  });
+
+  it('in Sanctuary she is told so, and is told not to offer reading permission, a reading, keeping or a plan', async () => {
+    const system = await systemFor({ ...(workCtx(true) as object), sanctuary: true } as AskContext);
+    expect(system).toContain('THIS EXCHANGE IS IN SANCTUARY');
+    expect(system).toMatch(/Do not suggest granting or changing reading permission/);
+    // the take-me-there buttons (incl. "Read this chapter", which keeps observations) are not offered in Sanctuary
+    expect(system).not.toContain('Read this chapter');
+  });
+
+  it('outside Sanctuary she hears nothing about Sanctuary, and the buttons are still described', async () => {
+    const system = await systemFor(workCtx(true));
+    expect(system).not.toContain('THIS EXCHANGE IS IN SANCTUARY');
+    expect(system).toContain('Read this chapter');
+  });
+});

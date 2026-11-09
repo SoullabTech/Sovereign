@@ -50,13 +50,13 @@ test('the passage is pinned above one conversation, with a way back to the page'
   expect(p.onBackToPage).toHaveBeenCalled();
 });
 
-test('an option arrives as a turn: MAIA speaks plainly, the wording follows with Use it · Change it · Talk about it', () => {
+test('an option arrives as a turn: MAIA speaks plainly, the wording follows with Use it · Change it · Talk about it · Keep mine', () => {
   render();
   const turn = q('[data-stage-thread] [data-stage-option="v1"]')!.closest('li')!;
   expect(turn.querySelector('p')!.textContent).toContain('the ending explains');
   expect(turn.querySelector('p')!.textContent).not.toContain('What I’d preserve');
   expect(Array.from(turn.querySelectorAll('.ws-stage-option-actions button')).map((b) => b.textContent))
-    .toEqual(['Use it', 'Change it', 'Talk about it']);
+    .toEqual(['Use it', 'Change it', 'Talk about it', 'Keep mine']); // Keep mine added by founder act 2026-11-08: the writer can say no
 });
 
 test('Use it is the writer’s one act; it applies MAIA’s exact wording and nothing else', async () => {
@@ -179,4 +179,18 @@ test('no answer buttons while MAIA is answering, or under an earlier turn', () =
   const latest = [turns[0]!, { turnIndex: 1, speaker: 'maia', body: 'Which?\n[[answer: A]]', at: 't1', adjunct: null }];
   render({ busy: true, thread: { ...thread, turns: latest, versions: [], headVersionId: null }, version: null, lastMaiaTurn: latest[1] });
   expect(q('[data-stage-answers]')).toBeNull();
+});
+
+
+test('Keep mine says no without mutating anything: it calls only onKeep — never Use it, apply, send or save', () => {
+  const p = render();
+  act(() => q('[data-stage-keep]')!.click());
+  expect(p.onKeep).toHaveBeenCalledTimes(1);
+  for (const k of ['onUseVersion', 'onApply', 'onSend', 'onSaveMember', 'onUndo']) expect(p[k]).not.toHaveBeenCalled();
+});
+
+test('Keep mine is not offered once the writer has used the option (Undo takes its place)', () => {
+  render({ thread: { ...thread, application: { authorizationId: 'a', versionId: 'v1', resultingVersion: 2, undone: false, canUndo: true } } });
+  const keep = q('[data-stage-keep]');
+  expect(keep === null || keep.closest('.ws-stage-option-actions') === null).toBe(true);
 });

@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import type { ReviewFailure } from './chapterReview';
 
 export interface ChapterReviewManifest {
@@ -38,7 +39,7 @@ export async function saveChapterReviewManifest(
     const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/chapter-reviews`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify(withKeepPosture({ ...input })),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok || !body?.run) return { ok: false, refusal: String(body?.refusal ?? `http_${res.status}`) };

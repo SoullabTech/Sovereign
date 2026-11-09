@@ -195,6 +195,9 @@ const KNOWN: Record<string, { readonly phrase: string | null; readonly removePhr
   },
   writer_studio_relationship_returns: { phrase: 'where you left off', what: 'where the writer last returned to the Work' },
   writer_studio_place_returns: { phrase: 'where you left off', what: 'the place in the writing the writer last returned to' },
+  work_reading_scope_events: { phrase: 'what you told MAIA about it', what: 'the content-free record of the writer\'s standing permission for MAIA to read the Work (a permission, not a thing the member keeps; it ends with the Work)' },
+  development_plans: { phrase: 'its plans', what: 'the plans MAIA drafted for the Work and the writer edited (their history and their links to applied changes go with them; the manuscript text itself is not part of a plan)' },
+  writer_decision_events: { phrase: 'what you told MAIA about it', what: 'what the writer settled about the Work, in their own words (a record of their own decisions; ends with the Work)' },
   // Baseline tables with no live writer in this tree (production row counts are UNKNOWN). They still cascade, so they are listed.
   developmental_reviews: { phrase: null, what: 'legacy readings of a Work; no live writer in this tree' },
   studio_companion_turns: {

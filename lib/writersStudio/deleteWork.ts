@@ -360,7 +360,7 @@ export const REMOVE_WORK_COPY = {
    Work row (see the R-SHARED lane record, section 6), including the Work's conversations. Used by the Delete bodies only. A Work that
    is merely REMOVED, with its writing left in place, does not lose the conversations about that writing; see the next constant. */
 const WHAT_GOES_WITH_A_WORK =
-  'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off, its list of materials and its image';
+  'its conversations with MAIA, what you told MAIA about it, your corrections, its plans, where you left off, its list of materials and its image';
 /* What goes when a Work is REMOVED and the writing stays (the two Remove bodies below).
 
    "its conversations with MAIA" is NOT in this list, because for a Work that holds a writing it is mostly false. A conversation with
@@ -372,7 +372,7 @@ const WHAT_GOES_WITH_A_WORK =
    a storage distinction a member cannot see. Naming both exactly is what keeps the dialog from promising an erasure that does not
    happen. (Post-merge census, 2026-11-06.) */
 const WHAT_GOES_WITH_A_REMOVED_WORK =
-  'what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing';
+  'what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing';
 /* What stays, and the exit. These say where the conversations live and what ends them. They make NO claim about whether anything can
    still open them: the Develop conversations and the Work's own conversation stay openable from the writing and from any other Work
    that holds it. The editing (passage-by-passage) conversations are different: each is bound to the Work it was opened under, so once
