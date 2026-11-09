@@ -1052,6 +1052,9 @@ export default function FlagshipWriteEditController() {
   // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
   // The listener is stable for the manuscript; everything that changes between renders is read through refs, so an unrelated
   // re-render can never cancel a pending hand-off. Only the writer's LATEST hand-off may act (decideHandoff: superseded).
+  const openWorkspaceRef = useRef<(() => void) | null>(null);
+  // The hand-off's own notice. Not the shared editorialFailure, which Work arrival and thread restoration clear.
+  const [planHandoffNotice, setPlanHandoffNotice] = useState<string | null>(null);   // assigned where openWorkspace is declared, further down
   const handoffLive = useRef({ context, work, workKind: workContext.kind, holdPassage, focusWritingSection });
   handoffLive.current = { context, work, workKind: workContext.kind, holdPassage, focusWritingSection };
   const handoffManuscriptId = context?.manuscriptId ?? null;
@@ -1081,12 +1084,15 @@ export default function FlagshipWriteEditController() {
         if (d.kind === 'superseded') return;
         if (d.kind === 'refuse') {
           if (d.focusSectionId) C.focusWritingSection(d.focusSectionId);
-          setEditorialFailure(HANDOFF_REFUSAL_COPY[d.reason]);
+          setPlanHandoffNotice(HANDOFF_REFUSAL_COPY[d.reason]);
           return;
         }
+        setPlanHandoffNotice(null);
         const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
         C.holdPassage(section, d.start, d.end, d.text);
         setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId });
+        // The writer asked to WORK ON this passage: open the desk on it, exactly as a hand selection followed by Talk with MAIA does.
+        setTimeout(() => { openWorkspaceRef.current?.(); }, 0);
         // Only after the passage is actually held may an open step become 'working'. A refused hand-off leaves it as it was.
         if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working' }]);
       });
@@ -2103,6 +2109,8 @@ export default function FlagshipWriteEditController() {
   }, [workspaceOpen, focusId, selectedPassage, scopedEditorialThread, suggestedVersionId,
     currentLivingWorkScope, workGestureEpoch]);
 
+  openWorkspaceRef.current = () => openWorkspace();
+
   const closeWorkspace = useCallback(() => {
     const awaitingChoice = conversationChoices.length > 1;
     if (!currentWorkGesture() || (editorialBusy && !awaitingChoice) || adoptionBusy || memberVersionBusy) return;
@@ -2504,6 +2512,8 @@ export default function FlagshipWriteEditController() {
             editorialBusy={editorialBusy && !workReentryRequired.current}
             adoptionBusy={adoptionBusy && !workReentryRequired.current}
             memberVersionBusy={memberVersionBusy && !workReentryRequired.current}
+            planHandoffNotice={planHandoffNotice}
+            onDismissPlanHandoffNotice={() => setPlanHandoffNotice(null)}
             editorialFailure={workReentryRequired.current
               ? 'This Living Work has its own MAIA context. Earlier manuscript conversations are not shared automatically.'
               : editorialFailure}

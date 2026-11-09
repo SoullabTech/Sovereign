@@ -24,7 +24,7 @@
 import { REMOVE_MANY_WORK_COPY, deleteConfirmCopy, removeSharedWorkCopy } from '@/lib/writersStudio/deleteWork';
 
 const GOES_LIST_INTRO = 'That removes the Work and what you built inside it: ';
-const GOES_LIST = 'what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing';
+const GOES_LIST = 'what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing';
 const IRREVERSIBLE = 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule.';
 
 const STAYS_SINGULAR = 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
@@ -32,32 +32,32 @@ const STAYS_PLURAL = 'Your conversations with MAIA about those writings are not 
 
 const SHARED_WITH_ONE =
   'This writing is also in another of your Works, so it cannot be deleted from here without taking it from there. '
-  + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
+  + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'The writing itself is not deleted: it stays in your other Work. '
   + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
 
 const sharedWithMany = (n: number) =>
   `This writing is also in ${n} of your other Works, so it cannot be deleted from here without taking it from there. `
-  + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
+  + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'The writing itself is not deleted: it stays in the other Works that hold it. '
   + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
 
 const MANY_WRITINGS =
   'This Work holds more than one writing, so it cannot be deleted from here without choosing which writing to delete. '
-  + 'You can remove the Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
+  + 'You can remove the Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'None of the writings is deleted: each stays in any other Work that holds it, or with your other writing that is not in a Work. '
   + 'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.';
 
 const DELETE_WITH_WRITING =
   'This deletes the Work and its writing: the sections and drafts, the original file it came from, if there is one, and your conversations with MAIA about the writing. '
-  + 'It also removes what you built inside the Work: its conversations with MAIA, what you told MAIA about it, your corrections, where you left off, its list of materials and its image. '
+  + 'It also removes what you built inside the Work: its conversations with MAIA, what you told MAIA about it, your corrections, its plans, where you left off, its list of materials and its image. '
   + 'It cannot be undone and there is no archive. Private backups already taken can still hold a copy until they are retired on their normal schedule.';
 
 const DELETE_EMPTY =
-  'This Work has no writing in it. Deleting it removes the Work and what you built inside it: its conversations with MAIA, what you told MAIA about it, your corrections, where you left off, its list of materials and its image. '
+  'This Work has no writing in it. Deleting it removes the Work and what you built inside it: its conversations with MAIA, what you told MAIA about it, your corrections, its plans, where you left off, its list of materials and its image. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule.';
 
 /** Every Remove body the member can be shown, labelled. Shared-with-N covers one other Work, two and five. */

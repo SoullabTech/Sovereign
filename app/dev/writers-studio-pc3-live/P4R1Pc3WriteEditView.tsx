@@ -136,6 +136,9 @@ export type P4R1Pc3WriteEditViewProps = {
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
   editorialFailure: string | null;
+  /** A plan-step hand-off that was refused, said where the writer is. */
+  planHandoffNotice?: string | null;
+  onDismissPlanHandoffNotice?: () => void;
   editorialNotice: string | null;
   adoptionOutcome: AdoptionWireOutcome | null;
   undoMessage: string | null;
@@ -1315,6 +1318,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     />
   );
 
+  /* A refusal (e.g. a plan step that no longer fits) must be visible where the writer is, not only inside the desk. */
+  const pageNotice = props.planHandoffNotice
+    ? <p role="status" data-write-page-notice style={{ margin: '8px 0', fontSize: '0.9em' }}>{props.planHandoffNotice}{' '}
+        <button type="button" onClick={props.onDismissPlanHandoffNotice} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>OK</button></p>
+    : null;
   const modeSwitch = proseAvailable && !canvas ? (
     <div className="p4r1-write-view-switch" aria-label="Writing view">
       <button type="button" aria-pressed={proseView} onClick={() => {
@@ -1329,6 +1337,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const proseRoom = proseAvailable ? (
     <div className="p4r1-prose-host">
       {modeSwitch}
+      {pageNotice}
       <ChapterProseSurface
         sections={proseSections}
         activeId={props.focusId}
@@ -1344,6 +1353,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const exactRoom = (
     <div className="p4r1-edit-host">
       {modeSwitch}
+      {pageNotice}
       {proseAvailable ? (
         <div className="p4r1-chapter-edit" data-chapter-edit>
           <WholeManuscriptSurface

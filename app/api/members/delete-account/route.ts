@@ -138,6 +138,7 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
   // so a member who has used them can never be deleted while this route says nothing — the preflight must tell them.
   { table: 'writer_decision_events', column: 'member_id', label: 'what you settled about your Work, in your words' },
   { table: 'work_reading_scope_events', column: 'member_id', label: 'your permission for MAIA to read your Work' },
+  { table: 'development_plans', column: 'member_id', label: 'your plans for your Work' },
 ];
 
 /**

@@ -37,7 +37,15 @@ http.createServer((req, res) => { let b = ''; req.on('data', (c) => b += c); req
   fs.appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), tools: (j.tools ?? []).map((t) => t.name), chaptersInFrontOfMaia: seen, standingPermission: sys.includes('STANDING PERMISSION'), settled: /WHAT THE WRITER HAS SETTLED/.test(sys) }) + '\n');
   const base = { id: 'msg_stub', type: 'message', role: 'assistant', model: j.model ?? 'stub', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } };
   res.setHeader('content-type', 'application/json');
-  if ((j.tools ?? []).length) {
+  if ((j.tools ?? []).some((t) => t.name === 'development_plan')) {
+    // Plan: steps anchored to EXACT sentences from the chapters she was handed, plus one invented step that grounding must drop.
+    const blocks = [...sys.matchAll(/--- (.+?) \[([0-9a-f-]{36})\] ---\n([\s\S]*?)(?=\n\n--- |$)/g)].map((m) => ({ h: m[1], id: m[2], text: m[3] }));
+    const firstSentence = (t) => { const b = t.split('\n\n').slice(-1)[0]; const m = b.match(/^[^.!?]+[.!?]/); return (m ? m[0] : b.slice(0, 80)).trim(); };
+    const steps = blocks.slice(0, 2).map((c) => ({ chapterId: c.id, anchor: firstSentence(c.text), direction: 'Try letting this opening answer what an earlier chapter promised.', why: 'It would tie the chapters together.' }));
+    if (blocks[0]) steps.push({ chapterId: blocks[0].id, anchor: 'a lighthouse that never appears in this book', direction: 'invented', why: '' });
+    res.end(JSON.stringify({ ...base, stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_plan' + (++n), name: 'development_plan',
+      input: { summary: '[stand-in] A plan across ' + blocks.map((b) => b.h).join(', ') + '.', steps } }] }));
+  } else if ((j.tools ?? []).length) {
     n++; const verbs = ['stirred', 'shifted', 'came to', 'opened', 'rose'];
     const original = 'The harbour woke slowly, and the salt on the rails caught the first light before anyone spoke.';
     const rep = original.replace('woke slowly', verbs[n % verbs.length] + ' slowly');

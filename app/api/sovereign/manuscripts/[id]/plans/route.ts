@@ -14,7 +14,6 @@ import { loadActiveGrant, loadSectionSizes, loadSuppliedSections } from '@/lib/d
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
-import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
 import { loadThread } from '@/lib/manuscript/ask/threadStore';
 import { draftPlan } from '@/lib/manuscript/ask/planReader';
 import { groundSteps, digestOfText, staleStepIds, stepStanding } from '@/lib/writersStudio/developmentPlan';
@@ -76,7 +75,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const chapters = supplied.map((s) => ({ id: s.id, heading: s.label, text: s.body }));
   const thread = typeof b.threadId === 'string' && UUID.test(b.threadId) ? await loadThread(b.threadId, memberId) : null;
   const history = (thread?.turns ?? []).slice(-8).map((t) => ({ speaker: t.speaker, body: t.body }));
-  const settled = await decisionContextForWork(memberId, workId, id);
+  /* HELD for a founder ruling: the plan does not yet read the writer's settled decisions. The shared decision read carries the
+     D5 narrow exception and its readers are a closed list (standingOutsideCognition.test.ts); adding this route would widen it.
+     Until ruled, a plan may propose something the writer has settled; the writer can still Keep mine / Set aside. */
+  const settled = '';
 
   const drafted = await draftPlan({ ask, chapters, settled, history });
   for (const d of minted) { try { await confirmDisclosureCrossed(d); } catch { console.error('[PLAN] receipt confirmation threw'); } }

@@ -42,7 +42,7 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings } from './DevelopStage';
-import { PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
+import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import { fetchPlan, makePlanClient, editPlanClient, type PlanView } from '@/lib/writersStudio/planClient';
@@ -2164,6 +2164,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   /** A plan step -> the passage desk. Leaves an id for Write and goes there. Changes nothing itself: no status, no manuscript. */
   const workOnStep = (stepId: string) => {
     if (!stageManuscriptId) return;
+    // Say a known refusal HERE, beside the step, instead of sending the writer somewhere to find nothing. Write re-checks authoritatively.
+    if (planView && !planView.verdict) { setPlanNote(HANDOFF_REFUSAL_COPY.no_verdict.replace(' The chapter is open; select the passage you mean.', '')); return; }
+    if (planView?.staleStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.changed.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
+    if (planView?.unverifiedStepIds.includes(stepId)) { setPlanNote(HANDOFF_REFUSAL_COPY.unverified.replace(' The chapter is open; check it, then', ' Check the chapter, then')); return; }
+    setPlanNote(null);
     try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }
     // ⛔ No status change here: only a hand-off Write actually completes may mark the step 'working'.
     try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* fresh mount reads the key */ }

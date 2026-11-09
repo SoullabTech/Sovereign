@@ -109,12 +109,13 @@ Not a second product, and not more intelligence — the same reading with the ma
 
 ## 11 · Order (each one walked on *The Long Harbour* and a helper's nonfiction book before the next)
 1. **Finish the journey that exists** (reviewer's gate): G1 + a browser walk of plan → passage → change → apply → leave → return → undo, with the refusal cases (wrong manuscript, duplicate anchor, stale revision, revoked permission, other member, repeated action). Record in the owner handoff.
-2. **G2 + G3: passage cards and comparisons in turns**, revision-labelled. Retires the excerpt strip.
-3. **G4: words in, confirmed acts out.** Retires the plan form, permission control, kind control and starter row.
-4. **G5: return brief.**
-5. **G6: readings in the conversation**, and lenses by words.
-6. **G7: DIRECT palette and drawer.**
-7. **G8: outline alternatives.**
+2. **G6 brought forward (reviewer, 2026-11-09): readings usable in the Work conversation**, with revision provenance and consent, because the Nov 8 witness showed MAIA reading a chapter in Develop and then lacking it in the next turn. This is the core relationship to repair before the interface is called ready.
+3. **G2 + G3: passage cards and comparisons in turns**, revision-labelled. Retires the excerpt strip.
+4. **G4: words in, confirmed acts out.** Retires the plan form, permission control, kind control and starter row.
+5. **G5: return brief.**
+6. **Lenses by words.**
+7. **G7: DIRECT palette and drawer.**
+8. **G8: outline alternatives.**
 Then: independent review, founder walk, and only then a ruling on making the stage the default.
 
 ## 12 · Lane and process
