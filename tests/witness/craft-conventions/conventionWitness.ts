@@ -1,7 +1,7 @@
 /**
  * WS-CRAFT-CONVENTIONS-01 · before/after witness for CONVENTION_STANCE_DIRECTIVE (2026-11-09).
  *
- *   npx tsx tests/witness/craft-conventions/conventionWitness.ts <before|seven|after> <out.json> [--all-depths]
+ *   npx tsx tests/witness/craft-conventions/conventionWitness.ts <before|seven|nolevels|after> <out.json> [--all-depths] [--only=<case-id-prefix>]
  *
  * ⛔ EVIDENCE CLASS: INSTRUCTION-LEVEL, not a runtime witness. It sends MAIA's real composed
  * editorial rules (editorialDirective + responsive length + the free-Ask conversation shape, or
@@ -19,7 +19,7 @@
 import fs from 'node:fs';
 import { runStructured } from '@/lib/ai/structured/router';
 import {
-  CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE, editorialDirective, responsiveLengthDirective, type EditorialDepth,
+  CONVENTION_STANCE_DIRECTIVE, EDITORIAL_LEVELS_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE, editorialDirective, responsiveLengthDirective, type EditorialDepth,
 } from '@/lib/writersStudio/editorialDepth';
 import { conversationTurnInstruction } from '@/lib/writersStudio/conversationTurn';
 import { teachingTurnInstruction } from '@/lib/writersStudio/teachingTurn';
@@ -27,11 +27,12 @@ import { PASSAGES, CASES } from './conventionCases';
 
 const MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
 
-type Arm = 'before' | 'seven' | 'after';
-/** before: neither convention rule. seven: the seven rules without ruling 8. after: both. */
+type Arm = 'before' | 'seven' | 'nolevels' | 'after';
+/** before: no convention rules and no levels. seven: the seven rules only. nolevels: as shipped minus the levels directive. after: as shipped. */
 function system(depth: EditorialDepth, teaching: boolean, arm: Arm): string {
   let directive = editorialDirective(depth);
-  if (arm !== 'after') directive = directive.replace(` ${WRITER_ATTENTION_DIRECTIVE}`, '');
+  if (arm !== 'after') directive = directive.replace(` ${EDITORIAL_LEVELS_DIRECTIVE}`, '');
+  if (arm === 'before' || arm === 'seven') directive = directive.replace(` ${WRITER_ATTENTION_DIRECTIVE}`, '');
   if (arm === 'before') directive = directive.replace(` ${CONVENTION_STANCE_DIRECTIVE}`, '');
   return [
     'You are MAIA, an editorial companion in a writer\'s studio. Reply to the writer in plain prose.',
@@ -44,18 +45,22 @@ function system(depth: EditorialDepth, teaching: boolean, arm: Arm): string {
 async function main() {
   const arm = process.argv[2] as Arm;
   const out = process.argv[3];
-  if ((arm !== 'before' && arm !== 'seven' && arm !== 'after') || !out) throw new Error('usage: <before|seven|after> <out.json>');
+  if (!['before', 'seven', 'nolevels', 'after'].includes(arm) || !out) throw new Error('usage: <before|seven|nolevels|after> <out.json> [--all-depths] [--only=<case-id-prefix>]');
   const results = [];
   /* --all-depths: every case at guided, learning and direct (founder acceptance 4). */
-  const allDepths = process.argv[4] === '--all-depths';
+  const flags = process.argv.slice(4);
+  const allDepths = flags.includes('--all-depths');
+  const only = flags.find((f) => f.startsWith('--only='))?.slice('--only='.length);
+  const cases = only ? CASES.filter((c) => c.id.startsWith(only)) : CASES;
   const plan = allDepths
-    ? CASES.flatMap((c) => (['guided', 'learning', 'direct'] as const).map((depth) => ({ ...c, depth })))
-    : CASES;
+    ? cases.flatMap((c) => (['guided', 'learning', 'direct'] as const).map((depth) => ({ ...c, depth })))
+    : cases;
   for (const c of plan) {
     const passage = PASSAGES[c.passage];
     const sys = system(c.depth, c.teaching, arm);
     if ((arm !== 'before') !== sys.includes(CONVENTION_STANCE_DIRECTIVE)) throw new Error(`${arm} arm has the wrong seven-rule state`);
-    if ((arm === 'after') !== sys.includes(WRITER_ATTENTION_DIRECTIVE)) throw new Error(`${arm} arm has the wrong ruling-8 state`);
+    if ((arm === 'after' || arm === 'nolevels') !== sys.includes(WRITER_ATTENTION_DIRECTIVE)) throw new Error(`${arm} arm has the wrong ruling-8 state`);
+    if ((arm === 'after') !== sys.includes(EDITORIAL_LEVELS_DIRECTIVE)) throw new Error(`${arm} arm has the wrong levels state`);
     const user = `The passage in view:\n"""\n${passage.text}\n"""\n\n${c.ask}`;
     const out1 = await runStructured({ model: MODEL, system: sys, messages: [{ role: 'user', content: user }], maxTokens: 4096 });
     if (!out1.ok) throw new Error(`${c.id}: ${out1.refusal} ${out1.detail ?? ''}`);

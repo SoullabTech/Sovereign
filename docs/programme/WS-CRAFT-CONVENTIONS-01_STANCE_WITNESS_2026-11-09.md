@@ -214,3 +214,52 @@ claim about her own earlier answer. A rate would need the accuracy passages run 
 this path. The "false retraction after an edit" behaviour (the other session's defect 3) was not
 re-tested here. The integrity directive's "treat nothing said earlier as established" sits beside
 WORK_STANDING's "do not say you were mistaken"; watch it in the next real walk.
+
+## 9. The editorial levels directive (design §5a; founder: "Approve the model", "Approve the wording")
+
+**Change.** `EDITORIAL_LEVELS_DIRECTIVE` is the §5a text, word for word (a test pins it to the
+design). It is composed into `editorialDirective` after the editorial stance and before the
+convention rules, at every depth, and into the Develop/Work conversation as `WORK_LEVELS_RULES`,
+after `WORK_STANDING`. The work prompt hash covers it.
+
+**Gates.**
+- Guards: 60/60 across the convention, teaching-turn and Work-conversation suites. One finding
+  while adding them: an older order check in `conventionStanceDirective.test.ts` compared
+  positions against a constant it had not imported, so it passed vacuously. It is now imported and
+  checks for real.
+- Typecheck: 214 against a baseline of 214.
+
+**Witness run 8** (structured seam, 4,096 tokens, every reply ended normally):
+- `run8-levels-nolevels` vs `run8-levels-after`: six level cases × 3 depths.
+- `run8-regression-after`: all 22 cases × 3 depths with the levels directive on.
+
+| Case | Asked at | With the levels directive (all three depths) | Verdict |
+|---|---|---|---|
+| L1 | the whole book | Stays at the whole and offers no new wording; Guided opens "At the level of the whole book…" | Held |
+| L2 | the scene | Stays at the scene's shape and offers no new wording; Guided opens "Working at the level of how the scene is shaped…" | Held |
+| L3 | one sentence | Stays with the sentence; no upward question | Held |
+| L4 | a sentence, "I might cut this scene" | Discusses the sentence, then asks **once, at the end**: "is the scene staying, or would you rather look at whether it earns its place first?" (Guided); "is it staying for now…?" (Learning); "Do you want to keep working at this level, or is it worth deciding first whether the scene stays?" (Direct) | Held |
+| L5 | "Tighten the gulls sentence" | Works at the sentence, asks no upward question, asks what "tighten" means, and gives options with costs plus "Keeping it as written is a live option too" | Held |
+| L6 | an argument (nonfiction) | Answers the argument; the closing question is a choice; no "you should" | Held |
+
+Compared with the arm without the levels directive:
+- The levels arm names the level more often (L1 at Guided and Direct, L2 at Guided and Direct).
+- In L4 the "is it staying" question becomes consistent. Without the directive it appeared at
+  Direct only, and Guided offered rewrites straight away.
+- Neither arm descended a level unasked.
+- Guided replies at the whole and scene levels were longer with the directive (L1 471 vs 311
+  words; L2 349 vs 218). This is reported, not judged.
+
+**Ruling 8 regression check with the levels on:**
+- **0 of 36** unasked surface remarks in the 12 cases.
+- G1, G2 and G4 raise colour/color when asked, at every depth.
+
+**Accuracy, still open and unrelated to this change.** Word counts are wrong in some replies:
+- "The gulls kept their own counsel." called five words (it is six), L5 at Guided.
+- "The water was the colour of old pewter." called seven (it is eight), L4.
+
+The text-accuracy rule is composed, but counts still slip. Repeated measurement is the next
+honest step, not another wording change.
+
+**Standing.** Implemented and witnessed at instruction level. A Studio walk of the levels on the
+harness is owed. Not merged, not deployed.

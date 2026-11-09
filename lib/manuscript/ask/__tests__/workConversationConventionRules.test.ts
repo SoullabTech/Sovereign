@@ -57,7 +57,7 @@ describe('the Work conversation carries the convention rulings', () => {
     const { promptHash } = await systemFor(ctx(false));
     expect(promptHash).toBe(workAskPromptHash());
     const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
-    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}`)");
+    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_LEVELS_RULES}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}`)");
   });
 
   it('defeat candidate: the Work prompt as it was before (no rules) fails the guard', async () => {

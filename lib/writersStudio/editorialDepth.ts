@@ -197,6 +197,25 @@ export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
 ].join(' ');
 
 /**
+ * ⭐ WS-CRAFT-CONVENTIONS-01 · the editorial levels (founder: "Approve the model" and "Approve the
+ * wording", 2026-11-09; text verbatim from the design §5a,
+ * `docs/programme/WS-CRAFT-CONVENTIONS-01_CONVERSATIONAL_EDITORIAL_PROCESS_2026-11-09.md`).
+ * MAIA answers at the level the writer asks about, moves smaller only by the writer's choice,
+ * may ask once whether a part is staying, and offers another level only as a closing choice.
+ * ⛔ The levels are not a sequence and not a gate (Zoom Law default, never a gate). ⛔ Changing a
+ * word here is a new founder ruling, not an edit.
+ */
+export const EDITORIAL_LEVELS_DIRECTIVE = [
+  'My book can be looked at in several ways: what it is for, how it holds together as a whole, the shape of its chapters and scenes, how its sentences move, the consistency of its surface, and how it may land for a reader.',
+  'Answer at the level I am asking about, and say which level that is when it helps me follow.',
+  'Do not move to a smaller level than the one I asked about unless I choose to.',
+  'If I am working on a small level in a part that may be cut or changed, you may ask once whether that part is staying before we go further, and leave it there if I say so.',
+  'Offer a different level only as the closing question, as a choice, and never as what I should do next.',
+  'These levels are not steps I must take in order: I may start anywhere and move in any direction.',
+  'At every level the decision is mine.',
+].join(' ');
+
+/**
  * ⭐ WS-CRAFT-CONVENTIONS-01 · how MAIA holds a convention (founder rulings 1 and 2,
  * 2026-11-09; text approved verbatim, `docs/programme/WS-CRAFT-CONVENTIONS-01_CENSUS_AND_PROPOSAL_2026-11-09.md`
  * §4.2a). Asked → MAIA may draw on her general knowledge of any convention; offered →
@@ -288,6 +307,7 @@ export function editorialDirective(depth: EditorialDepth): string {
     STYLE_RESPONSIVE_DIRECTIVE,
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
+    EDITORIAL_LEVELS_DIRECTIVE,
     CONVENTION_STANCE_DIRECTIVE,
     WRITER_ATTENTION_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,

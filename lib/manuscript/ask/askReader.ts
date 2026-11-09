@@ -31,7 +31,7 @@ import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt'
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
-import { CONVENTION_STANCE_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+import { CONVENTION_STANCE_DIRECTIVE, EDITORIAL_LEVELS_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
 
 /**
  * WS-CRAFT-CONVENTIONS-01 · rulings 2 and 8 (founder, 2026-11-09), carried into the Work
@@ -52,6 +52,11 @@ export const WORK_CONVENTION_RULES = [CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENT
  * So a first turn carries TEXT_ACCURACY_DIRECTIVE (a strict part of the integrity directive), and
  * every later turn carries the whole EPISTEMIC_INTEGRITY_DIRECTIVE.
  */
+/**
+ * WS-CRAFT-CONVENTIONS-01 · the editorial levels (design §5a, wording approved 2026-11-09), carried
+ * unchanged. It agrees with this path's own "STAY WHERE THEY ARE" and names the levels.
+ */
+export const WORK_LEVELS_RULES = EDITORIAL_LEVELS_DIRECTIVE;
 export const WORK_INTEGRITY_RULES = EPISTEMIC_INTEGRITY_DIRECTIVE;
 export function workIntegrityRules(hasHistory: boolean): string {
   return hasHistory ? WORK_INTEGRITY_RULES : TEXT_ACCURACY_DIRECTIVE;
@@ -146,7 +151,7 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
 export function workAskPromptHash(): string {
-  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}`).digest('hex');
+  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -540,7 +545,7 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [WORK_STANDING, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),

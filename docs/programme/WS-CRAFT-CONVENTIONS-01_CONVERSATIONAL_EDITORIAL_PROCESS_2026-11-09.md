@@ -204,9 +204,8 @@ format, label or badge.
 | Item | Ruling | Effect |
 |---|---|---|
 | G-1 | **APPROVED** (founder: "Approve G-1", 2026-11-09) | Implemented in `3ea7aeb55`: text accuracy on every Develop/Work turn, and the whole integrity directive once there is history (law A2). Witness: stance record §8. |
-
 | §8 Q1 · Eight-level model and movement rules (§2–§3, including §3.7) | **APPROVED as design** (founder: "Approve the model", 2026-11-09) | The model governs future work. It changes no MAIA behaviour by itself: MAIA learns the levels only through the §5a directive, which is not yet approved. |
+| §8 Q3 + Q4 · §5a wording, including the single "is this part staying?" question | **APPROVED** (founder: "Approve the wording", 2026-11-09) | The §5a text is fixed word for word. It is implemented as `EDITORIAL_LEVELS_DIRECTIVE` in both MAIA paths and witnessed in the stance record §9. Not merged, not deployed. |
 
-Still open: §8 Q3 (the §5a wording) and Q4 (the single "is this part staying?" question, which
-sits inside that wording). Then G-5 (the "where next" check), G-3 (depth and Teach me in Develop)
-and G-4 (style sheet).
+Still open: G-5 (the "where next" check), G-3 (depth and Teach me in Develop) and G-4 (style
+sheet), each its own act.
