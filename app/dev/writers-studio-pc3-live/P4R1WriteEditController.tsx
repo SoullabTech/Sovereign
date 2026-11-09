@@ -88,6 +88,7 @@ async function sha256Hex(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 import { decideHandoff, HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
+import { decidePassageHandoff, decodePassageHandoff, PASSAGE_HANDOFF_EVENT, PASSAGE_HANDOFF_KEY, PASSAGE_HANDOFF_REFUSAL_COPY } from '@/lib/writersStudio/passageHandoff';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -1133,9 +1134,40 @@ export default function FlagshipWriteEditController() {
         if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working', ifStatus: 'open' }]);
       });
     };
+    /* Design 1B amendment 2 · `open-desk`: the passage the writer was discussing with MAIA in Develop. Held only if its exact words occur
+       once in a saved chapter here; otherwise the chapter opens and says why. Nothing changes until the writer acts at the desk. */
+    const consumePassage = () => {
+      const L = handoffLive.current;
+      if (!L.context || L.context.manuscriptId !== handoffManuscriptId || !L.work || L.workKind !== 'work' || workReentryRequired.current) return;
+      let raw: string | null = null;
+      try { raw = window.sessionStorage.getItem(PASSAGE_HANDOFF_KEY(handoffManuscriptId)); } catch { /* none */ }
+      const handoff = decodePassageHandoff(raw);
+      if (!raw) return;
+      const ctx = L.context;
+      const d = handoff
+        ? decidePassageHandoff({ handoff, sectionIds: ctx.sections.map((x) => x.draftSectionId),
+            saveStateOf: (id) => writingRef.current?.statusOf(id), bodyOf: (id) => writingRef.current?.bodyOf(id) })
+        : { kind: 'refuse' as const, reason: 'missing' as const };
+      if (d.kind === 'refuse' && d.reason === 'not_ready') return;          // the editor is still opening: keep the key, try on the next signal
+      try { window.sessionStorage.removeItem(PASSAGE_HANDOFF_KEY(handoffManuscriptId)); } catch { /* ignore */ }
+      const focus = d.kind === 'hold' ? d.sectionId : d.focusSectionId;
+      if (focus) {
+        planHandoffPlace.current = focus;
+        L.focusWritingSection(focus);
+        if (writingRef.current && writingRef.current.activeId !== focus) writingRef.current.goToSection(focus);
+      }
+      if (d.kind === 'refuse') { setPlanHandoffNotice(PASSAGE_HANDOFF_REFUSAL_COPY[d.reason]); return; }
+      setPlanHandoffNotice(null);
+      const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
+      L.holdPassage(section, d.start, d.end, d.text);
+      setOpenDeskForHeld(true);
+    };
     consume();
+    consumePassage();
     window.addEventListener(PLAN_HANDOFF_EVENT, consume);
-    return () => { mounted = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); };
+    window.addEventListener(PASSAGE_HANDOFF_EVENT, consumePassage);
+    window.addEventListener(PLAN_HANDOFF_EVENT, consumePassage);
+    return () => { mounted = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); window.removeEventListener(PASSAGE_HANDOFF_EVENT, consumePassage); window.removeEventListener(PLAN_HANDOFF_EVENT, consumePassage); };
   }, [handoffManuscriptId]);
   // A Work that becomes ready AFTER the id was left (context/work load late) still receives it.
   useEffect(() => { if (context && work && workContext.kind === 'work') { try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* ignore */ } } }, [context, work, workContext.kind]);

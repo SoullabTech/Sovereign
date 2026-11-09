@@ -43,6 +43,10 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings, DevelopCompanion } from './DevelopStage';
+import type { StudioAct } from '@/app/writers-studio/canvas/WorkConversation';
+import { setReadScope } from '@/lib/writersStudio/readScopeClient';
+import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
+import { encodePassageHandoff, PASSAGE_HANDOFF_EVENT, PASSAGE_HANDOFF_KEY } from '@/lib/writersStudio/passageHandoff';
 import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
@@ -2147,17 +2151,48 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     void fetchPlan(stageManuscriptId).then((v) => { if (live && v) setPlanView(v); });
     return () => { live = false; };
   }, [stageManuscriptId]);
-  const makePlan = async (ask: string) => {
+  const makePlan = async (ask: string): Promise<boolean> => {
     const posture = readCurrentSanctuaryPosture();
     if (!posture.resolved || posture.sanctuary) {
       setPlanNote(posture.resolved ? 'Sanctuary is on, so MAIA is not reading your work and cannot make a plan.' : 'Your Sanctuary setting could not be read on this device, so no plan was made. Open MAIA here once, then try again.');
-      return;
+      return false;
     }
     setPlanBusy(true); setPlanNote(null);
     const r = await makePlanClient(stageManuscriptId, ask);
     setPlanBusy(false);
-    if (r.ok) { setPlanView(r.view); setLastRead(r.read); if (r.dropped > 0) setPlanNote(`${r.dropped} suggested step${r.dropped === 1 ? ' was' : 's were'} left out because ${r.dropped === 1 ? 'it' : 'they'} did not point at wording actually in your chapter.`); }
-    else setPlanNote(keepRefusalCopy(r.refusal) ?? (r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” on the right, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.'));
+    if (r.ok) { setPlanView(r.view); setLastRead(r.read); if (r.dropped > 0) setPlanNote(`${r.dropped} suggested step${r.dropped === 1 ? ' was' : 's were'} left out because ${r.dropped === 1 ? 'it' : 'they'} did not point at wording actually in your chapter.`); return true; }
+    setPlanNote(keepRefusalCopy(r.refusal) ?? (r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” under More → What MAIA can read, or ask MAIA, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.'));
+    return false;
+  };
+  /* Design 1B amendment 2 · the writer clicked one of MAIA's acting offers in the stage conversation. Only that click lands here. */
+  const studioAct = async (act: StudioAct): Promise<{ ok: true; text: string } | { ok: false; message: string }> => {
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) return { ok: false, message: 'Sanctuary is on, so that is not done here. Nothing was changed.' };
+    if (!props.work || !stageManuscriptId) return { ok: false, message: 'This Work is not ready for that yet. Nothing was changed.' };
+    if (act.id === 'grant-reading') {
+      const r = await setReadScope(stageManuscriptId, { action: 'grant', level: act.level });
+      if (r && 'refused' in r) return { ok: false, message: keepRefusalCopy(r.refused) ?? 'That permission could not be given just now. Nothing was changed.' };
+      if (!r) return { ok: false, message: 'That permission could not be given just now. Nothing was changed.' };
+      return { ok: true, text: `MAIA may now read your saved ${r.level === 'work' ? 'work' : 'chapter'} while you talk. Ask her again. You can stop it any time under More → What MAIA can read.` };
+    }
+    if (act.id === 'make-plan') {
+      return (await makePlan(act.ask))
+        ? { ok: true, text: 'Your plan is ready under More. Nothing in your writing changed.' }
+        : { ok: false, message: 'No plan was made. Under More you can see why.' };
+    }
+    if (act.id === 'note-settled') {
+      const r = await settleDecisionNote(props.work.id, act.words, { room: 'develop' });
+      return r.ok ? { ok: true, text: 'Noted, in your words. You can see or withdraw it under More → What you have settled.' }
+        : { ok: false, message: keepRefusalCopy(r.refusal) ?? 'That could not be noted just now. Nothing was recorded.' };
+    }
+    // open-desk: navigation only. The exact words go to Write, which holds them only if they occur once in the saved chapter.
+    const sid = stageSection?.draftSectionId ?? props.currentSectionId;
+    if (act.words && sid) {
+      try { window.sessionStorage.setItem(PASSAGE_HANDOFF_KEY(stageManuscriptId), encodePassageHandoff({ sectionId: sid, text: act.words })); } catch { /* Write then opens the chapter only */ }
+      try { window.dispatchEvent(new Event(PASSAGE_HANDOFF_EVENT)); } catch { /* a fresh mount reads the key */ }
+    }
+    navigateMode('write');
+    return { ok: true, text: act.words ? 'Opening the passage desk in Write.' : 'Opening the chapter in Write; select the passage you want to work on.' };
   };
   const editPlan = async (edits: import('@/lib/writersStudio/developmentPlan').StepEdit[]) => {
     const id = planView?.plan?.id; if (!id) return;
@@ -3349,6 +3384,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               quiet
               onRead={setLastRead}
               onReadChapter={props.onCommissionChapterReading}
+              onStudioAct={studioAct}
               onClose={() => setAttentionConversationDraft('')}
             />
           )}

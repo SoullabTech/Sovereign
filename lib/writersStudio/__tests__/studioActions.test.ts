@@ -9,7 +9,8 @@ describe('the closed allowlist', () => {
   it('is exactly the approved v1 set, with no "go to section"', () => {
     // Craftsman's Table restored as a place to go (founder, 2026-11-04), passage Focus only.
     // G4 (founder, 2026-11-09): read-chapter, Work conversation only, started by the writer's click.
-    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'new-conversation', 'read-chapter']);
+    // Amendment 2 (founder, 2026-11-09, "Yes, amend it"): grant-reading, make-plan, note-settled, open-desk — Work conversation only.
+    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'grant-reading', 'make-plan', 'new-conversation', 'note-settled', 'open-desk', 'read-chapter']);
     expect(JSON.stringify(STUDIO_ACTIONS)).not.toMatch(/section-|go-to-section/);
   });
 
@@ -88,5 +89,22 @@ describe('G4: Read this chapter, offered in conversation', () => {
     expect(work).toContain('You never start a reading yourself');
     expect(work).toContain('[[studio:read-chapter:arc]]');
     expect(studioActionsInstruction('passage-focus')).not.toContain('read-chapter');
+  });
+});
+
+describe('Design 1B amendment 2: acting offers', () => {
+  const { parseStudioActions, studioActionsInstruction } = jest.requireActual('../studioActions');
+  it('grant-reading carries only chapter or work; anything else is no button', () => {
+    expect(parseStudioActions('x\n[[studio:grant-reading:work]]', 'work-conversation').level).toBe('work');
+    expect(parseStudioActions('x\n[[studio:grant-reading]]', 'work-conversation').level).toBe('chapter');
+    expect(parseStudioActions('x\n[[studio:grant-reading:everything]]', 'work-conversation').action).toBeNull();
+  });
+  it('the four are Work-conversation only, and she is told only the click performs them', () => {
+    for (const id of ['grant-reading', 'make-plan', 'note-settled', 'open-desk']) {
+      expect(parseStudioActions(`x\n[[studio:${id}]]`, 'passage-focus').action).toBeNull();
+      expect(parseStudioActions(`x\n[[studio:${id}]]`, 'work-conversation').action?.id).toBe(id);
+    }
+    expect(studioActionsInstruction('work-conversation')).toMatch(/Consent is theirs/);
+    expect(studioActionsInstruction('work-conversation')).toMatch(/never yours/);
   });
 });

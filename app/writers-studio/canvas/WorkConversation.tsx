@@ -173,7 +173,24 @@ export interface WorkConversationProps {
   onRead?: (read: readonly { sectionId: string; label: string | null }[]) => void;
   /** G4: MAIA offered "Read this chapter" and the writer clicked it. Absent → no such button. Only the click starts a reading. */
   onReadChapter?: (lens: DevelopmentalLens) => Promise<{ ok: true; label: string } | { ok: false; message: string }>;
+  /** Design 1B amendment 2: the acting controls MAIA may offer (grant reading, make a plan, note a decision, open the desk). Absent →
+   *  no such buttons. ONLY the writer's click performs one; the host refuses in Sanctuary and says so. */
+  onStudioAct?: (act: StudioAct) => Promise<{ ok: true; text: string } | { ok: false; message: string }>;
   onClose: () => void;
+}
+
+export type StudioAct =
+  | { id: 'grant-reading'; level: 'chapter' | 'work' }
+  | { id: 'make-plan'; ask: string }
+  | { id: 'note-settled'; words: string }
+  | { id: 'open-desk'; words: string | null };
+
+const ACTING = new Set(['grant-reading', 'make-plan', 'note-settled', 'open-desk']);
+/** The writer's own words in their latest question, minus the "About “…”:" frame the stage places for a selection. */
+export function latestAuthorWords(turns: readonly { speaker: string; body: string }[]): { question: string; passage: string | null } {
+  const last = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? '';
+  const m = /^About “([\s\S]+?)”:\s*/.exec(last);
+  return { question: last.trim(), passage: m ? m[1] : null };
 }
 
 export default function WorkConversation(props: WorkConversationProps) {
@@ -188,7 +205,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -230,6 +247,22 @@ function ScopedWorkConversation({
       ? { phase: 'done', text: `MAIA has read ${result.label}. Ask her what she noticed. Nothing in your writing changed.` }
       : { phase: 'refused', text: result.message });
   }, [onReadChapter]);
+
+  /* Amendment 2 · what happened when the writer clicked one of MAIA's acting offers. */
+  const [actStatus, setActStatus] = useState<{ busy: boolean; text: string } | null>(null);
+  const [noteDraft, setNoteDraft] = useState<string | null>(null);
+  const performAct = useCallback(async (act: StudioAct) => {
+    if (!onStudioAct) return;
+    // Sanctuary keeps nothing and suspends permissions: none of these is performed there (the host refuses too).
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setActStatus({ busy: false, text: posture.resolved ? 'Sanctuary is on, so that is not done here. Nothing was changed.' : 'Your Sanctuary setting could not be read on this device, so nothing was done.' });
+      return;
+    }
+    setActStatus({ busy: true, text: act.id === 'make-plan' ? 'MAIA is making a plan…' : 'One moment…' });
+    const r = await onStudioAct(act);
+    setActStatus({ busy: false, text: r.ok ? r.text : r.message });
+  }, [onStudioAct]);
 
   const [draft, setDraft] = useState(initialDraft);
   // The Studio's starter, as placed; never sent on its own.
@@ -668,13 +701,20 @@ function ScopedWorkConversation({
               if (!offered) return null;
               const place = offered.id === 'develop-overview' || offered.id === 'editorial-pass' ? offered.id : null;
               if (place && !onStudioPlace) return null;
+              if (ACTING.has(offered.id) && !onStudioAct) return null;   // a room that cannot honour it shows no button
+              const mine = latestAuthorWords(thread?.turns ?? []);
               const run = () => {
+                if (offered.id === 'grant-reading') { void performAct({ id: 'grant-reading', level: parsed.level ?? 'chapter' }); return; }
+                if (offered.id === 'make-plan') { if (mine.question) void performAct({ id: 'make-plan', ask: mine.question }); return; }
+                if (offered.id === 'note-settled') { setNoteDraft(mine.question); setActStatus(null); return; }
+                if (offered.id === 'open-desk') { if (requestConversationDeparture()) void performAct({ id: 'open-desk', words: mine.passage }); return; }
                 if (offered.id === 'new-conversation') { startFresh(); return; }
                 if (offered.id === 'read-chapter') { void startChapterReading(parsed.lens ?? 'overview'); return; }
                 if (place && requestConversationDeparture()) onStudioPlace?.(place);
               };
               const enabled = offered.id === 'new-conversation' ? canStartFresh
                 : offered.id === 'read-chapter' ? pending === null && chapterReading?.phase !== 'running'
+                : ACTING.has(offered.id) ? pending === null && !actStatus?.busy
                 : pending === null;
               return (
                 <button
@@ -688,7 +728,7 @@ function ScopedWorkConversation({
                     cursor: enabled ? 'pointer' : 'default', color: INK.secondary, opacity: enabled ? 1 : 0.5,
                   }}
                 >
-                  <StudioText role="metadata" as="span">{offered.label}</StudioText>
+                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? 'Let MAIA read this saved chapter' : offered.label}</StudioText>
                 </button>
               );
             })()}
@@ -785,6 +825,30 @@ function ScopedWorkConversation({
                 ? readingProgressText('MAIA is reading the chapter', chapterReading.now - chapterReading.startedAt)
                 : chapterReading.text}
             </StudioText>
+          </div>
+        ) : null}
+
+        {noteDraft !== null ? (
+          /* A settled decision is the writer's own words: prefilled from what they said, editable, recorded only on "Note it". */
+          <div data-note-settled="true" style={{ marginTop: SPACE.tight, display: 'flex', flexDirection: 'column', gap: SPACE.tight }}>
+            <label htmlFor="ws-note-settled"><StudioText role="metadata" as="span">In your words, what have you settled about the book?</StudioText></label>
+            <textarea id="ws-note-settled" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={3} maxLength={1000}
+              style={{ font: 'inherit', fontSize: 14, padding: 8, borderRadius: RADIUS.sm, border: `1px solid ${RULE.soft}`, background: 'transparent', color: INK.primary }} />
+            <div style={{ display: 'flex', gap: SPACE.tight }}>
+              <button type="button" data-note-settled-confirm="true" disabled={!noteDraft.trim() || Boolean(actStatus?.busy)}
+                onClick={() => { const words = noteDraft.trim(); setNoteDraft(null); void performAct({ id: 'note-settled', words }); }}
+                style={{ background: 'transparent', border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`, cursor: 'pointer', color: INK.secondary }}>
+                <StudioText role="metadata" as="span">Note it</StudioText>
+              </button>
+              <button type="button" onClick={() => setNoteDraft(null)} style={{ background: 'transparent', border: 0, cursor: 'pointer', color: INK.quiet }}>
+                <StudioText role="metadata" as="span">Not now</StudioText>
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {actStatus ? (
+          <div data-studio-act-status={actStatus.busy ? 'busy' : 'done'} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
+            <StudioText role="metadata" tone="secondary">{actStatus.text}</StudioText>
           </div>
         ) : null}
 
