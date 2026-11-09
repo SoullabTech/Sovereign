@@ -545,3 +545,41 @@ They are rare and small, and they never touched a quotation. Quotations stayed e
 
 Recommended: **(ii)**. It targets exactly the two clusters, it can be measured, and it removes
 numbers the writer did not ask for, which is in the spirit of ruling 8.
+
+### 12.2 The passing-counts sentence, added and measured (founder: "Yes, add and measure", 2026-11-09)
+
+**Change.** One sentence was appended to `TEXT_ACCURACY_DIRECTIVE`: "When a count or length is not
+what I asked about, leave it out, or say it only after checking it word by word." That directive
+reaches every depth in Passage Focus, and every turn of the Develop conversation (on its own on a
+first turn, inside the integrity directive after). Guard: `textAccuracyDirective.test.ts` 7/7.
+
+**Measurement** (same instruments and model; every passing count read by hand against the true
+lengths):
+
+| | Before (§12.1) | After |
+|---|---|---|
+| Direct checkable questions (54) | 54/54 | 54/54. The scorer flagged one miss, but it was its own error: it read "Counting the **one** I was shown…" as the answer, where MAIA said "twenty-eight", which is correct. |
+| Passing "N words" mentions in 48 editorial replies | 44 | **32** |
+| Replies with any passing count | 31 | 28 |
+| Wrong passing counts | 3 (in 3 replies) | **2** (in 2 replies) |
+
+The two slips after the change:
+- Passage Focus, rain passage, "Is the rhythm too even?": "the third is **four** words" (it is three).
+- Develop, "Mara", "Tighten the last sentence": cutting "the color of" is "**four** words leaner" (it
+  is three). This is the same edit-arithmetic slip as before.
+
+The list-every-length slip did **not** recur. The "Mara" lengths were listed exactly ("six, eight,
+six, twelve, four, five, six, twelve").
+
+**Reading.**
+- The sentence cut unrequested numbers by about a quarter.
+- The error rate per mention barely moved (about 7% to about 6%). With samples this small that is
+  no measurable improvement.
+- The slip that persists is the arithmetic of how many words an edit removes. MAIA does not count
+  a span she is about to cut.
+- The change does no harm: direct accuracy holds, and quotations stayed exact.
+
+**Options (a founder decision):**
+- (i) Keep it as is.
+- (ii) Add a targeted line: "When you say how many words a change adds or removes, count the exact
+  words you are changing." Then measure again.

@@ -57,3 +57,11 @@ describe('MAIA checks the passage before agreeing about it', () => {
     expect(TEXT_ACCURACY_DIRECTIVE).not.toMatch(/\b(level|beginner|novice|advanced|expert|skill(ed)?|competen\w*)\b/i);
   });
 });
+
+describe('passing counts (WS-CRAFT-CONVENTIONS-01, founder: "Yes, add and measure", 2026-11-09)', () => {
+  const SENTENCE = 'When a count or length is not what I asked about, leave it out, or say it only after checking it word by word.';
+  it('is part of the text-accuracy rule, so it reaches every depth and the Develop conversation on every turn', () => {
+    expect(TEXT_ACCURACY_DIRECTIVE).toContain(SENTENCE);
+    for (const d of DEPTHS) expect(editorialDirective(d)).toContain(SENTENCE);
+  });
+});

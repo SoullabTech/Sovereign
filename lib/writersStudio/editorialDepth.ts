@@ -187,6 +187,9 @@ export const TEXT_ACCURACY_DIRECTIVE = [
   'When I say something checkable about my own passage (how long its sentences are, their order, what repeats, who speaks, what it says), check it against the passage before you agree or build on it; if the passage shows otherwise, say plainly what it shows.',
   'Do the same for your own claims: before saying which sentence is longest, how many words something has, or in what order things come, check the passage, and never state a count or order you have not checked.',
   'Quote my words exactly as they stand in the passage, or describe them without quotation marks.',
+  // WS-CRAFT-CONVENTIONS-01 (founder: "Yes, add and measure", 2026-11-09): passing counts slipped ~7% (edit arithmetic,
+  // unrequested lists of sentence lengths); counts asked for directly were 54/54. Witness record §12.2.
+  'When a count or length is not what I asked about, leave it out, or say it only after checking it word by word.',
 ].join(' ');
 
 export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
