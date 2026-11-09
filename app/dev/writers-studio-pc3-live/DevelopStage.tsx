@@ -14,7 +14,8 @@
 import type { ReactNode } from 'react';
 import ReadScopeControl from '@/app/writers-studio/canvas/ReadScopeControl';
 import SettledDecisions from '@/app/writers-studio/canvas/SettledDecisions';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKind';
 
@@ -42,9 +43,15 @@ export function DevelopStage(props: {
   onStarter: (words: string) => void;
   onOpenWrite: () => void;
   onMoreWays: () => void;
+  /** the chapters MAIA was handed for her last answer (ids + headings); their text is shown here from the writer's own copy, in place */
+  lastRead: readonly { sectionId: string; label: string | null }[] | null;
   conversation: ReactNode;
 }) {
   const { sections } = props;
+  const [thread, setThread] = useState<string | null>(null);
+  const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
+  const threads = useMemo(() => recurringThreads(sections.map((s) => ({ id: s.draftSectionId, text: stripHeading(s) }))), [sections]);
+  const activeThread = threads.find((t) => t.term === thread) ?? null;
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
   const current = sections[idx] ?? null;
   const text = current ? stripHeading(current) : '';
@@ -58,18 +65,34 @@ export function DevelopStage(props: {
         {sections.map((s, i) => {
           const w = wordsOf(stripHeading(s));
           const active = i === idx;
+          const hasThread = Boolean(activeThread?.chapterIds.includes(s.draftSectionId));
           return (
             <button key={s.draftSectionId} type="button" onClick={() => props.onSelect(s.draftSectionId)}
-              aria-current={active ? 'true' : undefined} aria-label={`${labelOf(s)}, about ${w} words`} title={`${labelOf(s)} · ${w} words`}
+              aria-current={active ? 'true' : undefined}
+              aria-label={`${labelOf(s)}, about ${w} words${hasThread ? `, contains “${activeThread!.term}”` : ''}`} title={`${labelOf(s)} · ${w} words${hasThread ? ` · “${activeThread!.term}”` : ''}`}
               style={{ flex: `${Math.max(w / total, 0.06)} 1 0`, minWidth: 18, cursor: 'pointer', font: 'inherit', fontSize: 11, textAlign: 'left',
                 padding: '0 8px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: 'inherit', borderRadius: 4,
                 border: active ? '1px solid currentColor' : hair,
-                background: active ? 'color-mix(in srgb, currentColor 14%, transparent)' : 'color-mix(in srgb, currentColor 5%, transparent)' }}>
-              {labelOf(s)}
+                background: hasThread ? 'color-mix(in srgb, #d9a441 30%, transparent)' : active ? 'color-mix(in srgb, currentColor 14%, transparent)' : 'color-mix(in srgb, currentColor 5%, transparent)' }}>
+              {hasThread ? '● ' : ''}{labelOf(s)}
             </button>
           );
         })}
       </nav>
+
+      {threads.length > 0 ? (
+        <div data-develop-threads="true" role="group" aria-label="Words that recur across your chapters" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: -6 }}>
+          <span style={{ fontSize: 11, opacity: .7 }} title="Counted across your chapters. Not interpreted.">Recurs across chapters:</span>
+          {threads.map((t) => (
+            <button key={t.term} type="button" aria-pressed={thread === t.term} onClick={() => setThread(thread === t.term ? null : t.term)}
+              title={`“${t.term}” appears in ${t.chapterIds.length} chapters`}
+              style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', borderRadius: 999, padding: '2px 10px',
+                background: thread === t.term ? 'color-mix(in srgb, #d9a441 30%, transparent)' : 'none', border: hair }}>
+              {t.term} <span style={{ opacity: .6 }}>{t.chapterIds.length}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* the chapter, in the writer's words */}
       <article aria-label={current ? `${labelOf(current)}, as you wrote it` : 'Your chapter'} data-develop-chapter={current?.draftSectionId}
@@ -91,9 +114,43 @@ export function DevelopStage(props: {
         {paragraphs.length === 0 ? (
           <p style={{ opacity: .75, margin: 0 }}>{current ? 'This chapter has no text yet.' : 'Choose a chapter on the left.'}</p>
         ) : paragraphs.map((p, i) => (
-          <p key={i} style={{ margin: '0 0 14px', lineHeight: 1.75, fontSize: 17, maxWidth: '64ch', fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{p}</p>
+          <p key={i} style={{ margin: '0 0 14px', lineHeight: 1.75, fontSize: 17, maxWidth: '64ch', fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
+            {markTerm(p, thread).map((piece, k) => piece.hit
+              ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
+              : <span key={k}>{piece.text}</span>)}
+          </p>
         ))}
       </article>
+
+      {/* the chapters she read for her last answer, in place — from the writer's own copy; nothing is sent to show it */}
+      {props.lastRead && props.lastRead.length > 0 ? (
+        <section data-develop-excerpts="true" aria-label="The chapters MAIA read for her last answer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7 }}>What she read for that answer</div>
+          {props.lastRead.map((r) => {
+            const sec = sections.find((x) => x.draftSectionId === r.sectionId);
+            if (!sec) return null;
+            const full = stripHeading(sec); const ex = excerptOf(full); const open = openExcerpt === sec.draftSectionId;
+            return (
+              <div key={r.sectionId} data-develop-excerpt={r.sectionId} style={{ border: hair, borderRadius: 10, padding: '10px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13 }}>
+                  <strong style={{ fontWeight: 500 }}>{labelOf(sec)}{sec.draftSectionId === current?.draftSectionId ? ' · this chapter' : ''}</strong>
+                  <span style={{ display: 'flex', gap: 10 }}>
+                    {sec.draftSectionId !== current?.draftSectionId ? (
+                      <button type="button" onClick={() => props.onSelect(sec.draftSectionId)} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>Go there</button>
+                    ) : null}
+                    {ex.cut ? (
+                      <button type="button" aria-expanded={open} onClick={() => setOpenExcerpt(open ? null : sec.draftSectionId)} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>{open ? 'Less' : 'Read it here'}</button>
+                    ) : null}
+                  </span>
+                </div>
+                <p style={{ margin: '6px 0 0', lineHeight: 1.65, fontSize: 15, fontFamily: "'Iowan Old Style','Charter',Georgia,serif", maxHeight: open ? '28vh' : undefined, overflowY: open ? 'auto' : undefined }}>
+                  {open ? full : `${ex.text}${ex.cut ? '…' : ''}`}
+                </p>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
 
       {/* ways in: the writer's own sentence, in the composer, theirs to send or change */}
       {props.starters.length > 0 ? (

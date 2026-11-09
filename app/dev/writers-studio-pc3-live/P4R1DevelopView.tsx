@@ -3260,6 +3260,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onStarter={(words) => setAttentionConversationDraft(words)}
       onOpenWrite={() => navigateMode('write')}
       onMoreWays={() => chooseDevelopView('full')}
+      lastRead={lastRead}
       conversation={(
         <WorkConversation
           key={attentionConversationDraft || 'develop-stage-conversation'}
