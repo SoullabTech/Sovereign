@@ -340,3 +340,35 @@ custody ruling and "not reworded", so changing it is a founder ruling.
 - **(c)** Leave as is.
 
 Recommended: (a). It keeps the writer's act meaningful and removes the unstated ranking.
+
+### 11.1 G-5 ruled and implemented (founder: "yes" to option (a) with fallback, 2026-11-09)
+
+**Change.** In `passageActs.ts`, act `where-next`, the first line becomes:
+
+> Which one or two exact passages could I look at next, given what I have been working on in this
+> conversation? Name them in the order they appear in my manuscript, say in a sentence how each
+> relates to what I have been working on, and do not say or imply that either matters more. If
+> nothing in this conversation tells you what I am working on, ask me instead of choosing.
+
+Lines 2 and 3 are unchanged. The writer's own words ("Which passage should I work on next?") are
+unchanged. Guard: `lib/writersStudio/__tests__/whereNextAct.test.ts`, 5/5; the passage-act suites
+pass (41).
+
+**Witness run 9** (`runs/2026-11-09-run9-wherenext-{old,after}.json`): three cases × 3 depths,
+the old first line vs the new, levels and rulings on in both, every reply ended normally.
+
+| Case | Old line | New line |
+|---|---|---|
+| W1 · pressed with no focus in the conversation | Chooses at every depth, in ranking language: "Two places stand out"; "carry the most live tension, in my reading" | **Asks at every depth**, naming nothing: "Picking a next passage would mean inventing a direction for you rather than following one you'd set… what have you been working on…?" |
+| W2 · focus: point of view | Picks related places, with no stated order; "either could be worth your attention" | Names two, "in the order they appear", each tied to whose head we are in; no importance language |
+| W3 · focus: unquoted dialogue | Learning: "seem to have the most going on", and picks point-of-view issues, ignoring the writer's focus | Ties each pick to how speech and thought sit unmarked; manuscript order; Direct names one and asks for the next scene |
+
+Ranking phrases found by the check: old 7 of 9 replies; new **0 of 9**.
+
+**Finding, not changed.** A second, older call site,
+`app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx:1553` (`onAskMaia` in a craft-focus
+tools block), still sends the **old** full instruction text through `sendCraft`. That stores the
+instruction as if the writer had typed it, which the F1 ruling retired elsewhere. Whether this
+block is reachable in the live Studio was not verified. Recommended: route it through
+`passageActQuestion('where-next')` with `passageAct: 'where-next'`, like the other call site. That
+is a UI change on the shared Write view, so it needs its own act.

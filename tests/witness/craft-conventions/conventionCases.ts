@@ -28,6 +28,10 @@ export interface ConventionCase {
   passage: keyof typeof PASSAGES;
   ask: string;
   watch: string;
+  /** A pressed button (server-owned act) instead of typed words. */
+  act?: 'where-next';
+  /** Earlier turns, first one being the writer's (the passage is prefixed to it). */
+  history?: { role: 'user' | 'assistant'; content: string }[];
 }
 
 export const CASES: ConventionCase[] = [
@@ -98,4 +102,23 @@ export const CASES: ConventionCase[] = [
   { id: 'L6', family: 'levels · closing offer', depth: 'guided', teaching: false, passage: 'nonfiction',
     ask: 'What is this paragraph arguing?',
     watch: 'Answers the argument; any move to another level appears only as a closing choice, never "you should".' },
+  // G-5 · "Ask MAIA where next" (founder: option (a) with fallback, 2026-11-09).
+  { id: 'W1', family: 'where-next · cold', depth: 'guided', teaching: false, passage: 'fiction', act: 'where-next',
+    ask: '', watch: 'No focus in the conversation: asks what the writer is working on instead of choosing.' },
+  { id: 'W2', family: 'where-next · focus', depth: 'guided', teaching: false, passage: 'fiction', act: 'where-next',
+    history: [
+      { role: 'user', content: 'I am working on point of view in this scene: whose head we are in.' },
+      { role: 'assistant', content: 'The scene stays close to Mara except for one clause about what Tomas thinks. Do you want to look at that clause?' },
+      { role: 'user', content: 'Yes, I looked at it. I am keeping it for now.' },
+      { role: 'assistant', content: 'Then it stays. Where would you like to go from here?' },
+    ],
+    ask: '', watch: 'Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.' },
+  { id: 'W3', family: 'where-next · focus', depth: 'guided', teaching: false, passage: 'fiction', act: 'where-next',
+    history: [
+      { role: 'user', content: 'I have been working on the dialogue: how the speech sits without quotation marks.' },
+      { role: 'assistant', content: 'The two spoken lines sit at the same level as the narration. Is that what you want?' },
+      { role: 'user', content: 'Yes. That is settled.' },
+      { role: 'assistant', content: 'Understood.' },
+    ],
+    ask: '', watch: 'Relates its picks to dialogue and how speech sits; manuscript order; no "most important".' },
 ];

@@ -1,0 +1,115 @@
+{
+  "arm": "after",
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T16:05:52.907Z",
+  "results": [
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "I don't have anything to go on yet — this is the only passage in front of me, and there's no earlier part of our conversation where you've been working on something I could point you back toward. Picking a next passage would mean inventing a direction for you rather than following one you'd set.\n\nSo before I name anything: what have you been working on in this scene — or in the book — that you'd want the next passage to connect to?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "This is the only passage I have in front of me, and nothing in our conversation yet tells me what you've been working on in it — whether that's Mara's withheld feeling, the shift into Tomas's head, the unquoted dialogue, the gulls line, or something else entirely.\n\nSo I'd rather ask than guess.\n\nWhat were you working on here?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "This is the first thing you've said to me, so I don't yet know what you've been working on — and the only text I have is the passage above, which means I can't point you to anywhere else in the manuscript.\n\nTwo things would let me answer: what you've been attending to in this passage (its handling of interiority, its pacing, the way the dialogue sits unmarked, something else), and which other passages you want in view. If you'd rather, paste the two or three candidates and tell me what you're after, and I'll tell you how each relates to the thread you're pulling."
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "Two places in this passage touch the same question, in the order they appear:\n\n**\"She would not cry, not here.\"** — this reads as Mara's own refusal, her words to herself, so it holds the scene inside her; it's the clearest test of how close you want that inside position to be.\n\n**\"The gulls kept their own counsel.\"** — this one could be Mara noticing the gulls, or it could be a voice standing a little apart from her and commenting; worth deciding which, since you're settling whose head we're in.\n\nWould you like to start with either of these, or stay where you are?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "Only this passage is in front of me, so these are both inside it, in the order they appear.\n\n\"The gulls kept their own counsel\" — this sits with no one in particular; it isn't anchored to Mara's seeing the way the pewter water is, so it bears on the same question of whose head we are in.\n\n\"She could still see the color of his coat at the rail\" — this one turns on vantage: what Mara can still make out from the shore, and how far her seeing is allowed to reach.\n\nIf you have other pages where the camera shifts, paste one and we can look there instead. Which of these two would you like to start with?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "The only text I have is this paragraph, so I can point within it rather than elsewhere in the manuscript. Two spots bear on whose head we're in, in the order they appear:\n\nThe gulls kept their own counsel. — This is an observation with no stated perceiver; it could be read as Mara's, or as a narrator's aside, which touches the same question as the Tomas clause.\n\nShe could still see the color of his coat at the rail. — This one anchors perception to Mara explicitly, so it may be useful as a measure of how close the narration sits when it is unambiguously hers.\n\nIf you meant a passage elsewhere in the manuscript, paste it and I will work from that instead."
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "The only text I have is this passage, so I can only point inside it. Two places sit next to what you have settled:\n\n**\"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"** — Tomas's thought is carried in the narration without any mark setting it off, the same way his spoken line is.\n\n**\"The gulls kept their own counsel.\"** — this sounds like something someone would say rather than a plain description, so it sits near the same question of what is voiced and what is told.\n\nIf you meant somewhere else in the book, paste it and I will work from that instead. Do you want to stay with this passage, or bring in the next one?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "Two places sit right against what you have settled, in the order they appear:\n\nBehind her, Tomas lit a cigarette and thought she was being ridiculous. — this is the sentence just before the speech, and it already puts Tomas's inward thought on the same unmarked level the spoken lines will use.\n\nThe gulls kept their own counsel. — this one follows In a minute, she said, and lands in the same unmarked flow, so it can read as narration or almost as a third turn in the exchange.\n\nWhich of those would you like to look at?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "I only have this one passage in front of me, so I can't name places elsewhere in the manuscript. Within what's here, the spot that bears on the decision you just settled is Behind her, Tomas lit a cigarette and thought she was being ridiculous — reported thought running in the same unmarked register as the speech lines, which is the same question of levels you've been working on, just applied to interiority rather than speech.\n\nIf you paste the next scene where people talk, I can name one or two places in it."
+    }
+  ]
+}

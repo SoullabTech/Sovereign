@@ -1,0 +1,115 @@
+{
+  "arm": "oldwhere",
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T16:06:43.062Z",
+  "results": [
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "Two places stand out.\n\nThe first is **\"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"** Everything else in the passage stays inside Mara — what she sees, what she won't let herself do. This sentence steps out and reports what Tomas is thinking, and it does it at the one moment he is behind her, where she can't see his face. So the sentence knows something Mara couldn't. Whether that's a problem depends entirely on how the rest of the book handles who knows what; in some books that shift is the method, in others it's the only spot where it happens. I can't tell from these seven sentences which this is.\n\nThe second is the last line: **\"She could still see the color of his coat at the rail.\"** Tomas is behind her lighting a cigarette, so *his* is pointing at someone else — presumably a man on the ferry, who hasn't been named or mentioned. A reader might work that out and feel the whole scene reorganize around a person who was never introduced, which could be exactly the effect you want. Or they might stall for a beat and reread. The line also carries most of the feeling in the passage, so whatever it does, it does hard.\n\nBefore suggesting anything about either, I'd need two things from you: whether the shift into Tomas's head is something the book does elsewhere, and whether the man at the rail is withheld on purpose at this point in the story.\n\n(For what it's worth, \"The gulls kept their own counsel\" is doing something none of the other sentences do, and I'd be careful with it.)\n\nWhich of those two — the step into Tomas, or the man at the rail — is the one you're less sure about?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "Two places in the paragraph are doing something that the rest of it isn't, so they'd be the ones I'd point at:\n\n1. \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"\n2. \"She could still see the color of his coat at the rail.\"\n\nThe thing both touch is where the telling stands. Most of the paragraph sits just behind Mara — her refusal to cry, her read of the gulls, the water as she takes it in. Sentence 1 steps out of her and into Tomas's head for four words, so the telling briefly knows something she couldn't verify. Sentence 2 stays with her eyes but introduces a *his* who isn't Tomas, since Tomas is behind her and this man is at the rail of the departing ferry — so the last line asks the reader to hold a third person the paragraph hasn't named.\n\nWhat that kind of movement does: a vantage that mostly stays inside one person builds a sense that we're confined to what she can know, and any sentence that steps outside it reads as a different kind of knowing — either the narrator asserting, or Mara guessing and the sentence not saying so.\n\nWhich of the two would you rather open up?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W1",
+      "family": "where-next · cold",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "No focus in the conversation: asks what the writer is working on instead of choosing.",
+      "reply": "Two places in the passage carry the most live tension, in my reading:\n\n**1. \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"**\n\nThis is the only sentence that reports someone other than Mara from inside. Everything else is anchored to her — what she watches, what she will not do, what she can still see. The shift may be deliberate (a narrator with access to both), or it may be Mara's inference about Tomas rendered without attribution, which would read differently. Worth deciding which, because the rest of the paragraph's access rules follow from it.\n\n**2. \"She could still see the color of his coat at the rail.\"**\n\nThe only named male in the passage is Tomas, and he is behind her with a cigarette. So *his* almost certainly points to someone on the departing ferry who is never named. A reader might resolve that on the second pass, or might stumble on it; either way, the final sentence is where the unnamed person first becomes present, and the pronoun is doing that work alone.\n\nThe first is a question about who the narration can see into. The second is a question about what the reader is given and when. Both are decisions, not problems — I'd just note that the last sentence is probably carrying the most weight for the least explicit support.\n\nIf it's useful, I can stay at the sentence level on either one, or step back to how the paragraph as a whole holds its point of view. Your call."
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "Two places in these words carry the question of whose head we're in, besides the clause you're keeping.\n\nThe first is \"The gulls kept their own counsel.\" Nothing in the sentence attaches it to Mara the way \"She would not cry, not here\" does. It could be her thought, dry and self-protective, or it could be a voice standing a little outside her and commenting. Either reading holds; the words don't settle it. If you want the scene's distance from Mara to be deliberate everywhere, this is the second place where it's doing something you haven't yet decided on.\n\nThe second is \"She could still see the color of his coat at the rail.\" This one sits firmly in Mara's seeing — but \"his\" has no name attached, and Tomas is behind her, so the reader has to work out that this is someone else, someone on the ferry. What Mara knows and what the reader has been given come apart for a beat. That gap may be exactly the effect you want, or it may be worth knowing you've made it.\n\nWhich of those two do you want to take up?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "Two places in this passage are where the question of whose perception we're in is still open, and either could be worth your attention:\n\n\"The gulls kept their own counsel.\" Nothing marks this as Mara seeing or thinking it. It could be hers, or it could be a vantage standing a little apart from her. The sentence works either way, which is what makes it a place to decide about rather than a problem.\n\n\"She could still see the color of his coat at the rail.\" This one is anchored in Mara — it is her seeing — but what she sees sits across the water, so the reach of her attention is doing something different here than it does in the earlier lines, where everything is within a few feet of her.\n\nThere is also \"The water was the colour of old pewter,\" which is the same kind of unattributed description as the gulls line, if you would rather take those two together.\n\nWhich of these do you want to sit with?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W2",
+      "family": "where-next · focus",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Names one or two places that relate to point of view, in manuscript order, says how each relates, implies no importance.",
+      "reply": "Two that bear directly on whose head we are in:\n\n**\"The gulls kept their own counsel.\"** This one attributes a withholding to the birds. It could read as Mara's own figure — what she notices because she is being watched and not spoken to — or as a narrating voice standing a little outside her. The sentence does not settle which, so it is a place where the distance between narrator and Mara is currently open.\n\n**\"She would not cry, not here.\"** The *not here* carries a cadence that could be Mara's own, which would make this free indirect rather than report. Worth deciding how much of that nearness you want, since it sets the baseline the Tomas clause departs from.\n\nA smaller third, if you want it: the final sentence turns on *his*, and with Tomas standing behind her the referent is doing some work. That is a question about what Mara can see from where she is, which is adjacent to the one you are already in."
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "Two places in these lines, both at the sentence level:\n\n**\"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"** Everywhere else we are at Mara's shoulder — what she sees, what she will not do. This sentence steps over and reports what Tomas thinks. It is the one moment we get another person's inside. Whether that is a slip or a deliberate widening is yours to say, but it is the sentence that behaves differently from the rest.\n\n**\"She could still see the color of his coat at the rail.\"** The rail belongs to the ferry, which has pulled away; Tomas is behind her with a cigarette. So *his* most likely points to someone the passage has not named. A reader might take a beat to work that out, or might attach it to Tomas and be briefly wrong. That ambiguity may be exactly the weight you want at the end — the unnamed man is the reason she will not cry — or it may be landing earlier than you intend.\n\nWhich of those two is closer to what you already felt was unfinished?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "Two places in the paragraph seem to have the most going on, and you can take either or neither.\n\nThe first is \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" Everything up to there sits with Mara — what she watches, what she sees, what she resolves. This sentence steps into Tomas for a clause and then the paragraph returns to her. That shift is doing something, and it's worth deciding whether it's doing what you want.\n\nThe second is the closing sentence, \"She could still see the color of his coat at the rail.\" Tomas has just spoken from behind her, so \"his\" has two possible homes in the reader's ear — the man at her back or the man on the ferry. The ferry reading is available from \"at the rail,\" but a reader may hesitate for a beat.\n\nWhich of those two would you rather look at?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "W3",
+      "family": "where-next · focus",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "",
+      "watch": "Relates its picks to dialogue and how speech sits; manuscript order; no \"most important\".",
+      "reply": "Two places in this passage are doing something distinct enough to be worth your attention:\n\n**\"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\"** Every other interior report in the passage sits with Mara — *She would not cry*, *She could still see*. This one sentence reports Tomas's thought directly. Whether that's a deliberate widening of access or a place where the narration slips its anchor is yours to decide, but it's the one sentence that changes who the narration can see inside. It also sits immediately before the speech, so it may bear on how the unattributed lines are heard.\n\n**\"The gulls kept their own counsel.\"** This is the only sentence that attributes something to the non-human, and the only one working figuratively rather than reporting. It falls between the exchange and the closing line. Worth looking at what it's carrying there — withholding, a beat of silence after *In a minute*, or both.\n\nBoth are sentence-level observations about narration and register, not structural ones. The dialogue question stays settled; neither of these reopens it."
+    }
+  ]
+}
