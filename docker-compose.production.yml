@@ -27,6 +27,9 @@ x-maia-build: &maia_build
   args:
     GIT_COMMIT: ${GIT_COMMIT:-unknown}
     NEXT_PUBLIC_SHOW_BETA_BADGE: ${NEXT_PUBLIC_SHOW_BETA_BADGE:-false}
+    # Writer's Studio Develop stage — build-time (Next.js inlines NEXT_PUBLIC_*).
+    # Founder ruling 2026-11-09: ON for all Writer's Studio beta members.
+    NEXT_PUBLIC_WS_DEVELOP_STAGE: ${NEXT_PUBLIC_WS_DEVELOP_STAGE:-1}
     # Deploy-lane tripwire: deliberately NO default. Only the deploy lane
     # (scripts/deploy-lock.sh acquire_deploy_lock) exports this, so a raw
     # `docker compose ... up -d --build` FAILS LOUDLY in the Dockerfile
