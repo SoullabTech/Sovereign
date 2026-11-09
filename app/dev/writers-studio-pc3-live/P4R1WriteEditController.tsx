@@ -81,7 +81,7 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { fetchPlan } from '@/lib/writersStudio/planClient';
-import { locateAnchor, PLAN_HANDOFF_KEY } from '@/lib/writersStudio/developmentPlan';
+import { locateAnchor, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -1034,20 +1034,29 @@ export default function FlagshipWriteEditController() {
 
   /* A plan step opened from Develop. Develop leaves only a step id; the words come from the writer's saved plan and are located in the text AS IT IS NOW.
      Exactly one match is held (the desk then does the rest: propose, Use it, Undo). Anything else opens the chapter and says so. Nothing is written here. */
-  const planHandoffDone = useRef(false);
+  // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
   useEffect(() => {
-    if (planHandoffDone.current || !context || !work || workContext.kind !== 'work' || workReentryRequired.current) return;
+    if (!context || !work || workContext.kind !== 'work' || workReentryRequired.current) return;
+    let live = true;
+    const consume = () => {
     let stepId: string | null = null;
     try { stepId = window.sessionStorage.getItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* none */ }
     if (!stepId) return;
-    planHandoffDone.current = true;
     try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* ignore */ }
-    let live = true;
     void fetchPlan(context.manuscriptId).then((view) => {
       if (!live) return;
-      const step = view?.plan?.steps.find((x) => x.id === stepId);
+      if (!view) { setEditorialFailure('Your plan could not be loaded just now. Nothing was changed.'); return; }
+      const step = view.plan?.steps.find((x) => x.id === stepId);
       const section = step ? context.sections.find((x) => x.draftSectionId === step.chapterId) : undefined;
       if (!step || !section) { setEditorialFailure('That plan step could not be found in this Work. Nothing was changed.'); return; }
+      // A unique phrase is not evidence the proposal still fits: the chapter must be exactly what MAIA read (server verdict), else the writer revalidates.
+      if (view.staleStepIds.includes(step.id) || view.unverifiedStepIds.includes(step.id)) {
+        focusWritingSection(section.draftSectionId);
+        setEditorialFailure(view.staleStepIds.includes(step.id)
+          ? 'This chapter has changed since the plan was made, so the step may no longer fit. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.'
+          : 'I cannot confirm this chapter is the one MAIA read for the plan. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.');
+        return;
+      }
       const found = locateAnchor(writingRef.current?.bodyOf(section.draftSectionId) ?? section.body, step.anchor);
       if (found.ok) { holdPassage(section, found.start, found.end, found.text); return; }
       focusWritingSection(section.draftSectionId);
@@ -1055,7 +1064,10 @@ export default function FlagshipWriteEditController() {
         ? 'Those words occur more than once in this chapter, so I have not chosen for you. Select the passage you mean. Nothing was changed.'
         : 'Those words are no longer in this chapter as they were. The chapter is open; select the passage you mean. Nothing was changed.');
     });
-    return () => { live = false; };
+    };
+    consume();
+    window.addEventListener(PLAN_HANDOFF_EVENT, consume);
+    return () => { live = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); };
   }, [context, work, workContext.kind, holdPassage, focusWritingSection]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {

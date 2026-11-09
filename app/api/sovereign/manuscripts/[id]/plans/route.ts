@@ -17,7 +17,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
 import { loadThread } from '@/lib/manuscript/ask/threadStore';
 import { draftPlan } from '@/lib/manuscript/ask/planReader';
-import { groundSteps, digestOfText, staleStepIds } from '@/lib/writersStudio/developmentPlan';
+import { groundSteps, digestOfText, staleStepIds, stepStanding } from '@/lib/writersStudio/developmentPlan';
 import { createPlan, latestPlan } from '@/lib/writersStudio/developmentPlanStore';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -31,7 +31,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!plan) return NextResponse.json({ plan: null });
   const ids = [...new Set(plan.steps.map((s) => s.chapterId))];
   const now = new Map((await loadSuppliedSections(id, memberId, ids)).map((s) => [s.id, s.digest]));
-  return NextResponse.json({ plan, staleStepIds: staleStepIds(plan.steps, plan.basis, now) });
+  return NextResponse.json({ plan, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
+    unverifiedStepIds: plan.steps.filter((s) => stepStanding(s, plan.basis, now) === 'unverified').map((s) => s.id) });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -84,5 +85,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const plan = await createPlan({ memberId, livingWorkId: workId, manuscriptId: id, ask, summary: drafted.summary, steps: grounded.steps,
     basis: supplied.map((s) => ({ sectionId: s.id, digest: s.digest || digestOfText(s.body) })) });
   if (!plan) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
-  return NextResponse.json({ plan, staleStepIds: [], dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
+  return NextResponse.json({ plan, staleStepIds: [], unverifiedStepIds: [], dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
 }

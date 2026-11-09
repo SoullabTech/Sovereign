@@ -60,6 +60,18 @@ export function staleStepIds(steps: readonly PlanStep[], basis: readonly { secti
 }
 
 /**
+ * The strict verdict the passage hand-off needs. A unique phrase match is not evidence the proposal still fits:
+ * only a chapter whose text is byte-identical to what MAIA read is `verified`. No record of what she read, or no way to read it now, is `unverified` — never assumed fine.
+ */
+export type StepStanding = 'verified' | 'changed' | 'unverified';
+export function stepStanding(step: Pick<PlanStep, 'chapterId'>, basis: readonly { sectionId: string; digest: string }[], currentDigests: ReadonlyMap<string, string>): StepStanding {
+  const was = basis.find((b) => b.sectionId === step.chapterId)?.digest;
+  const now = currentDigests.get(step.chapterId);
+  if (!was || !now) return 'unverified';
+  return was === now ? 'verified' : 'changed';
+}
+
+/**
  * Find a step's anchor in the chapter's CURRENT text. Exactly one match or nothing: a passage that has moved, or that occurs twice, is never guessed.
  * Exact match first; then the same words ignoring case. Returns offsets into `body`.
  */
@@ -76,4 +88,6 @@ export function locateAnchor(body: string, anchor: string): { ok: true; start: n
 }
 
 /** Develop notes which step the writer chose; Write reads it once. Only an id, never prose. */
+/** Signals a mounted Write room that a new hand-off is waiting (the key alone serves a fresh mount). */
+export const PLAN_HANDOFF_EVENT = 'ws-plan-handoff';
 export const PLAN_HANDOFF_KEY = (manuscriptId: string): string => `ws-plan-step:${manuscriptId}`;

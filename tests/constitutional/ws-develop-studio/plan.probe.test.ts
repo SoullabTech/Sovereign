@@ -113,6 +113,29 @@ d('development plan · real database, real routes', () => {
     expect((await call(A, 'GET')).json.plan.steps).toHaveLength(1);
   });
 
+  it('a plan is bound to its manuscript: the same writer cannot read or edit it through another of their manuscripts', async () => {
+    const plan = (await call(A, 'GET')).json.plan;
+    const other = (await query<{ id: string }>(`INSERT INTO member_manuscripts(member_id,title) VALUES ($1,'Other book') RETURNING id`, [A])).rows[0].id;
+    const keep = ms; ms = other;
+    try {
+      expect((await call(A, 'GET')).json.plan ?? null).toBeNull();
+      expect((await call(A, 'PATCH', { edits: [{ id: plan.steps[0].id, remove: true }] }, plan.id)).status).toBe(404);
+    } finally { ms = keep; }
+    expect((await call(A, 'GET')).json.plan.steps).toHaveLength(1);   // untouched
+  });
+
+  it('the server names a step it cannot verify (its chapter can no longer be read), so the hand-off refuses it', async () => {
+    const r = (await call(A, 'GET')).json;
+    expect(r.unverifiedStepIds).toEqual([]);
+    const sid = r.plan.steps[0].chapterId;
+    // Fixture-only: remove the chapter, keeping the draft consistent (flatten trigger set aside, as before).
+    const keepText = 'Salt\n\nMarta left a light on in the hallway, as if someone might yet come home.';
+    await query(`BEGIN; SET LOCAL session_replication_role = replica; DELETE FROM manuscript_draft_sections WHERE id='${sid}'; UPDATE manuscript_working_drafts SET content='${keepText}' WHERE id='${dr}'; COMMIT;`);
+    const after = (await call(A, 'GET')).json;
+    expect(after.unverifiedStepIds).toEqual([r.plan.steps[0].id]);
+    expect(after.staleStepIds).toEqual([]);                                // not claimed changed: unknown is not "changed"
+  });
+
   it('deleting the Work removes its plans with it', async () => {
     const w2 = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Gone') RETURNING id`, [A])).rows[0].id;
     await query(`DELETE FROM living_works WHERE id=$1`, [w2]);

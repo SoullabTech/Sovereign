@@ -29,14 +29,15 @@ export async function latestPlan(memberId: string, manuscriptId: string): Promis
   } catch (e) { if (noTable(e)) return null; throw e; }
 }
 
-export async function getPlan(memberId: string, planId: string): Promise<StoredPlan | null> {
-  const r = await query<Row>(`SELECT id, ask, summary, steps, basis, created_at, updated_at FROM development_plans WHERE id = $1 AND member_id = $2`, [planId, memberId]);
+/** A plan is addressed by member AND manuscript AND id: a plan of another of the writer's Works is not reachable through this manuscript's route. */
+export async function getPlan(memberId: string, manuscriptId: string, planId: string): Promise<StoredPlan | null> {
+  const r = await query<Row>(`SELECT id, ask, summary, steps, basis, created_at, updated_at FROM development_plans WHERE id = $1 AND member_id = $2 AND manuscript_id = $3`, [planId, memberId, manuscriptId]);
   return r.rows[0] ? shape(r.rows[0]) : null;
 }
 
-export async function saveSteps(memberId: string, planId: string, steps: PlanStep[]): Promise<StoredPlan | null> {
+export async function saveSteps(memberId: string, manuscriptId: string, planId: string, steps: PlanStep[]): Promise<StoredPlan | null> {
   const r = await query<Row>(
-    `UPDATE development_plans SET steps = $3::jsonb WHERE id = $1 AND member_id = $2 RETURNING id, ask, summary, steps, basis, created_at, updated_at`,
-    [planId, memberId, JSON.stringify(steps)]);
+    `UPDATE development_plans SET steps = $3::jsonb WHERE id = $1 AND member_id = $2 AND manuscript_id = $4 RETURNING id, ask, summary, steps, basis, created_at, updated_at`,
+    [planId, memberId, JSON.stringify(steps), manuscriptId]);
   return r.rows[0] ? shape(r.rows[0]) : null;
 }

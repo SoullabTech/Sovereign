@@ -42,7 +42,7 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings } from './DevelopStage';
-import { PLAN_HANDOFF_KEY } from '@/lib/writersStudio/developmentPlan';
+import { PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import { fetchPlan, makePlanClient, editPlanClient, type PlanView } from '@/lib/writersStudio/planClient';
@@ -2167,6 +2167,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }
     const st = planView?.plan?.steps.find((x) => x.id === stepId);
     if (st && st.status === 'open') editPlan([{ id: stepId, status: 'working' }]);
+    try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* fresh mount reads the key */ }
     navigateMode('write');
   };
   const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);

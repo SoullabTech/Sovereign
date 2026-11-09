@@ -14,9 +14,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let b: { edits?: unknown };
   try { b = (await req.json()) as { edits?: unknown }; } catch { return NextResponse.json({ refusal: 'malformed' }, { status: 400 }); }
   if (!Array.isArray(b.edits)) return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
-  const plan = await getPlan(memberId, planId);
+  const plan = await getPlan(memberId, id, planId);
   if (!plan) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   const edits: StepEdit[] = (b.edits as StepEdit[]).filter((e) => e && typeof e.id === 'string');
-  const saved = await saveSteps(memberId, planId, applyStepEdits(plan.steps, edits));
+  const saved = await saveSteps(memberId, id, planId, applyStepEdits(plan.steps, edits));
   return saved ? NextResponse.json({ plan: saved }) : NextResponse.json({ refusal: 'not_found' }, { status: 404 });
 }
