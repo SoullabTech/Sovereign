@@ -12,7 +12,7 @@ import {
 const REAL_MASTER = '9fa8ee35914a351d9aca055c51f66618d557940805ed76d97d94a86bc46fa7b1';
 const root = new URL('../../', import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), 'utf8');
-const sha = path => crypto.createHash('sha256').update(fs.readFileSync(new URL(`public${path}`, root))).digest('hex');
+const sha = path => crypto.createHash('sha256').update(fs.readFileSync(new URL(`private-media${path.replace(/^\/media/, "")}`, root))).digest('hex');
 
 test('Music Only is a valid finite two-segment review sequence with no voice and no loop', () => {
   const sequence = reviewMediaSequence(MO);
@@ -32,7 +32,7 @@ test('Music Only is a valid finite two-segment review sequence with no voice and
 test('the media on disk is exactly what the manifest records', () => {
   for (const media of reviewMediaSequence(MO)) {
     assert.equal(sha(media.path), media.sha256, `${media.id} sha256`);
-    assert.equal(fs.statSync(new URL(`public${media.path}`, root)).size, media.sizeBytes, `${media.id} size`);
+    assert.equal(fs.statSync(new URL(`private-media${media.path.replace(/^\/media/, "")}`, root)).size, media.sizeBytes, `${media.id} size`);
   }
 });
 

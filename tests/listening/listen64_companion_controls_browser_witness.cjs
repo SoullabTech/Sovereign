@@ -20,7 +20,7 @@ const sourceFiles = [
   'components/listening/persistentListeningDock.module.css',
   'lib/listening/soundStudioExperience.ts',
   'lib/listening/manifests/open-ground-432-v1.json',
-  'public/media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a',
+  'private-media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a',
 ];
 const sourceHashes = Object.fromEntries(sourceFiles.map(file => [
   file,
@@ -119,7 +119,7 @@ function serverFor(root) {
   return http.createServer((req, res) => {
     const requested = decodeURIComponent((req.url || '/').split('?')[0]);
     if (requested === '/media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a') {
-      const media = path.join(repo, 'public', requested.replace(/^\//, ''));
+      const media = path.join(repo, 'private-media', requested.replace(/^\/media\//, ''));
       streamFile(req, res, media, 'audio/mp4');
       return;
     }

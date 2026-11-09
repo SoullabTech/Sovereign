@@ -16,7 +16,7 @@ const sourceFiles = [
   'components/listening/PersistentListeningDock.tsx',
   'lib/listening/soundStudioExperience.ts',
   'lib/listening/manifests/open-ground-432-v1.json',
-  'public/media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a',
+  'private-media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a',
 ];
 const sourceHashes = Object.fromEntries(sourceFiles.map(file => [file,
   crypto.createHash('sha256').update(fs.readFileSync(path.join(repo, file))).digest('hex'),

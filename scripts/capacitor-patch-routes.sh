@@ -482,6 +482,8 @@ revert_patched_pages() {
 MOBILE_EXCLUDED_DIRS=(
     # C7A: server-side founder authorization cannot be static-exported.
     "app/founder/constellation"
+    # LISTEN-01: gated Sound Studio audio route (server session + flag); web-only.
+    "app/media"
     # Studio web-only sections
     "app/studio/marketing"
     "app/studio/media"

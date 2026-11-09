@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, '../..');
 const manifestPath = path.join(root, 'lib/listening/manifests/night-ground-01-guided-arrival-v0.1.json');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const review = manifest.editions.defaultReview;
-const publicMedia = path.join(root, 'public', review.path.replace(/^\//, ''));
+const publicMedia = path.join(root, 'private-media', review.path.replace(/^\/media\//, ''));
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 

@@ -24,7 +24,7 @@ test('Nicole First Night is one private 109-minute experience with Nicole only i
 test('two exact bundled parts preserve one complete review sequence under ordinary Git limits', () => {
   const seq=manifest.editions.sequence;
   assert.equal(seq.length,2);
-  const files=seq.map(item=>path.join(root,'public',item.path.replace(/^\//,'')));
+  const files=seq.map(item=>path.join(root,'private-media',item.path.replace(/^\/media\//,'')));
   for (let i=0;i<seq.length;i++) {
     assert.equal(fs.existsSync(files[i]),true);
     assert.equal(fs.statSync(files[i]).size,seq[i].sizeBytes);
@@ -36,7 +36,7 @@ test('two exact bundled parts preserve one complete review sequence under ordina
 
 test('both private-review parts decode as stereo AAC at the declared 44.1 kHz review rate', () => {
   for (const item of manifest.editions.sequence) {
-    const file=path.join(root,'public',item.path.replace(/^\//,''));
+    const file=path.join(root,'private-media',item.path.replace(/^\/media\//,''));
     const probe=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,sample_rate,channels:format=duration','-of','json',file],{encoding:'utf8'}));
     assert.equal(probe.streams[0].codec_name,'aac');
     assert.equal(Number(probe.streams[0].sample_rate),44100);

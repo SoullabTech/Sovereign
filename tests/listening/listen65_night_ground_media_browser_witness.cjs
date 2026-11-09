@@ -20,7 +20,7 @@ const sourceFiles = [
   'components/listening/persistentListeningDock.module.css',
   'lib/listening/soundStudioExperience.ts',
   'lib/listening/manifests/night-ground-01-guided-arrival-v0.1.json',
-  'public/media/sound-studio/night-ground/Night_Ground_01_Guided_Arrival_12min_v0.1.m4a',
+  'private-media/sound-studio/night-ground/Night_Ground_01_Guided_Arrival_12min_v0.1.m4a',
 ];
 const sourceHashes = Object.fromEntries(sourceFiles.map(file => [
   file,
@@ -119,7 +119,7 @@ function serverFor(root) {
   return http.createServer((req, res) => {
     const requested = decodeURIComponent((req.url || '/').split('?')[0]);
     if (requested === '/media/sound-studio/night-ground/Night_Ground_01_Guided_Arrival_12min_v0.1.m4a') {
-      const media = path.join(repo, 'public', requested.replace(/^\//, ''));
+      const media = path.join(repo, 'private-media', requested.replace(/^\/media\//, ''));
       streamFile(req, res, media, 'audio/mp4');
       return;
     }

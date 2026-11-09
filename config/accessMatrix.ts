@@ -116,6 +116,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
   { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
 
+  // LISTEN-01 dark launch (2026-11-09) — Sound Studio review audio. Served by a route that
+  // repeats the /listen conditions (flag + verified member session); never a public asset.
+  { prefix: '/media/sound-studio/', minTier: 'free', notes: 'Sound Studio review audio — authenticated members only; route also requires SOULLAB_LISTEN_REVIEW_ENABLED=1 and 404s otherwise; exact allowlisted files only' },
+
   // LISTEN-45 — exact authenticated Sound Field door and exact current-session
   // receipt. The page remains disabled-by-default behind
   // SOULLAB_LISTEN_REVIEW_ENABLED and carries its own server session check.
