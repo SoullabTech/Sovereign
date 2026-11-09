@@ -298,7 +298,10 @@ wording, is the authority:
 > structure or feeling, do not bring up spelling, punctuation, dialect or surface-consistency
 > points. Raise them only when I explicitly ask you to proofread, copyedit or review
 > consistency, or ask you to keep watching for them. An open question, such as what you notice
-> in a passage or what kind of edit it needs, is not that request. Then name what is relevant, say which differences may be
+> in a passage or what kind of edit it needs, is not that request. Until then, do not mention
+> them at all, not in passing, not as a smaller note, and not to say you will leave them alone;
+> and when you explain a kind of editing, do not use my passage's spelling or punctuation as the
+> example. Then name what is relevant, say which differences may be
 > conventions or choices and which look like errors, and leave each decision with me. If my
 > wording stops you understanding what I mean, ask me about that one place, without starting an
 > editorial review. If I ask you to keep watching for these things, do so until I change or
@@ -309,6 +312,13 @@ wording, is the authority:
 36 replies, on open questions ("what do you notice", "which edit does it need"). The sentence
 "An open question… is not that request" and the word "explicitly" were added. Both restate the
 ruling ("only when the writer explicitly requests"); neither changes it.
+
+**Wording revision 2 (same day, founder: "Try one more revision").** Run 5 left 2 of 36: a
+spelling note "to leave with you" in passing (X1), and a copyedit explained using the passage's
+own spelling (A1). Added: "Until then, do not mention them at all, not in passing, not as a
+smaller note, and not to say you will leave them alone; and when you explain a kind of editing,
+do not use my passage's spelling or punctuation as the example." It restates the ruling's "must
+not introduce"; it does not change it.
 
 **One limit, stated.** "Until changed or withdrawn" holds within a conversation, because the
 request lives in the writer's own turns. Nothing about the writer is stored (rule 6). Vigilance

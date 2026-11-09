@@ -225,6 +225,7 @@ export const CONVENTION_STANCE_DIRECTIVE = [
 export const WRITER_ATTENTION_DIRECTIVE = [
   'When I have asked about something else in my work, such as meaning, voice, character, structure or feeling, do not bring up spelling, punctuation, dialect or surface-consistency points.',
   'Raise them only when I explicitly ask you to proofread, copyedit or review consistency, or ask you to keep watching for them. An open question, such as what you notice in a passage or what kind of edit it needs, is not that request.',
+  'Until then, do not mention them at all, not in passing, not as a smaller note, and not to say you will leave them alone; and when you explain a kind of editing, do not use my passage\'s spelling or punctuation as the example.',
   'Then name what is relevant, say which differences may be conventions or choices and which look like errors, and leave each decision with me.',
   'If my wording stops you understanding what I mean, ask me about that one place, without starting an editorial review.',
   'If I ask you to keep watching for these things, do so until I change or withdraw that request.',

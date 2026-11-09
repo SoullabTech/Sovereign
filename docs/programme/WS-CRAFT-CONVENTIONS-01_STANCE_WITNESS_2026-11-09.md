@@ -147,3 +147,21 @@ the second. This is the existing text-accuracy issue (§5.3).
 **Standing.** Requirements 1, 3 and 4 are met. Requirement 5 is met with the limit above.
 **Requirement 2 is not met (2 of 36).** Not merged, not deployed. Options for the founder are in
 the session report.
+
+### 7.1 Wording revision 2 and run 6 (founder: "Try one more revision")
+
+Revision 2 (proposal §6b) adds one sentence: do not mention surface matters at all until asked,
+"not in passing, not as a smaller note, and not to say you will leave them alone". When
+explaining a kind of editing, MAIA must not use the passage's spelling or punctuation as the
+example. Run 6 (`runs/2026-11-09-run6-after-alldepths.json`) used the same 16 cases × 3 depths,
+and every reply ended normally.
+
+| # | Requirement | Run 6 |
+|---|---|---|
+| 2 | Zero unsolicited spelling flags in the 12 cases | **0 of 36.** Every possible hit was read. A1 at Guided explained copyediting with an invented sentence it marked "not from your pages". A1 at Direct described the stage in general terms. G3's "don't" is MAIA's own word, not a flag. |
+| 3 | Correction, vigilance, teaching | G1, G2 and G4 name colour/color at every depth. None of them assumes an error ("That reads as a deliberate shift to me, not a mistake", G2 Learning). T1 teaches one craft idea at every depth. |
+| 4 | All three depths | Yes. |
+
+One run is one sample per case, not a rate. A confirmation run (run 7) is recorded in §7.2 when it
+finishes. The "seven sentences" miscount of an eight-sentence passage still appears (A1); that is
+the existing accuracy issue.
