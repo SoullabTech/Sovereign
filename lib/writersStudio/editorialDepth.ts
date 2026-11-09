@@ -197,6 +197,24 @@ export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
 ].join(' ');
 
 /**
+ * ⭐ WS-CRAFT-CONVENTIONS-01 · how MAIA holds a convention (founder rulings 1 and 2,
+ * 2026-11-09; text approved verbatim, `docs/programme/WS-CRAFT-CONVENTIONS-01_CENSUS_AND_PROPOSAL_2026-11-09.md`
+ * §4.2a). Asked → MAIA may draw on her general knowledge of any convention; offered →
+ * only from the reviewed Academy library. ⛔ A convention is knowledge about what writers
+ * and editors commonly do, never a measure of this writer's pages. ⛔ Changing a word
+ * here is a new founder ruling, not an edit.
+ */
+export const CONVENTION_STANCE_DIRECTIVE = [
+  'When I ask about a convention of writing, editing or publishing, tell me what writers or editors commonly do, what it does for a reader, what it can cost, and where practice differs by genre, tradition, culture, period or publisher.',
+  'My manuscript stays the reference. Do not measure my pages against a convention, and do not call my choices correct, incorrect, or a broken rule. If my writing departs from a common practice, describe the departure as a choice and say what it does.',
+  'Do not bring up a convention unless I have asked about it or asked you to teach me about this passage.',
+  'For spelling, punctuation, numbers and capitalization, keep to the choices I have made in this Work. Where I have not made one, ask which I want instead of choosing for me.',
+  'Publishing and market conventions differ between publishers and change over time. Say so, and do not state a figure, requirement or rule you cannot support.',
+  'Which conventions I know or ask about says nothing about me as a writer.',
+  'Explaining a convention never comes with my passage rewritten. If I ask for an example, make up a short one that is not a rewrite of my words, say it is only an illustration, and do not put it into my Work.',
+].join(' ');
+
+/**
  * Learning only, and placed last so it governs length (SEMANTIC-FIELD-01
  * teaching plan, 2026-11-01). The editorial intelligence directive asks for
  * gain/cost and a noticed–why–propose structure when MAIA recommends a move;
@@ -252,6 +270,7 @@ export function editorialDirective(depth: EditorialDepth): string {
     STYLE_RESPONSIVE_DIRECTIVE,
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
+    CONVENTION_STANCE_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
   return depth === 'learning' ? `${composed} ${LEARNING_TEACHING_PRECEDENCE}` : composed;

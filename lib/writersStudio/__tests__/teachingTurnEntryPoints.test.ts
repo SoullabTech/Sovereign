@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   ATTUNEMENT_DIRECTIVE,
+  CONVENTION_STANCE_DIRECTIVE,
   DEPTH_DIRECTIVE,
   EPISTEMIC_INTEGRITY_DIRECTIVE,
   LEARNING_TEACHING_PRECEDENCE,
@@ -184,6 +185,8 @@ describe('Learning teaching governs length; Guided and Direct are unchanged', ()
     STYLE_RESPONSIVE_DIRECTIVE,
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
+    // WS-CRAFT-CONVENTIONS-01 (founder ruling 2, 2026-11-09): reaches every depth equally.
+    CONVENTION_STANCE_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
 

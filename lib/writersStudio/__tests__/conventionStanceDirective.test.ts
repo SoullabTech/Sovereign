@@ -1,0 +1,70 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  CONVENTION_STANCE_DIRECTIVE,
+  DEPTH_DIRECTIVE,
+  EDITORIAL_INTELLIGENCE_DIRECTIVE,
+  EPISTEMIC_INTEGRITY_DIRECTIVE,
+  editorialDirective,
+  type EditorialDepth,
+} from '../editorialDepth';
+
+/**
+ * WS-CRAFT-CONVENTIONS-01 · founder rulings 1 and 2 (2026-11-09).
+ * The convention stance text was approved verbatim; these guards keep it verbatim and make
+ * sure it reaches every depth. ⛔ They prove the instruction is sent, not that MAIA follows
+ * it: that is the witness. "Describes, not prescribes" stays a human judgement.
+ */
+
+const DEPTHS: EditorialDepth[] = ['guided', 'learning', 'direct'];
+const RECORD = 'docs/programme/WS-CRAFT-CONVENTIONS-01_CENSUS_AND_PROPOSAL_2026-11-09.md';
+
+/** The seven numbered rules exactly as quoted in the approved record (§4.2a). */
+function approvedRules(): string[] {
+  const doc = fs.readFileSync(path.join(process.cwd(), RECORD), 'utf8');
+  const start = doc.indexOf('### 4.2a');
+  const block = doc.slice(start, doc.indexOf('Choices made in drafting', start));
+  const quoted = block.split('\n').filter((l) => l.startsWith('>')).map((l) => l.replace(/^>\s?/, '')).join('\n');
+  return quoted.split(/\n(?=\d\. )/).map((r) => r.replace(/^\d\.\s+/, '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
+export function carriesConventionStance(directive: string): boolean {
+  return directive.includes(CONVENTION_STANCE_DIRECTIVE);
+}
+
+describe('MAIA holds conventions as knowledge, never as a measure', () => {
+  it('is word for word the text the founder approved', () => {
+    const rules = approvedRules();
+    expect(rules).toHaveLength(7);
+    expect(CONVENTION_STANCE_DIRECTIVE).toBe(rules.join(' '));
+  });
+
+  it('reaches every depth, after the editorial stance and before epistemic integrity', () => {
+    for (const d of DEPTHS) {
+      const composed = editorialDirective(d);
+      expect(carriesConventionStance(composed)).toBe(true);
+      const at = composed.indexOf(CONVENTION_STANCE_DIRECTIVE);
+      expect(composed.indexOf(EDITORIAL_INTELLIGENCE_DIRECTIVE)).toBeLessThan(at);
+      expect(composed.indexOf(EPISTEMIC_INTEGRITY_DIRECTIVE)).toBeGreaterThan(at);
+    }
+  });
+
+  it('leaves the depth texts themselves untouched', () => {
+    for (const d of DEPTHS) expect(DEPTH_DIRECTIVE[d]).not.toMatch(/convention/i);
+  });
+
+  it('reaches both MAIA paths: Write/Focus turns and the Develop ask reader', () => {
+    const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), 'utf8');
+    expect(read('lib/manuscript/editorialRuntime/turn.ts')).toContain("editorialDirective(input.responseDepth ?? 'guided')");
+    expect(read('lib/manuscript/ask/developmentalAskReader.ts')).toContain("editorialDirective('guided')");
+  });
+
+  it('names no level or skill of the writer and ranks nothing', () => {
+    expect(CONVENTION_STANCE_DIRECTIVE).not.toMatch(/\b(level|beginner|novice|advanced|expert|skill(ed)?|competen\w*|best|better|worse|priority)\b/i);
+  });
+
+  it('defeat candidate: the guard fails on the composition as it was before', () => {
+    const before = editorialDirective('guided').replace(` ${CONVENTION_STANCE_DIRECTIVE}`, '');
+    expect(carriesConventionStance(before)).toBe(false);
+  });
+});
