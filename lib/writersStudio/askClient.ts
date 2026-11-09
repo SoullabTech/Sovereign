@@ -40,6 +40,8 @@ export interface AskThreadView {
 export type AskOutcome =
   | {
       ok: true; threadId: string; thread: AskThreadView; staleness: StalenessState;
+      /** Which saved sections MAIA was handed for this answer (ids + headings only, never text). Present on the Work conversation. */
+      read?: readonly { sectionId: string; label: string | null }[];
       /**
        * BUILD-07E. Present only on a developmental thread, and never synthesised
        * client-side: it is the server's `observationLocation` answer, three-state.
@@ -123,6 +125,7 @@ export async function ask(input: {
       threadId: j.threadId as string,
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
+      ...(Array.isArray(j.read) ? { read: j.read as { sectionId: string; label: string | null }[] } : {}),
       location: j.location as CurrentLocation | undefined,
     };
   } catch {

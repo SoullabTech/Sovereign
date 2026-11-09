@@ -161,6 +161,10 @@ export interface WorkConversationProps {
   initialDraft?: string;
   /** Design 1B: open a Develop place MAIA offered (navigation only). Absent → no such button. */
   onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
+  /** The Develop stage keeps MAIA's holdings (reading permission, what you have settled) in its own column, so the conversation stays a conversation. */
+  hideHoldings?: boolean;
+  /** Which saved sections MAIA was handed for the answer just received (ids + headings only). */
+  onRead?: (read: readonly { sectionId: string; label: string | null }[]) => void;
   onClose: () => void;
 }
 
@@ -176,7 +180,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, onRead, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -379,6 +383,7 @@ function ScopedWorkConversation({
         setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
         setThreadId(r.threadId);
         setThread(r.thread);
+        if (onRead && manuscriptId) onRead(r.read ?? []);
         return;
       }
       // Refusals must retain literal text and any server-returned thread id.
@@ -422,8 +427,8 @@ function ScopedWorkConversation({
       data-maia-focus={focusMode ? 'true' : 'false'}
       style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
     >
-      {manuscriptId ? <ReadScopeControl manuscriptId={manuscriptId} /> : null}
-      <SettledDecisions workId={work.id} />
+      {!hideHoldings && manuscriptId ? <ReadScopeControl manuscriptId={manuscriptId} /> : null}
+      {!hideHoldings ? <SettledDecisions workId={work.id} /> : null}
       {/* ── The Work this exchange is in, where the member can see it. ── */}
       <div
         data-studio-conversation="situated"

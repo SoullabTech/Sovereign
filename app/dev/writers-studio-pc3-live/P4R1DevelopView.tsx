@@ -41,6 +41,7 @@ import { DevelopAddToWork } from './DevelopAddToWork';
 import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
+import { DevelopStage, DevelopHoldings } from './DevelopStage';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -2117,6 +2118,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setWorkConversationState(previous => previous.scope === workConversationScope
       ? previous : { scope: workConversationScope, open: false, starter: '' });
   }, [workConversationScope]);
+  /* what MAIA was handed for the last answer on the Develop stage (ids + headings only); null until the first answer */
+  const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
 
@@ -3226,17 +3229,71 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
+  /* ⭐ THE DEVELOP STAGE. The work is the centre and the conversation sits under it; the right column holds what MAIA may read, what she has
+     read, and what the writer has settled. Used for the plain overview with a Work declared. Observations, the Full view, themes and the
+     other fields keep their existing rooms. */
+  /* Behind a flag until the draft-protection guards are re-expressed for the stage and the founder has accepted it (design doc §6, M1). */
+  const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && developView !== 'full' && props.field === 'overview' && !selectedObservation
+    && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
+  const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
+  const stageLabel = stageSection?.heading?.trim() || 'this chapter';
+  const stageNext = props.sections[props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1];
+  const stageStarters = [
+    `What is ${stageLabel} doing in the book?`,
+    `Where does ${stageLabel} lose you?`,
+    stageNext ? `How does ${stageLabel} lead into ${stageNext.heading?.trim() || 'what comes next'}?` : `How does ${stageLabel} end?`,
+  ];
+  const stageCenter = useStage && props.work ? (
+    <DevelopStage
+      workTitle={props.workTitle || null}
+      sections={props.sections}
+      currentId={stageSection?.draftSectionId ?? null}
+      onSelect={selectManuscriptLocus}
+      starters={stageStarters}
+      onStarter={(words) => setAttentionConversationDraft(words)}
+      onOpenWrite={() => navigateMode('write')}
+      onMoreWays={() => chooseDevelopView('full')}
+      conversation={(
+        <WorkConversation
+          key={attentionConversationDraft || 'develop-stage-conversation'}
+          work={props.work}
+          manuscriptId={props.manuscriptId}
+          sectionId={props.currentSectionId}
+          initialDraft={attentionConversationDraft}
+          onStudioPlace={onStudioPlace}
+          hideHoldings
+          onRead={setLastRead}
+          onClose={() => setAttentionConversationDraft('')}
+        />
+      )}
+    />
+  ) : null;
+  const stageHoldings = useStage && props.work ? (
+    <div className="fr-maia-inner">
+      <div className="fr-maia-head">
+        <div className="fr-orb" aria-hidden="true" />
+        <div className="fr-maia-name"><h2>MAIA</h2><span>What she holds</span></div>
+      </div>
+      <div className="fr-mbody">
+        <DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} lastRead={lastRead} />
+      </div>
+      <div className="fr-foot">MAIA reads with you, not ahead of you.</div>
+    </div>
+  ) : null;
+
   return (
     <Shell
       mode="develop"
       appearance={props.appearance}
-      geometry={props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
+      geometry={useStage
+        ? { ...STATE_GEOMETRY['develop-manuscript'], maiaWidth: 320, maiaFloor: 270 }
+        : props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
       workTitle={props.workTitle || undefined}
       memberInitial=""
       onSelectMode={props.onMode}
       manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
-      work={center}
-      maia={maia}
+      work={stageCenter ?? center}
+      maia={stageHoldings ?? maia}
     />
   );
 }
