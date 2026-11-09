@@ -178,6 +178,27 @@ CREATE TRIGGER ask_turn_reads_no_update_trigger
   BEFORE UPDATE ON ask_turn_reads
   FOR EACH ROW EXECUTE FUNCTION ask_turn_reads_no_update();
 
+-- ── 5 · G6: which of MAIA's own completed readings were carried into a Work-conversation turn (founder ruling 2026-11-09) ──
+--    Ids and revision numbers only, never text. "What did MAIA have when she said this" stays answerable afterwards.
+--    Not a foreign key to developmental_readings: a reading removed with its manuscript leaves the record dangling by design,
+--    like scope_event_id on receipts; the thread cascade still removes these rows with the conversation.
+CREATE TABLE IF NOT EXISTS ask_turn_readings (
+  thread_id       UUID NOT NULL REFERENCES ask_threads(id) ON DELETE CASCADE,
+  turn_index      INTEGER NOT NULL CHECK (turn_index >= 0),
+  reading_id      UUID NOT NULL,
+  revision_number INTEGER NOT NULL CHECK (revision_number >= 1),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (thread_id, turn_index, reading_id)
+);
+CREATE OR REPLACE FUNCTION ask_turn_readings_no_update() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION '[ASK] ask_turn_readings is append-only — UPDATE refused';
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS ask_turn_readings_no_update_trigger ON ask_turn_readings;
+CREATE TRIGGER ask_turn_readings_no_update_trigger BEFORE UPDATE ON ask_turn_readings
+  FOR EACH ROW EXECUTE FUNCTION ask_turn_readings_no_update();
+
 COMMENT ON TABLE work_reading_scope_events IS
 'Append-only member grant/revoke of MAIA''s standing permission to read the saved text of a Work inside the Work conversation. State is derived from the latest event for (member, Work). Nothing inferred, no default grant. Distinct from, and does not mutate, the single-use S3 authorization.';
 
@@ -191,5 +212,5 @@ COMMIT;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Migration 20261108000001: Work reading scope events, standing receipt vocabulary, ask_turn_reads';
+  RAISE NOTICE 'Migration 20261108000001: Work reading scope events, standing receipt vocabulary, ask_turn_reads, ask_turn_readings';
 END $$;

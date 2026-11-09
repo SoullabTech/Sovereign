@@ -18,6 +18,7 @@
  * be and where the author makes it, because the author makes it.
  */
 
+import type { CarriedReading } from './carriedReadings';
 import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
@@ -187,6 +188,8 @@ export interface WorkContext {
   standingRead?: StandingRead;
   /** A helper's book, not yet offered: add the one gentle, once-only note about case stories (see practiceOffers). */
   practiceOffer?: string;
+  /** G6 · her own completed readings (latest per lens), labelled by revision. Absent in Sanctuary. Never chapter text. */
+  carriedReadings?: readonly CarriedReading[];
 }
 
 export interface StandingRead {
@@ -198,6 +201,36 @@ export interface StandingRead {
   }[];
   /** In scope for the question but not supplied this turn (budget). */
   readonly notSupplied: readonly { id: string; label: string | null }[];
+}
+
+/** The block's first line, so the quote check can leave her earlier account out of what may ground a quotation. */
+export const CARRIED_READINGS_HEADER = 'YOUR EARLIER READINGS OF THIS WORK';
+export const CARRIED_READINGS_END = '(END OF YOUR EARLIER READINGS)';
+
+/** The text she was handed with her earlier-readings block removed: her account never grounds a quotation of the writing. */
+export function withoutCarriedReadings(seen: string): string {
+  const a = seen.indexOf(CARRIED_READINGS_HEADER);
+  if (a < 0) return seen;
+  const b = seen.indexOf(CARRIED_READINGS_END, a);
+  return b < 0 ? seen.slice(0, a) : seen.slice(0, a) + seen.slice(b + CARRIED_READINGS_END.length);
+}
+
+/** G6 · her own account from readings the writer commissioned, labelled so she can say which reading and which revision. */
+export function carriedReadingsSays(readings: readonly CarriedReading[]): string {
+  const lines = [
+    `${CARRIED_READINGS_HEADER} (your own account, made when the writer asked you to read; it may be wrong; it is not the writer's view and not a fact about the text):`,
+  ];
+  for (const r of readings) {
+    const chapters = r.chapters.map((c) => `${c.label ?? '(no heading)'}${c.changedSince === true ? ' (CHANGED since you read it)' : c.changedSince === false ? ' (unchanged since)' : ' (cannot tell whether it has changed)'}`).join('; ');
+    lines.push('', `- Through the ${r.lens} lens, read ${r.frozenAt.slice(0, 10)}, from revision ${r.revisionNumber} of the saved writing. Read in full: ${chapters || '(none)'}.`);
+    for (const o of r.observations) lines.push(`    • ${o.text}${o.doesNotEstablish.length ? `  [this does not establish: ${o.doesNotEstablish.join(', ')}]` : ''}`);
+  }
+  lines.push('',
+    'Use them when the writer follows up: say which reading you mean and that it was made from that revision. If a chapter has changed since, say your reading may not fit it now.',
+    'A reading is your ACCOUNT, not the chapter text: quote the writing only from text you were given this turn.',
+    'If the text itself would help and you were not given it, say exactly what you do have, and suggest the writer choose "Let MAIA read my saved work" in Develop. Do NOT send them to "Read this chapter" for a chapter you already have a reading of.',
+    CARRIED_READINGS_END);
+  return lines.join('\n');
 }
 
 function standingReadSays(read: StandingRead): string {
@@ -279,6 +312,7 @@ function workSays(ctx: WorkContext): string {
     ].join('\n'));
   }
   if (ctx.practiceOffer) parts.push(ctx.practiceOffer);
+  if (ctx.carriedReadings && ctx.carriedReadings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
   } else if (!locus) {

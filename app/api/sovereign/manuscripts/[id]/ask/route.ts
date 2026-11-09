@@ -52,8 +52,9 @@ import {
 } from '@/lib/manuscript/ask/frozenReading';
 import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
-import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
-import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
+import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manuscript/ask/askReader';
+import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads, recordTurnReadings } from '@/lib/disclosure/workReadScopeRead';
+import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
 import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
 import { livingWorkKind } from '@/lib/writersStudio/workKind';
@@ -699,14 +700,20 @@ async function workTurn(input: {
     && (await livingWorkKind(memberId, built.facts.work.id)) === 'practitioner'
     && !(await anonymiseOfferAlreadyMade(memberId, manuscriptId)))
     ? ANONYMISE_OFFER_INSTRUCTION : undefined;
-  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer };
+  /* ⭐ G6 · her own completed readings (founder ruling 2026-11-09): latest per lens, for the chapters in play, labelled by revision and by
+     whether each chapter changed since. Carried on the commission's consent; never chapter text; nothing in Sanctuary or an unstated posture. */
+  const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? []
+    : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections);
+  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that
      wording" answer replaces it. ⛔ Checks that a quote EXISTS, not that her claim about it is true. */
   if (outcome.ok) {
     /* Exactly what she was handed (system prompt + messages) — complete by construction. */
-    const sources = [outcome.seen ?? '', question, ...workHistory.map((h) => h.body), factsWithDecisions.writerUnderstanding];
+    /* Her earlier ACCOUNT never grounds a quotation of the writing: it is cut out of what she was handed before checking. */
+    const seenForQuotes = withoutCarriedReadings(outcome.seen ?? '');
+    const sources = [seenForQuotes, question, ...workHistory.map((h) => h.body), factsWithDecisions.writerUnderstanding];
     const first = checkQuoteFidelity(outcome.answer, sources);
     if (!first.ok) {
       const again = await askMaia(workCtx, workHistory, question,
@@ -740,6 +747,7 @@ async function workTurn(input: {
   });
   /* The turn is already saved: a failed read-record must never turn a good answer into a 500 (a retry would duplicate the turn). */
   if (supplied.length > 0) { try { await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied); } catch { console.error('[WORK-READ] could not record what was supplied this turn'); } }
+  if (carriedReadings.length > 0) { try { await recordTurnReadings(liveThreadId, memberId, maiaIndex, carriedReadings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber }))); } catch { console.error('[WORK-READ] could not record which readings were carried this turn'); } }
 
   const thread = await loadThread(liveThreadId, memberId);
   /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */

@@ -65,3 +65,15 @@ export async function recordTurnReads(
        ON CONFLICT DO NOTHING`, [threadId, turnIndex, s.id, s.digest, memberId]);
   }
 }
+
+/** G6 · which of MAIA's completed readings were carried into this turn (ids and revisions only, never text). */
+export async function recordTurnReadings(
+  threadId: string, memberId: string, turnIndex: number, readings: readonly { readingId: string; revisionNumber: number }[],
+): Promise<void> {
+  for (const r of readings) {
+    await query(
+      `INSERT INTO ask_turn_readings (thread_id, turn_index, reading_id, revision_number)
+       SELECT t.id, $2, $3, $4 FROM ask_threads t WHERE t.id = $1 AND t.member_id = $5
+       ON CONFLICT DO NOTHING`, [threadId, turnIndex, r.readingId, r.revisionNumber, memberId]);
+  }
+}

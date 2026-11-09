@@ -1,6 +1,6 @@
 # G6 — a reading MAIA made does not reach the next conversation: census and proposed design (2026-11-09)
 
-Status: **read-only census + design proposal.** No source changed for G6. Lane: Writer's Studio (#1800). Founder decision needed (§4).
+Status: **ruled and built** (see §6). Lane: Writer's Studio (#1800).
 
 ## 1 · The defect, as witnessed (production, 2026-11-08, #1800 comment 6722897723)
 Develop → "Read this chapter" on Chapter 10 completed (201, after several minutes) and the reading named the hiker-with-a-map image.
@@ -27,5 +27,19 @@ Recommended: **yes, on those terms.** It is her own account, made under the writ
 Read Chapter 10 → ask about its image in the conversation → she answers from her reading (and from the text if permitted), naming the revision ·
 edit Chapter 10 → she says the chapter has changed since her reading · no permission → she offers the permission, not the button ·
 Sanctuary → nothing carried · another Work's reading never appears · revoked permission → text stops, her account remains labelled ·
-a newer reading supersedes an older one · per-turn record names the reading and the digests.
+⚠️ CORRECTED: readings are per lens and coexist by design, so the latest reading **per lens** is carried, never "the latest reading" · per-turn record names the reading and the digests.
 Separately tracked tester-facing defects from the same witness: the unbounded reading wait, and silent disabled Send.
+
+## 6 · Ruling and build (2026-11-09)
+**Founder ruling: "Yes, on those terms."** MAIA's completed reading is carried into later Work conversations about that Work on the commission's consent, labelled by lens and revision; chapter text still needs the standing permission; Sanctuary carries nothing.
+
+**Correction to §3/§5 above:** I first wrote that a newer reading supersedes an older one. The code says otherwise, deliberately: readings are per lens and coexist (`developmentalContext.ts`, "a newer reading exists is not supersession"). Built: the latest reading **per lens** covering the chapters in play, at most three.
+
+Built (candidate, not deployed):
+- `lib/manuscript/ask/carriedReadings.ts` (SELECTs only): readings for the chapters in play (where the writer is, chapters named in the question, or all for a whole-book question); "changed since" answered by the database digesting the current text, so no chapter text is loaded to answer it.
+- `askReader.ts`: a labelled block (lens · date · revision · per chapter unchanged / CHANGED / cannot tell; each observation with what it does not establish), ended by a marker. **Her account never grounds a quotation**: the block is cut out before the quote check (shown to fail without the cut).
+- `studioGuide.ts`: the reading permission is now a control she may name; she is told never to send the writer to "Read this chapter" for a chapter she already has a reading of.
+- Per-turn record: `ask_turn_readings` (ids and revisions only; added to candidate migration `20261108000001`, unapplied anywhere real).
+- Evidence: `reading.carry.test.ts` 7/7 against the real Ask route and a throwaway DB (the Nov 8 case without permission; Sanctuary and unstated carry nothing; CHANGED label; per-lens; chapters in play only; never another manuscript or member; quote not grounded by her account; with permission she also gets the text). Existing route walk and scope probe still pass.
+
+Not done: a real-model walk of the Nov 8 case; the unbounded reading wait and silent disabled Send (separate defects); readings shown as layers in the stage.

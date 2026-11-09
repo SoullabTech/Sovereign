@@ -99,6 +99,7 @@ describe('the developmental Ask route writes conversation and authority — neve
     runtime_consent_state: 'the consent state the crossing was evaluated against',
     context_disclosure_receipts: 'the accountability record of a crossing',
     ask_turn_reads: 'which saved sections were supplied on which conversation turn (WS-WORK-CONTINUITY; conversation metadata, not the Work)',
+    ask_turn_readings: 'which of MAIA\'s own completed readings were carried into which conversation turn (G6, founder ruling 2026-11-09; ids and revisions only, conversation metadata, not the Work)',
   };
 
   /* ⛔ THE WORK. Named explicitly rather than left to the allowlist's silence, so
