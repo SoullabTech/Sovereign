@@ -98,6 +98,84 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     expect(rec.rows[0]!.p.carriedReadings![0]!.revisionNumber).toBe(4);
   });
 
+  it('SANCTUARY CLOSURE (founder ruling 2026-11-09): an UNDECLARED posture keeps nothing in the Work conversation, fresh or continuing', async () => {
+    const counts = async () => (await query<{ th: string; tu: string }>(
+      `SELECT (SELECT COUNT(*) FROM ask_threads WHERE member_id=$1)::text th,
+              (SELECT COUNT(*) FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1)::text tu`, [A])).rows[0]!;
+    const before = await counts();
+    const fresh = await post(A, { anchor: { on: 'work' }, question: 'Undeclared: tell me about Return.', sectionId: sec[2] });
+    expect(fresh.status).toBe(200);
+    expect(fresh.json.sanctuary?.notKept).toBe(true);
+    expect(fresh.json.threadId).toBeNull();
+    expect(await counts()).toEqual(before);
+    const ordinary = await post(A, { anchor: { on: 'work' }, question: 'Declared ordinary.', sectionId: sec[2], sanctuary: false });
+    const after1 = await counts();
+    expect(Number(after1.tu)).toBe(Number(before.tu) + 2);
+    const cont = await post(A, { threadId: ordinary.json.threadId, question: 'Undeclared, continuing.', sectionId: sec[2] });
+    expect(cont.json.sanctuary?.notKept).toBe(true);
+    expect(await counts()).toEqual(after1);
+    expect((await query(`SELECT 1 FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1 AND t.body LIKE '%Undeclared%'`, [A])).rows.length).toBe(0);
+  });
+
+  it('SANCTUARY CLOSURE: the reading-anchored lanes (structure, developmental) refuse in Sanctuary or undeclared, BEFORE any write', async () => {
+    const threads = async () => (await query<{ n: string }>(`SELECT COUNT(*)::text n FROM ask_threads WHERE member_id=$1`, [A])).rows[0]!.n;
+    const before = await threads();
+    const anchors = [
+      { on: 'division', proposalId: crypto.randomUUID(), unitId: 'u1' },
+      { on: 'observation', readingId: crypto.randomUUID(), observationKey: 'o1' },
+    ];
+    for (const anchor of anchors) {
+      const s1 = await post(A, { anchor, question: 'In Sanctuary.', sanctuary: true });
+      expect([s1.status, s1.json.refusal]).toEqual([409, 'sanctuary_not_kept']);
+      const u1 = await post(A, { anchor, question: 'Undeclared.' });
+      expect([u1.status, u1.json.refusal]).toEqual([409, 'posture_undeclared']);
+      const ok = await post(A, { anchor, question: 'Ordinary.', sanctuary: false });
+      expect(ok.json.refusal).not.toBe('sanctuary_not_kept');                                  // ordinary passes the gate (and is refused later, for the made-up reading)
+      expect(ok.json.refusal).not.toBe('posture_undeclared');
+    }
+    expect(await threads()).toBe(before);
+  });
+
+  it('SANCTUARY CLOSURE: the Living Work conversation (before a manuscript) keeps nothing in Sanctuary or undeclared; ordinary keeps', async () => {
+    const lw = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'A work before its manuscript') RETURNING id`, [A])).rows[0].id;
+    const postLW = async (body: Record<string, unknown>) => {
+      CURRENT = A; const { POST } = await import('@/app/api/sovereign/living-works/[id]/ask/route');
+      const res = await POST(new NextRequest('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id: lw }) });
+      return { status: res.status, json: await res.json() as Record<string, any> };
+    };
+    const n = async () => (await query<{ th: string; tu: string }>(
+      `SELECT (SELECT COUNT(*) FROM ask_threads WHERE living_work_id=$1)::text th,
+              (SELECT COUNT(*) FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.living_work_id=$1)::text tu`, [lw])).rows[0]!;
+    const s1 = await postLW({ question: 'In Sanctuary.', sanctuary: true });
+    expect([s1.status, s1.json.sanctuary?.notKept, s1.json.threadId]).toEqual([200, true, null]);
+    const u1 = await postLW({ question: 'Undeclared.' });
+    expect([u1.status, u1.json.sanctuary?.notKept]).toEqual([200, true]);
+    expect(await n()).toEqual({ th: '0', tu: '0' });
+    const o1 = await postLW({ question: 'Ordinary.', sanctuary: false });
+    expect(o1.status).toBe(200);
+    expect(await n()).toEqual({ th: '1', tu: '2' });
+    const c1 = await postLW({ threadId: o1.json.threadId, question: 'Undeclared, continuing.' });
+    expect(c1.json.sanctuary?.notKept).toBe(true);
+    expect(await n()).toEqual({ th: '1', tu: '2' });
+    expect((await postLW({ question: 'Malformed.', sanctuary: 'yes' })).status).toBe(400);
+  });
+
+  it('SANCTUARY CLOSURE: a reading (a kept record) is never commissioned in Sanctuary or undeclared', async () => {
+    const postR = async (body: Record<string, unknown>) => {
+      CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/readings/route');
+      const res = await POST(new NextRequest('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id: ms }) });
+      return { status: res.status, json: await res.json() as Record<string, any> };
+    };
+    const count = async () => (await query<{ n: string }>(`SELECT COUNT(*)::text n FROM developmental_readings WHERE manuscript_id=$1`, [ms])).rows[0]!.n;
+    const before = await count();
+    const sys = systems.length;
+    expect(await postR({ lens: 'overview', sanctuary: true })).toMatchObject({ status: 409, json: { refusal: 'sanctuary_not_kept' } });
+    expect(await postR({ lens: 'overview' })).toMatchObject({ status: 409, json: { refusal: 'posture_undeclared' } });
+    expect(await postR({ lens: 'overview', sanctuary: 'false' })).toMatchObject({ status: 409, json: { refusal: 'posture_undeclared' } });
+    expect(await count()).toBe(before);
+    expect(systems.length).toBe(sys);                                                              // MAIA was never called
+  });
+
   it('Sanctuary, or an unstated posture, carries nothing', async () => {
     await post(A, { anchor: { on: 'work' }, question: 'Where does the hiker come back?', sectionId: sec[2], sanctuary: true });
     expect(last()).not.toContain('YOUR EARLIER READINGS');

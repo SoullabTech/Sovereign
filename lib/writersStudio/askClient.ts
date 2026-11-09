@@ -13,6 +13,7 @@
  * says — only asked about the one it already holds.
  */
 
+import { declaredSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { TeachingAnchor } from './teachingTurn';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
@@ -95,7 +96,7 @@ export async function ask(input: {
    * the anchor of a resumed thread.
    */
   sectionId?: string;
-  /** The member's CURRENT Sanctuary posture, when it could be resolved. Omitted (never guessed) when it could not. */
+  /** The member's CURRENT Sanctuary posture. When omitted, the client declares it from saved settings (none saved ⇒ ordinary); unreadable ⇒ undeclared. */
   sanctuary?: boolean;
 }): Promise<AskOutcome> {
   try {
@@ -108,7 +109,8 @@ export async function ask(input: {
           : { anchor: input.anchor }),
         question: input.question,
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
-        ...(typeof input.sanctuary === 'boolean' ? { sanctuary: input.sanctuary } : {}),
+        // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
+        ...(typeof input.sanctuary === 'boolean' ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));
@@ -193,7 +195,7 @@ async function rawPost(
     const res = await apiFetch(url(manuscriptId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...declaredSanctuaryPosture(), ...body }),
     });
     const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const outcome = bodyOutcomeFrom(res.status, j);
@@ -307,6 +309,7 @@ export async function askLivingWork(input: {
       body: JSON.stringify({
         question: input.question,
         ...(input.threadId ? { threadId: input.threadId } : {}),
+        ...declaredSanctuaryPosture(),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));
@@ -324,6 +327,7 @@ export async function askLivingWork(input: {
       threadId: j.threadId as string,
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
+      ...(j.sanctuary && typeof j.sanctuary === 'object' ? { sanctuary: j.sanctuary as { notKept: true; question: string; answer: string } } : {}),
     };
   } catch {
     return { ok: false, refusal: 'unreachable' };

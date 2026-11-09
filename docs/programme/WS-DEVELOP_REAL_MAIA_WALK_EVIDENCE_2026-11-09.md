@@ -52,3 +52,23 @@ Founder ruling "Yes, start G4", recorded as a **narrow amendment to Design 1B**:
 - Tests: offer parsing and instruction (studioActions), click-only, lens passed, progress, success, refusal, Sanctuary, degraded rooms (workConversationStudioActions). Type gate: no regressions. Wider suites: only the 8 inherited failures.
 - ⚠️ Observed, not changed: the old Develop view's lens-card reading buttons do not check Sanctuary at all.
 - ⛔ Not yet: a real-model walk of this path; lenses beyond the current chapter (whole book, chosen chapters).
+
+## Sanctuary closure — fail closed (founder ruling 2026-11-09, "yes")
+Rule: **a conversation turn or a reading is kept only when the request declared an ordinary posture.** A writer who has never saved settings declares ordinary (canon: Sanctuary is off by default). A posture that exists but cannot be read (storage blocked, corrupt, not a boolean) is **undeclared**, and an undeclared request keeps nothing.
+- Client: one helper, `declaredSanctuaryPosture()` (`lib/sanctuary/currentClientPosture.ts`), used by every request to these routes (`askClient` ask, the developmental body protocol, `askLivingWork`, `developClient` readings, and the Work conversation).
+- **Work conversation** (manuscript): Sanctuary or undeclared → answers in the moment, keeps nothing (no thread, no turn), fresh or continuing.
+- **Living Work conversation** (before a manuscript): previously had no Sanctuary handling at all. Now the same: Sanctuary or undeclared keeps nothing; a non-boolean posture is malformed (400).
+- **Structure and developmental conversations** (anchored to kept readings): refused **before any write** (`409 sanctuary_not_kept` / `posture_undeclared`), with the writer told why. Building a not-kept answer for these lanes is not done.
+- **Readings** (incl. G4 *Read this chapter* and the old lens cards): refused before commissioning in Sanctuary or undeclared; MAIA is never called.
+- Tests: real PostgreSQL 16 (production-derived baseline + 90 migrations, 0 errors), real routes, scripted model: four closure tests (Work undeclared fresh+continuing; structure+developmental refuse with no thread row; Living Work; readings), **each fails on the previous routes and passes now**; reading-carry suite 32/32. Client helper unit test (saved / none saved / unreadable / blocked / no storage). Readings route unit test 13/13. Type gate: no regressions. Wider suites: the failing set is **identical** with and without this change (31 suites, all inherited).
+
+### What this does NOT close (owed, in order)
+1. **The server trusts the browser's declaration.** `sanctuary: false` from the client is not independent proof of the member's current setting; Sanctuary posture lives only in the browser today. Making the server verify it needs a server-side record of posture — a design decision, not yet made.
+2. **Storage-layer enforcement.** The thread store (`openThread` / `appendTurn` / the living-work variants) still accepts writes without a verified posture; the protection is at the three routes. Requiring a resolved posture at the store is the next step and touches every caller.
+3. The shared resolver `TurnPosture.resolve()` still reads absence as ordinary; these routes no longer rely on it for the keep decision, but other MAIA routes do.
+4. G4 isolation beyond start/switch: late responses after switching, recovery, reopening, Sanctuary→ordinary transitions — not yet tested. `writerCorrections` in Sanctuary not yet reconciled against the in-the-moment ruling.
+5. Provider-off negative suite on one frozen SHA (contradictory posture, direct store bypass, cross-member, concurrency, failed writes/retries).
+
+### Found while testing (not changed; reported)
+- **G6 vs D5 conflict.** When a question names no chapter, G6 carries MAIA's latest readings of the whole book — including observations the writer marked *keep* or left *unresolved* — while D5's narrow rule says only *dismissed* observations reach her as her earlier words. It also carries readings that covered no chapter text. `ws-decision-continuity` D5 fails on this since G6 (also at the previous commit). Needs a founder ruling: does carrying her readings override D5, or must carried observations respect the writer's standing?
+- **Inherited test failures:** `sanctuary-editorial` and `sanctuary-keep` matrices fail on canonical's own editorial routes (also with canonical's route file swapped in); `ws-delete` dynamic probes create members without `passkey`, which the production-derived baseline requires (fixture, not route).

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReadScopeControl from './ReadScopeControl';
 import SettledDecisions from './SettledDecisions';
-import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { declaredSanctuaryPosture, readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { parseStudioActions } from '@/lib/writersStudio/studioActions';
 import { readingProgressText } from '@/lib/writersStudio/readingProgress';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
@@ -402,7 +402,7 @@ function ScopedWorkConversation({
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
             ...(sectionId ? { sectionId } : {}),
             /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
-            ...(() => { const p = readCurrentSanctuaryPosture(); return p.resolved ? { sanctuary: p.sanctuary } : {}; })(),
+            ...declaredSanctuaryPosture(),
           })
         : await askLivingWork({
             workId: work.id,

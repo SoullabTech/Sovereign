@@ -115,7 +115,8 @@ describe('develop surface — what it may not do', () => {
        carry text, an observation, or anything the reader could mistake for
        the member's writing. */
     const c = read(FILES.client);
-    expect(c).toMatch(/body:\s*JSON\.stringify\(scope \? \{ lens, scope \} : \{ lens \}\)/);
+    // Founder ruling 2026-11-09 (Sanctuary closure): the body ALSO declares the Sanctuary posture (a boolean, never prose). Nothing else.
+    expect(c).toMatch(/body:\s*JSON\.stringify\(\{ \.\.\.\(scope \? \{ lens, scope \} : \{ lens \}\), \.\.\.declaredSanctuaryPosture\(\) \}\)/);
     expect(c).not.toMatch(/method:\s*'(PUT|PATCH|DELETE)'/);
     for (const forbidden of ['content', 'text:', 'body:', 'observation', 'sections:']) {
       const inPayload = new RegExp(`JSON\\.stringify\\([^)]*${forbidden}`);

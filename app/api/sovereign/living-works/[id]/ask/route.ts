@@ -73,7 +73,7 @@ export async function POST(
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
-  const allowed = new Set(['question', 'threadId']);
+  const allowed = new Set(['question', 'threadId', 'sanctuary']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown field' }, { status: 400 });
   }
@@ -85,6 +85,13 @@ export async function POST(
   if (question.length > MAX_QUESTION) {
     return NextResponse.json({ refusal: 'question_too_long' }, { status: 413 });
   }
+
+  /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09): a turn is kept ONLY when the request DECLARED an ordinary posture. Sanctuary, or a
+     posture the client could not read (undeclared), answers in the moment and keeps nothing: no thread opened, no turn written. */
+  if (body.sanctuary !== undefined && typeof body.sanctuary !== 'boolean') {
+    return NextResponse.json({ refusal: 'malformed', detail: 'sanctuary' }, { status: 400 });
+  }
+  const storing = body.sanctuary === false;
 
   const requestedThreadId = typeof body.threadId === 'string' ? body.threadId : null;
   const existing = requestedThreadId
@@ -116,15 +123,15 @@ export async function POST(
     return NextResponse.json({ refusal: built.reason }, { status: 422 });
   }
 
-  const liveThreadId = existing?.id ?? await openLivingWorkThread({
+  const liveThreadId = existing?.id ?? (!storing ? '' : await openLivingWorkThread({
     livingWorkId: workId,
     memberId,
     canonicalAtOpen: currentFingerprint,
     initiatedBy: 'author',
-  });
+  }));
 
   const priorTurns = existing?.turns ?? [];
-  if (!isHeldRetry(priorTurns, question)) {
+  if (storing && !isHeldRetry(priorTurns, question)) {
     await appendTurn({
       threadId: liveThreadId,
       memberId,
@@ -150,9 +157,19 @@ export async function POST(
 
   if (!outcome.ok) {
     return NextResponse.json(
-      { threadId: liveThreadId, refusal: outcome.refusal, staleness },
+      { threadId: liveThreadId || null, refusal: outcome.refusal, staleness },
       { status: 502 },
     );
+  }
+
+  if (!storing) {
+    // Answered in the moment, kept nowhere. An earlier ordinary thread (if continuing) is returned unchanged.
+    return NextResponse.json({
+      threadId: existing?.id ?? null,
+      thread: existing ? await loadLivingWorkThread(existing.id, memberId) : null,
+      sanctuary: { notKept: true, question, answer: outcome.answer },
+      staleness,
+    });
   }
 
   await appendTurn({

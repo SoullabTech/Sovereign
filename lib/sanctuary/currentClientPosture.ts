@@ -85,3 +85,18 @@ export function readCurrentSanctuaryPosture(
   if (typeof value !== 'boolean') return { resolved: false, reason: 'not_boolean' };
   return { resolved: true, sanctuary: value };
 }
+
+/**
+ * ⭐ What a request DECLARES about Sanctuary (founder ruling 2026-11-09, "yes"):
+ *   - the member's saved posture, when it can be read;
+ *   - `false` when no settings have ever been saved — canon: Sanctuary is OFF by default, an explicit opt-in;
+ *   - NOTHING when the posture exists but cannot be read (storage blocked, corrupt, not a boolean).
+ * ⛔ An undeclared posture is never guessed here. The server keeps nothing for a request that declares none.
+ */
+export function declaredSanctuaryPosture(
+  storage: StorageLike | null | undefined = defaultStorage(),
+): { sanctuary: boolean } | Record<string, never> {
+  const read = readCurrentSanctuaryPosture(storage);
+  if (read.resolved) return { sanctuary: read.sanctuary };
+  return read.reason === 'no_live_settings' ? { sanctuary: false } : {};
+}

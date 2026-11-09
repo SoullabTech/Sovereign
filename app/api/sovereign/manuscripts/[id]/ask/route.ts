@@ -329,6 +329,16 @@ export async function POST(
      structure path, unchanged. The two never meet again: a developmental anchor
      never reaches `loadFrozenReading`, and a structure anchor never reaches
      `loadFrozenDevelopmentalReading`. */
+  /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09, "yes"): a turn is kept ONLY when the request DECLARED an ordinary posture.
+     A client with no saved settings declares ordinary (canon: Sanctuary is off by default); a posture that exists but cannot be
+     read is undeclared, and an undeclared posture keeps nothing. The Work lane can answer without keeping (below). The reading-anchored
+     lanes (structure, developmental) are built on kept records, so in Sanctuary or with an undeclared posture they refuse BEFORE any write. */
+  const postureDeclared = typeof (body as Record<string, unknown>).sanctuary === 'boolean';
+  const turnPosture = TurnPosture.resolve(body);
+  if (effectiveAnchor.on !== 'work' && (turnPosture.sanctuary || !postureDeclared)) {
+    return NextResponse.json({ refusal: turnPosture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared' }, { status: 409 });
+  }
+
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({
       manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question,
@@ -336,7 +346,7 @@ export async function POST(
       /* ⭐ ONE identity, minted at the boundary and carried through consent and
          receipt. ⛔ Correlation only — it is never act identity. */
       requestId: randomUUID(),
-      posture: TurnPosture.resolve(body),
+      posture: turnPosture,
       responseStyle,
       teachingAnchor,
     });
@@ -410,8 +420,7 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, posture: TurnPosture.resolve(body),
-                      postureKnown: typeof (body as Record<string, unknown>).sanctuary === 'boolean' });
+                      question, sectionId: bodySectionId, posture: turnPosture, postureKnown: postureDeclared });
   }
 
   if (!reading) {
@@ -619,8 +628,9 @@ async function workTurn(input: {
      neither the question nor the answer is written, and no read happens beyond the passage the writer is at. Earlier ordinary turns of an
      existing conversation may still inform her (reading is not storing; founder ruling 2026-11-09, "Yes, in the moment": the passage the
      writer is at, earlier ordinary turns and the writer's declared notes may be seen in the moment, never kept). The writer's manuscript,
-     edits, plans and decisions are untouched by this. ⛔ An unstated posture is ordinary: Sanctuary is an explicit opt-in. */
-  const storing = !posture.sanctuary;
+     edits, plans and decisions are untouched by this. ⛔ An UNDECLARED posture keeps nothing (founder ruling 2026-11-09): a client with no
+     saved settings declares ordinary, so only a posture that exists but cannot be read lands here. */
+  const storing = postureKnown && !posture.sanctuary;
   const liveThreadId = existing ? existing.id : !storing ? '' : await openThread({
     manuscriptId, memberId, anchor,
     /* ⛔ NULL, AND LAWFULLY SO. The column is nullable precisely for "a thread on
