@@ -385,3 +385,42 @@ to send the old instruction text as if the writer had typed it.
 - Gates: `app/writers-studio` + `app/dev` 1766/1766; typecheck 214 against a baseline of 214.
 - Not walked: whether this block is reachable in the live Studio is still unverified. The
   behaviour behind it is the run-9 behaviour.
+
+## 12. Repeated accuracy measurement (no wording change)
+
+Counting and position slips appeared in every witness and walk, so they were measured before any
+further change.
+
+- **Instrument:** `tests/witness/craft-conventions/accuracyMeasure.ts`. Truth is computed from the
+  passage (`passageFacts`, `checkQuotes`), not judged by a reader.
+- **Two paths:**
+  - Passage Focus: `editorialDirective` at Guided, through the structured seam.
+  - Develop/Work: the real prompt, built by `askMaia()` itself.
+- **Cases:** three fictional passages (accuracy passages A and B, and "Mara") × three questions
+  (word count of sentence 3; the longest sentence; quote sentence 2 exactly) × three repeats,
+  making 54 replies.
+- **Run:** `runs/2026-11-09-accuracy-measure.json`.
+
+| Path | Word count | Longest | Exact quote |
+|---|---|---|---|
+| Passage Focus | 9/9 | 9/9 | 9/9 |
+| Develop / Work | 9/9 | 9/9 | 9/9 |
+
+The first scoring reported 6 misses on "longest". All six were **my scorer's error**. In the
+"Mara" passage, sentences 4 and 8 are tied at twelve words each, and every reply said so, for
+example "Two tie at twelve words each… Everything else runs from four to eight", which is correct.
+The scorer now treats a tie as an answer.
+
+**Finding.** When the writer asks a checkable question directly, MAIA is accurate on both paths:
+54/54. The slips seen earlier were all **incidental**: a count or position dropped in passing
+inside an editorial answer about something else, such as "five words" for six while discussing
+tightening. The text-accuracy rule works when the count is the question, and is weaker when the
+count is a side remark.
+
+**Next, if wanted:**
+- (a) measure incidental claims directly, with editorial questions whose answers tend to cite
+  counts, scored the same way; or
+- (b) a ruling on whether MAIA should avoid stating incidental counts at all unless asked. That
+  would be new wording, so it is a founder act.
+
+No change has been made.
