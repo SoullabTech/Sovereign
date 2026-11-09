@@ -2166,6 +2166,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   };
   /* Design 1B amendment 2 · the writer clicked one of MAIA's acting offers in the stage conversation. Only that click lands here. */
   const studioAct = async (act: StudioAct): Promise<{ ok: true; text: string } | { ok: false; message: string }> => {
+    // Navigation inside Develop: nothing is written, so it is not a Sanctuary question.
+    if (act.id === 'show') { setStageOpenAt({ place: act.place, n: Date.now() }); return { ok: true, text: 'Opened under More.' }; }
+    if (act.id === 'go-chapter') {
+      const sec = props.sections.find((x) => x.draftSectionId === act.sectionId);
+      if (!sec) return { ok: false, message: 'That chapter is not in this Work. Nothing was changed.' };
+      selectManuscriptLocus(sec.draftSectionId);
+      return { ok: true, text: `You are at ${sec.heading?.trim() || 'that chapter'}.` };
+    }
     const posture = readCurrentSanctuaryPosture();
     if (!posture.resolved || posture.sanctuary) return { ok: false, message: 'Sanctuary is on, so that is not done here. Nothing was changed.' };
     if (!props.work || !stageManuscriptId) return { ok: false, message: 'This Work is not ready for that yet. Nothing was changed.' };
@@ -2219,6 +2227,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     navigateMode('write');
   };
   const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
+  const [stageOpenAt, setStageOpenAt] = useState<{ place: string; n: number } | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
 
@@ -3359,6 +3368,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onWorkOnStep={workOnStep}
       onDeletePlan={deletePlan}
       onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
+      openAt={stageOpenAt}
       holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
     />
   ) : null;
@@ -3385,6 +3395,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               onRead={setLastRead}
               onReadChapter={props.onCommissionChapterReading}
               onStudioAct={studioAct}
+              chapterLabel={(id) => { const sec = props.sections.find((x) => x.draftSectionId === id); return sec ? (sec.heading?.trim() || `Section ${sec.position + 1}`) : null; }}
               onClose={() => setAttentionConversationDraft('')}
             />
           )}

@@ -194,7 +194,7 @@ Founder, repeatedly ("a truly interactive MAIA conversational driven field where
 
 **Rule:** every capability on the Develop stage must be reachable by asking MAIA, as an offer the writer clicks (a Design 1B studio action; only the click performs it, never in Sanctuary), or must itself be a way of talking to her. **A capability that is not is a defect against this rule, not optional scope.**
 
-**Acceptance check (mechanical):** `lib/writersStudio/developAskable.ts` maps every control on the stage and in its conversation to its offer; `lib/writersStudio/__tests__/developAskable.test.ts` fails on any unmapped control and names the open defects. At `ff9163784`+: 14 open defects (book kind, change chapter, close, delete plan, edit plan, focus, keeps, More, open in MAIA, recurring words, revoke reading, what she read in place, withdraw settled, work on a plan step). The list must shrink; it is never hidden.
+**Acceptance check (mechanical):** `lib/writersStudio/developAskable.ts` maps every control on the stage and in its conversation to its offer; `lib/writersStudio/__tests__/developAskable.test.ts` fails on any unmapped control and names the open defects. 14 open defects were recorded at `ff9163784` and all closed the same day with navigation offers (`show:plan|kind|reading|settled|recurring|read`, `go-chapter:<id>` checked against the Work, `show-keeps`, `open-in-maia`, `focus`, `close-conversation`); More is now a doorway, lawful only while nothing behind it is a defect. The test now requires zero defects.
 
 ## Founder requirements for the design submission
 

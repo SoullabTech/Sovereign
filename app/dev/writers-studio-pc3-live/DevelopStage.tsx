@@ -18,7 +18,7 @@
 import type { ReactNode } from 'react';
 import ReadScopeControl from '@/app/writers-studio/canvas/ReadScopeControl';
 import SettledDecisions from '@/app/writers-studio/canvas/SettledDecisions';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKind';
@@ -65,6 +65,8 @@ export function DevelopStage(props: {
   onDeletePlan?: () => void;
   /** what lives behind the one quiet "More" control besides the plan: the book's kind, reading permission, settled decisions */
   holdings?: ReactNode;
+  /** MAIA's "show" offer, clicked by the writer: open More at this place (`data-develop-place`). */
+  openAt?: { place: string; n: number } | null;
 }) {
   const { sections } = props;
   const [thread, setThread] = useState<string | null>(null);
@@ -81,6 +83,14 @@ export function DevelopStage(props: {
   const text = current ? stripHeading(current) : '';
   const paragraphs = text ? text.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) : [];
   const total = Math.max(1, sections.reduce((n, s) => n + wordsOf(stripHeading(s)), 0));
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!props.openAt) return;
+    setMore(true);
+    const place = props.openAt.place;
+    const t = window.setTimeout(() => rootRef.current?.querySelector(`[data-develop-place="${place}"]`)?.scrollIntoView?.({ block: 'start' }), 0);
+    return () => window.clearTimeout(t);
+  }, [props.openAt]);
   const quiet = { background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12, opacity: .85 } as const;
 
   /* Shared attention: the writer selects words in their chapter; one quiet offer appears to talk about exactly those words. Nothing is sent. */
@@ -92,7 +102,7 @@ export function DevelopStage(props: {
   };
 
   return (
-    <div data-develop-stage="true" style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, height: '100%', padding: '8px 6px 12px', boxSizing: 'border-box', ...ink }}>
+    <div ref={rootRef} data-develop-stage="true" style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, height: '100%', padding: '8px 6px 12px', boxSizing: 'border-box', ...ink }}>
       {/* one line: where you are, and one quiet way to everything else */}
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto', fontSize: 13 }}>
         <span style={{ opacity: .75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{props.workTitle ?? 'Your Work'}</span>
@@ -113,7 +123,7 @@ export function DevelopStage(props: {
       {more ? (
         /* behind the one quiet control: the shape of the book, the plan, what she read, ways in, and what she holds */
         <div data-develop-more-panel="true" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
-          <nav aria-label="The shape of your book" data-develop-ribbon="true" style={{ display: 'flex', gap: 3, alignItems: 'stretch', height: 34, flex: '0 0 auto' }}>
+          <nav aria-label="The shape of your book" data-develop-ribbon="true" data-develop-place="chapters" style={{ display: 'flex', gap: 3, alignItems: 'stretch', height: 34, flex: '0 0 auto' }}>
             {sections.map((s, i) => {
               const w = wordsOf(stripHeading(s));
               const active = i === idx;
@@ -132,7 +142,7 @@ export function DevelopStage(props: {
             })}
           </nav>
           {threads.length > 0 ? (
-            <div data-develop-threads="true" role="group" aria-label="Words that recur across your chapters" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: -10 }}>
+            <div data-develop-threads="true" data-develop-place="recurring" role="group" aria-label="Words that recur across your chapters" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: -10 }}>
               <span style={{ fontSize: 11, opacity: .7 }} title="Counted across your chapters. Not interpreted.">Recurs across chapters:</span>
               {threads.map((t) => (
                 <button key={t.term} type="button" aria-pressed={thread === t.term} onClick={() => setThread(thread === t.term ? null : t.term)}
@@ -146,7 +156,7 @@ export function DevelopStage(props: {
           ) : null}
 
           {/* the plan: MAIA's grounded steps, the writer's to edit. It never changes the manuscript; a step is opened in the passage desk. */}
-          <section aria-label="Your plan" data-develop-plan="true" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <section aria-label="Your plan" data-develop-plan="true" data-develop-place="plan" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {!props.plan?.plan ? (
               asking ? (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -218,7 +228,7 @@ export function DevelopStage(props: {
 
           {/* the chapters she read for her last answer, in place — from the writer's own copy; nothing is sent to show it */}
           {props.lastRead && props.lastRead.length > 0 ? (
-            <section data-develop-excerpts="true" aria-label="The chapters MAIA read for her last answer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <section data-develop-excerpts="true" data-develop-place="read" aria-label="The chapters MAIA read for her last answer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7 }}>What she read for that answer</div>
               {props.lastRead.map((r) => {
                 const sec = sections.find((x) => x.draftSectionId === r.sectionId);
@@ -357,15 +367,15 @@ export function DevelopHoldings(props: {
 }) {
   return (
     <div data-develop-holdings="true" style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '4px 2px', fontSize: 13 }}>
-      <div>
+      <div data-develop-place="kind">
         <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>Your book</div>
         <KindControl workId={props.workId} kind={props.kind} onKind={props.onKind} />
       </div>
-      <div>
+      <div data-develop-place="reading">
         <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>What MAIA can read</div>
         <ReadScopeControl manuscriptId={props.manuscriptId} />
       </div>
-      <div>
+      <div data-develop-place="settled">
         <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>What you have settled</div>
         <SettledDecisions workId={props.workId} />
       </div>

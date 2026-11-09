@@ -101,3 +101,38 @@ it('in Sanctuary a click does nothing and says so', async () => {
   expect(act1).not.toHaveBeenCalled();
   expect(host.querySelector('[data-studio-act-status]')!.textContent).toMatch(/Sanctuary is on/);
 });
+
+describe('standing rule: navigation offers', () => {
+  it('go-chapter: a chapter id not in this Work is no button; a known one moves there on the click only', async () => {
+    const act1 = jest.fn().mockResolvedValue({ ok: true, text: 'moved' });
+    mockLoadThread.mockResolvedValue(threadWith('Let us look there.\n[[studio:go-chapter:s9]]'));
+    await act(async () => { root.render(React.createElement(WorkConversation, { work, manuscriptId: 'fictional-manuscript', sectionId: 's1', onClose: jest.fn(), onStudioAct: act1, chapterLabel: (id: string) => (id === 's2' ? 'Salt' : null) })); });
+    const cont = Array.from(host.querySelectorAll('button')).find((b) => /continue|Continue/.test(b.textContent ?? ''));
+    if (cont) await act(async () => (cont as HTMLElement).click());
+    expect(btn('go-chapter')).toBeNull();
+    act(() => root.unmount()); root = createRoot(host);
+    mockLoadThread.mockResolvedValue(threadWith('Let us look there.\n[[studio:go-chapter:s2]]'));
+    await act(async () => { root.render(React.createElement(WorkConversation, { work, manuscriptId: 'fictional-manuscript', sectionId: 's1', onClose: jest.fn(), onStudioAct: act1, chapterLabel: (id: string) => (id === 's2' ? 'Salt' : null) })); });
+    const cont2 = Array.from(host.querySelectorAll('button')).find((b) => /continue|Continue/.test(b.textContent ?? ''));
+    if (cont2) await act(async () => (cont2 as HTMLElement).click());
+    expect(btn('go-chapter')!.textContent).toBe('Go to Salt');
+    expect(act1).not.toHaveBeenCalled();
+    await act(async () => btn('go-chapter')!.click());
+    expect(act1).toHaveBeenCalledWith({ id: 'go-chapter', sectionId: 's2' });
+  });
+
+  it('show: opens the named place on the click; navigation is not refused in Sanctuary (nothing is written)', async () => {
+    const act1 = jest.fn().mockResolvedValue({ ok: true, text: 'Opened under More.' });
+    await mount('Your plan is there.\n[[studio:show:plan]]', act1);
+    expect(btn('show')!.textContent).toBe('Show my plan');
+    mockPosture = { resolved: true, sanctuary: true };
+    await act(async () => btn('show')!.click());
+    expect(act1).toHaveBeenCalledWith({ id: 'show', place: 'plan' });
+  });
+
+  it('show-keeps and focus are the conversation’s own controls, reached by her offer', async () => {
+    await mount('Your keeps may help.\n[[studio:show-keeps]]', jest.fn());
+    await act(async () => btn('show-keeps')!.click());
+    expect(host.querySelector('[data-keeps-chooser]')).not.toBeNull();
+  });
+});

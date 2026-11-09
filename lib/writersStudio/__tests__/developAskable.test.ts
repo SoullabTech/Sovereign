@@ -17,6 +17,7 @@ const NOT_CONTROLS = new Set([
   'data-chapter-reading', 'data-correction-status', 'data-maia-focus', 'data-maia-refusal', 'data-maia-work-conversation',
   'data-pending-question', 'data-resume', 'data-sanctuary-turn', 'data-sanctuary-turns', 'data-send-mode', 'data-studio-act-status',
   'data-studio-action', 'data-turn', 'data-work-thread', 'data-studio-conversation', 'data-maia-presentation-notice',
+  'data-develop-place',
 ]);
 
 it('every control on the Develop stage and in its conversation is classified against the rule', () => {
@@ -35,7 +36,11 @@ it('every offer named is a real Work-conversation action', () => {
   }
 });
 
-it('open defects against the rule are named (this list must shrink, never be hidden)', () => {
-  // Recorded 2026-11-09. Closing one means giving it an offer above; adding one needs a reason in the founder's record.
-  expect(DEVELOP_ASKABLE_DEFECTS.map((d) => d.key).sort()).toMatchSnapshot();
+it('no open defects: every capability is reachable by asking MAIA (14 recorded 2026-11-09, all closed the same day)', () => {
+  expect(DEVELOP_ASKABLE_DEFECTS.map((d) => d.key)).toEqual([]);
+});
+
+it('a doorway (More) is lawful only while nothing behind it is a defect', () => {
+  const doors = DEVELOP_CAPABILITIES.filter((c) => c.reach.kind === 'doorway');
+  expect(doors.length === 0 || DEVELOP_ASKABLE_DEFECTS.length === 0).toBe(true);
 });

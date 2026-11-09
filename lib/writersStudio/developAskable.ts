@@ -12,6 +12,7 @@ import type { StudioActionId } from './studioActions';
 export type Reach =
   | { kind: 'offer'; action: StudioActionId }          // MAIA may offer it; the writer's click performs it
   | { kind: 'conversation' }                           // the control is itself a way of asking her
+  | { kind: 'doorway' }                                // a control that only reveals others; lawful only while every capability behind it is reachable
   | { kind: 'defect'; note: string };                  // not reachable through her yet: a defect against the rule
 
 export type DevelopCapability = {
@@ -37,20 +38,20 @@ export const DEVELOP_CAPABILITIES: readonly DevelopCapability[] = [
   { key: 'open-in-write', what: 'work on the passage in Write (Edit in Write, passage desk)', controls: ['data-develop-edit-in-write'], reach: { kind: 'offer', action: 'open-desk' } },
   { key: 'editorial-pass', what: 'more ways to explore / editorial pass', controls: [], reach: { kind: 'offer', action: 'editorial-pass' } },
   { key: 'new-conversation', what: 'start a new conversation', controls: ['data-start-fresh-work-conversation'], reach: { kind: 'offer', action: 'new-conversation' } },
-  { key: 'revoke-reading', what: 'stop MAIA reading saved work', controls: ['data-develop-holdings'], reach: { kind: 'defect', note: 'no offer to revoke; only under More' } },
-  { key: 'edit-plan', what: 'change, resolve, set aside or remove a plan step', controls: ['data-develop-plan-step'], reach: { kind: 'defect', note: 'only under More' } },
-  { key: 'work-on-step', what: 'open a plan step at the passage desk', controls: ['data-develop-plan-work'], reach: { kind: 'defect', note: 'open-desk covers a discussed passage, not a plan step' } },
-  { key: 'delete-plan', what: 'delete the plan', controls: ['data-develop-plan-delete'], reach: { kind: 'defect', note: 'only under More' } },
-  { key: 'withdraw-settled', what: 'withdraw a settled decision', controls: ['data-develop-holdings'], reach: { kind: 'defect', note: 'only under More' } },
-  { key: 'book-kind', what: 'say what kind of book this is', controls: ['data-develop-kind'], reach: { kind: 'defect', note: 'only under More' } },
-  { key: 'change-chapter', what: 'move to another chapter', controls: ['data-develop-chapter-select', 'data-develop-ribbon'], reach: { kind: 'defect', note: 'Design 1B left out "go to section" (headings are not unique); needs section ids MAIA is given' } },
-  { key: 'recurring-words', what: 'show words that recur across chapters', controls: ['data-develop-threads'], reach: { kind: 'defect', note: 'only under More' } },
-  { key: 'what-she-read', what: 'see the chapters she read, in place', controls: ['data-develop-excerpt'], reach: { kind: 'defect', note: 'the line beside the conversation says which; reading them in place is only under More' } },
-  { key: 'keeps', what: 'offer a kept passage into the conversation', controls: ['data-keeps-toggle', 'data-keeps-chooser'], reach: { kind: 'defect', note: 'only behind the conversation’s More' } },
-  { key: 'open-in-maia', what: 'continue in MAIA', controls: ['data-open-in-maia'], reach: { kind: 'defect', note: 'only behind the conversation’s More' } },
-  { key: 'focus', what: 'focus the conversation', controls: ['data-maia-focus-toggle'], reach: { kind: 'defect', note: 'layout control; whether it counts as a capability is the founder’s call' } },
-  { key: 'close-conversation', what: 'close the conversation', controls: ['data-close-conversation'], reach: { kind: 'defect', note: 'layout control; whether it counts as a capability is the founder’s call' } },
-  { key: 'more', what: 'the one quiet More on the stage and in the conversation', controls: ['data-develop-more', 'data-conversation-more'], reach: { kind: 'defect', note: 'the doorway to everything above that is still a defect' } },
+  { key: 'revoke-reading', what: 'stop MAIA reading saved work', controls: ['data-develop-holdings'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'edit-plan', what: 'change, resolve, set aside or remove a plan step', controls: ['data-develop-plan-step'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'work-on-step', what: 'open a plan step at the passage desk', controls: ['data-develop-plan-work'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'delete-plan', what: 'delete the plan', controls: ['data-develop-plan-delete'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'withdraw-settled', what: 'withdraw a settled decision', controls: ['data-develop-holdings'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'book-kind', what: 'say what kind of book this is', controls: ['data-develop-kind'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'change-chapter', what: 'move to another chapter', controls: ['data-develop-chapter-select', 'data-develop-ribbon'], reach: { kind: 'offer', action: 'go-chapter' } },
+  { key: 'recurring-words', what: 'show words that recur across chapters', controls: ['data-develop-threads'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'what-she-read', what: 'see the chapters she read, in place', controls: ['data-develop-excerpt'], reach: { kind: 'offer', action: 'show' } },
+  { key: 'keeps', what: 'offer a kept passage into the conversation', controls: ['data-keeps-toggle', 'data-keeps-chooser'], reach: { kind: 'offer', action: 'show-keeps' } },
+  { key: 'open-in-maia', what: 'continue in MAIA', controls: ['data-open-in-maia'], reach: { kind: 'offer', action: 'open-in-maia' } },
+  { key: 'focus', what: 'focus the conversation', controls: ['data-maia-focus-toggle'], reach: { kind: 'offer', action: 'focus' } },
+  { key: 'close-conversation', what: 'close the conversation', controls: ['data-close-conversation'], reach: { kind: 'offer', action: 'close-conversation' } },
+  { key: 'more', what: 'the one quiet More on the stage and in the conversation', controls: ['data-develop-more', 'data-conversation-more'], reach: { kind: 'doorway' } },
 ];
 
 export const DEVELOP_ASKABLE_DEFECTS = DEVELOP_CAPABILITIES.filter((c) => c.reach.kind === 'defect');

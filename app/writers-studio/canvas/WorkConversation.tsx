@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import ReadScopeControl from './ReadScopeControl';
 import SettledDecisions from './SettledDecisions';
 import { declaredSanctuaryPosture, readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
-import { parseStudioActions } from '@/lib/writersStudio/studioActions';
+import { parseStudioActions, showLabel, SHOW_PLACES, type ShowPlace } from '@/lib/writersStudio/studioActions';
 import { readingProgressText } from '@/lib/writersStudio/readingProgress';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import Link from 'next/link';
@@ -176,6 +176,8 @@ export interface WorkConversationProps {
   /** Design 1B amendment 2: the acting controls MAIA may offer (grant reading, make a plan, note a decision, open the desk). Absent →
    *  no such buttons. ONLY the writer's click performs one; the host refuses in Sanctuary and says so. */
   onStudioAct?: (act: StudioAct) => Promise<{ ok: true; text: string } | { ok: false; message: string }>;
+  /** The heading of a chapter id MAIA named, if it is in this Work; null → no "go to chapter" button. */
+  chapterLabel?: (sectionId: string) => string | null;
   onClose: () => void;
 }
 
@@ -183,9 +185,13 @@ export type StudioAct =
   | { id: 'grant-reading'; level: 'chapter' | 'work' }
   | { id: 'make-plan'; ask: string }
   | { id: 'note-settled'; words: string }
-  | { id: 'open-desk'; words: string | null };
+  | { id: 'open-desk'; words: string | null }
+  | { id: 'show'; place: ShowPlace }
+  | { id: 'go-chapter'; sectionId: string };
 
-const ACTING = new Set(['grant-reading', 'make-plan', 'note-settled', 'open-desk']);
+/* Offers the host performs (absent host → no button). The conversation's own controls (keeps, focus, close, open in MAIA) it does itself. */
+const ACTING = new Set(['grant-reading', 'make-plan', 'note-settled', 'open-desk', 'show', 'go-chapter']);
+const NAVIGATES = new Set(['show', 'go-chapter']);   // navigation within Develop: nothing is written, so no posture gate
 /** The writer's own words in their latest question, minus the "About “…”:" frame the stage places for a selection. */
 export function latestAuthorWords(turns: readonly { speaker: string; body: string }[]): { question: string; passage: string | null } {
   const last = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? '';
@@ -205,7 +211,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -253,9 +259,9 @@ function ScopedWorkConversation({
   const [noteDraft, setNoteDraft] = useState<string | null>(null);
   const performAct = useCallback(async (act: StudioAct) => {
     if (!onStudioAct) return;
-    // Sanctuary keeps nothing and suspends permissions: none of these is performed there (the host refuses too).
+    // Sanctuary keeps nothing and suspends permissions: none of these is performed there (the host refuses too). Navigation writes nothing.
     const posture = readCurrentSanctuaryPosture();
-    if (!posture.resolved || posture.sanctuary) {
+    if (!NAVIGATES.has(act.id) && (!posture.resolved || posture.sanctuary)) {
       setActStatus({ busy: false, text: posture.resolved ? 'Sanctuary is on, so that is not done here. Nothing was changed.' : 'Your Sanctuary setting could not be read on this device, so nothing was done.' });
       return;
     }
@@ -702,12 +708,21 @@ function ScopedWorkConversation({
               const place = offered.id === 'develop-overview' || offered.id === 'editorial-pass' ? offered.id : null;
               if (place && !onStudioPlace) return null;
               if (ACTING.has(offered.id) && !onStudioAct) return null;   // a room that cannot honour it shows no button
+              const chapterName = offered.id === 'go-chapter' && parsed.target ? chapterLabel?.(parsed.target) ?? null : null;
+              if (offered.id === 'go-chapter' && !chapterName) return null;   // ⛔ an id not in this Work is no button
+              if ((offered.id === 'show-keeps' || offered.id === 'open-in-maia') && !manuscriptId) return null;
               const mine = latestAuthorWords(thread?.turns ?? []);
               const run = () => {
                 if (offered.id === 'grant-reading') { void performAct({ id: 'grant-reading', level: parsed.level ?? 'chapter' }); return; }
                 if (offered.id === 'make-plan') { if (mine.question) void performAct({ id: 'make-plan', ask: mine.question }); return; }
                 if (offered.id === 'note-settled') { setNoteDraft(mine.question); setActStatus(null); return; }
                 if (offered.id === 'open-desk') { if (requestConversationDeparture()) void performAct({ id: 'open-desk', words: mine.passage }); return; }
+                if (offered.id === 'show' && parsed.target) { void performAct({ id: 'show', place: parsed.target as ShowPlace }); return; }
+                if (offered.id === 'go-chapter' && parsed.target) { void performAct({ id: 'go-chapter', sectionId: parsed.target }); return; }
+                if (offered.id === 'show-keeps') { setMoreOpen(true); setShowKeeps(true); return; }
+                if (offered.id === 'focus') { setFocusMode(true); return; }
+                if (offered.id === 'close-conversation') { if (requestConversationDeparture()) onClose(); return; }
+                if (offered.id === 'open-in-maia') { if (manuscriptId && requestConversationDeparture()) window.location.assign(handoffToMaia('/maia', { workId: work.id, manuscriptId })); return; }
                 if (offered.id === 'new-conversation') { startFresh(); return; }
                 if (offered.id === 'read-chapter') { void startChapterReading(parsed.lens ?? 'overview'); return; }
                 if (place && requestConversationDeparture()) onStudioPlace?.(place);
@@ -728,7 +743,7 @@ function ScopedWorkConversation({
                     cursor: enabled ? 'pointer' : 'default', color: INK.secondary, opacity: enabled ? 1 : 0.5,
                   }}
                 >
-                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? 'Let MAIA read this saved chapter' : offered.label}</StudioText>
+                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? 'Let MAIA read this saved chapter' : offered.id === 'show' && (SHOW_PLACES as readonly string[]).includes(parsed.target ?? '') ? showLabel(parsed.target as ShowPlace) : offered.id === 'go-chapter' ? `Go to ${chapterName}` : offered.label}</StudioText>
                 </button>
               );
             })()}

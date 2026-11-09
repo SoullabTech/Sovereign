@@ -25,13 +25,26 @@
  *                   A settled decision is always writer-authored, never MAIA's words.
  *   `open-desk`   — navigation: Write's passage desk on the passage being discussed (exact, unique words only). The desk proposes;
  *                   the writer decides there.
+ *
+ * ⭐ STANDING RULE COMPLETION (founder, 2026-11-09: everything on Develop askable through MAIA; see developAskable.ts). Navigation
+ * offers, Design 1B's original "take me there" pattern — each opens the writer's own control, which they then use:
+ *   `show:plan|kind|reading|settled|recurring|read` — opens Develop's More at that place (the plan's steps, the book's kind — chosen by
+ *                   the writer, never guessed —, reading permission incl. stopping it, settled decisions incl. withdrawing, recurring
+ *                   words, the chapters she read). `go-chapter:<section id>` — moves to a chapter; ⛔ only an id she was given, checked
+ *                   against the Work (the reason Design 1B left it out: headings are not unique). `show-keeps`, `open-in-maia`, `focus`,
+ *                   `close-conversation` — the conversation's own controls.
  */
 
 import { stripAnswerChoices } from '@/lib/writersStudio/answerChoices';
 import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 
 export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation' | 'read-chapter'
-  | 'grant-reading' | 'make-plan' | 'note-settled' | 'open-desk';
+  | 'grant-reading' | 'make-plan' | 'note-settled' | 'open-desk'
+  | 'show' | 'go-chapter' | 'show-keeps' | 'open-in-maia' | 'focus' | 'close-conversation';
+export const SHOW_PLACES = ['plan', 'kind', 'reading', 'settled', 'recurring', 'read'] as const;
+export type ShowPlace = typeof SHOW_PLACES[number];
+const SHOW_LABEL: Record<ShowPlace, string> = { plan: 'Show my plan', kind: 'Say what kind of book this is', reading: 'Show what MAIA can read', settled: 'Show what I have settled', recurring: 'Show words that recur', read: 'Show the chapters she read' };
+export const showLabel = (p: ShowPlace): string => SHOW_LABEL[p];
 export type StudioActionSurface = 'passage-focus' | 'work-conversation';
 
 export type StudioAction = {
@@ -52,6 +65,12 @@ export const STUDIO_ACTIONS: readonly StudioAction[] = [
   { id: 'make-plan', label: 'Make a plan from this', does: 'when the writer clicks it, you make a plan of grounded steps for the question they just asked; the plan is theirs to edit and never changes their writing. Only their click starts it', surfaces: ['work-conversation'] },
   { id: 'note-settled', label: 'Note this as settled', does: 'when the writer clicks it, a box opens with the writer\'s own latest words for them to edit and note as something they have settled about the book; nothing is recorded until they press Note it, and you never write the decision for them', surfaces: ['work-conversation'] },
   { id: 'open-desk', label: 'Open the passage desk', does: 'takes the writer to Write\'s passage desk on the passage you are discussing, where they can work on it; nothing changes until they decide there', surfaces: ['work-conversation'] },
+  { id: 'show', label: 'Show it', does: 'opens Develop’s More at one place for the writer to use: write :plan (their plan, to edit, resolve, set aside, delete or open a step at the desk), :kind (where THEY say what kind of book this is; never choose it for them), :reading (what you may read, and stopping it), :settled (what they have settled, and withdrawing it), :recurring (words that recur across chapters), or :read (the chapters you read, in place)', surfaces: ['work-conversation'] },
+  { id: 'go-chapter', label: 'Go to that chapter', does: 'moves the writer to a chapter; write the chapter’s id exactly as given in brackets in the section list, e.g. [[studio:go-chapter:abc123]]; never invent one', surfaces: ['work-conversation'] },
+  { id: 'show-keeps', label: 'Show my Keeps', does: 'opens the writer’s kept passages beside this conversation, to offer one into it', surfaces: ['work-conversation'] },
+  { id: 'open-in-maia', label: 'Continue in MAIA', does: 'takes the writer to MAIA outside the Studio with this Work', surfaces: ['work-conversation'] },
+  { id: 'focus', label: 'Focus on our conversation', does: 'widens this conversation so the writer can concentrate on it', surfaces: ['work-conversation'] },
+  { id: 'close-conversation', label: 'Back to your chapter', does: 'closes this conversation so the writer is back with their chapter', surfaces: ['work-conversation'] },
   { id: 'new-conversation', label: 'Start a new conversation', does: 'sets this conversation aside (it stays saved) so the next question starts fresh', surfaces: ['passage-focus', 'work-conversation'] },
 ];
 
@@ -66,6 +85,8 @@ export type ParsedReply = {
   readonly lens?: DevelopmentalLens;
   /** For `grant-reading`: what the writer would be permitting (default: the chapter). */
   readonly level?: 'chapter' | 'work';
+  /** For `show`: the place; for `go-chapter`: the section id she named (checked against the Work before any button appears). */
+  readonly target?: string;
 };
 
 /** Strip every `[[studio:…]]` marker; keep the first one this surface allows. */
@@ -73,18 +94,24 @@ export function parseStudioActions(body: string, surface: StudioActionSurface): 
   let action: StudioAction | null = null;
   let lens: DevelopmentalLens | undefined;
   let level: 'chapter' | 'work' | undefined;
+  let target: string | undefined;
   // Answer-choice markers are never shown as text anywhere (answerChoices.ts).
   const text = stripAnswerChoices(body).replace(MARKER, (_m, raw: string) => {
     const [id, param] = raw.trim().split(':', 2) as [string, string | undefined];
-    const found = STUDIO_ACTIONS.find((a) => a.id === id && (param === undefined || a.id === 'read-chapter' || (a.id === 'grant-reading' && (param === 'chapter' || param === 'work'))));
+    const paramOk = (a: StudioAction): boolean => param === undefined
+      ? a.id !== 'show' && a.id !== 'go-chapter'
+      : a.id === 'read-chapter' || (a.id === 'grant-reading' && (param === 'chapter' || param === 'work'))
+        || (a.id === 'show' && (SHOW_PLACES as readonly string[]).includes(param)) || (a.id === 'go-chapter' && /^[A-Za-z0-9_-]{1,52}$/.test(param));
+    const found = STUDIO_ACTIONS.find((a) => a.id === id && paramOk(a));
     if (!action && found && found.surfaces.includes(surface)) {
       action = found;
       if (found.id === 'grant-reading') level = param === 'work' ? 'work' : 'chapter';
+      if (found.id === 'show' || found.id === 'go-chapter') target = param;
       if (found.id === 'read-chapter') lens = (DEVELOPMENTAL_LENSES as readonly string[]).includes(param ?? '') ? (param as DevelopmentalLens) : 'overview';
     }
     return '';
   }).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-  return { text, action, ...(lens ? { lens } : {}), ...(level ? { level } : {}) };
+  return { text, action, ...(lens ? { lens } : {}), ...(level ? { level } : {}), ...(target ? { target } : {}) };
 }
 
 /** Strip markers only, for surfaces that show replies but offer no buttons. */
@@ -130,6 +157,8 @@ export function studioActionsInstruction(surface: StudioActionSurface): string {
       'Offer [[studio:make-plan]] when the writer asks for a plan, or asks how to get from here to what they want across several passages.',
       'Offer [[studio:note-settled]] when the writer states something they have decided about the book. The decision is in their words, never yours.',
       'Offer [[studio:open-desk]] when the writer wants to work on the exact passage you are discussing.',
+      'Offer [[studio:show:…]] when the writer asks to see or change their plan, the book’s kind, what you may read (or to stop you reading), what they have settled (or to withdraw it), recurring words, or the chapters you read. For the book’s kind, the writer chooses; never suggest which.',
+      'Offer [[studio:go-chapter:ID]] when the writer asks to go to a chapter, using only an id from the section list. Offer [[studio:show-keeps]], [[studio:open-in-maia]], [[studio:focus]] or [[studio:close-conversation]] when the writer asks for exactly that.',
     ] : []),
   ].join('\n');
 }

@@ -215,3 +215,11 @@ test('a plan that read every chapter shows no coverage note', () => {
   mount({ plan: { ...planOf([step('a')]), coverage: { read: 3, total: 3, notRead: [] } } });
   expect(q('[data-develop-plan-coverage]')).toBeNull();
 });
+
+test('MAIA’s “show” offer, clicked, opens More at that place', () => {
+  const p = mount({ closed: true });
+  expect(q('[data-develop-more-panel]')).toBeNull();
+  act(() => root.render(React.createElement(DevelopStage, { ...p, openAt: { place: 'plan', n: 1 } } as any)));
+  expect(q('[data-develop-more-panel]')).not.toBeNull();
+  expect(q('[data-develop-place="plan"]')).not.toBeNull();
+});

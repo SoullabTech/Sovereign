@@ -10,7 +10,8 @@ describe('the closed allowlist', () => {
     // Craftsman's Table restored as a place to go (founder, 2026-11-04), passage Focus only.
     // G4 (founder, 2026-11-09): read-chapter, Work conversation only, started by the writer's click.
     // Amendment 2 (founder, 2026-11-09, "Yes, amend it"): grant-reading, make-plan, note-settled, open-desk — Work conversation only.
-    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'grant-reading', 'make-plan', 'new-conversation', 'note-settled', 'open-desk', 'read-chapter']);
+    // Standing rule completion (founder, 2026-11-09): navigation offers so every Develop capability is askable; go-chapter takes an id, never a heading.
+    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['close-conversation', 'craftsmans-table', 'develop-overview', 'editorial-pass', 'focus', 'go-chapter', 'grant-reading', 'make-plan', 'new-conversation', 'note-settled', 'open-desk', 'open-in-maia', 'read-chapter', 'show', 'show-keeps']);
     expect(JSON.stringify(STUDIO_ACTIONS)).not.toMatch(/section-|go-to-section/);
   });
 
@@ -106,5 +107,17 @@ describe('Design 1B amendment 2: acting offers', () => {
     }
     expect(studioActionsInstruction('work-conversation')).toMatch(/Consent is theirs/);
     expect(studioActionsInstruction('work-conversation')).toMatch(/never yours/);
+  });
+});
+
+describe('standing rule: navigation offers', () => {
+  const { parseStudioActions } = jest.requireActual('../studioActions');
+  it('show takes only a known place; go-chapter takes only an id-shaped target; neither stands bare', () => {
+    expect(parseStudioActions('x\n[[studio:show:plan]]', 'work-conversation').target).toBe('plan');
+    expect(parseStudioActions('x\n[[studio:show:secrets]]', 'work-conversation').action).toBeNull();
+    expect(parseStudioActions('x\n[[studio:show]]', 'work-conversation').action).toBeNull();
+    expect(parseStudioActions('x\n[[studio:go-chapter:abc-123]]', 'work-conversation').target).toBe('abc-123');
+    expect(parseStudioActions('x\n[[studio:go-chapter:The Harbour]]', 'work-conversation').action).toBeNull();
+    expect(parseStudioActions('x\n[[studio:go-chapter]]', 'work-conversation').action).toBeNull();
   });
 });
