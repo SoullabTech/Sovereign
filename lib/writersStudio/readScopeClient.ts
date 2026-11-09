@@ -1,3 +1,4 @@
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { apiFetch } from '@/lib/http/apiBase';
 
 /* WS-WORK-CONTINUITY · B — the member's standing reading scope (their own gesture). */
@@ -15,12 +16,15 @@ export async function getReadScope(manuscriptId: string): Promise<ReadScope | un
 
 export async function setReadScope(
   manuscriptId: string, change: { action: 'grant'; level: 'chapter' | 'work' } | { action: 'revoke' },
-): Promise<ReadScope | undefined> {
+): Promise<ReadScope | undefined | { refused: string }> {
   try {
     const res = await apiFetch(scopeUrl(manuscriptId), {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(change),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(withKeepPosture({ ...change })),
     });
-    if (!res.ok) return undefined;
+    if (!res.ok) {
+      const refusal = ((await res.json().catch(() => ({}))) as { refusal?: string }).refusal;
+      return refusal === 'sanctuary_not_kept' || refusal === 'posture_undeclared' ? { refused: refusal } : undefined;
+    }
     return ((await res.json()) as { scope: ReadScope }).scope;
   } catch { return undefined; }
 }

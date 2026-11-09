@@ -35,7 +35,7 @@ d('development plan · real database, real routes', () => {
   };
   const scope = async (action: string, level?: string) => {
     CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
-    const r = await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action, level }) }), { params: Promise.resolve({ id: ms }) }); return r.status;
+    const r = await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action, level, sanctuary: false }) }), { params: Promise.resolve({ id: ms }) }); return r.status;   // a grant declares ordinary (founder ruling 2026-11-09)
   };
   const receipts = async () => Number((await query<{ n: string }>(`SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE member_id=$1 AND boundary='writers_studio.work_conversation->maia_cognition'`, [A])).rows[0].n);
 

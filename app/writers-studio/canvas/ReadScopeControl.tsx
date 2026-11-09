@@ -33,7 +33,11 @@ export default function ReadScopeControl({ manuscriptId }: { manuscriptId: strin
   const change = async (c: Parameters<typeof setReadScope>[1]) => {
     setBusy(true); setNote(null);
     const next = await setReadScope(manuscriptId, c);
-    if (next !== undefined) setScope(next); else setNote('That could not be changed just now. Nothing was changed; your setting is as it was.');
+    if (next && typeof next === 'object' && 'refused' in next) {
+      setNote(next.refused === 'sanctuary_not_kept'
+        ? 'Sanctuary is on, and MAIA doesn’t use this permission in Sanctuary, so it wasn’t recorded. Turn Sanctuary off to give it.'
+        : 'Your Sanctuary setting couldn’t be read on this device, so nothing was changed. Reload and try again.');
+    } else if (next !== undefined) setScope(next); else setNote('That could not be changed just now. Nothing was changed; your setting is as it was.');
     setBusy(false);
   };
 

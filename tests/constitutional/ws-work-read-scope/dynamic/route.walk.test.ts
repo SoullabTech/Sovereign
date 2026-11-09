@@ -49,7 +49,8 @@ d('Work conversation · route walk (fictional manuscript)', () => {
   const scope = async (member: string, c: Record<string, unknown>) => {
     CURRENT_MEMBER = member;
     const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
-    const res = await POST(new NextRequest(`http://localhost/x`, { method: 'POST', body: JSON.stringify(c) }),
+    // A grant declares ordinary unless the test says otherwise (founder ruling 2026-11-09).
+    const res = await POST(new NextRequest(`http://localhost/x`, { method: 'POST', body: JSON.stringify(c.action === 'grant' && !('sanctuary' in c) ? { ...c, sanctuary: false } : c) }),
       { params: Promise.resolve({ id: ms }) });
     return res.status;
   };
@@ -149,6 +150,7 @@ d('Work conversation · route walk (fictional manuscript)', () => {
     expect(r.status).toBe(200);
     expect(lastSystem()).not.toContain('STANDING PERMISSION');
     expect(await receipts()).toBe(before);
+    expect((r as { json?: Record<string, any> }).json?.sanctuary?.notKept).toBe(true);   // undeclared: answered in the moment, kept nowhere (founder ruling 2026-11-09)
   });
 
   it('W6 another member cannot reach this Work, and their grant means nothing here', async () => {

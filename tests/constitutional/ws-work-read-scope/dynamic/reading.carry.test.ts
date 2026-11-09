@@ -288,7 +288,7 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
 
   it('FAILURE INJECTION: if her answer cannot be saved, its provenance is not saved either, and the writer is told — nothing is silently lost', async () => {
     CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
-    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work' }) }), { params: Promise.resolve({ id: ms }) });
+    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work', sanctuary: false }) }), { params: Promise.resolve({ id: ms }) });
     await query(`CREATE OR REPLACE FUNCTION g6_fail_maia() RETURNS trigger AS $$ BEGIN IF NEW.speaker = 'maia' THEN RAISE EXCEPTION 'injected'; END IF; RETURN NEW; END; $$ LANGUAGE plpgsql`);
     await query(`CREATE TRIGGER g6_fail_maia_trigger BEFORE INSERT ON ask_turns FOR EACH ROW EXECUTE FUNCTION g6_fail_maia()`);
     let status = 0; let threadId: string | undefined;
@@ -307,7 +307,7 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
 
   it('with reading permission she ALSO gets the text, as before; the reading stays labelled as her account', async () => {
     CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
-    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work' }) }), { params: Promise.resolve({ id: ms }) });
+    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work', sanctuary: false }) }), { params: Promise.resolve({ id: ms }) });
     await post(A, { anchor: { on: 'work' }, question: 'Where does the hiker with the map come back?', sectionId: sec[2], sanctuary: false });
     expect(last()).toContain('THE WRITER HAS GIVEN YOU STANDING PERMISSION');
     expect(last()).toContain('YOUR EARLIER READINGS OF THIS WORK');

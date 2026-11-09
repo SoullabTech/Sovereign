@@ -35,7 +35,7 @@ d('long book: unread chapters are named', () => {
     }
     await query(`UPDATE manuscript_working_drafts SET content=$2, section_addressable_at=NOW() WHERE id=$1`, [dr, all]);
     CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
-    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work' }) }), { params: Promise.resolve({ id: ms }) });
+    await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify({ action: 'grant', level: 'work', sanctuary: false }) }), { params: Promise.resolve({ id: ms }) });
   });
 
   it('MAIA is told which chapters she was not given; the writer sees the same, on making the plan and on return', async () => {

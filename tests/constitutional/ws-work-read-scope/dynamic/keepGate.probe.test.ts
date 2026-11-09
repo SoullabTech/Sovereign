@@ -13,7 +13,7 @@ jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: as
 jest.mock('@/lib/ai/structured/router', () => ({ runStructured: async () => { throw new Error('MAIA must not be called in this probe'); } }));
 const d = ON ? describe : describe.skip;
 
-const TABLES = ['writer_studio_corrections', 'living_work_writer_understanding', 'writer_studio_chapter_review_runs', 'development_plans',
+const TABLES = ['work_reading_scope_events', 'manuscript_collections', 'writer_studio_corrections', 'living_work_writer_understanding', 'writer_studio_chapter_review_runs', 'development_plans',
   'development_plan_history', 'development_plan_step_links', 'manuscript_structure_proposals', 'writer_studio_work_themes',
   'writer_decision_events', 'ask_threads', 'ask_turns', 'developmental_readings'];
 
@@ -60,6 +60,9 @@ d('every MAIA-kept write refuses in Sanctuary or undeclared, and writes nothing'
     { name: 'structure read', path: 'sovereign/manuscripts/[id]/structure/read', method: 'POST', params: { id: ms }, body: {} },
     { name: 'structure proposal review', path: 'sovereign/manuscripts/[id]/structure/proposals/[proposalId]', method: 'POST', params: { id: ms, proposalId: crypto.randomUUID() }, body: { op: 'x' } },
     { name: 'theme', path: 'sovereign/manuscripts/[id]/themes', method: 'POST', params: { id: ms }, body: { action: 'declare', label: 'Return' } },
+    { name: 'reading permission grant', path: 'sovereign/manuscripts/[id]/read-scope', method: 'POST', params: { id: ms }, body: { action: 'grant', level: 'work' } },
+    { name: 'new Press collection', path: 'sovereign/manuscripts/[id]/collections', method: 'POST', params: { id: ms }, body: { name: 'Shore lines' } },
+    { name: 'Keep placed in a collection', path: 'sovereign/manuscripts/[id]/collections', method: 'PATCH', params: { id: ms }, body: { collectionId: crypto.randomUUID(), keepId: crypto.randomUUID(), op: 'place' } },
   ];
 
   it('in Sanctuary: 409 sanctuary_not_kept everywhere, nothing written, MAIA never called', async () => {
@@ -96,5 +99,21 @@ d('every MAIA-kept write refuses in Sanctuary or undeclared, and writes nothing'
       expect([c.name, r.json.refusal]).not.toEqual([c.name, 'sanctuary_not_kept']);
       expect([c.name, r.json.refusal]).not.toEqual([c.name, 'posture_undeclared']);
     }
+  });
+});
+
+d('what Sanctuary never blocks', () => {
+  it('revoking reading permission and removing a Keep from a collection pass the gate in Sanctuary', async () => {
+    const A = (await query<{ id: string }>(`INSERT INTO members(passkey,username,password_hash,name) VALUES ($1,$1,'x',$1) RETURNING id`, [`kg2-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`])).rows[0].id;
+    const work = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Never blocked') RETURNING id`, [A])).rows[0].id;
+    const ms = (await query<{ id: string }>(`INSERT INTO member_manuscripts(member_id,title) VALUES ($1,'Never blocked') RETURNING id`, [A])).rows[0].id;
+    await query(`INSERT INTO living_work_expressions(living_work_id,expression_type,expression_id,declared_by) VALUES ($1,'manuscript',$2,$3)`, [work, ms, A]);
+    CURRENT = A;
+    const scope = await import('@/app/api/sovereign/manuscripts/[id]/read-scope/route');
+    const r = await scope.POST(new NextRequest('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'revoke', sanctuary: true }) }), { params: Promise.resolve({ id: ms }) });
+    expect(r.status).toBe(200);
+    const col = await import('@/app/api/sovereign/manuscripts/[id]/collections/route');
+    const p = await col.PATCH(new NextRequest('http://localhost/x', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ collectionId: crypto.randomUUID(), keepId: crypto.randomUUID(), op: 'remove', sanctuary: true }) }), { params: Promise.resolve({ id: ms }) });
+    expect((await p.json().catch(() => ({})) as { refusal?: string }).refusal).toBeUndefined();
   });
 });

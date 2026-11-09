@@ -4,6 +4,7 @@
  * ⛔ Nothing is inferred and there is no default: absent events mean "no grant".
  * ⛔ Not part of the Ask route's import graph (it writes scope events; the Ask route only reads them).
  */
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { livingWorkIdForManuscript } from '@/lib/manuscript/ask/workOfManuscript';
@@ -37,6 +38,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ scope: null });
   }
   if (b.action === 'grant' && (b.level === 'chapter' || b.level === 'work')) {
+    /* Founder ruling 2026-11-09: Sanctuary ignores this permission, so granting it there would only store a consent that cannot be used.
+       ⛔ Revoking is never blocked (above). */
+    { const refused = await keepGate(memberId, b); if (refused) return refused; }
     await appendScopeEvent({ memberId, livingWorkId: workId, event: 'grant', level: b.level });
     return NextResponse.json({ scope: { level: b.level } });
   }
