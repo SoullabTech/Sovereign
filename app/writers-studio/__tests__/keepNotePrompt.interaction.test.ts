@@ -33,7 +33,8 @@ describe('Keep mine · writer-confirmed note', () => {
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
     await act(async () => { setter.call(ta, 'I am keeping this line as it is.'); ta.dispatchEvent(new Event('input', { bubbles: true })); });
     await act(async () => { btn('Note it').click(); });
-    expect(settle).toHaveBeenCalledWith('W', 'I am keeping this line as it is.', false, { room: 'passage_desk', subjectKind: 'wording', subjectRef: 'S' });
+    // The posture is no longer passed as a hard-coded `false`; the client declares the member's real posture (founder ruling 2026-11-09).
+    expect(settle).toHaveBeenCalledWith('W', 'I am keeping this line as it is.', { room: 'passage_desk', subjectKind: 'wording', subjectRef: 'S' });
     expect(done).toHaveBeenCalled();
   });
   it('"No thanks" records nothing', async () => {

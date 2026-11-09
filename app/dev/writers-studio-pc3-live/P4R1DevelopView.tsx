@@ -1,5 +1,6 @@
 'use client';
 
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { STUDIO_PLACE_HASH, type StudioPlace } from '@/lib/writersStudio/studioActions';
 import { GUIDED_STARTERS, OBSERVATION_STARTERS, placeStarter, type ObservationStarter } from '@/lib/writersStudio/developStarters';
@@ -2153,10 +2154,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       return;
     }
     setPlanBusy(true); setPlanNote(null);
-    const r = await makePlanClient(stageManuscriptId, ask, false);
+    const r = await makePlanClient(stageManuscriptId, ask);
     setPlanBusy(false);
     if (r.ok) { setPlanView(r.view); setLastRead(r.read); if (r.dropped > 0) setPlanNote(`${r.dropped} suggested step${r.dropped === 1 ? ' was' : 's were'} left out because ${r.dropped === 1 ? 'it' : 'they'} did not point at wording actually in your chapter.`); }
-    else setPlanNote(r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” on the right, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.');
+    else setPlanNote(keepRefusalCopy(r.refusal) ?? (r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” on the right, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.'));
   };
   const editPlan = async (edits: import('@/lib/writersStudio/developmentPlan').StepEdit[]) => {
     const id = planView?.plan?.id; if (!id) return;

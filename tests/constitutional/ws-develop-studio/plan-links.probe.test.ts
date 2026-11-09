@@ -31,7 +31,8 @@ d('plan step ↔ desk records', () => {
   const undo = (id: string) => query(`UPDATE manuscript_application_recovery SET undone_at = NOW(), resulting_version = 3 WHERE authorization_id = $1`, [id]);
   const link = async (who: string, body: Record<string, unknown>, onMs = ms, onPlan = plan) => {
     CURRENT = who; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/plans/[planId]/links/route');
-    const r = await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify(body) }), { params: Promise.resolve({ id: onMs, planId: onPlan }) });
+    // A link is kept: declare an ordinary posture unless the test says otherwise (founder ruling 2026-11-09).
+    const r = await POST(new NextRequest('http://localhost/x', { method: 'POST', body: JSON.stringify('sanctuary' in body ? body : { ...body, sanctuary: false }) }), { params: Promise.resolve({ id: onMs, planId: onPlan }) });
     return { status: r.status, outcome: ((await r.json()) as { outcome?: string }).outcome };
   };
   const view = async () => { CURRENT = A; const { GET } = await import('@/app/api/sovereign/manuscripts/[id]/plans/route');

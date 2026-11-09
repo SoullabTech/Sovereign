@@ -2,6 +2,7 @@
  * WS-DECISION-CONTINUITY — the writer's own gestures: settle a decision (their words) or withdraw one; GET lists what is
  * currently settled. ⛔ Nothing here is created by the system. ⛔ Fails closed in Sanctuary: a settle must state sanctuary:false.
  */
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { listActiveDecisions, type DecisionRoom, type DecisionSubjectKind } from '@/lib/writersStudio/decisionRecord';
@@ -33,9 +34,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   }
   if (b.action === 'settle' && typeof b.saidIn === 'string') {
-    if (b.sanctuary !== false) {
-      return NextResponse.json({ refusal: 'sanctuary_unresolved', detail: 'A decision is kept, so it cannot be recorded unless Sanctuary is known to be off.' }, { status: 409 });
-    }
+    /* A decision is kept: Sanctuary or an undeclared posture refuses (founder ruling 2026-11-09; account default when the device has none). */
+    { const refused = await keepGate(memberId, b); if (refused) return refused; }
     const room = ROOMS.includes(b.room as DecisionRoom) ? (b.room as DecisionRoom) : 'work_conversation';
     const kind = KINDS.includes(b.subjectKind as DecisionSubjectKind) ? (b.subjectKind as DecisionSubjectKind) : 'note';
     const settledId = await settleDecision({

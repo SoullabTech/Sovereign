@@ -5,6 +5,7 @@
  * change; what is recorded is exactly what is in the box when they confirm — their words once they have confirmed them. Declining
  * records nothing. Sanctuary (or an unreadable setting) records nothing and says so.
  */
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
@@ -29,9 +30,9 @@ export default function KeepNotePrompt({ workId, sectionId, passageLabel, onDone
       return;
     }
     setBusy(true);
-    const r = await settleDecisionNote(workId, text, false, { room: 'passage_desk', subjectKind: 'wording', subjectRef: sectionId });
+    const r = await settleDecisionNote(workId, text, { room: 'passage_desk', subjectKind: 'wording', subjectRef: sectionId });
     setBusy(false);
-    if (r.ok) onDone(); else setNote('That could not be recorded just now. Nothing was changed.');
+    if (r.ok) onDone(); else setNote(keepRefusalCopy(r.refusal) ?? 'That could not be recorded just now. Nothing was changed.');
   };
 
   /* A portal to the page: the Write room frames its content in a clipped container (`fr-capture-frame`), and a fixed element

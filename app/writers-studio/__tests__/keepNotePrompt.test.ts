@@ -14,7 +14,8 @@ describe('Keep mine · writer-confirmed decision', () => {
   });
   it('a decision is written only by the confirm button, with the text in the box', () => {
     const confirm = prompt.slice(prompt.indexOf('const confirm'), prompt.indexOf('return ('));
-    expect(confirm).toContain('settleDecisionNote(workId, text, false');
+    expect(confirm).toContain('settleDecisionNote(workId, text, {');
+    expect(confirm).not.toMatch(/settleDecisionNote\([^)]*\bfalse\b/);   // never a hard-coded ordinary posture
     // exactly one write call in the whole component, and it is inside confirm
     expect((prompt.match(/settleDecisionNote\(/g) ?? []).length).toBe(1);
     expect(prompt).toMatch(/onClick=\{\(\) => void confirm\(\)\}/);

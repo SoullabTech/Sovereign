@@ -1,4 +1,5 @@
 /** WS-DEVELOP-STUDIO · M4 — the writer edits their plan: a step's wording, its status, or removing it. Never an anchor, never the manuscript. */
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import type { StepEdit } from '@/lib/writersStudio/developmentPlan';
@@ -13,6 +14,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!UUID.test(id) || !UUID.test(planId)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   let b: { edits?: unknown };
   try { b = (await req.json()) as { edits?: unknown }; } catch { return NextResponse.json({ refusal: 'malformed' }, { status: 400 }); }
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, b); if (refused) return refused; }
   if (!b || typeof b !== 'object' || !Array.isArray(b.edits)) return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   const edits: StepEdit[] = (b.edits as StepEdit[]).filter((e) => e && typeof e.id === 'string');
   const saved = await editSteps(memberId, id, planId, edits);

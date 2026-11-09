@@ -27,6 +27,8 @@ d('development plan · real database, real routes', () => {
   const call = async (who: string, method: 'GET' | 'POST' | 'PATCH', body?: unknown, planId?: string) => {
     CURRENT = who;
     const mod = planId ? await import('@/app/api/sovereign/manuscripts/[id]/plans/[planId]/route') : await import('@/app/api/sovereign/manuscripts/[id]/plans/route');
+    // A plan edit is kept: it declares an ordinary posture unless the test says otherwise (founder ruling 2026-11-09).
+    if (method === 'PATCH' && body && typeof body === 'object' && !('sanctuary' in (body as object))) body = { ...(body as object), sanctuary: false };
     const req = new NextRequest('http://localhost/x', { method, headers: { 'content-type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) });
     const res = await (mod as any)[method](req, { params: Promise.resolve(planId ? { id: ms, planId } : { id: ms }) });
     return { status: res.status as number, json: await res.json() as Record<string, any> };
@@ -59,8 +61,9 @@ d('development plan · real database, real routes', () => {
     await scope('grant', 'chapter');
     expect((await call(A, 'POST', { ask: 'plan', sanctuary: false })).json.refusal).toBe('permission_required');   // chapter-level is not enough for a plan across chapters
     await scope('grant', 'work');
-    expect((await call(A, 'POST', { ask: 'plan', sanctuary: true })).json.refusal).toBe('sanctuary_unresolved');
-    expect((await call(A, 'POST', { ask: 'plan' })).json.refusal).toBe('sanctuary_unresolved');
+    expect((await call(A, 'POST', { ask: 'plan', sanctuary: true })).json.refusal).toBe('sanctuary_not_kept');
+    expect((await call(A, 'POST', { ask: 'plan' })).json.refusal).toBe('posture_undeclared');
+    expect((await call(A, 'PATCH', { edits: [], sanctuary: true }, crypto.randomUUID())).json.refusal).toBe('sanctuary_not_kept');
     expect(await receipts()).toBe(before);
     expect(systems.length).toBe(0);
   });

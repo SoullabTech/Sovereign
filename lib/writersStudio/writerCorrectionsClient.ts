@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import type { WriterCorrection, WriterCorrectionKind } from './writerCorrections';
 
 export type CreateWriterCorrectionResult =
@@ -18,12 +19,12 @@ export async function createWriterCorrection(input: {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(withKeepPosture({
           threadId: input.threadId,
           maiaTurnIndex: input.maiaTurnIndex,
           kind: input.kind,
           correction: input.correction,
-        }),
+        })),
       },
     );
     const body = await response.json().catch(() => ({}));

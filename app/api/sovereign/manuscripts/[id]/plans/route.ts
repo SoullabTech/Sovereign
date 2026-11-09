@@ -4,6 +4,7 @@
  * Reading follows the same law as the Work conversation: the writer's standing, revocable permission ("my saved work"), one receipt per chapter minted BEFORE any text
  * is loaded, Sanctuary stated and OFF, grant re-read after minting. A plan never changes the manuscript. ⛔ Not part of the Ask route's graph.
  */
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -59,7 +60,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!b || typeof b !== 'object' || Array.isArray(b)) return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   const ask = typeof b.ask === 'string' ? b.ask.trim().slice(0, 1000) : '';
   if (!ask) return NextResponse.json({ refusal: 'malformed', detail: 'say, in your own words, what the plan is for' }, { status: 400 });
-  if (b.sanctuary !== false) return NextResponse.json({ refusal: 'sanctuary_unresolved', detail: 'A plan reads your saved work, so it needs Sanctuary to be known to be off.' }, { status: 409 });
+  /* A plan reads your saved work and is kept: Sanctuary or an undeclared posture refuses (founder ruling 2026-11-09). */
+  { const refused = await keepGate(memberId, b); if (refused) return refused; }
 
   const grant = await loadActiveGrant(memberId, workId);
   if (!grant || grant.level !== 'work') {

@@ -1,3 +1,4 @@
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export interface SettledDecision { id: string; room: string; saidIn: string }
@@ -11,13 +12,14 @@ export async function listDecisions(workId: string): Promise<SettledDecision[] |
   } catch { return undefined; }
 }
 
-export async function settleDecisionNote(workId: string, saidIn: string, sanctuary: boolean,
+/** Sanctuary closure (founder ruling 2026-11-09): the request declares the member's real posture — never a hard-coded ordinary. */
+export async function settleDecisionNote(workId: string, saidIn: string,
   where: { room?: 'work_conversation' | 'passage_desk' | 'develop'; subjectKind?: 'note' | 'wording'; subjectRef?: string } = {}):
   Promise<{ ok: true } | { ok: false; refusal: string }> {
   try {
     const res = await apiFetch(url(workId), { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'settle', saidIn, room: where.room ?? 'work_conversation', subjectKind: where.subjectKind ?? 'note',
-        ...(where.subjectRef ? { subjectRef: where.subjectRef } : {}), sanctuary }) });
+      body: JSON.stringify(withKeepPosture({ action: 'settle', saidIn, room: where.room ?? 'work_conversation', subjectKind: where.subjectKind ?? 'note',
+        ...(where.subjectRef ? { subjectRef: where.subjectRef } : {}) })) });
     if (res.ok) return { ok: true };
     const j = (await res.json().catch(() => ({}))) as { refusal?: string };
     return { ok: false, refusal: j.refusal ?? `http_${res.status}` };

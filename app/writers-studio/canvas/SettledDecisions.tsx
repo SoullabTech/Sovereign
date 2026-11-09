@@ -3,6 +3,7 @@
  * WS-DECISION-CONTINUITY — what the writer has settled, visible to them and withdrawable at any time. Their own words, never MAIA's.
  * Nothing is added by the system; a decision exists only because the writer wrote it here or confirmed it in another room.
  */
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useId, useState } from 'react';
 import { listDecisions, settleDecisionNote, withdrawDecisionById, type SettledDecision } from '@/lib/writersStudio/decisionClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
@@ -27,8 +28,8 @@ export default function SettledDecisions({ workId }: { workId: string }) {
         : 'Your Sanctuary setting could not be read on this device, so nothing was recorded. Open MAIA here once, then try again.');
       return;
     }
-    const r = await settleDecisionNote(workId, draft, false);
-    if (r.ok) { setDraft(''); setNote(null); refresh(); } else setNote('That could not be recorded just now. Nothing was changed.');
+    const r = await settleDecisionNote(workId, draft);
+    if (r.ok) { setDraft(''); setNote(null); refresh(); } else setNote(keepRefusalCopy(r.refusal) ?? 'That could not be recorded just now. Nothing was changed.');
   };
   const withdraw = async (id: string) => {
     const ok = await withdrawDecisionById(workId, id);

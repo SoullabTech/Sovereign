@@ -4,6 +4,7 @@
  * GET projects only already-frozen evidence and member-governed Theme state.
  * POST performs explicit governance acts. Neither method commissions cognition.
  */
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -235,6 +236,8 @@ export async function POST(
   }
 
   const body: unknown = await req.json().catch(() => null);
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, body); if (refused) return refused; }
   if (!isRecord(body) || typeof body.action !== 'string') {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
