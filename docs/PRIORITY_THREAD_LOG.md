@@ -1,8 +1,15 @@
-# CLAUDE.md "Current priority thread" — byte-exact archive (relocated 2026-11-09)
+# Priority thread log
 
-Relocation only, per `CLAUDE_MD_RELOCATION_PLAN_2026-11-09.md`: nothing summarized, rewritten or deleted. Everything between the two rule lines below is lines 45-149 of the root `CLAUDE.md` at `ee9dcf394`, unchanged. The three newest entries and the ops-diagnostic block are ALSO kept in `CLAUDE.md` (intentional duplication). Reason: the 255 KB root file overflowed the 65k-token window of the local delegation lane.
+The dated record of rulings, lane openings and closures that used to live in the
+"Current priority thread" section of `CLAUDE.md`. Moved here word for word on
+2026-11-09 (founder direction) because that section had grown to about 210 KB and
+was loaded into every session and every JARVIS worker; the local lane could not
+start with it in the prompt.
 
------8<----- BEGIN BYTE-EXACT SECTION -----8<-----
+- Add a new entry as a bullet at the top of the section below, in the same form.
+- The Founder Workspace projector reads these bullets from this file.
+- Nothing below this line was edited in the move.
+
 ## Current priority thread (update each session)
 
 - **LATEST — 2026-11-03 — `WRITER-SOURCE-INTAKE-LIFT` lane H1 (hardening of the released original-file intake) · PR #2088 MERGED as `8a93b5d4` · IN THE LAST RECORDED PRODUCTION CUTOVER `88fc9cc78` (11-03 15:05Z) · #2107 and later merges NOT deployed.** Record `docs/programme/WRITER-SOURCE-INTAKE-LIFT_H1_HARDENING_LANE_RECORD_2026-11-03.md` (detail: `WRITER_SOURCE_INTAKE_HARDENING_BRANCH_2026-11-02.md`). A lane inside the founder's lift runbook (`WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md` §4), not a new flow. Hardened: roster + rate limit · posture · custody claim atomic with Work creation · KMS timeouts · member removal door · abandoned-upload sweep (⛔ UNWIRED, dry-run) · honest Delete copy. Two independent agent review passes (10 findings fixed, 8 refuted) · 37 mutants killed · PostgreSQL 16 probes 31/31 against a **FAKE KMS**. ⚠️ **CORRECTION (2026-11-03, lane record §10): production ALREADY runs `sourceIntakeReleased: true` (founder-authorized cutovers `da55740ae` 11-02 21:02Z → `f21fda83a` → `374c472a9` 11-03 11:47Z) and the Import control offers file upload with no hold; SECOND CORRECTION (2026-11-05, lane record §12): the repository's case study §9 records two LATER founder-authorized cutovers, `857509331` (11-03 13:14Z) and `88fc9cc78` (11-03 15:05Z, carries #2088), so the hardening has been in the last recorded production build since 11-03 15:05Z; what that build lacks is #2107 (fail-closed config gate, suite repairs) and 14 later merges. The sentence that stood here, that the hardening was NOT in the build, was wrong: I read a snapshot, not the latest record. Production's current commit is not known to the repository. An earlier version of this entry said the next deploy would be the first to carry the flag; that was wrong. Whether `WRITER_SOURCE_*` is set in production and whether KMS was ever exercised are NOT evidenced (§10 gives the read-only check). D-01 as first written (deploy the hardened canonical, urgency higher) is WITHDRAWN: a deploy does not switch the hardening on. Inventory `docs/programme/WRITER-SOURCE-INTAKE-LIFT_H1_PENDING_DEPLOY_INVENTORY_2026-11-05.md`: no migration or infra change in `88fc9cc78..f10bb264`, but canonical's tip now carries another lane's additive migration `20261104000001` (astro-pro saved charts). Deploy decision = founder, after the read-only checks in that record.** The 6 red suites / 10 tests were triaged: 9 stale, 1 real fidelity defect (writer's own words trimmed in the Craft companion); the repair, a fail-closed check for an unconfigured key provider, and this correction ship together in one follow-ups PR (branch `claude/writer-source-intake-lift-h1-followups`, unmerged). Found, not fixed: canvas `EditorialConversation.adopt()` reads no posture (D-08). Not proved: real KMS/AWS, any browser run, production witness, human code review. ⛔ No deploy · no migration · no AWS · frozen branch untouched.
@@ -108,4 +115,3 @@ Relocation only, per `CLAUDE_MD_RELOCATION_PLAN_2026-11-09.md`: nothing summariz
   ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT origin_route, processing_profile, count(*) FROM agent_runs WHERE created_at > NOW() - INTERVAL '\''24 hours'\'' GROUP BY 1,2 ORDER BY 3 DESC;"'
   ```
 
------8<----- END BYTE-EXACT SECTION -----8<-----

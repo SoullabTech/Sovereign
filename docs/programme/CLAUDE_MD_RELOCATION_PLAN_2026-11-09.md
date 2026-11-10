@@ -23,3 +23,6 @@ Status entries go to a dated record in `docs/programme/`; CLAUDE.md gets at most
 - Editing CLAUDE.md is a project-governance change: needs the founder's explicit yes, then a normal PR.
 - Stop if the byte-exact check fails or the trial worker still fails (cause then not size).
 - Not authorized: merge, deploy, summarizing or rewriting any entry, deleting any entry, touching other sections.
+
+## Outcome (same day)
+Superseded: commit `60c5407b1` ("move the priority thread out of CLAUDE.md, word for word", archive at `docs/PRIORITY_THREAD_LOG.md`) reached canonical while this plan's PR was open, so this branch's own CLAUDE.md edit and archive were dropped; canonical's version stands. What this plan contributed that stays true: the measured cause (255 KB root file vs the 65,536-token local worker window) and the confirming trial (unit failed in 11 s with "Prompt is too long" before; ran to completion in 91 s with a 46 KB CLAUDE.md). Guard idea (fail when CLAUDE.md exceeds 60 KB) is still open.
