@@ -61,6 +61,8 @@ export function DevelopStage(props: {
   onStarter: (words: string) => void;
   onOpenWrite: () => void;
   onMoreWays: () => void;
+  /** ⭐ P0: the shown View is a visit-only expansion, not the writer's saved View. */
+  viewTemporary?: boolean;
   /** the writer selected words in the chapter and chose to ask about them: the exact words go into the composer, unsent */
   onAskAbout?: (words: string) => void;
   /** the chapters MAIA was handed for her last answer (ids + headings); their text is shown here from the writer's own copy, in place */
@@ -134,6 +136,7 @@ export function DevelopStage(props: {
               style={{ font: 'inherit', fontSize: 12, color: 'inherit', background: 'none', border: hair, borderRadius: 6, padding: '2px 6px' }}>
               {STUDIO_DEPTHS.map((d) => <option key={d} value={d} title={STUDIO_DEPTH_HINT[d]}>{STUDIO_DEPTH_LABEL[d]}</option>)}
             </select>
+            {props.viewTemporary ? <span data-develop-view-temporary style={{ opacity: 0.75 }}>this visit only</span> : null}
           </label>
         ) : null}
         <button type="button" data-develop-edit-in-write="true" onClick={props.onOpenWrite} style={quiet}>Edit in Write</button>

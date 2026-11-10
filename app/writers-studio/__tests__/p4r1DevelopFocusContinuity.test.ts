@@ -47,7 +47,7 @@ describe('C3 Develop → Focus continuity', () => {
     const buttons=(value:any):any[]=>Array.isArray(value)?value.flatMap(buttons):value&&typeof value==='object'?[...(value.type==='button'?[value]:[]),...buttons(value.props?.children)]:[];
     const make=(targets:Record<string,string>,workTargets:Record<string,string>)=>{
       const onWorkWithObservation=jest.fn(),onGoToObservation=jest.fn();
-      const tree=readingField({reading:{id:'fiction-reading',outcome:'observations',coverage:{sentence:'Fixture'},frozenAt:'2026-10-01',stateLabel:'Saved',observations:[{key:'fiction-observation',observation:'Fixture',phenomenonLabel:'Fixture',evidence:[],limits:[]}]},field:'overview',selectedObservationKey:null,targets,workTargets,onWorkWithObservation,onGoToObservation,onTalkObservation:jest.fn(),onTeachObservation:jest.fn(),onDeepObservation:jest.fn(),onSelectObservation:jest.fn()});
+      const tree=readingField({reading:{id:'fiction-reading',outcome:'observations',coverage:{sentence:'Fixture'},frozenAt:'2026-10-01',stateLabel:'Saved',observations:[{key:'fiction-observation',observation:'Fixture',phenomenonLabel:'Fixture',evidence:[],limits:[]}]},field:'overview',selectedObservationKey:'fiction-observation',targets,workTargets,onWorkWithObservation,onGoToObservation,onTalkObservation:jest.fn(),onTeachObservation:jest.fn(),onDeepObservation:jest.fn(),onSelectObservation:jest.fn()});
       return {items:buttons(tree),onWorkWithObservation,onGoToObservation};
     };
     const exact=make({'fiction-observation':'orientation-section'},{'fiction-observation':'exact-section'});

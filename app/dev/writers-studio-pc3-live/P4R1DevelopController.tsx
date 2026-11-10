@@ -139,6 +139,8 @@ export default function P4R1DevelopController() {
 
   const [scope, setScope] = useState<DevelopScopeChoice>({ kind: 'whole' });
   const [commissioning, setCommissioning] = useState(false);
+  /* ⭐ P0: the reading the writer just asked for has completed and is WAITING. Completion never navigates. */
+  const [readyReadingId, setReadyReadingId] = useState<string | null>(null);
   const [commissionError, setCommissionError] = useState<string | null>(null);
   const [commissionNeedsCheckpoint, setCommissionNeedsCheckpoint] = useState(false);
 
@@ -276,6 +278,10 @@ export default function P4R1DevelopController() {
   useEffect(() => {
     if (field === 'themes' && manuscriptId) void loadThemes();
   }, [field, manuscriptId, loadThemes]);
+
+  useEffect(() => {
+    if (selectedReadingId) setReadyReadingId((ready) => (ready === selectedReadingId ? null : ready));
+  }, [selectedReadingId]);
 
   useEffect(() => {
     if (!selectedReadingId || !manuscriptId) {
@@ -918,11 +924,10 @@ export default function P4R1DevelopController() {
       }
       await loadSummaries();
       if (field === 'themes') await loadThemes();
-      updateQuery((query) => {
-        query.set('mode', 'develop');
-        query.set('developField', field);
-        query.set('r', result.readingId);
-      });
+      /* ⭐ P0 (founder decision, 2026-11-10): a reading the writer asked for shows a READY state and WAITS. It used to set `r` here,
+         which opened the reading, selected an observation, ended any conversation in progress and discarded unsent text. Opening
+         it is now the writer's act — "Explore observations" calls `onReading`. */
+      setReadyReadingId(result.readingId);
     } finally {
       setCommissioning(false);
     }
@@ -1722,6 +1727,7 @@ export default function P4R1DevelopController() {
       sections={context.sections}
       currentSectionId={currentSectionId}
       summaries={summaries}
+      readyReadingId={readyReadingId}
       summariesLoading={summariesLoading}
       reading={projectedReading}
       readingLoading={readingLoading}

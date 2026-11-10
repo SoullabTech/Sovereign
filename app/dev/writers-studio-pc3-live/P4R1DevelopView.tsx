@@ -31,7 +31,7 @@ import type {
 import type { DevelopmentalOrientation } from '@/lib/writersStudio/developmentalOrientation';
 import { observeTextExtent } from '@/lib/writersStudio/workMaturity';
 import { nextMoveOptions, type WriterNextMove } from '@/lib/writersStudio/writerNextMoves';
-import { readStudioPresentation, subscribeStudioPresentation, writeStudioPresentation, STUDIO_DEPTHS, STUDIO_DEPTH_LABEL, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
+import { clearWorkPresentationOverride, hasWorkPresentationOverride, readStudioPresentation, subscribeStudioPresentation, writeStudioPresentation, STUDIO_DEPTHS, STUDIO_DEPTH_LABEL, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
 import { lineageProcessForState } from '@/lib/writersStudio/intellectualLineageProcess';
 import {
   sourceVerificationOptions,
@@ -192,6 +192,8 @@ export interface P4R1DevelopViewProps {
   sections: readonly RebuildSection[];
   currentSectionId: string | null;
   summaries: readonly ReadingSummary[];
+  /** ⭐ P0: a reading the writer asked for has completed and is waiting to be opened by her. */
+  readyReadingId?: string | null;
   summariesLoading: boolean;
   reading: ReadingView | null;
   readingLoading: boolean;
@@ -559,6 +561,71 @@ function ScopeChooser({ scope, sections, sectionScope, chapterScope, onScope }: 
   );
 }
 
+/* ⭐ P0 (founder decision 2026-11-10: a reading the writer asked for shows a ready state and WAITS).
+   The offer lives in MAIA's panel. It opens nothing; its one action is the writer's explicit "Explore observations". */
+function ReadingOffer({ summary, ready, onExplore }: { summary: ReadingSummary; ready: boolean; onExplore: () => void }) {
+  const none = summary.outcome === 'none';
+  const n = summary.observationCount;
+  return (
+    <section
+      data-develop-reading-offer={summary.id}
+      data-reading-ready={ready ? 'true' : 'false'}
+      style={{ flex: '0 0 auto', margin: '0 0 12px', padding: '10px 12px', fontSize: 13, lineHeight: 1.5,
+        border: '1px solid color-mix(in srgb, currentColor 22%, transparent)', borderRadius: 10 }}
+    >
+      <span className="p4r1-eyebrow">{ready ? 'MAIA has finished reading' : `MAIA’s last reading · ${new Date(summary.frozenAt).toLocaleDateString()}`}</span>
+      <p style={{ margin: '4px 0 8px' }}>
+        {none
+          ? 'She found nothing she could support with evidence. '
+          : `${n} observation${n === 1 ? '' : 's'}. `}
+        Nothing is opened until you choose.
+      </p>
+      {none ? null : (
+        <button type="button" data-develop-explore-observations onClick={onExplore}
+          style={{ font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'none',
+            border: '1px solid color-mix(in srgb, currentColor 28%, transparent)', borderRadius: 999, padding: '4px 12px' }}>
+          Explore observations
+        </button>
+      )}
+    </section>
+  );
+}
+
+/* A status announcement only reaches a screen reader reliably if its region already exists when its text changes, so this region is
+   mounted unconditionally. It announces politely and never takes focus. */
+function ReadingStatusRegion({ message }: { message: string }) {
+  return (
+    <div aria-live="polite" aria-atomic="true" data-develop-reading-status
+      style={{ position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
+      {message}
+    </div>
+  );
+}
+
+/* ⭐ P0 (founder, 2026-11-10: Develop stays manuscript-centred across lens navigation). A read-only chapter on every lens page, so the
+   writer's words never leave the room. It is a surface to read, not a second editor, and the writer can fold it. */
+function LensChapterPane({ section }: { section: RebuildSection }) {
+  const label = section.heading?.trim() || `Section ${section.position + 1}`;
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) body = body.trimStart().slice(heading.length);
+  const paragraphs = body.trim().split(/\n{2,}/).filter(Boolean);
+  return (
+    <details open data-develop-lens-chapter
+      style={{ margin: '0 0 14px', border: '1px solid color-mix(in srgb, currentColor 16%, transparent)', borderRadius: 10 }}>
+      <summary style={{ cursor: 'pointer', padding: '8px 12px', fontSize: 13 }}>Your chapter · {label}</summary>
+      <article aria-label={`${label}, as you wrote it`} data-develop-chapter={section.draftSectionId} tabIndex={0}
+        style={{ maxHeight: '32vh', overflowY: 'auto', padding: '4px 14px 12px' }}>
+        {paragraphs.length === 0
+          ? <p style={{ opacity: 0.75, margin: 0 }}>This chapter has no text yet.</p>
+          : paragraphs.map((text, i) => (
+            <p key={i} style={{ margin: '0 0 12px', lineHeight: 1.75, fontSize: 16, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{text}</p>
+          ))}
+      </article>
+    </details>
+  );
+}
+
 function ReadingField({
   reading,
   field,
@@ -575,7 +642,7 @@ function ReadingField({
   reading: ReadingView;
   field: DevelopField;
   selectedObservationKey: string | null;
-  onSelectObservation: (key: string) => void;
+  onSelectObservation: (key: string | null) => void;
   onTalkObservation: (key: string) => void;
   onTeachObservation: (key: string) => void;
   onDeepObservation: (key: string) => void;
@@ -605,11 +672,43 @@ function ReadingField({
   }
 
   const observations = reading.observations;
-  const selectedIndex = Math.max(
-    0,
-    observations.findIndex((observation) => observation.key === selectedObservationKey),
-  );
-  const observation = observations[selectedIndex] ?? observations[0]!;
+  const foundIndex = observations.findIndex((observation) => observation.key === selectedObservationKey);
+
+  /* ⭐ P0 (founder, 2026-11-10): a reading never chooses an observation for the writer. This clamped a missing selection to
+     index 0, which opened observation 1 whenever nothing was selected. With none selected she sees the INDEX, and each
+     observation opens only by her own choice. */
+  if (foundIndex < 0) {
+    return (
+      <div className="p4r1-reading-field">
+        <section className="p4r1-observation-index" data-develop-observation-index aria-label="Observations in this reading">
+          <span className="p4r1-eyebrow">MAIA’s reading</span>
+          <h4>{observations.length} observation{observations.length === 1 ? '' : 's'}</h4>
+          <p>Choose one to open. Nothing opens until you do.</p>
+          <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {observations.map((entry, i) => (
+              <li key={entry.key}>
+                <button
+                  type="button"
+                  data-develop-observation-open={entry.key}
+                  onClick={() => onSelectObservation(entry.key)}
+                  style={{ width: '100%', textAlign: 'left', font: 'inherit', color: 'inherit', cursor: 'pointer',
+                    background: 'transparent', border: '1px solid color-mix(in srgb, currentColor 22%, transparent)',
+                    borderRadius: 8, padding: '10px 12px' }}
+                >
+                  <span className="p4r1-eyebrow">{i + 1} of {observations.length} · {friendlyObservation(entry.phenomenonLabel).title}</span>
+                  <span style={{ display: 'block', marginTop: 4 }}>
+                    {entry.observation.length > 120 ? `${entry.observation.slice(0, 118).trimEnd()}…` : entry.observation}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+    );
+  }
+  const selectedIndex = foundIndex;
+  const observation = observations[selectedIndex]!;
   const sectionId = targets[observation.key];
   const workSectionId = workTargets[observation.key];
 
@@ -650,6 +749,11 @@ function ReadingField({
           {sectionId ? (
             <button type="button" onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}>
               Show me in the manuscript
+            </button>
+          ) : null}
+          {hasMore ? (
+            <button type="button" data-develop-observation-index-open onClick={() => onSelectObservation(null)}>
+              All observations
             </button>
           ) : null}
           {hasMore && selectedIndex < observations.length - 1 ? (
@@ -2084,9 +2188,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const sourceIntakeHref = '/writers-studio/sources?returnTo=' + encodeURIComponent(
     livePathname + (liveSearch ? '?' + liveSearch : ''),
   );
-  const [selectedObservationKey, setSelectedObservationKey] = useState<string | null>(
-    props.reading?.observations[0]?.key ?? null,
-  );
+  /* ⭐ P0: nothing is selected until the writer selects it. A reading that is merely opened, restored by URL, or completed is shown
+     as an INDEX; `selectedObservationKey` is set only by the writer's own act. */
+  const [selectedObservationKey, setSelectedObservationKey] = useState<string | null>(null);
+  /* A writer's "talk about this" on an item from a DIFFERENT reading is honoured once that reading has opened. */
+  const pendingTalkRef = useRef<{ readingId: string; key: string } | null>(null);
   const [talking, setTalking] = useState(false);
   const [dialoguePrompt, setDialoguePrompt] = useState('');
 
@@ -2256,14 +2362,34 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setDevelopView(readStudioPresentation({ workId: densityWorkId }).depth);
     return subscribeStudioPresentation(next => setDevelopView(next.depth), { workId: densityWorkId });
   }, [densityWorkId]);
+  /* The View control is the ONE place a writer's saved View changes. Choosing here also ends any visit-only expansion, so her choice
+     is not shadowed by a temporary one. */
   const chooseDevelopView = (next: StudioDepth) => {
+    if (densityWorkId) clearWorkPresentationOverride(densityWorkId);
     setDevelopView(next);
     writeStudioPresentation({ depth: next });
   };
+  /* ⭐ P0 (provisional, delegated 2026-11-10): "More ways to explore" is an action, not a preference. It expands the tools for THIS
+     visit using the existing temporary per-Work choice and never changes the writer's saved View. */
+  const exploreForVisit = (next: StudioDepth) => {
+    setDevelopView(next);
+    if (densityWorkId) writeStudioPresentation({ depth: next }, { workId: densityWorkId, temporary: true });
+  };
+  const viewIsTemporary = hasWorkPresentationOverride(densityWorkId);
 
+  /* ⭐ P0. The reading in view changes only by the writer's own act (opening a reading, a saved link, history). A completed reading no
+     longer navigates, so it cannot reach this effect. Opening a reading ends the conversation about the previous one and selects
+     NOTHING — except an observation the writer explicitly asked to talk about. */
   useEffect(() => {
-    setSelectedObservationKey(props.reading?.observations[0]?.key ?? null);
-    setTalking(false);
+    const pending = pendingTalkRef.current;
+    pendingTalkRef.current = null;
+    if (pending && pending.readingId === props.reading?.id) {
+      setSelectedObservationKey(pending.key);
+      setTalking(true);
+    } else {
+      setSelectedObservationKey(null);
+      setTalking(false);
+    }
     setDialoguePrompt('');
   }, [props.reading?.id]);
 
@@ -2492,6 +2618,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         >
           {STUDIO_DEPTHS.map(d => <option key={d} value={d}>{STUDIO_DEPTH_LABEL[d]}</option>)}
         </select>
+        {viewIsTemporary ? <span data-develop-view-temporary style={{ fontSize: 12, opacity: 0.75 }}>this visit only</span> : null}
         <button type="button" className="p4r1-develop-prefs-link"
           aria-label="Open writing preferences"
           onClick={(event) => {
@@ -2607,7 +2734,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               </details>
             ) : null}
             <button type="button" className="p4r1-develop-secondary"
-              onClick={() => chooseDevelopView(developView === 'focused' ? 'guided' : 'full')}>
+              onClick={() => exploreForVisit(developView === 'focused' ? 'guided' : 'full')}>
               {developView === 'focused' ? 'Show more ways to explore' : 'Show the whole Develop map'}
             </button>
             <p className="p4r1-develop-trust">Nothing is read or changed until you choose it.</p>
@@ -3063,7 +3190,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 setSelectedObservationKey(candidate.observationKey);
                 setDialoguePrompt('');
                 setTalking(true);
-                if (props.reading?.id !== candidate.readingId) props.onReading(candidate.readingId);
+                if (props.reading?.id !== candidate.readingId) {
+                  pendingTalkRef.current = { readingId: candidate.readingId, key: candidate.observationKey };
+                  props.onReading(candidate.readingId);
+                }
               }}
             />
           ) : null}
@@ -3173,6 +3303,22 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
+  /* The offer: the reading she just asked for, otherwise her most recent one — only while no reading is open. */
+  const readySummary = props.readyReadingId ? props.summaries.find((x) => x.id === props.readyReadingId) ?? null : null;
+  const offerSummary = readySummary && readySummary.id !== props.reading?.id
+    ? readySummary
+    : (!props.reading ? props.summaries[0] ?? null : null);
+  const offerIsReady = Boolean(offerSummary && readySummary && offerSummary.id === readySummary.id);
+  const readingOffer = offerSummary
+    ? <ReadingOffer summary={offerSummary} ready={offerIsReady} onExplore={() => props.onReading(offerSummary.id)} />
+    : null;
+  const readingStatus = (
+    <ReadingStatusRegion message={offerIsReady && offerSummary
+      ? (offerSummary.outcome === 'none'
+        ? 'MAIA has finished reading. She found nothing she could support with evidence.'
+        : `MAIA has finished reading. ${offerSummary.observationCount} observation${offerSummary.observationCount === 1 ? '' : 's'} are ready when you want them.`)
+      : ''} />
+  );
   const maia = (
     <div className="fr-maia-inner">
       <div className="fr-maia-head">
@@ -3190,6 +3336,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
+        {readingStatus}
+        {readingOffer}
         {needsWork && !focusedAttachShown ? (
           <DevelopAddToWork
             works={props.allWorks}
@@ -3359,7 +3507,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       starters={stageStarters}
       onStarter={(words) => setAttentionConversationDraft(words)}
       onOpenWrite={() => navigateMode('write')}
-      onMoreWays={() => chooseDevelopView('full')}
+      onMoreWays={() => exploreForVisit('full')}
       lastRead={lastRead}
       plan={planView}
       planBusy={planBusy}
@@ -3371,11 +3519,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
       openAt={stageOpenAt}
       view={developView}
+      viewTemporary={viewIsTemporary}
       onView={chooseDevelopView}
       holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
     />
   ) : null;
   /* MAIA beside the work, not beneath it: the writer never scrolls away from the words to speak with her. */
+  const lensSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
+  const lensChapterPane = !useStage && lensSection ? <LensChapterPane section={lensSection} /> : null;
   const stageCompanion = useStage && props.work ? (
     <div className="fr-maia-inner">
       <div className="fr-maia-head">
@@ -3383,6 +3534,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name"><h2>MAIA</h2><span>Editorial companion</span></div>
       </div>
       <div className="fr-mbody" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {readingStatus}
+        {readingOffer}
         <DevelopCompanion
           lastRead={lastRead}
           conversation={(
@@ -3418,7 +3571,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       memberInitial=""
       onSelectMode={props.onMode}
       manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
-      work={stageCenter ?? center}
+      work={stageCenter ?? (lensChapterPane ? <>{lensChapterPane}{center}</> : center)}
       maia={stageCompanion ?? maia}
     />
   );
