@@ -48,3 +48,12 @@ files existing. Release ledger #1938 remains HOLD.
 | `p0-observation-repro/p0-accept.mjs` | The acceptance run. Parameterised by `P0_MS` `P0_MS2` `P0_RA` `P0_RB` `P0_OUT` `CHROMIUM`; assumes `ws-continuity-walk.sh up` and the two fictional writers `bwriter` / `cwriter` |
 
 The seed needs a **kept version** first (press *Keep a version* in Write), because the product correctly refuses to read a draft with no revision.
+
+## Added 2026-11-10 — P0 integrated experience walk
+
+⛔ **Evidence only.** No source file is modified; nothing is promoted, merged, deployed or released.
+
+| File | What it is |
+|---|---|
+| `WS-DEVELOP_P0_INTEGRATED_EXPERIENCE_WALK_2026-11-10.md` | The seven-scenario walk against `895ffbc61c42` (#2208 + canonical), the acceptance matrix, what is BLOCKED or untested, and the corrections made to my own instrument |
+| `p0-walk-repro/` | The walk, helpers, stand-in model and reset scripts, and the raw `events.jsonl`. **Container paths**: provided for audit, not as a runnable kit |
