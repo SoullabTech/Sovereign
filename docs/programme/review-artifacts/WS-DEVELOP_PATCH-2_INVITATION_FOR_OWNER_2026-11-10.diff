@@ -1,0 +1,13 @@
+diff --git a/app/writers-studio/develop/DevelopRoom.tsx b/app/writers-studio/develop/DevelopRoom.tsx
+index df1412e39..ce8fd7c1c 100644
+--- a/app/writers-studio/develop/DevelopRoom.tsx
++++ b/app/writers-studio/develop/DevelopRoom.tsx
+@@ -88,7 +88,7 @@ type PrepPhase =
+   | { phase: 'error' };
+ 
+ const INVOCATION_SENTENCE =
+-  'MAIA will look at how this work is developing and bring back what she noticed. Nothing changes unless you change it.';
++  'MAIA will read this work and tell you what she notices. Nothing changes unless you change it.';
+ 
+ /**
+  * What did not happen, in the member's language. The code is shown beneath
