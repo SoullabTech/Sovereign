@@ -172,7 +172,9 @@ describe('F5 · the receipt carries identities, never words', () => {
     const dir = join(ROOT, 'database/migrations');
     const mine = '20261002000001_disclosure_boundary_editorial_turn.sql';
     const m = readFileSync(join(dir, mine), 'utf8').replace(/^\s*--.*$/gm, '');
-    const others = readdirSync(dir).filter((f) => f !== mine
+    /* A LATER widening (e.g. work_conversation, 20261108) is checked by the same
+       rule from its own side below; here only EARLIER widenings must be restated. */
+    const others = readdirSync(dir).filter((f) => f !== mine && f < mine
       && /boundary_check/.test(readFileSync(join(dir, f), 'utf8')));
     expect(others.length).toBeGreaterThan(0);
     for (const f of others) expect(f < mine).toBe(true);
@@ -185,8 +187,12 @@ describe('F5 · the receipt carries identities, never words', () => {
   });
 
   it('the TypeScript union carries exactly the values the CHECK admits', () => {
-    const sql = readFileSync(join(ROOT,
-      'database/migrations/20261002000001_disclosure_boundary_editorial_turn.sql'), 'utf8')
+    /* The union must equal the LATEST migration that states the CHECK, which
+       itself must restate every earlier value (asserted next). */
+    const dir2 = join(ROOT, 'database/migrations');
+    const latest = readdirSync(dir2).filter((f) => /ADD CONSTRAINT context_disclosure_receipts_boundary_check/
+      .test(readFileSync(join(dir2, f), 'utf8'))).sort().pop()!;
+    const sql = readFileSync(join(dir2, latest), 'utf8')
       .replace(/^\s*--.*$/gm, '');
     const check = sql.slice(sql.indexOf('CHECK (boundary IN'), sql.indexOf('));'));
     const inSql = [...check.matchAll(/'(writers_studio\.[a-z_]+->maia_cognition)'/g)].map((x) => x[1]).sort();
@@ -206,5 +212,17 @@ describe('the dispatch module names no vendor', () => {
 
   it('the router still imports no SDK after carrying the observation', () => {
     expect(src('lib/ai/structured/router.ts')).not.toMatch(/from\s+'@anthropic-ai\/sdk'/);
+  });
+
+  it('the latest widening restates every earlier boundary value', () => {
+    const dir = join(ROOT, 'database/migrations');
+    const files = readdirSync(dir).filter((f) => /ADD CONSTRAINT context_disclosure_receipts_boundary_check/
+      .test(readFileSync(join(dir, f), 'utf8'))).sort();
+    const latest = files.pop()!;
+    const body = readFileSync(join(dir, latest), 'utf8').replace(/^\s*--.*$/gm, '');
+    for (const f of files) {
+      for (const v of readFileSync(join(dir, f), 'utf8').replace(/^\s*--.*$/gm, '')
+        .match(/'writers_studio\.[a-z_]+->maia_cognition'/g) ?? []) expect(body).toContain(v);
+    }
   });
 });

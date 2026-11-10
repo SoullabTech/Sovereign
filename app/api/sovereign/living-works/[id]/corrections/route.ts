@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { currentWriterCorrectionsForWork } from '@/lib/writersStudio/writerCorrectionsServer';
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, raw); if (refused) return refused; }
   const allowed = new Set(['threadId', 'maiaTurnIndex', 'kind', 'correction']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown_field' }, { status: 400 });

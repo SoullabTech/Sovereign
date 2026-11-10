@@ -11,6 +11,7 @@
  * rather than choosing not to make one.
  */
 
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { StructureTreeDTO } from './structureClient';
 import type { StructureInterpretation } from '@/lib/manuscript/structure/interpret';
@@ -102,7 +103,8 @@ export async function requestStructureReading(
 ): Promise<ReadingOutcome> {
   try {
     const res = await apiFetch(
-      `/api/sovereign/manuscripts/${manuscriptId}/structure/read`, { method: 'POST' });
+      `/api/sovereign/manuscripts/${manuscriptId}/structure/read`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(withKeepPosture({})) });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       return { ok: false, refusal: String(body?.refusal ?? `http_${res.status}`),
@@ -142,7 +144,7 @@ async function post(
   const res = await apiFetch(url(manuscriptId, proposalId), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(withKeepPosture({ ...(body as Record<string, unknown>) })),
   });
   return { status: res.status, json: await res.json().catch(() => ({})) };
 }

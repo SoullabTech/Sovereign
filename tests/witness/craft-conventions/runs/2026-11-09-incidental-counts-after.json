@@ -1,0 +1,487 @@
+{
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T17:07:55.947Z",
+  "rows": [
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"She did not call.\" is four words",
+          "ok": true,
+          "detail": "said 4, \"She did not call.\" has 4"
+        }
+      ],
+      "reply": "There isn't much left to cut — \"She did not call.\" is four words, and three of them are doing load-bearing work. If it feels loose to you, I don't think the looseness is in the length.\n\nWhat I notice instead is that *call* is holding more than one thing at once. It could mean she didn't call out to the dog, or didn't call the neighbour, or didn't phone anyone at all. Nothing in the passage settles it, and the quiet of the ending may partly come from that unsettledness — a reader might feel the withheld action without knowing which action it was. It also works because the sentence before it is long and winding, with that clause about the fence, so the four flat words land hard after it.\n\nIf you wanted the meaning pinned down, you'd have to add rather than subtract — naming the dog or the phone — and that would cost both the shortness and the open feeling. Keeping it as it stands is a real option.\n\nIs the vagueness about what she doesn't call something you want, or something you were hoping to fix?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"She did not call.\" is four words",
+          "ok": true,
+          "detail": "said 4, \"She did not call.\" has 4"
+        }
+      ],
+      "reply": "There isn't much to take out — \"She did not call.\" is four words, and the only shorter version I can see would be cutting \"call,\" which changes what the sentence says rather than tightening it.\n\nSo I'd guess what's bothering you isn't length. The thing I notice is that \"call\" is left open: she could be not calling out to the dog, not calling to someone in the house, not making a phone call to the neighbour. The sentence lands hard partly *because* of that openness — after the long middle sentence with all its history in it, this one stops short and withholds the object. If the openness is deliberate, I'd leave it alone; it's doing real work.\n\nIf what you want is for the sentence to hit harder rather than be shorter, that's usually a matter of what it's set against. Right now it follows a sentence that carries the fence, the spring, the barking, the stillness. The short one gets its force from that contrast. Changing the last sentence may not be where the gain is.\n\nBefore I suggest anything, I'd need to know: does Mara know the dog is dead, or is this the moment she's deciding not to find out?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Measured sentence by sentence, it isn't even. Three of the four are short and one is long — and the long one is very long, with the whole history of the dog folded into the middle of it before it comes to rest on the grass. So the shape is: short, short, a long stretch, short.\n\nWhat might be registering as evenness is that the three short ones are all built the same way. Something does something, stated flatly, no sign of what Mara feels about it. The kettle clicks. She stands. She does not call. Each one just reports. That sameness is probably why the paragraph feels level to you even though the lengths aren't.\n\nWhether that's a problem depends on what it's for. As it stands, the flatness is holding something back — you're refusing to say what the stillness means to her, and the plain sentences enforce that refusal. The long middle sentence is where everything you're willing to tell us gets put, and it ends on *lay perfectly still*, which the short sentence after it then sits beside without comment. That's a deliberate-looking arrangement, and it may be doing exactly what you want.\n\nBefore I'd suggest touching it, I'd need to see the paragraphs on either side. If the pages around this one move the same way — flat statement after flat statement — then this paragraph doesn't drop into plainness, it just continues, and the last line may not land with the weight you're giving it. If the surrounding prose is warmer or more inward, then this stands out as a held breath and I'd leave it alone.\n\nOne other thing I noticed, which bears on where the weight falls: *She did not call* could mean she didn't call out to the dog, or didn't telephone someone. I can't tell from these words alone, and the two readings put the ending in different places.\n\nDo you want to send me what comes before and after, or would it help more to talk about that last line first?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Measured by length, it isn't even — three short sentences sit around one long one, and that long one is much longer than the rest put together. So the sameness you're hearing is probably coming from somewhere else.\n\nWhat I notice: the three short sentences are all built the same way. Someone or something does one plain thing, and then it stops. Kettle clicks off. Mara stands. She does not call. No hesitation inside any of them, no clause hanging off the end. The long sentence breaks that, but it breaks it only once and then the paragraph goes back. That could read as flatness, or it could read as a person holding very still — which seems to be what the paragraph is about, given that the dog is lying still too and she won't call.\n\nThe part doing the most work is the middle: a dog that barks at everything, silent, and a fence that came down in a spring you don't explain. That's where the unease lives. I'd be slow to disturb it.\n\nBefore suggesting anything I'd want to know what comes immediately before and after. Evenness is only a problem next to something — if the surrounding paragraphs also run short-short-long-short, the ear may start to anticipate it. On its own, this one has a shape.\n\nWould you paste the paragraph on either side, or is this an opening?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"She did not call,\" the drop is steep, and the four words",
+          "ok": true,
+          "detail": "said 4, \"She did not call,\" has 4"
+        }
+      ],
+      "reply": "Three of the four are short: \"The kettle clicked off,\" \"Mara stood at the window,\" and \"She did not call.\" The third sentence, the one about the dog, is much longer than the rest put together.\n\nWhat makes the short ones feel short is that long one sitting between them. The first two are quiet and clipped — a sound, then a person standing — and they read as stillness rather than as hurry. Then the dog's sentence opens out and carries a whole history in it: the barking, the cars, the spring the fence came down. When you come back to \"She did not call,\" the drop is steep, and the four words land harder than they would if everything around them were the same size.\n\nSo yes, I think it works, and the reason it works is the placement rather than the shortness itself. If all four sentences were short, none of them would stand out. If you wanted to test that, you could try the dog sentence broken into two and see whether the ending still has the same weight — my guess is it would lose some, but that's a guess, and you'd hear it better than I would.\n\nOne thing I'd want to know before saying anything more: \"She did not call\" could mean she didn't call the dog, didn't call out to anyone, or didn't make a phone call. The sentence sits right after the dog, so the dog reading comes first — but the passage doesn't close the other two off, and I can't tell from these words alone whether that openness is something you want.\n\nIs the ambiguity in that last line deliberate, or would you rather a reader landed on one meaning?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Three of the four are short: *The kettle clicked off.* / *Mara stood at the window.* / *She did not call.* The third sentence, the one about the dog, is much longer than the rest put together, and it's the only one carrying any history — the barking, the spring, the fence coming down.\n\nThat arrangement is doing something I'd be slow to disturb. The short sentences state only what happens on the surface: a click, a woman standing, something she doesn't do. None of them tells us what she's thinking. The long sentence holds all the remembered time in the passage, and it's spent on the dog rather than on Mara, so the past arrives attached to the animal and not to her. The withholding reads as deliberate rather than thin, at least here.\n\nThe last one is the one I'd point to most. *She did not call* is short enough that it never has to say who or what she didn't call — the dog, a person, on a phone. Four words leave that open. Almost any lengthening would force you to name it.\n\nThe one thing I can't judge from this alone: whether this clipped way of putting things belongs to this moment or is how the whole book speaks. Three flat short sentences in a row read as pressure if the surrounding pages are looser, and could read as habit if they're not. I'd need the paragraphs either side before saying anything about whether to vary it.\n\nDo you want to show me what comes immediately before and after?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Yes, it could — but it's the only long sentence here, and the length is doing something. The three short sentences around it are flat and quiet; the long one carries all the history (the barking, the fence, the spring), and then \"She did not call\" drops back to short. The stillness lands partly because the sentence takes time to get to it.\n\nIf you want it shorter, the question is which part of the history you're willing to lose. The barking is what makes the stillness strange, so that seems load-bearing. The fence and the spring place it in time and suggest how long this has gone on — that could go without the stillness losing its force, though you'd lose the sense of a known, dated history between the house and the dog.\n\nTwo directions, both optional:\n\n- Trim inside the sentence: *Across the yard the neighbour's dog, which had barked at every passing car since spring, lay perfectly still in the long grass.* Shorter, keeps the contrast, loses the fence.\n- Split it: give the dog's habit its own sentence and let the stillness stand alone. That gains a second short beat before \"She did not call,\" but it may also give you four short sentences in a row and flatten the moment the long one currently creates.\n\nLeaving it as it stands is a real option too — the imbalance between the one long sentence and the short ones around it looks deliberate.\n\nDo you want it shorter because it felt slow to you, or because you're weighing whether the fence detail earns its place?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Yes, it could — but it's worth knowing what the length is doing before you cut it.\n\nRight now that sentence is the only long one, sitting between two very short ones on either side. The clause about the dog barking at every passing car keeps you waiting between \"the dog\" and what the dog is actually doing, so the stillness arrives late. A reader might feel the hold before the news. Shorten it and the stillness comes straight at you, which is a different effect, not a worse one — quicker, flatter, more like a fact noticed.\n\nThe other thing that sentence carries is the reason the stillness matters at all. Without the barking history, a dog lying in long grass is just a dog lying in long grass. So if you shorten, the question is which part goes. Dropping \"since the spring the old fence came down\" keeps the habit and loses the dating of it. Dropping the whole middle clause gets you the shortest version and loses the strangeness.\n\nBefore I'd suggest anything specific, I'd want to know whether the fence coming down matters elsewhere in the book, or whether it's here only to place the barking in time.\n\nDoes that fence detail come back later?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "Your last sentence is one word — \"Silence.\" — so there's nothing left to cut inside it. Which makes me think you may mean the ending as a whole, from \"Then it stopped. Silence.\"\n\nIf so, here's what I notice. The four sentences get shorter in steps: a long one that runs the length of the afternoon, then a shorter one, then three words, then one. The writing shrinks as the rain does. That's doing real work, and I'd be slow to lose a step of it.\n\nThe one place I see slack is that \"Then it stopped\" and \"Silence\" are close to the same event told twice — the rain ends, and then we're told what that sounds like. You could end on either alone: \"Then it slowed to a whisper on the slate. Then it stopped.\" is faster and drier; ending on \"Silence.\" instead keeps the hush but loses the small click of the rain actually ceasing. Keeping both, as you have it, buys you a held beat before the chapter moves on — the reader waits a moment in the quiet. Whether that pause earns its keep depends on what comes next, which I can't see.\n\nWhat follows this paragraph?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "Your last sentence is one word — \"Silence.\" — so there's nothing left in it to cut.\n\nIf something feels slack there, I'd guess it isn't that sentence on its own but the pair: \"Then it stopped. Silence.\" The rain stopping and the quiet arriving are close to the same moment, named twice. You could let one carry it — ending on \"Then it stopped.\" keeps the plain report; ending on \"Silence.\" after \"Then it slowed to a whisper on the slate\" lets the quiet land without being announced first. Either loses something, though. As it stands, each sentence is shorter than the one before, down to a single word, and the sound of the writing dies out the way the rain does. Cutting one of the last two breaks that run.\n\nDid you mean \"Silence.\", or the two together?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Not even, as far as I can see — the opposite. Each piece is shorter than the one before it: the long opening sentence, then a shorter one, then three words, then one. The rain dies away and the sentences die away with it, so the shape is doing the work of the meaning rather than just sitting alongside it.\n\nIf there's a tension here, it's that the steps down are very regular. Two sentences start with \"Then,\" which makes the pattern easy to hear, and by the time a reader reaches \"Then it stopped\" they may already feel the one-word landing coming. That's not automatically a loss — a reader seeing it coming and then getting it is a kind of satisfaction too. But it's a different effect from surprise, and worth knowing which one you want.\n\nThe other thing I notice is at the very end. \"Then it stopped\" and \"Silence\" are close in meaning — the rain ceasing and the quiet that follows are nearly the same event. \"Silence.\" may be adding a beat of held time rather than new information, which can be exactly right, or can feel like the paragraph saying the same thing twice in a row.\n\nBefore I'd suggest touching any of it I'd want to know what comes next. If something breaks that silence in the following line — a voice, a knock, a thought — then the hard stop is a door, and I'd leave it entirely. If the silence just sits there and the next paragraph moves elsewhere, the last word is carrying more weight alone.\n\nWhat follows this paragraph?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Not even, as far as I can see — it shortens steadily. The first sentence runs long, the second is about half that, the third is four words, and then one word alone. The rain gets smaller and so does the sentence carrying it, right down to nothing. That's the opposite of even.\n\nWhat might be reading to you as evenness is the pair of \"Then\"s. Those two sentences start identically, so they can feel like matched steps even though one is much shorter than the other — a small ticking regularity sitting inside a shape that's otherwise narrowing. A reader might feel the pattern as deliberate there, the hand showing a little.\n\nWhether that matters depends on what's on either side. If the sentence before this paragraph is also long and winding, the taper reads as a change in the weather of the prose. If the next line is also short, the \"Silence.\" has nothing to land against.\n\nCan you show me the sentence that comes immediately after?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [],
+      "reply": "The three short ones are \"Then it slowed to a whisper on the slate,\" \"Then it stopped,\" and \"Silence.\" They sit after a first sentence that runs the full width of the afternoon, and each one is shorter than the last — nine words, then three, then one. The shrinking matches what the rain is doing. That's the main thing I notice, and it does seem to me to work: the sentences run down the same way the water does.\n\nThe place where I'd slow down is the gap between \"Then it stopped\" and \"Silence.\" Those may be the same moment said twice — once as something happening, once as the state it leaves behind. A reader might take the single word as the extra beat of stillness after the rain, the thing you only hear once the noise is gone. Or it might land as a restatement of what the previous three words already gave them. I can't tell which from these lines alone, and I'd rather not guess.\n\nWhat would settle it for me is what comes next. If the next sentence stays inside that quiet — someone noticing it, or the house doing something in it — then \"Silence.\" is the doorway and it earns its place. If the next sentence moves off to something else, the word may be carrying the whole weight of a pause that nothing picks up. I'd also want to know whether this is the end of a section, because a one-word close at a break reads differently than one mid-scene.\n\nThe twin \"Then\"s I'd leave. They tick like the sequence they're describing.\n\nDo you want to show me what follows, or would you rather look at the two \"Then\"s on their own?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Then it slowed to a whisper on the slate.\" (nine words",
+          "ok": true,
+          "detail": "said 9, \"Then it slowed to a whisper on the slate.\" has 9"
+        },
+        {
+          "kind": "ordinal-count",
+          "text": "first sentence runs twenty-two words",
+          "ok": true,
+          "detail": "said 22, sentence 1 has 22"
+        }
+      ],
+      "reply": "The three after the opening are the short ones, and they get shorter in order: \"Then it slowed to a whisper on the slate.\" (nine words), \"Then it stopped.\" (three), \"Silence.\" (one). The first sentence runs twenty-two words and travels — along the gutters, down the pane — so the shortening does the same thing the rain does: it runs out.\n\nSo yes, it works, in the sense that the shape of the sentences and the thing being described agree. Two things I'd flag, not as faults but as choices you're making:\n\nThe repeated \"Then\" at the start of two sentences is what makes the drop feel stepped rather than sudden — a countdown. Some readers may feel it as a deliberate beat, others as a tic. It's doing work either way.\n\n\"Silence.\" arrives after a sentence that has already stopped, on a page where the paragraph then ends. The stop is landed twice — once enacted, once named. Keeping it gives you a held note; letting the paragraph end on \"Then it stopped.\" would let a reader feel the quiet without being handed the word. I can't tell which serves you better without seeing what follows — a quiet next line would make \"Silence.\" redundant, a loud one would make it a hinge.\n\nWhat comes immediately after this?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Then it stopped.\" — already three words",
+          "ok": true,
+          "detail": "said 3, \"Then it stopped.\" has 3"
+        }
+      ],
+      "reply": "Counting from the start, the third sentence is \"Then it stopped.\" — already three words, and the shortest thing in the passage apart from \"Silence.\" So before I suggest anything I want to be sure which one you have in mind. If you mean \"Then it slowed to a whisper on the slate,\" that's the second.\n\nEither way, here's what I notice. The four pieces get shorter as they go: a long opening, then a medium one, then a short one, then a single word. That shrinking is doing the work of the rain dying out — you can feel it stop before you're told it stopped. Cutting \"Then it stopped\" any further would put two very short pieces side by side and lose a step in that descent. You could do it — \"It stopped. Silence.\" — but the \"Then... Then...\" pairing is what makes the two stages feel like one continuous fading rather than two separate facts, and you'd be giving that up.\n\nIf it's \"Then it slowed to a whisper on the slate\" you want tighter, there's more room there — dropping \"on the slate\" would quicken it, at the cost of the one detail that tells us where the rain has landed and what it sounds like on that surface.\n\nWhich of the two did you mean?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Then it stopped.\" — three words",
+          "ok": true,
+          "detail": "said 3, \"Then it stopped.\" has 3"
+        }
+      ],
+      "reply": "The third sentence is \"Then it stopped.\" — three words. There's one word in it you could drop: \"It stopped.\" That saves a word but breaks the chain of \"Then… Then…\", which is part of what's carrying the rain from steady to slowing to gone. You could also cut the sentence altogether and go straight from the whisper on the slate to \"Silence.\" — that's the biggest shortening available, and the cost is that the rain would stop offstage rather than in front of us.\n\nWorth saying: the thing making this work is that each sentence is shorter than the one before, so the rain quieting down and the sentences getting shorter happen together, and \"Silence.\" lands last because there's nowhere shorter to go. Any cut in the middle changes that stepping-down.\n\nIf you meant the sentence before it — \"Then it slowed to a whisper on the slate.\" — that's the one with room in it, and I'd want to know first whether you want the rain to stop suddenly or to thin out gradually before I'd suggest anything there.\n\nWhich did you have in mind, \"Then it stopped.\" or the whisper on the slate?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "The sentence is already short, so tightening it mainly means deciding what to drop. Two things are doing work in it: her still looking (the \"she could still see\"), and the colour of the coat picking up the pewter water from earlier. Cutting either one buys you a couple of words and costs one of those.\n\nA few directions, in rough order of how much they take out:\n\n- **She could still see the color of his coat at the rail.** — unchanged. Everything stays; it's the slowest of the options, which may suit a sentence meant to linger.\n- **She could still see his coat at the rail.** — tightest while keeping her looking. Loses the link back to the pewter water.\n- **The color of his coat was still at the rail.** — keeps the colour, drops her from the sentence. Slightly strange in a way that might read as her watching without admitting it, or might just read as odd.\n- **She could still see the color of his coat.** — keeps the colour, drops the rail. The rail has already been established by the ferry, so this may lose less than it looks like it does.\n\nMy own leaning is the last one, because the rail is the most repeatable detail and the colour is the one tying this ending back to the water in the second sentence — but the current wording holds the moment longest, and that may be the point.\n\nDo you want the pewter-water echo kept, or is it fine for the coat to stand on its own?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "The sentence is already lean, so most of the tightening available comes out of \"the color of\" — and that's the part doing the work. Seeing a colour at the rail rather than seeing him means the ferry is far enough that he's reduced to a smudge, and it picks up the pewter water from earlier. Cut it and you get speed but she's suddenly looking at a man again.\n\nTwo directions, both optional:\n\n- **Drop the place:** *She could still see the color of his coat.* Keeps the distance and the colour, loses the rail — which is the one thing anchoring him to the boat.\n- **Drop the holding-on:** *She could see the color of his coat at the rail.* Cutting *still* removes the sense of her watching past the point of sense. Tighter by one word; the loss is probably bigger than the gain.\n\nWorth saying: the last sentence is the longest in the passage, and that extra length is partly why it trails off instead of snapping shut after \"The gulls kept their own counsel.\" A reader might feel the ending close harder if it's shortened.\n\nIs it the length that's bothering you, or something else in how it lands?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Mostly even, but not entirely — and the exceptions are worth noticing before you change anything.\n\nSeven of the eight sentences are a single plain statement, and they take up about the same space. The one that breaks the pattern is the one about Tomas: it's the longest, it's the only one that strings two things together with \"and,\" and it's the only sentence that steps outside her head. So the paragraph already has one place where the pace shifts, and it's at the point where the attention moves to someone else.\n\nThe two spoken lines are the shortest, and they're built the same way — a few words, then he said, she said. That match makes the exchange sound like nothing much is happening, which seems to be the point if she's holding something down.\n\nThat's what makes me hesitate to call the evenness a problem. Steady, one-thing-at-a-time sentences are what a person sounds like when they're keeping themselves level. Where it may cost you is the last line. It carries the most — she's still looking, she hasn't stopped — but it arrives at the same walking pace as the water and the gulls, so a reader might move past it rather than feel it land. It also echoes the earlier comparison of the water to pewter, closing the paragraph on the same turn of phrase it opened with. That could read as a quiet return, or as a slightly neat seal on a moment that isn't resolved.\n\nBefore I'd suggest anything, I'd need to know whether this steadiness is how the pages around it move too. If the whole chapter walks like this, the evenness is the book's voice and I'd leave it alone. If this paragraph is flatter than its neighbours, then the flatness is doing something local at the moment she's holding back — which is a different thing, and worth keeping for a different reason.\n\nIs this paragraph steadier than the writing around it, or does the rest move the same way?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Not in the way the question suggests, I think. The sentences aren't the same length — they run roughly six words, eight, six, twelve, four, five, six, twelve. There's real variety there. What's steady is something else: almost every sentence starts with the thing doing the action and goes straight to the doing. Mara watched. The water was. She would not. Tomas lit. The gulls kept. She could still see. Only one sentence opens somewhere else — \"Behind her\" — and the two spoken lines sidestep it.\n\nSo the sameness is in the build, not the measure. And each sentence closes itself off completely. There's one \"and\" in the whole paragraph; nothing else runs over into what follows. Statement, stop. Statement, stop. That might be exactly right for a woman deciding she will not cry — each thought cut short before it can go anywhere. A reader could feel that as held breath rather than monotony. It's also worth noticing where the one break in the pattern falls: \"Behind her, Tomas\" is the only sentence that starts somewhere other than with its subject, and it's the only moment we leave Mara's head. The shape and the attention shift together.\n\nThe two things I'd want before saying anything about changing it: how the paragraphs on either side of this one move, and whether this clipped quality is how the book sounds generally or something that tightens here. If the surrounding prose runs longer and looser, this paragraph is already doing its work by contrast and I'd leave it. If everything around it moves this way too, then the question isn't about this paragraph at all.\n\nOne direction available to you, if you did want more give: let one sentence lean into the next instead of stopping — the gulls and the coat, say, held in a single breath. That would gain a small loosening right at the end, where she stops resisting and just looks. It would cost you the last full stop before \"She could still see,\" which is currently a little silence she has to cross. I'd want to know what you think that silence is doing before trading it away.\n\nDo you want to show me what comes directly before this?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\" and \"In a minute, she said\" — at four and five words",
+          "ok": false,
+          "detail": "said 5, \" and \" has 1"
+        }
+      ],
+      "reply": "The two shortest are the spoken ones — \"You coming, he said\" and \"In a minute, she said\" — at four and five words. But what struck me more is that almost everything here is short. Counting them: six, eight, six, twelve, four, five, six, twelve. Only two sentences run past eight words, and the rest sit in a tight band.\n\nSo the shortness isn't an effect applied to a few lines; it's the whole weather of the passage. I think it works, and here's where I can point to why. Mara is holding something down. The sentences hold it down too — they close before they can open out into feeling. \"She would not cry, not here\" is the clearest case: that second \"not\" could have introduced a longer clause and instead it clamps the sentence shut. A reader may feel that tightness as her tightness, though that's my reading rather than something the words state.\n\nThe one place I'd flag a possible friction is the two long sentences, because they're doing different jobs and the matched length may set up an echo you didn't intend. The first long one — \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" — is the only place we leave Mara and go into someone else's head, and it's also where the sentence stretches. The last one, \"She could still see the color of his coat at the rail,\" is the sentence that finally lets her look, and it's exactly as long. That symmetry might be the quiet point of the passage, or it might make the ending feel like it rhymes with Tomas's dismissal when you want it to land on her.\n\nThe other thing I notice is \"The gulls kept their own counsel.\" It's short like the rest, but it's the only line that's wry and figurative — a voice slightly outside Mara, commenting. It may be doing useful work as a breath between the dialogue and the last line, or it may pull a reader out of her just before the sentence that needs them closest. I can't tell from these words alone which it is.\n\nBefore I'd suggest changing anything, I'd want to know whether this clipped way of moving runs through the scene or whether it's a pocket of held breath in writing that otherwise opens up — and whether that dry, observing voice in the gulls line appears elsewhere.\n\nDoes that voice show up in other places, or is this the only time it comes through?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [],
+      "reply": "The shortest are the two spoken lines — \"You coming, he said\" and \"In a minute, she said\" — and after them the opening sentence, the one about not crying, and the gulls. Most of the rest sit close to that, around six to eight words. Only two sentences run notably longer, and they happen to be the same length: the one about Tomas lighting the cigarette, and the last one about the coat at the rail.\n\nI think it works, and here's what I notice about why. The clipped sentences aren't just terse for atmosphere — they match a woman holding herself still so she doesn't break. Short sentences are what someone says to herself when she's deciding not to feel something. So the evenness reads as effort, not as a tic.\n\nThe more interesting thing is where the two long ones fall. Both of them leave the surface she's clamping down on. One goes into Tomas's head and gives us his judgment of her; the other lets her look at the departing ferry longer than she's been letting herself look at anything. The passage stays tight and then twice it stretches, and both stretches are a kind of leak. That's doing real work, whether or not you planned it that way.\n\nThe one thing I'd flag, and only as a question rather than a problem: the Tomas sentence is the single place we're told what someone other than Mara is thinking. That's what makes it longer, and it's also a shift away from standing behind her eyes. Whether that's a crack in the surface or an unintended step out depends on how the rest of the chapter handles who we're inside — which I can't tell from these eight sentences. Before I'd suggest anything there, I'd want to know whether we stay with Mara elsewhere, and whether the \"colour of old pewter\" / \"color of his coat\" pairing is meant to be heard as the same phrase coming back.\n\nDo you want to look at that Tomas sentence, or leave the lengths as they are and move on?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Yes, it could — but what you'd be cutting is the part that's doing the most.\n\n\"She would not cry, not here\" says two things. The first half is the resolve. The second half narrows it to this place, and in doing so admits there's somewhere else, later, where she will. Cut to \"She would not cry here\" and you keep the meaning but lose the sound of someone making a bargain with herself mid-thought. Cut to \"She would not cry\" and the admission goes entirely.\n\nThe small pause at the comma also holds the line back for a beat before it finishes, which could read as the physical act of not crying. That's one way it might land, not the only one.\n\nWorth noting it's already one of the shortest in the passage — six words, same as the opening sentence. So the question may not really be about length but about whether that doubling-back feels like too much pressure on a small moment.\n\nBefore I'd suggest anything, I'd want to know: does she cry later in the chapter? If she does, \"not here\" is quietly setting that up and I'd leave it. If she never does, the line is promising something the book doesn't pay, and shortening it starts to make sense.\n\nDoes she cry later?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [],
+      "reply": "It could — \"She would not cry.\" is the obvious shorter version — but the two halves aren't saying the same thing twice. \"She would not cry\" is a flat refusal; \"not here\" quietly admits she will, somewhere else, later. Cut the second half and you lose that admission, and Mara becomes someone who simply won't cry rather than someone postponing it.\n\nThe other thing the current version does is hesitate. The sentences around it don't: the ferry pulls away, the water is pewter, Tomas lights a cigarette. This is the one place the writing doubles back on itself, which is also the one place her control slips enough to need restating. A shorter version would move at the same even pace as everything else.\n\nIf what's bothering you is length rather than meaning, \"Not here, she thought\" or just \"Not here\" keeps the postponement and drops the words — though \"Not here\" alone leans on the reader to supply what she won't do.\n\nBefore suggesting anything further I'd want to know what's prompting the question — does the sentence feel slow to you, or too explanatory about her feeling, or something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "*She did not call.* Four words",
+          "ok": true,
+          "detail": "said 4, \"She did not call.\" has 4"
+        }
+      ],
+      "reply": "This is at the level of the sentence, and I should say first that I can't alter your text — any change is yours to make at the desk.\n\nLooking at what's there: the last sentence is *She did not call.* Four words, no modifiers, nothing hedged. There isn't slack in it to take out. The only contraction available would shorten the look of it without shortening the beat, and the full *did not* is carrying some of the weight — that flat formality is what makes the refusal feel deliberate rather than casual. I'd leave it as it stands.\n\nIf something about it is bothering you, I suspect it isn't length. Is it that the sentence feels too quiet after the long middle one, or that *call* is doing more work than you want it to carry?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "In the version I have, the closing sentence is already down to four words — She did not call — and each one is doing separate work: the pronoun places us back with Mara after the long middle sentence, the negative is the whole point, and call is what she withholds. Cutting any of them changes the meaning rather than compressing it; a bare Mara did not call or She didn't would alter distance or register, not tightness.\n\nIf what feels slack is nearer the middle — the long clause about the dog and the fence — that's where the sentence weight actually sits, and tightening there would make the last line land harder by contrast. Either way I can't alter the text myself; you'd make the change at the desk.\n\nWould you like me to look at the long middle sentence instead?\n\n[[studio:open-desk]]"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"She did not call.\" are all four or five words",
+          "ok": false,
+          "detail": "said 5, \"She did not call.\" has 4"
+        }
+      ],
+      "reply": "This is the level of how the sentences move, and what's on the page isn't even in length: three short sentences around one long one. \"The kettle clicked off.\" and \"Mara stood at the window.\" and \"She did not call.\" are all four or five words; the dog sentence runs much longer, and its relative clause about the barking holds the stillness off until the very end.\n\nWhat might read as evenness is that all three short sentences take the same shape — subject, verb, flat declarative, full stop — so they land with the same weight each time. The long sentence breaks the length but not that grammar. So the paragraph alternates, but the alternation is between one kind of long and one kind of short, and the short kind arrives three times unvaried.\n\nWhether that is too even depends on what you want from the ending. \"She did not call.\" gets its force from matching the openers — it sounds like the same flat observation, except something has been withheld. If the short sentences were varied, that last one would lose some of its echo.\n\nWould it help to look at what the long sentence is doing with its delay, or at where in the paragraph you feel the flatness most?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "This is at the level of how the sentences move. By length the paragraph isn't even at all: three short declaratives frame one long sentence whose relative clause — about the dog barking at every passing car since the spring the old fence came down — runs much further than anything around it. The shape is short, short, long, short.\n\nWhat may read as evenness is something else: the three short sentences all have the same grammatical build, a subject followed straight by its verb, each landing as a flat statement with no subordination. The kettle clicks, Mara stands, she does not call. So the sameness is in their construction rather than their length, and it gives the paragraph a clipped, held-breath quality that the long middle sentence interrupts and then releases back into.\n\nWhether that's too even depends on what you want the final sentence to do. Because it matches the opening two in shape, it reads as a return rather than a turn — the paragraph closes the way it opened, which can feel like a door shutting or can feel like the withholding gets absorbed into the same flatness as the kettle.\n\nWould it help to say what you want that last sentence to land as?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"She did not call.\" drops back to four words",
+          "ok": true,
+          "detail": "said 4, \"She did not call.\" has 4"
+        }
+      ],
+      "reply": "At the level of how the sentences move: three of the four are short, and they sit around one long one. \"The kettle clicked off.\" and \"Mara stood at the window.\" open with the same bare shape — subject, verb, nothing held back. Then the middle sentence runs long, and the length is doing something: the relative clause carries the dog's whole history, and the history has its own history buried inside it, the spring the old fence came down. So the one place the prose expands is the one place the past gets in. Then \"She did not call.\" drops back to four words.\n\nWhether it works depends on what you want from that last sentence. Its shortness makes it feel withheld rather than merely brief — partly because *call* is left without an object, so a reader does not know if she is calling to the dog, calling someone about it, or calling out at all. The three-short-one-long pattern earns that: after the long sentence has given you more than you asked for, the short one giving you less registers as a refusal. The one risk is that the first two short sentences are so similarly built that they can read as a single setting-up gesture rather than two separate moments, which slightly softens the contrast when the long sentence arrives.\n\nWould you like to stay with how these sentences move, or step back and look at what the opening is doing for the chapter as a whole?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [],
+      "reply": "This is the level of how the sentences move. Three of the four are short: *The kettle clicked off*, *Mara stood at the window*, and *She did not call* — all plain subject-verb statements with no subordination. Between them sits the one long sentence about the dog, and it is the only one carrying a relative clause, the only place the passage reaches back into any history.\n\nWhat that arrangement does: the short sentences read as flat observation, a camera noting things in order, while the long sentence is where the passage lets itself remember. So the stillness of the dog arrives inside the one sentence with the most movement in it, which gives that stillness something to be still against.\n\nThe last sentence is short and also negative — the only withheld action in the paragraph — so brevity and refusal land together. That brevity is also what leaves *call* open: call the dog, call out, call someone. Whether that openness is doing what you want is the one thing I can't settle from the paragraph alone; it depends on what follows.\n\nWould it help to look at how this paragraph hands off to whatever comes next?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Yes — nearly all its length sits in the clause between the commas, the one about the dog barking at every passing car since the fence came down. Strip that and you'd be left with a short sentence that lands on the stillness almost at once.\n\nWhat you'd be trading is the history. As it stands, the sentence makes you wait through the dog's habit before you reach what it isn't doing, so the stillness arrives as a break in a pattern rather than a fact. It's also the only long sentence among three short ones, and that length is what makes the final four words land as flatly as they do.\n\nSo the question is less whether it can be shorter than whether you want the reader to feel the delay. Would it help to look at what the clause is doing for the paragraph's rhythm, or at the paragraph as a whole?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Yes, it could be — the length sits almost entirely in the relative clause about the dog's barking and the fence, and that clause could go or shrink without touching the frame of the sentence, which is just the dog lying still in the long grass.\n\nWhat the length is doing right now, at the level of how the sentences move: it's the only long sentence among four, and the clause delays the arrival of \"lay perfectly still\" so that the stillness lands after a stretch of remembered noise. The two clipped sentences before it and the clipped one after it make that delay audible. Shortening it would even out the rhythm and push more weight onto \"She did not call,\" which currently gets its force partly from the contrast with what precedes it. You'd also lose the history — the spring, the fence coming down — which is the only past in the paragraph.\n\nSo it's less a question of whether it can be shorter than of whether you want the stillness to arrive slowly or fast. Which of those is closer to what you're after here?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "As it stands, the last sentence is a single word — Silence. — so there is no slack in it to take out; it is already as short as a sentence gets. The tightening you may be after is in the pair that ends the paragraph, since Then it stopped. and Silence. both land the same moment, one naming the rain's end and one naming what is left. Cutting either would make the ending quicker: keep Then it stopped. and the rhythm of the two Thens closes cleanly; keep Silence. and the paragraph ends on the absence rather than the event. I can't make the change — that's yours to type, and the desk is where you'd do it.\n\nWould you rather look at what each of those two endings does to the paragraph's rhythm before you choose?\n\n[[studio:open-desk]]"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "Your last sentence as it stands is a single word: Silence. There is nothing in it to compress — tightening has no room to work here. The only moves available are different in kind: cutting it, so the paragraph ends on Then it stopped and lets the stopping carry the silence by implication; or folding it into the preceding sentence so the stop and the silence arrive in one breath rather than two beats.\n\nWhat the word currently does is add a third beat after two already-short sentences, so the paragraph steps down in three stages from the long opening sentence. Removing it would leave two steps instead of three, and the fall would be quicker and less staged.\n\nI can't make any of those changes myself — you would apply it at the passage desk.\n\nWould you like me to say more about how the three-beat fall reads against that first long sentence, or is it the ending word itself you're weighing?\n\n[[studio:open-desk]]"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [],
+      "reply": "This is at the level of how the sentences move, so let me stay there.\n\nEven isn't quite what I see. The four sentences contract steeply — twenty-two words, then nine, then three, then one. That's a diminuendo, and the shape of it matches what's being described: rain thinning out to nothing. The last word arrives with no sentence left around it.\n\nWhat might read as evenness is something narrower: **Then** opens both the second and third sentences in the same position with the same pronoun following it. That parallel is what makes the middle feel like a measured step rather than a fall. It can read as deliberate — the two beats of a clock winding down — or as a tic, depending on whether that construction turns up elsewhere nearby. I can only see this paragraph, so I can't tell you which it is here.\n\nWould you like to look at whether that repeated opening recurs in the surrounding pages, or stay with the four sentences as they stand?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "This is at the level of how your sentences move. By length, the paragraph is the opposite of even: the first sentence runs long, carrying the rain across gutters and pane, then each one after it is shorter than the last, down to the single word. That contraction is doing most of the work.\n\nWhat may read as evenness is not length but patterning. Two sentences open the same way, with Then, and the drop from one to the next is regular enough that a reader can feel the stair before they reach the bottom. Whether that is too even depends on what you want the ending to feel like: a sequence that arrives at silence by design, which the repetition supports, or a stop that catches the reader slightly off balance, which a less predictable approach would serve. I would not call the regularity a fault in itself — it is audible, and audible is not the same as mechanical.\n\nWould it help to say what you want that final word to do to a reader?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [],
+      "reply": "This is at the level of how the sentences move. Counting from the passage as I have it: the first sentence runs the full length of the afternoon, from the gutters down to the cracked pane; the second, beginning with Then, is markedly shorter; the third, also beginning with Then, is shorter still — three words after the opener; and the last is a single word standing alone, Silence.\n\nSo the shortening is a ladder, and it falls at the same rate the rain does. The rhythm enacts the dying-off rather than only reporting it, and the repeated Then makes the steps feel measured, like something being counted down.\n\nThe one place a reader might feel the effect doubled is the last two: by the time the sentences have contracted to Then it stopped, the silence has already arrived in the rhythm itself, so Silence names what the shape has delivered. Whether that lands as emphasis or as restatement depends on how much weight you want the paragraph to end on — a held beat versus a quick cut. Both are real effects; I would not call either a problem.\n\nWould you rather stay with the sound of this ending, or look at what the paragraph is doing for the opening of the chapter as a whole?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [],
+      "reply": "You're asking at the level of how the sentences move, so I'll stay there.\n\nThree of the four read short, and they shorten in a measured way: the opening sentence runs twenty-two words and carries the rain the whole length of the house, then nine for the slowing, three for the stopping, one for what's left. The descent is steep and regular enough that a reader will feel it as a shape rather than just a sequence — the sentences do what the rain does, running out.\n\nWhat makes the last one land differently from the other two isn't only length. \"Silence.\" is the only one without a verb, so it reads as a condition rather than an event, where the two \"Then\" sentences are still describing something happening. That shift from action to state is doing as much work as the shortening is. The repeated \"Then\" also knits the middle two together as a pair, which sets up the final word as arriving from outside that pattern.\n\nWhat it costs, if anything, is that the effect is visible: a reader who notices the ladder may feel the paragraph arranging itself for them. Whether that's a problem depends on whether this opening wants to be felt as composed or as overheard.\n\nDo you want it to be noticed as a shape, or to pass without the reader seeing the hand?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Then it stopped.\" — three words",
+          "ok": true,
+          "detail": "said 3, \"Then it stopped.\" has 3"
+        }
+      ],
+      "reply": "As it stands, the third sentence is \"Then it stopped.\" — three words, already the shortest full sentence in the passage, with only the one-word \"Silence.\" after it. The passage is already stepping down: a long first sentence, a shorter second, then those two. Dropping \"Then\" is the only cut available, and it would break the pairing with the \"Then\" before it, which is what makes the shortening feel like a sequence rather than three separate observations.\n\nIf you were counting \"Then it slowed to a whisper on the slate.\" as the third, that one does have room in it — \"on the slate\" is the part carrying new information, \"slowed to a whisper\" the part doing the work.\n\nWhich of the two did you have in mind?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "ordinal-count",
+          "text": "third sentence is Then it stopped — three words",
+          "ok": true,
+          "detail": "said 3, sentence 3 has 3"
+        }
+      ],
+      "reply": "As the passage stands now, the third sentence is Then it stopped — three words, with the one-word Silence following it. So it is already about as short as the sequence gets; shortening further would mean cutting a word from it or folding it into what follows.\n\nIf you were thinking of the one that still carries some length, that would be the second, which runs through to the slate. Which of the two did you have in mind?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "This is a Line-level question — the sentence as it moves, not the paragraph.\n\nAs it stands the sentence reads: She could still see the color of his coat at the rail. There are two things carrying weight in it that a tightening would have to choose between. Cutting the color of gives you the shortest version — she could still see his coat at the rail — which is four words leaner and makes the distance concrete, but it drops the thread back to the water being pewter, which is the one other place the passage names a colour. Cutting still instead keeps that thread but loses the sense of time having passed since the ferry pulled away. There's also the option of cutting she could see, the perceiving frame, and letting the coat sit at the rail on its own — that's the biggest change in feel, because it moves the ending out of her head and onto the thing she's looking at.\n\nI can't make any of these changes myself; you'd make the edit at the desk, in the passage.\n\nWould you rather keep the colour echo or the sense of elapsed time? That decides it.\n\n[[studio:open-desk]]"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Tighten the last sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "I can't change the line myself — that stays with you — but I can say what's load-bearing in it. As it stands the sentence ends with \"She could still see the color of his coat at the rail.\" Two things are doing work there: *still*, which holds the duration of her looking past the point where she said she'd stop, and *the color of*, which picks up the pewter water from the third sentence, so the coat and the sea are being registered by the same eye. Tightening usually means losing one of those. Cutting to his coat at the rail gains speed and ends on a hard image, but drops the echo and the held time. Cutting only *the color of* keeps *still* and loses the rhyme. Cutting only *could still* makes it more immediate but flattens the ache of persistence.\n\nWhich of those two — the duration or the echo back to the water — do you most want the line to end on?\n\n[[studio:open-desk]]"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 1,
+      "claims": [],
+      "reply": "This is the level of how your sentences move, so that's where I'll stay.\n\nThe lengths are less even than the paragraph feels. Counting them: six, eight, six, twelve, four, five, six, twelve. What creates the evenness isn't length but construction — nearly every sentence opens on its subject and runs straight through in the same declarative shape: Mara watched, The water was, She would, You coming, In a minute, The gulls kept, She could. Only \"Behind her\" starts anywhere else. The two lines of dialogue break the length pattern but not the pattern of shape, since each lands on a matched tag.\n\nWhat that evenness does here is worth weighing before you decide it's a problem. The held-flat quality matches a woman who has decided not to cry, and the two longest sentences — the one carrying Tomas's indifference and the one carrying the coat at the rail — are the two where the feeling actually leaks. That's a shape, not an accident of monotony.\n\nWould you like to look at what the paragraph would lose if that flatness broke somewhere, or stay with how the two long sentences are working?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Is the rhythm of this paragraph too even?",
+      "rep": 2,
+      "claims": [],
+      "reply": "This is the level of how the sentences move. Lengths actually vary a fair amount — the two longest sentences, about Tomas lighting the cigarette and about the coat at the rail, run roughly twice the length of the shortest, and the two spoken lines are shorter still. So it isn't even by measure.\n\nWhat may feel even is the construction. Almost every sentence is a plain declarative that opens with its subject and closes on a full stop with nothing held open — no subordination, no clause that turns back on itself, no sentence that runs on into the next. Even the spoken lines are built into the same unbroken texture as the narration, so they pass without lifting the surface. The result is a steady, falling cadence, one closed statement after another.\n\nWhether that is too even depends on what you want it to do"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 1,
+      "claims": [],
+      "reply": "You're asking at the level of how the sentences move, so that's where I'll stay.\n\nThe shortest are the two lines of speech — You coming, he said and In a minute, she said — and after those, the opening, Mara watched the ferry pull away, and She would not cry, not here. The two longest sit at either side of the dialogue: the one about Tomas lighting a cigarette, and the closing line about the coat at the rail. So the passage narrows toward the middle and opens out again at the end.\n\nWhat that does: the clipped run in the middle holds the feeling at arm's length, which suits a character deciding not to cry. The speech being unmarked and unadorned means it doesn't lift out of the narration — it passes at the same low pitch as everything else, almost as if overheard rather than exchanged. Then the final sentence runs longer and lets her look, which is the one place the withholding gives way.\n\nThe one place the shortness works differently is The gulls kept their own counsel. It's brief like the others, but it's a wry aside in a sequence that has otherwise been plain observation, so it carries more authorial presence than its neighbours. Whether that's a welcome break or a small step away from Mara is a judgement only you can make.\n\nWould you like to look at where that sentence sits in relation to her, or stay with the rhythm as a whole?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Which sentences feel short to you, and does that work?",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"The gulls kept their own counsel.\" The two longest are both twelve words",
+          "ok": false,
+          "detail": "said 12, \"The gulls kept their own counsel.\" has 6"
+        }
+      ],
+      "reply": "This is at the level of how the sentences move. Counting them, the shortest are the two lines of speech — four and five words — and then a cluster at six: the opening, \"She would not cry, not here,\" and \"The gulls kept their own counsel.\" The two longest are both twelve words: the sentence about Tomas, and the last one. So short is the baseline here rather than a departure from one; nothing in the passage runs long.\n\nWhat that does is make the two twelve-word sentences the only places the rhythm opens, and both are the places where attention leaves Mara's own held body — out to Tomas behind her, then out across the water to the coat at the rail. The passage closing on one of its longest sentences gives it somewhere to arrive, after a lot of stopping.\n\nThe cost of a uniform short measure is that it can start to read as a manner rather than as her held breath — the reader stops hearing restraint and starts hearing a tapping. Whether that has happened depends on how long this register runs; in eight sentences it holds, and the comma in \""
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 1,
+      "claims": [],
+      "reply": "It could be, in the sense that it has a detachable part: as it stands the sentence is \"She would not cry, not here,\" and the only real cut available is the second half. Dropping that would leave a flat statement of will. Keeping it does two things at once — it turns the refusal into a self-correction, a second thought arriving a beat after the first, and it points at the place she's standing, which matters because Tomas is behind her with his cigarette. The comma is what gives you that beat.\n\nSo the question is less whether it can be shorter and more whether you want the hesitation in it. Against the sentences around it — the clean declarative about the ferry, the longer one about the water — the doubled clause is where the paragraph first sounds like her thinking rather than someone reporting.\n\nWould it help to look at how the sentence lengths move across the whole paragraph, or do you want to stay with this one?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "ask": "Could the third sentence be shorter?",
+      "rep": 2,
+      "claims": [],
+      "reply": "The third sentence as it stands is She would not cry, not here — six words, already the shortest in the paragraph apart from the opening one. It could be cut to its first clause, but the second half is doing something: the repetition of not is the sound of someone instructing herself twice, and here anchors the refusal to the dock, in public, with Tomas behind her. Without it you'd have a flat statement of fact rather than a held line. So shorter is possible, but the length is where the effort of not crying lives.\n\nThis is a question at the level of how the sentence moves. Would you like to stay with that, or look at how the paragraph's rhythm works as a whole?"
+    }
+  ]
+}

@@ -62,6 +62,10 @@ ARG NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=true
 ENV NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=${NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS}
 ARG NEXT_PUBLIC_SHOW_BETA_BADGE=false
 ENV NEXT_PUBLIC_SHOW_BETA_BADGE=${NEXT_PUBLIC_SHOW_BETA_BADGE}
+# Writer's Studio Develop stage (P4R1DevelopView). Off unless the build passes 1;
+# production compose passes 1 (founder ruling 2026-11-09: on for all Writer's Studio beta members).
+ARG NEXT_PUBLIC_WS_DEVELOP_STAGE=0
+ENV NEXT_PUBLIC_WS_DEVELOP_STAGE=${NEXT_PUBLIC_WS_DEVELOP_STAGE}
 
 # Install psql for SQL migrations (used by migrate service)
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*

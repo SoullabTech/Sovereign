@@ -20,6 +20,7 @@
  * into its own table, and only through the commission.
  */
 
+import { resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -156,11 +157,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
      Absent `scope` means the whole work, which is what every existing caller
      asked for and still gets. */
-  const ALLOWED = new Set(['lens', 'scope']);
+  const ALLOWED = new Set(['lens', 'scope', 'sanctuary']);
   const keys = Object.keys((body as object) ?? {});
   const foreign = keys.filter((k) => !ALLOWED.has(k));
   if (foreign.length > 0) {
     return NextResponse.json({ refusal: 'foreign_field', detail: foreign.join(', ') }, { status: 400 });
+  }
+  /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09): a reading is a KEPT record of MAIA reading the writing. It is commissioned only
+     when the request DECLARED an ordinary posture; Sanctuary or an undeclared posture reads nothing and writes nothing. */
+  const posture = await resolveStudioPosture(memberId, body as Record<string, unknown>);
+  if (!posture.keep) {
+    return NextResponse.json(
+      { refusal: posture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared', stage: 'capture' },
+      { status: 409 },
+    );
   }
 
   const rawScope = (body as { scope?: unknown } | null)?.scope;

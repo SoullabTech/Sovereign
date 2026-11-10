@@ -1,0 +1,21 @@
+.closed { margin: 12px 0 4px; }
+.closed button, .actions button, .head button { font: inherit; font-size: .86rem; color: #f3e6cd; background: rgba(223, 189, 132, .08); border: 1px solid rgba(223, 189, 132, .55); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.panel { display: grid; gap: 10px; margin: 12px 0 4px; padding: 12px 14px; border: 1px solid rgba(223, 189, 132, .4); border-radius: 10px; background: rgba(23, 32, 43, .75); color: #e9dfcc; font-size: .9rem; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #f3e6cd; }
+.note { margin: 0; font-size: .8rem; color: #b9b0a0; line-height: 1.45; }
+.exchange { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid rgba(223, 189, 132, .15); }
+.q { margin: 0; color: #dfbd84; font-style: italic; }
+.a { margin: 0; white-space: pre-wrap; line-height: 1.55; }
+.safety { color: #f4daac; }
+.panel textarea { font: inherit; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 8px; color: #f3e6cd; background: #121a24; resize: vertical; }
+.alert { margin: 0; color: #f4daac; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions button:disabled { opacity: .55; cursor: default; }
+.dateField { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; color: #d8cbb3; }
+.dateField input { font: inherit; padding: 5px 8px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 6px; color: #f3e6cd; background: #121a24; }
+.dateField button { font: inherit; font-size: .8rem; color: #f3e6cd; background: transparent; border: 1px solid rgba(223, 189, 132, .4); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.deepOptions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: .84rem; color: #d8cbb3; }
+.inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.block { display: grid; gap: 4px; font-size: .84rem; color: #d8cbb3; }
+.block input { font: inherit; padding: 7px 10px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 8px; color: #f3e6cd; background: #121a24; }
+.reading { white-space: pre-wrap; line-height: 1.6; padding: 12px 14px; border-top: 1px solid rgba(223, 189, 132, .2); color: #ede4d3; }

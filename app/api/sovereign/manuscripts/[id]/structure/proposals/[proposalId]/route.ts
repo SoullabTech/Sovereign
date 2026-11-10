@@ -29,6 +29,7 @@
  * the draft as it stands, and is `null` where the comparison cannot be made.
  */
 
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { loadProposal, updateReviewed, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
@@ -193,6 +194,8 @@ export async function POST(
      merely cast: `previewOnly: "false"` is truthy, so an intended commit
      returns an unsaved preview and says nothing; a fractional revision matches
      nothing and reaches the member as an invented editing conflict. */
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(memberId, raw); if (refused) return refused; }
   const parsed = parseReviewRequest(raw);
   if (!parsed.ok) {
     return NextResponse.json({ refusal: 'malformed', detail: parsed.reason }, { status: 400 });

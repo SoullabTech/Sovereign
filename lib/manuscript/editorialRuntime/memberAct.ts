@@ -33,6 +33,7 @@
  * would answer it by accident.
  */
 
+import type { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { appendTurnWithClient } from '../ask/threadStore';
 import { UNMEASURED } from '../ask/staleness';
@@ -58,6 +59,8 @@ export interface MemberEditorialActInput {
   /** ⛔ The THREAD is named. ⛔ The chain is NEVER accepted from the caller. */
   readonly threadId: string;
   readonly act: MemberEditorialAct;
+  /** Sanctuary closure (founder ruling 2026-11-09): proof the route admitted an ordinary posture. The store refuses without it. */
+  readonly keep: KeepWitness | null;
 }
 
 export type MemberActRefusal =
@@ -130,12 +133,13 @@ export async function persistMemberEditorialAct(
   input: MemberEditorialActInput,
 ): Promise<MemberActResult> {
   const { memberId, threadId, act } = input;
+  const keep = input.keep as KeepWitness;
   try {
     return await transaction(async (tx) => {
       const chainId = await resolveEditorialChain(tx, threadId, memberId);
 
       /* ⭐ THE ONLY THING CONSULTED IS `act.act`. */
-      const turnIndex = await appendTurnWithClient(tx, {
+      const turnIndex = await appendTurnWithClient(tx, { keep,
         threadId, memberId, speaker: 'author', body: act.text, staleness: UNMEASURED,
       });
 
