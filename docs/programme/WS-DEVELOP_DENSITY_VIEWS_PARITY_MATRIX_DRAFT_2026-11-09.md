@@ -35,11 +35,13 @@ Design question 1: does density apply to both paths, or does path B get retired/
 ## Acceptance (from ChatGPT research, adapted)
 Focus · Discoverability (every approved tool findable in every view) · MAIA continuity across chapters · Persistence without surprise · Authorship (challenge/decline/undo MAIA's proposals) · plus keyboard, visible focus, contrast, zoom, screen reader, reduced motion. Test with writers who prefer visible structure and writers who want less. Fictional-account scenarios only.
 
-## Open decisions (founder)
-1. Retire path B or give it density too?
-2. Preference storage: browser-local (no migration) vs saved to account (migration, NOT authorized). Draft assumes browser-local.
-3. Per-writer default only, or also per-Work override later?
-4. Where exactly the View control sits.
+## Decisions (founder, 2026-11-09 — "yes to all" on Claude's recommendations)
+1. Path B (old dense view) is NOT retired: it gets the same density setting (Quiet = folded, All tools = open). Nothing removed; reachability preserved.
+2. Preference is stored browser-only for now (no migration; does not follow the writer across devices; account storage is a later, separately authorized step).
+3. One default per writer, with a temporary change allowed on the current manuscript. Saved per-Work settings only after testing.
+4. A small labelled "View" control in the Develop header beside "Edit in Write" and "More", identical in every view.
+5. Default is Quiet, the same for every writer, never inferred.
+Still open: the live check (does the dense view return when an observation is opened or the writer leaves overview?), and the full per-button inventory of the 92 buttons.
 
 ## Not authorized
 Source edits, merge, deploy, migrations, member-facing copy, builds.
