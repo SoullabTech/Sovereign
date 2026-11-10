@@ -3,8 +3,11 @@
  * place route's ownership and input refusals.
  */
 import * as Astronomy from 'astronomy-engine';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { NextRequest } from 'next/server';
 import { astroMapInput, astroMapLines } from '../lib/astrology/proAstroMap';
+import { WORLD_LAND_110M_SEGMENTS, worldLandPath } from '../lib/astrology/worldLand110m';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
@@ -25,6 +28,25 @@ function horizon(body: 'Venus' | 'Mars', lat: number, lng: number) {
   const eq = Astronomy.Equator(Astronomy.Body[body], time, observer, true, true);
   return Astronomy.Horizon(time, observer, eq.ra, eq.dec);
 }
+
+describe('bundled world land', () => {
+  it('renders dateline-safe Natural Earth outlines beneath the map lines', () => {
+    expect(WORLD_LAND_110M_SEGMENTS.length).toBeGreaterThan(100);
+    expect(WORLD_LAND_110M_SEGMENTS.some((segment) => segment.some(([, lat]) => lat <= -89))).toBe(true); // Antarctica retained
+    for (const segment of WORLD_LAND_110M_SEGMENTS) {
+      expect(segment.length).toBeGreaterThan(1);
+      for (let i = 1; i < segment.length; i += 1) {
+        expect(Math.abs(segment[i][0] - segment[i - 1][0])).toBeLessThanOrEqual(180);
+      }
+    }
+    const paths = WORLD_LAND_110M_SEGMENTS.map((segment) => worldLandPath(segment));
+    expect(paths.every((path) => path.startsWith('M'))).toBe(true);
+    expect(paths.join(' ')).not.toMatch(/NaN|Infinity/);
+    const markup = renderToStaticMarkup(createElement('svg', null,
+      paths.map((d, index) => createElement('path', { key: index, d }))));
+    expect((markup.match(/<path/g) || [])).toHaveLength(paths.length);
+  });
+});
 
 describe('astro map lines', () => {
   const lines = astroMapLines(astroMapInput(utc));
