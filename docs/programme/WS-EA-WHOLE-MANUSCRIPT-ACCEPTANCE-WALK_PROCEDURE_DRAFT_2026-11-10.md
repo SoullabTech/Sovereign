@@ -702,6 +702,125 @@ authorization or provenance failure.**
 - **The founder walk has not yet run.** The eight-item companion checklist is a template, and all
   eight items are open.
 
+## 10i. Walk log — founder walk on `55742458` (2026-11-10, founder session, production)
+
+**P6** Sanctuary off (founder).
+**W2** ✅ The founder pressed "Let MAIA read my saved work". The scope event is a `grant` at level
+`work`, 22:16:38Z. ⭐ The previous silent disabled Send now explains itself ("Send waits until you
+do") — improved since 11-08. The founder started a new thread (`9cd3464f…`, 22:18:20Z).
+
+**W3** — the revised first prompt (no interpretation supplied).
+- **What MAIA reported having:**
+  - the 261 headings;
+  - the text of the one section the founder was standing in (the untitled opener, title only);
+  - her own reading of 2026-09-08 (development lens, revision 5), of which she can see only
+    **8 of 26 observations, several cut off mid-sentence.**
+
+  She declined to go further than that.
+- **Receipts:** exactly **one** crossing, `work_conversation->maia_cognition`, state `crossed`,
+  section = pos 0 (39 chars), carrying the scope event. Answer provenance is
+  `anthropic/claude-opus-5`, bound to that locus digest.
+- **Markers:** 0 of 178.
+
+| Check | Result |
+|---|---|
+| Epistemic integrity (self-report = receipts) | **PASS** — her account matches the receipt exactly |
+| Recollection | **PASS** — 0/178 markers |
+| Whole-work access under a granted Work-level scope | ⛔ **FAIL — named crossing** |
+
+**The broken crossing, from source** (`lib/manuscript/ask/workReadScope.ts`). At `work` level the
+host selects:
+1. the locus;
+2. then sections whose **heading the question names**;
+3. then the whole Work **only if the question matches a fixed phrase list** ("whole / entire /
+   full book|manuscript|work|draft", "throughout", "across the book|chapters", "overall",
+   "from the start").
+
+"What this book is fundamentally about… ground it in specific chapters" matches none of these,
+so selection fell to the locus alone. Even when the phrases match, the 60,000-character budget
+covers roughly a sixth of this Work.
+
+The earlier reading reaches the conversation **truncated** (8 of 26 observations, cut
+mid-sentence: `carriedReadings.ts`). ⛔ Not repaired; recorded as walk evidence.
+
+*A granted Work-level scope does not make the whole Work available to a whole-Work question
+asked in natural language.*
+
+**W3 — MAIA's answer is cut off.** The stored answer is 1,315 chars and ends mid-sentence ("…and
+treated again at"). The founder's screen shows the same. ⚠️ An answer truncated in storage or
+generation is not attributed.
+
+**W10 — founder witness, during W3** (primary data, recorded before any explanation):
+1. *"the columns are FIXED! they should be movable."*
+2. *"the Manuscript section looks terrible and it is not organized nor easy to follow especially
+   on such a well developed manuscript."*
+
+**Read-only context for (2):**
+- This Work's Source already carries its hierarchy: `heading_depth` 1 on 25 sections, 2 on 25,
+  3 on 211 (WS2-08 / BUILD-08A).
+- But it has **0 confirmed structure units**, because member-confirmed hierarchy (BUILD-08B) is
+  on HOLD.
+- So the rail shows 262 entries as one flat list.
+- **The crossing that's broken:** imported heading depth → the manuscript rail.
+
+**For (1):** no column-resize mechanism exists in `app/writers-studio` (canonical `b3f246b45`),
+and draft PR #2208 (Develop density views) does not address it.
+
+⛔ Both are recorded, not repaired. They are product findings for founder decision outside the
+walk.
+
+**⚠️ Surface correction (founder, 2026-11-10).** W2–W3 ran on `/writers-studio/canvas`, a link
+Claude Code supplied, which is **not** the founder's working studio. The working studio is
+`/writers-studio?mode=…&m=…` (reached from Home), and its Write rail **already nests** Parts →
+Chapters → sub-sections. So the flat-rail finding above applies to **canvas only**.
+
+**The W2–W3 evidence stands:**
+- the same Ask route (`manuscripts/[id]/ask`) and the same Work-level scope grant are shared;
+- the real studio's Develop mode mounts the same `ReadScopeControl` (`DevelopStage.tsx`).
+
+**Remaining steps run in the working studio:**
+- **W3/W4/W5/W7 in Develop mode** (`/writers-studio?m=55742458-…&mode=develop`).
+- **W11 in Write mode.** Its MAIA panel uses `/api/writers-studio/editorial/turn`, which §9 P3
+  excludes from whole-book evidence because it carries the MAIA runtime framework prompt. W11
+  is scored for the *pass behaviour* only, never as evidence of whole-book reading.
+
+**W3b — Claude-run in the founder's session** (built-in browser, founder-directed: "run all of
+the necessary tests here first"). Develop mode, same thread `9cd3464f`.
+- **Prompt:** "Looking across the whole book, from the start to the end, what do you understand it
+  to be fundamentally about? Tell me which parts of the text you actually have in front of you
+  for this answer."
+- **Receipts:** 40 sections crossed (= `MAX_READ_SECTIONS`), all carrying the scope event. The
+  whole-book phrase path fired.
+- **The answer is cut off at 140 chars**, stored and on screen identically: "…the three readings
+  in front of me now are of Chapter".
+- ⭐ The answer's "what she read" list is visible on screen, with "Go there / Read it here" per
+  section. **L8 PASS.**
+
+**⛔ BLOCKER for every conversational step: both Work-conversation answers in this walk are
+truncated mid-sentence** (1,315 and 140 chars).
+- `askReader.ts:593` caps answers at `maxTokens: 1200`.
+- Answer provenance and the server logs record **no stop reason**, so the cause is
+  **unattributed**. Whether the provider stopped at the token limit, or something else cut the
+  text, can't be determined from stored evidence.
+- The answer **got shorter as the context grew** (1 section → 40 sections). That is consistent
+  with a budget being consumed before the visible text, but not proof of it.
+- ⛔ **W5, W7, W7b, W8 and W11 were NOT run.** Their answers would be cut off and unscorable, and
+  each attempt spends a model call on the founder's book.
+
+**Found while walking, not tested:**
+- **Develop mode's rail nests the whole outline** (Parts → Chapters → sub-sections, through
+  Appendix and Bibliography).
+- The studio already contains **"Start an editorial pass"** (`P4R1DevelopView.tsx`, inside "More
+  ways to explore"). It runs the eight lens readings over the whole manuscript, then synthesizes
+  an ordered list of places to edit, offering "revision directions and alternate wording. You
+  decide what, if anything, to use." **That is the founder's W11 standard as an existing
+  feature.** The control was not reachable from the section-reading view used here. Its
+  location in the UI is to be found by the founder; not commissioned.
+
+**Class A #1969:** the H1 admission hook engages whenever the Work parameter is present
+(`h1AdmissionNeeded`). The containment is unchanged: founder account only, no account switching.
+Prefer links without `from=house` for the walk.
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
