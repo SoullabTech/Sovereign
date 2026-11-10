@@ -23,6 +23,25 @@
 .luckAge { color: #9fb2b9; }
 .luckChars { font-size: 1.25rem; }
 .luckYear { color: #9fb2b9; }
+.subtitle { margin: 14px 0 4px; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: #9fb2b9; font-weight: 500; }
+.nowLine { margin: 10px 0 6px; font-size: .9rem; line-height: 1.45; }
+.directionBox { margin: 6px 0; }
+.directionAsk { padding: 10px 12px; border: 1px solid rgba(223, 189, 132, .55); border-radius: 10px; background: rgba(223, 189, 132, .07); }
+.directionAsk .note { color: #ead9b9; }
+.direction label { padding: 4px 10px; border: 1px solid rgba(159, 208, 216, .25); border-radius: 999px; cursor: pointer; }
+.directionOn { border-color: #9fd0d8 !important; background: rgba(127, 179, 188, .2); }
+.luck li, .annual li { position: relative; }
+.past { opacity: .55; }
+.current { border-color: #dfbd84 !important; box-shadow: 0 0 0 1px #dfbd84 inset; background: rgba(223, 189, 132, .08); }
+.future { }
+.phaseLabel { font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: #9fb2b9; }
+.current .phaseLabel { color: #dfbd84; }
+.progress { display: block; height: 3px; margin-top: 4px; border-radius: 2px; background: rgba(223, 189, 132, .2); overflow: hidden; }
+.progress span { display: block; height: 100%; background: #dfbd84; }
+.annual { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.annual li { display: grid; gap: 1px; padding: 6px 2px; border: 1px solid rgba(159, 208, 216, .15); border-radius: 6px; text-align: center; font-size: .68rem; }
+.annualChars { font-size: 1.05rem; }
+.wood.annualChars { color: #9cc79a; } .fire.annualChars { color: #e7a794; } .earth.annualChars { color: #dfbd84; } .metal.annualChars { color: #d9dde2; } .water.annualChars { color: #8faacb; }
 /* Element tints, drawn from the astrology rooms' palette. */
 .wood .hanzi, .wood.luckChars, li.wood span { color: #9cc79a; }
 .fire .hanzi, .fire.luckChars, li.fire span { color: #e7a794; }
@@ -32,4 +51,5 @@
 @media (max-width: 700px) {
   .hanzi { font-size: 1.5rem; }
   .luck { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .annual { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }

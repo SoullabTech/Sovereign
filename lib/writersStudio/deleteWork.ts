@@ -356,11 +356,45 @@ export const REMOVE_WORK_COPY = {
   hint: 'Keeps your writing in Your Writings.',
 } as const;
 
-/* What goes when a Work row is removed: every table that cascades from it (see the R-SHARED lane record, section 6). Kept in one
-   place so the two removal bodies cannot drift apart. Conversations about the WRITING itself are not here: they belong to the
-   manuscript, not to the Work. */
+/* What goes when a Work is DELETED together with its writing (or when an empty Work is deleted): every table that cascades from the
+   Work row (see the R-SHARED lane record, section 6), including the Work's conversations. Used by the Delete bodies only. A Work that
+   is merely REMOVED, with its writing left in place, does not lose the conversations about that writing; see the next constant. */
 const WHAT_GOES_WITH_A_WORK =
-  'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off, its list of materials and its image';
+  'its conversations with MAIA, what you told MAIA about it, your corrections, its plans, where you left off, its list of materials and its image';
+/* What goes when a Work is REMOVED and the writing stays (the two Remove bodies below).
+
+   "its conversations with MAIA" is NOT in this list, because for a Work that holds a writing it is mostly false. A conversation with
+   MAIA about a writing (the Work's own "Ask MAIA about this work" conversation once a writing is attached, a Develop conversation,
+   an editing conversation) belongs to the manuscript, not to the Work: it has no foreign key to the Work and Remove does not touch
+   it. Only a conversation that belongs to the Work row itself is deleted with the Work: the Work's conversation attaches to the Work
+   only while the Work holds no writing (app/writers-studio/canvas/WorkConversation.tsx chooses the container by whether a manuscript
+   is present), so the clause says "while it held no writing", which a member can recall, and not "belongs to the Work", which is
+   a storage distinction a member cannot see. Naming both exactly is what keeps the dialog from promising an erasure that does not
+   happen. (Post-merge census, 2026-11-06.) */
+const WHAT_GOES_WITH_A_REMOVED_WORK =
+  'what you told MAIA about it, your corrections, its plans, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing';
+/* What stays, and the exit. These say where the conversations live and what ends them. They make NO claim about whether anything can
+   still open them: the Develop conversations and the Work's own conversation stay openable from the writing and from any other Work
+   that holds it. The editing (passage-by-passage) conversations are different: each is bound to the Work it was opened under, so once
+   that Work is removed no Work offers it again, but it is kept and is deleted with the writing. That last point is a statement about
+   what Write mode offers, not about what no route accepts (some routes take a retained thread's id; lane record 6.9.1). A blanket
+   "cannot be opened" would be false, which is why none is made. */
+/**
+ * The editing (passage-by-passage) conversations are among those that stay, and they are the one kind no Work offers again once the
+ * Work they were opened under is removed (founder ruling 2026-11-08, lane record 6.9.5(e)). The sentence says what the Studio SHOWS
+ * ("offer"), not what can be reached: it makes no claim that anything cannot be opened, which would be false (the ask route still
+ * reads a thread by id, for its owner) and which `removeCopyConversations.test.ts` forbids. It is true because the relationships
+ * list omits a thread whose relationship is gone and the open, read, turn and version paths refuse it (probes RT-1, RT-7, RT-C1 to
+ * RT-C4 in tests/constitutional/ws-delete/dynamic/retainedEditorial.probe.test.ts).
+ */
+const EDITING_CONVERSATIONS_NOT_OFFERED =
+  'The conversations you worked through passage by passage are among them, and no Work will offer them again.';
+const CONVERSATIONS_STAY_WITH_THE_WRITING =
+  'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them. '
+  + EDITING_CONVERSATIONS_NOT_OFFERED;
+const CONVERSATIONS_STAY_WITH_THE_WRITINGS =
+  'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations. '
+  + EDITING_CONVERSATIONS_NOT_OFFERED;
 const NO_UNDO_AND_BACKUPS =
   'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule.';
 
@@ -378,8 +412,8 @@ export const removeSharedWorkCopy = (others: number) => {
     question: (title: string) => `Remove “${title}” and keep the writing?`,
     body:
       `This writing is also in ${where}, so it cannot be deleted from here without taking it from there. `
-      + `You can remove this Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_WORK}. `
-      + `${NO_UNDO_AND_BACKUPS} The writing itself is not deleted: it stays in ${stays}.`,
+      + `You can remove this Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_REMOVED_WORK}. `
+      + `${NO_UNDO_AND_BACKUPS} The writing itself is not deleted: it stays in ${stays}. ${CONVERSATIONS_STAY_WITH_THE_WRITING}`,
     confirm: 'Remove this Work',
     working: 'Removing…',
     /* Not "Keep it": under a question that says "keep the writing" that reads as an answer, not as cancel. */
@@ -396,8 +430,8 @@ export const REMOVE_MANY_WORK_COPY = {
   question: (title: string) => `Remove “${title}”?`,
   body:
     'This Work holds more than one writing, so it cannot be deleted from here without choosing which writing to delete. '
-    + `You can remove the Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_WORK}. `
-    + `${NO_UNDO_AND_BACKUPS} None of the writings is deleted: each stays in any other Work that holds it, or with your other writing that is not in a Work.`,
+    + `You can remove the Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_REMOVED_WORK}. `
+    + `${NO_UNDO_AND_BACKUPS} None of the writings is deleted: each stays in any other Work that holds it, or with your other writing that is not in a Work. ${CONVERSATIONS_STAY_WITH_THE_WRITINGS}`,
   confirm: 'Remove this Work',
   working: 'Removing…',
   cancel: 'Don’t remove',

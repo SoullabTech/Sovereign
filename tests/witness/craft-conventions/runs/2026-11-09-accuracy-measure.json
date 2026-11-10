@@ -1,0 +1,546 @@
+{
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T16:24:32.450Z",
+  "rows": [
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Twenty-eight: *Across the yard the neighbour's dog, which had barked at every passing car since the spring the old fence came down, lay perfectly still in the long grass.*\n\nWas there something about that sentence's length you were weighing?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Twenty-eight words — counting from Across through grass, with neighbour's as one word.\n\nWant me to count any of the others?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Twenty-eight, counting neighbour's as one word: Across the yard the neighbour's dog, which had barked at every passing car since the spring the old fence came down, lay perfectly still in the long grass.\n\nFor comparison, the sentences around it run four, five, and four words.\n\nWant me to look at anything else here?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "longest",
+      "rep": 1,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence about the dog, from Across the yard through in the long grass. It runs twenty-eight words; the other three are four or five words each.\n\nWant me to say anything about what that difference is doing here, or would you rather keep going with your own read?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "longest",
+      "rep": 2,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence about the neighbour's dog. At twenty-eight words it's longer than the other three put together; they run four, five, and four words.\n\nWant to look at what that stretch of length is doing between the short sentences around it?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "longest",
+      "rep": 3,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence about the dog, beginning Across the yard and ending in the long grass. It runs 28 words; the other three are 4, 5, and 4.\n\nIt's worth noticing that it sits between two of the short ones, so it carries almost all the weight of the passage: the history of the dog, the fence, the spring, and then the stillness. The three short sentences around it do very little by comparison, which is likely why the long one lands the way it does.\n\nDo you want to look at what that length is doing here, or were you just checking?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "Mara stood at the window."
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "Mara stood at the window."
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "Mara stood at the window."
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three: Then it stopped.\n\n(For context, the fourth, Silence., stands alone as one word.)\n\nWant me to count anything else in the passage?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three: Then it stopped.\n\n(For reference, the sentences run: the long one about the rain, then the one ending on the slate, then this one, then Silence.)\n\nWant me to count anything else, or look at how that run of shortening sentences works?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three: *Then it stopped.*\n\n(For counting purposes I'm treating the sentences in order as the one beginning *All through the long afternoon*, then *Then it slowed to a whisper on the slate.*, then *Then it stopped.*, with *Silence.* standing as a fourth.)\n\nIs there something you're weighing about that short sentence, or did you just want the number?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "longest",
+      "rep": 1,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one: \"All through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window\" — twenty-two words. After it, the sentences drop to nine, then three, then one.\n\nWould you like to look at what that shrinking does here?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "longest",
+      "rep": 2,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one — All through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window — at twenty-two words. After it the sentences drop to nine, then three, then one.\n\nWould you like to look at what that shortening does here, or were you after the count on its own?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "longest",
+      "rep": 3,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one — All through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window — at twenty-two words. After that they drop sharply: nine, then three, then one. The passage gets shorter with every sentence, so the rain stopping and the sentences stopping happen together.\n\nIs it that falling-away pattern you're working on, or something else in these lines?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "Then it slowed to a whisper on the slate.\n\nThat's the second of four sentences, the three that follow it getting shorter each time — down to the single word.\n\nWant to look at how that narrowing works, or was this just a check?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "Then it slowed to a whisper on the slate.\n\nThat's the second sentence as it stands. Want to look at anything in how those three short sentences land after the long first one?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "The second sentence is: Then it slowed to a whisper on the slate.\n\nWant to look at anything else in these three lines?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six — \"She would not cry, not here.\"\n\nWant me to look at anything else in this passage?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six: *She would not cry, not here.*\n\nAnything else you want counted or checked?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six — *She would not cry, not here.*\n\nAnything else you want counted or checked here?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "longest",
+      "rep": 1,
+      "ok": false,
+      "truth": "4",
+      "got": "null",
+      "reply": "Two tie at twelve words each: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" and \"She could still see the color of his coat at the rail.\" Everything else in the passage runs from four to eight words.\n\nWorth noticing, since you asked: those two longest sentences are the only ones that leave Mara's immediate sight — one goes into Tomas's head, one reaches across the water to the departing coat.\n\nDo you want to look at how those two sit against the short sentences around them, or was the count all you needed?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "longest",
+      "rep": 2,
+      "ok": false,
+      "truth": "4",
+      "got": "null",
+      "reply": "The longest is the one about Tomas — \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" It runs twelve words.\n\nWorth knowing, though: the closing sentence, \"She could still see the color of his coat at the rail,\" is also twelve words. They tie on word count; the Tomas sentence is longer only because its words are longer. So the passage has two long sentences of equal count, one near the start and one at the very end, with shorter ones between them.\n\nWant to look at what that pairing does to the way the passage moves?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "longest",
+      "rep": 3,
+      "ok": false,
+      "truth": "4",
+      "got": "1",
+      "reply": "Two tie at twelve words each: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" and \"She could still see the color of his coat at the rail.\" Everything else runs between four and eight.\n\nWorth noting, since you may be after this: those two longest sentences are the first and last of the passage's interior — one gives you Tomas's head, the other keeps you in Mara's eye on him. The short ones cluster between them.\n\nDo you want the full count sentence by sentence?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "The second sentence is: \"The water was the colour of old pewter.\"\n\nWhere would you like to go from here?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "The second sentence is: \"The water was the colour of old pewter.\"\n\nAnything else you'd like me to look at here?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "The second sentence is: \"The water was the colour of old pewter.\"\n\nAnything else you'd like me to look at here?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Counting the passage as I have it, the third sentence — \"Across the yard the neighbour's dog, which had barked at every passing car since the spring the old fence came down, lay perfectly still in the long grass.\" — runs to twenty-eight words. It sits between three five-word sentences on either side, so it carries nearly all the weight of the paragraph.\n\nWould you like to stay with how that length works against the short sentences around it, or were you after the count for something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Twenty-eight — \"Across the yard the neighbour's dog, which had barked at every passing car since the spring the old fence came down, lay perfectly still in the long grass.\" It's by far the longest of the four, which sit at five, five, twenty-eight, and three.\n\nIs the sentence rhythm what you're weighing here, or were you checking something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "28",
+      "got": "28",
+      "reply": "Twenty-eight words — the one beginning Across the yard and ending in the long grass. It's by far the longest of the four; the other three run four, six and four.\n\nWould you like to stay with the sentence rhythm here, or step back to something larger?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "longest",
+      "rep": 1,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence beginning \"Across the yard\" and ending \"in the long grass.\" It runs to twenty-eight words, where the other three are four, five and four. The relative clause about the dog's barking is what stretches it; the other sentences are bare statements with nothing hung off them.\n\nWould you like to stay with how the sentences move here, or is there something else you were checking?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "longest",
+      "rep": 2,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence beginning \"Across the yard\" and ending \"in the long grass.\" It runs to twenty-eight words, where the other three are four, five and four. So one long sentence sits between short ones on either side.\n\nWould you like to talk about what that shape does here, or were you checking something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "longest",
+      "rep": 3,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "The third one — the sentence about the neighbour's dog, which runs from \"Across the yard\" to \"in the long grass.\" At twenty-eight words it is considerably longer than the other three, which are four, five and four words.\n\nWould you like to stay with how the sentences move here, or step back to something larger?"
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "The second sentence as I have it reads: \"Mara stood at the window.\"\n\nThat is the text as it stood when I received it; if you have revised since, check it against what is on your page now."
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "\"Mara stood at the window.\""
+    },
+    {
+      "path": "develop",
+      "passage": "A",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "Mara stood at the window.",
+      "got": "exact",
+      "reply": "As the passage stands in front of me, the second sentence is \"Mara stood at the window.\""
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three: Then it stopped."
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three — \"Then it stopped.\""
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "3",
+      "got": "3",
+      "reply": "Three — Then it stopped."
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "longest",
+      "rep": 1,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one — the sentence running from \"All through the long afternoon\" to \"the kitchen window\" — at twenty-two words. After it the passage drops sharply: nine words, then three, then one.\n\nWould you like to stay with how those sentences move, or look at something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "longest",
+      "rep": 2,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one: \"All through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window\" — twenty-two words, against nine, three, and one in the sentences that follow. The passage descends in a clean ladder from that opening to the single word at the end.\n\nWould you like to stay with how that ladder works, or is there something else about the passage you're weighing?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "longest",
+      "rep": 3,
+      "ok": true,
+      "truth": "1",
+      "got": "1",
+      "reply": "The first one — \"All through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window,\" at twenty-two words. After it the sentences fall away in a clear descending stair: nine words, then three, then one.\n\nWould you like to stay with how that shape works on the page, or look at something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "As the passage stands now, the second sentence is: \"Then it slowed to a whisper on the slate.\""
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "As the passage stands now, the second sentence is: \"Then it slowed to a whisper on the slate.\""
+    },
+    {
+      "path": "develop",
+      "passage": "B",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "Then it slowed to a whisper on the slate.",
+      "got": "exact",
+      "reply": "As the passage stands now, the second sentence reads: \"Then it slowed to a whisper on the slate.\""
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "count3",
+      "rep": 1,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six: She would not cry, not here."
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "count3",
+      "rep": 2,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six — \"She would not cry, not here.\""
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "count3",
+      "rep": 3,
+      "ok": true,
+      "truth": "6",
+      "got": "6",
+      "reply": "Six: She would not cry, not here."
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "longest",
+      "rep": 1,
+      "ok": false,
+      "truth": "4",
+      "got": "null",
+      "reply": "Counting words, two tie at twelve: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" and the closing sentence about seeing his coat at the rail. If you go by length on the page rather than word count, the Tomas sentence runs longer, since its words are heavier.\n\nEverything else in the passage sits between four and eight words, so those two are noticeably the long ones — and they bracket the short, clipped middle, including the exchange of dialogue.\n\nWould it help to look at what that rhythm is doing across the paragraph as a whole?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "longest",
+      "rep": 2,
+      "ok": false,
+      "truth": "4",
+      "got": "null",
+      "reply": "Two sentences tie at twelve words each: the one beginning Behind her, Tomas lit a cigarette, and the closing one beginning She could still see. Everything else in the passage runs between four and eight words, so those two stand out as the long beats — one placing Tomas, one returning to Mara's looking.\n\nWould you like to stay with how the sentence lengths move across the passage, or take up something else?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "longest",
+      "rep": 3,
+      "ok": false,
+      "truth": "4",
+      "got": "null",
+      "reply": "Two tie at twelve words each: the sentence beginning \"Behind her, Tomas lit a cigarette…\" and the closing sentence, \"She could still see the color of his coat at the rail.\" The Tomas sentence is longer on the page by syllable and character count, so it reads as the heaviest, but by word count they are even — and they sit at either end of the middle, with the short exchange of dialogue between them.\n\nWould it be useful to look at how that length pattern shapes the pacing, or is there something else about the passage you're weighing?"
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 1,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "In the passage as I have it here: \"The water was the colour of old pewter.\""
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 2,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "As the passage stands in front of me, the second sentence reads: \"The water was the colour of old pewter.\""
+    },
+    {
+      "path": "develop",
+      "passage": "F",
+      "q": "quote2",
+      "rep": 3,
+      "ok": true,
+      "truth": "The water was the colour of old pewter.",
+      "got": "exact",
+      "reply": "As the passage stands in front of me, the second sentence is: \"The water was the colour of old pewter.\""
+    }
+  ]
+}

@@ -154,7 +154,8 @@ export default function ProSystemsPanel({ subjectId, chartLabel, work, onWork }:
       {error && <p role="alert" className={styles.alert}>{error}</p>}
       {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} />}
       {w.data && w.tab === 'chinese' && (
-        <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })} />
+        <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })}
+          ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />
       )}
       {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} />}
     </div>
@@ -206,7 +207,8 @@ const CHINESE_ROOMS: Array<[ChineseRoom, string]> = [
  * each the same experience the Free Chinese page offers, computed on the
  * server so no birth detail reaches the browser.
  */
-function ChineseView({ c, direction, onDirection }: {
+function ChineseView({ c, direction, onDirection, ask }: {
+  ask: { subject: string; readsWhose: string };
   c: ProOtherSystems['chinese']; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
 }) {
   const [room, setRoom] = useState<ChineseRoom>('pillars');
@@ -225,7 +227,7 @@ function ChineseView({ c, direction, onDirection }: {
 
       {room === 'pillars' && (
         <div role="tabpanel" aria-label="Pillars and year sign">
-          <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} />
+          <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
           <h4 className={styles.subhead}>Year sign</h4>
           <p className={styles.headline}>
             <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}

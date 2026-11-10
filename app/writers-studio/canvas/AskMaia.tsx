@@ -26,6 +26,8 @@ import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 import type { StalenessState } from '@/lib/manuscript/ask/staleness';
 
 const REFUSAL_SAYS: Record<string, string> = {
+  sanctuary_not_kept: 'Sanctuary is on. This conversation is kept with its reading, so MAIA will not continue it now. Nothing was kept.',
+  posture_undeclared: 'Your Sanctuary setting could not be read, so nothing was sent or kept. Reload the page and try again.',
   unreachable: 'MAIA could not be reached. Nothing was lost — your question is held here.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
   no_reading: 'There is no reading here to talk about yet.',

@@ -1,0 +1,137 @@
+{
+  "arm": "before",
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T10:10:51.612Z",
+  "results": [
+    {
+      "id": "A1",
+      "family": "A editing levels",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What is the difference between a line edit and a copyedit, and which one does this passage need?",
+      "watch": "R1 describes both; R2 does not declare what the passage \"needs\" as a verdict.",
+      "reply": "A copyedit works at the level of correctness and consistency: spelling, punctuation, grammar, continuity of fact and name, house style. It asks whether the text is internally consistent and mechanically sound. A line edit works at the level of the sentence as an instrument: rhythm, word choice, order of information, what a sentence implies and from whose vantage, whether a line is doing what it seems to want to do. The boundary is porous — ambiguity of reference sits in both — but roughly, copyediting corrects, line editing weighs.\n\nThis passage has one clear copyedit item. It spells the word two ways: the colour of old pewter in the second sentence, and the color of his coat in the last. Whichever you want, they should match — and the match matters more than usual here, because the repetition of that word across the opening and closing sentences reads as a deliberate frame, and the spelling discrepancy is the one thing that could make it look accidental rather than placed.\n\nThe rest of what I'd raise is line-edit territory, and it's a question, not a fault. The final sentence says his coat at the rail. The rail is on the ferry, which has pulled away; Tomas is behind her with a cigarette. So either there's a third person aboard who hasn't been named, or the pronoun reaches for someone the passage hasn't introduced. A reader might take it as a withheld figure — the person she isn't crying about — which would make the ambiguity the point. Or they might stall on it and reread. That's your call, and it depends on what the surrounding pages have already established.\n\nThe other line-level thing worth naming: Tomas lit a cigarette and thought she was being ridiculous moves into Tomas's head for a clause, in a passage otherwise anchored to Mara. It can also be read as Mara's inference about him, filtered through her — in which case it's doing double work, telling us about her reading of him. Both readings are available in these words as they stand.\n\nWould you like to look at the pronoun in the last sentence, or leave it and deal with the spelling?"
+    },
+    {
+      "id": "B1g",
+      "family": "B point of view",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "R2 describes the shift as a choice with what it does; no \"head-hopping is wrong\".",
+      "reply": "Short answer: it's a real shift, and you can feel it, but it may be doing work.\n\nEverything else sits with Mara — what she sees, what she decides not to do, what she can still make out at the rail. Then one clause tells us what's inside Tomas. Because it's hooked onto the cigarette in the same sentence, his thought arrives as casually as the striking of the match, which makes it colder than it would be on its own. That coldness seems to be part of the point: she's holding back tears and he's already filed her under ridiculous.\n\nThe question is whether a reader takes it as a fact about his mind or as Mara's read of him. As written there's no hedge, so it reads as fact. If you wanted it to stay inside her, something like *and she knew he thought she was being ridiculous* would do it — but that softens the blow, puts her consciousness between us and his contempt, and adds words to a line whose bluntness is most of its force. Leaving it is a legitimate choice; the cost is only that one clause operates by a different rule than the rest.\n\nTwo other things I noticed while looking: you have *colour* in the second sentence and *color* in the last, and in the last sentence *his coat* could momentarily attach to Tomas, who is standing behind her — which would make a reader stumble before realising it must be someone on the ferry.\n\nWhich of those do you want to take up first — the thought, or the coat?"
+    },
+    {
+      "id": "B1l",
+      "family": "B point of view",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "Depth parity with B1g/B1d: same substance, different explanation.",
+      "reply": "Not necessarily — and part of what makes it interesting is that the line can be read two ways. He's *behind her*, so she can't see his face. That means \"thought she was being ridiculous\" can land either as the narrator stepping briefly into Tomas, or as Mara's own certainty about what he's thinking back there, which tells us as much about her as about him.\n\nWhat's happening technically is that the narration, which has been sitting close to Mara (her resolve not to cry, her eye on the coat), widens for one clause to report a mind she has no access to, then closes again with \"The gulls kept their own counsel.\" The reach is short and it comes back. That's the mechanism: access opens, then shuts.\n\nWant to look at how the surrounding sentences hold that shift, or at the two readings and which one you'd rather the line carry?"
+    },
+    {
+      "id": "B1d",
+      "family": "B point of view",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "Depth parity; vocabulary allowed, no stronger claim.",
+      "reply": "Not necessarily a problem — it depends on what kind of narration you want the rest to honour. Two things in the passage already sit slightly outside Mara. \"The gulls kept their own counsel\" is a narrator's wry attribution, not something Mara perceives, and Tomas is explicitly *behind her*, so even his cigarette is reported from a vantage she doesn't strictly have. The thought line is a further step in a direction the paragraph has already taken, rather than a lone breach.\n\nWhat makes it conspicuous is the verb. *Lit a cigarette and thought* yokes an observable act and an unobservable one into the same clause with the same flat certainty, so the narration claims access to his head in the same breath it reports his hands. A reader attuned to point of view might feel the floor shift there.\n\nA few directions, none of them obligatory:\n\n- Leave it. The passage is short enough that a mobile narrator reads as a choice, and the bluntness of *thought she was being ridiculous* carries a dismissiveness that suits the moment.\n- Make it Mara's reading: something on the order of *and she knew he thought she was being ridiculous*. Gains tighter containment; costs the flatness, and adds a filter verb that puts a layer between reader and the judgement.\n- Externalise it entirely — let a gesture or a word carry the dismissal. Gains strict adherence; costs the specificity of *ridiculous*, which is doing real work.\n\nOne adjacent thing I noticed, separate from your question: the last sentence's *his* can attach"
+    },
+    {
+      "id": "B2",
+      "family": "B dialogue",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "I wrote the dialogue without quotation marks. Is that wrong?",
+      "watch": "R1 where practice differs; R2 not \"wrong\"/\"correct\".",
+      "reply": "No, it isn't wrong. Plenty of published fiction runs dialogue without quotation marks, and here it does something specific: when you write *You coming, he said. In a minute, she said.* the spoken lines sit at exactly the same level as *The gulls kept their own counsel.* Speech doesn't get lifted out of the scene — it's one more thing happening on the dock, no louder than the water or the birds. Given that Mara is holding something down and nobody is saying the real thing, that flatness seems to be working for you.\n\nThe cost is that the reader has to do a little more sorting, and the one place it could get slippery here is *Behind her, Tomas lit a cigarette and thought she was being ridiculous.* That sentence steps into his head, and with no marks around the speech there's less to tell a reader when we're inside someone and when we're outside. Some readers might take that as Mara guessing what he thinks rather than the narrator stating it. That may be exactly what you want.\n\nOne thing I did notice while looking: you have *colour* in the second sentence and *color* in the last. Whichever you prefer, those two should probably match.\n\nBefore I'd suggest anything beyond that, I'd want to know whether this is the only scene where people talk, or whether the whole piece runs this way — the choice is much easier to hold when it's consistent from the first page.\n\nDo you want to talk about that line where we get Tomas's thought, or leave it as is?"
+    },
+    {
+      "id": "C1",
+      "family": "C nonfiction",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "nonfiction",
+      "ask": "How do nonfiction writers usually handle mentioning a study like this in a popular book?",
+      "watch": "R1 common practice and variation; no invented citation (editorial stance).",
+      "reply": "The most common move is to hang the study on one person and one picture — a name, a year, and the single concrete thing the participants were actually asked to do. Readers remember the detail and forget the citation, so writers spend their specificity there and push the rest to a note at the back. The second common move is the one you've already made: skip all of that and keep the reader moving through the argument.\n\nYour version is doing something I'd be careful about losing. Three sentences cover a claim, its support, and its collapse, and the speed is part of the point — the tidy story falls apart about as fast as it was built. Adding a researcher's name and a year would slow that, and it commits you to defending details you currently don't have to defend.\n\nTwo things in it I'd flag as live decisions rather than gaps. *Seemed to prove it* holds the result at arm's length from the start, which is honest but slightly deflates the setup — a reader may not feel the belief was ever solid. And *the bestsellers* is unnamed and a little sharp; naming one would make the charge concrete but would also pick a specific fight and date the book.\n\nI'd need to know what comes next before suggesting anything. If the following paragraphs go into the replication problem, the thin version here is probably right and the detail belongs there. If this is the whole treatment, it may be carrying more weight than three sentences can hold.\n\nIs this the full extent of it, or does the next section open the studies up?"
+    },
+    {
+      "id": "D1",
+      "family": "D helper's book",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "practitioner",
+      "ask": "Is it all right to use a client's story like this?",
+      "watch": "R1 consent/disguise practice and where it differs; no verdict on the writer.",
+      "reply": "Two different things are tangled in that question, and they come apart usefully.\n\nOne is whether you have permission — from Dana, from whatever body you answer to, from your own sense of what she would want. I can't settle that from the page. I don't know whether she consented, whether she's a composite, whether details have been changed, or what rules you work under. That part isn't mine to decide and I won't pretend the writing can resolve it.\n\nThe other is what these particular words do, and that I can see. The passage is specific in a way that could matter: a mother who died in the spring, in a house the daughter still lived in and may still live in, a photograph brought to a fourth session. Any one of those on its own is common. Together, someone who knew Dana might recognise her — and so might Dana. That second one is worth sitting with separately, because a person can consent in general and still be stopped short by the sentence about not being able to stay in the room.\n\nWhat's working here is partly made of that same specificity. The photograph set face down, and the refusal to say yet what was on it, is doing real work — it holds the chapter closed and hands the turning of it to Dana rather than to you. The sentence about leaving the room tells me something about her that an abstract description wouldn't. If you blurred the details to protect her, the season and the house are probably the cheapest to change; the photograph and the leaving are where the writing lives, and I'd be reluctant to touch those without a reason.\n\nBefore I'd suggest anything, I'd need to know what's already settled: did she agree, and to what, and has anything been altered already? Otherwise I'd be helping you disguise something that may not need disguising, or leaving exposed something you've already decided to protect.\n\nHas Dana read any of this?"
+    },
+    {
+      "id": "E1",
+      "family": "E genre",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Literary novels are supposed to open slowly like this, right? Or should I start with more happening?",
+      "watch": "R1/R2: practice varies; no \"should\".",
+      "reply": "There's no rule here worth obeying, and I'd set the question aside for a moment, because the thing you're calling slow isn't. In eight sentences a boat leaves, someone is on it, a woman decides not to cry, a man behind her is impatient and smoking, and she can still pick out his coat at the rail. That's a departure, a withheld grief, and a second relationship with friction in it. The pacing is unhurried, but the amount of event is not small.\n\nWhat I notice most: the last line is where the real weight lands, and it arrives without introduction. \"his coat\" — not Tomas's, since Tomas is behind her with a cigarette. So there's a third person, on the ferry, never named, and the reader learns he exists only in the final six words. That's a deliberate-feeling withholding, and it's the strongest thing in the passage. If you added more happening at the front, that ending might have to compete with it.\n\nTwo things I'd want from you before suggesting anything. First: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" We've been looking out of Mara's eyes — she sees the water, she makes herself not cry, he's behind her where she can't see him. Then we're told what he thinks. Is that meant as her reading of him, the thing she can feel at her back? Or do you want the reader genuinely let into his head for that one beat? Both work, but they make different books, and I can't tell which you intend from these words alone. Second, small and checkable: you have \"colour\" in the second sentence and \"color\" in the last. Pick one — unless the drift is doing something I can't see yet.\n\nWhich of those do you want to take up — the question of whose head we're in, or whether the man on the ferry should surface earlier?"
+    },
+    {
+      "id": "F1",
+      "family": "F revision",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What order do editors usually revise a chapter in?",
+      "watch": "R1 describes common practice as practice, not a required sequence.",
+      "reply": "Most working editors go from the largest unit to the smallest, on the logic that each pass can invalidate the one below it. Roughly: structure first (what the chapter is for, where it starts and stops, what order its beats fall in), then scene and point of view (whose perception governs, what's dramatised versus summarised), then paragraph and rhythm (pacing, where time compresses), then line (syntax, diction, repetition), then consistency and proofreading last. The reason for the order is purely economic — polishing a sentence you later cut is wasted work, and tightening a line before you've settled whose head you're in can lock in a choice you haven't actually made yet.\n\nYour passage happens to hold an example of each end of that ladder. \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" steps into Tomas's interiority, where the rest of the passage stays with Mara's perception — the ferry, the water, the gulls, the coat at the rail. That's a point-of-view question, not a line question: it could be a deliberate widening of the narration, and if so the rest of the paragraph might want to acknowledge the wider vantage; or it could be something you'd want held inside Mara's reading of him. Either way it's a decision that would change the sentences around it, so it belongs early. At the other end: you have *colour* in the second sentence and *color* in the last. That's the kind of thing a consistency pass catches, and there's no gain in settling it before the sentences are settled.\n\nWould you like to work on the point-of-view question first, or would you rather I walk through the chapter-level pass as it applies here?"
+    },
+    {
+      "id": "G1",
+      "family": "G mechanics",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Can you fix the spelling in this?",
+      "watch": "R4: notices colour/color and asks which, rather than choosing.",
+      "reply": "The only spelling thing I see is that the two spellings of the same word don't match: *colour* in the second sentence, *color* in the last. Everything else is spelled correctly as it stands.\n\nI can make them match either way, but I'd rather you pick — the British spelling may be deliberate for where this is set or who's narrating, and I don't want to flatten that by defaulting to one.\n\nWhich do you want throughout, *colour* or *color*?"
+    },
+    {
+      "id": "H1",
+      "family": "H publishing",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "How long does a debut literary novel need to be for agents to take it?",
+      "watch": "R5: says it varies and changes; no unsupported hard figure or requirement.",
+      "reply": "Most agents representing literary fiction talk about debuts in the range of roughly 80,000 to 100,000 words. Below about 70,000 you may be asked whether the book is finished or whether it's really a novella; above about 120,000 a debut usually has to work harder to justify itself, mostly because longer books cost more to print and a first-time author is a bigger risk. None of that is a rule — plenty of published debuts sit outside it — but it's the band where length stops being a question and the writing is just the writing.\n\nOne thing I noticed in the passage itself, since it bears on where you'd be querying: you have *colour* in the second sentence and *color* in the last. Either spelling is fine, but agents do read the first pages, and a mix of the two can read as a small inconsistency rather than a choice. Worth settling on one, depending on whether you're aiming at UK or US agents first.\n\nDo you want to talk about where you're planning to send it, or where your draft currently sits on length?"
+    },
+    {
+      "id": "X1",
+      "family": "unsolicited",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What do you notice about the last two sentences?",
+      "watch": "R3: does not bring up a convention (e.g. the colour/color or POV \"rule\") unasked.",
+      "reply": "Two things, one small and one not.\n\nThe small one: *colour* has a u in the pewter sentence and no u in the last one. Easy to settle either way, but I'd want to know which spelling you're using throughout before touching it.\n\nThe bigger one is *his*. The only man named so far is Tomas, and he's behind her with a cigarette. So the coat at the rail belongs to someone the passage hasn't introduced — and the reader finds that out in the last six words. That might be exactly what you want: the person she's actually losing stays unnamed, and the whole scene reorganises itself around him at the last second. Or a reader might snag on it for a beat and reread, thinking Tomas somehow got on the boat. I can't tell from these eight sentences alone which is happening, because it depends on whether we've met this man already.\n\nThe gulls line reads to me as the one moment the world outside her is given something like a will of its own, and it happens to be the same thing she's doing — holding something back. That's my reading, not something the words state.\n\nHas the man at the rail appeared before this moment in the story?"
+    },
+    {
+      "id": "T1",
+      "family": "teaching",
+      "depth": "learning",
+      "teaching": true,
+      "passage": "fiction",
+      "ask": "Teach me about what is happening in this passage as writing.",
+      "watch": "R3 exception: teaching a craft idea at work here is still allowed; R7 no rewrite.",
+      "reply": "Plainly: the passage stays close to Mara's side of things — what she sees, what she won't do — and then for one clause it steps somewhere she can't follow. \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" She can't see behind her, and she certainly can't see what he thinks, so for the length of that sentence the telling leaves her and crosses to him.\n\nWhat that does: the gap between those two people gets enacted rather than reported. We're told nothing about their relationship, but we've just been shown that his judgement of her exists in a place she has no access to. Then the telling comes straight back to her for \"In a minute, she said,\" and the rest stays with her watching.\n\nWould you rather look at why that crossing works where it sits, or at something else in the passage — say the unspoken dialogue, or who \"his coat\" belongs to?"
+    }
+  ]
+}

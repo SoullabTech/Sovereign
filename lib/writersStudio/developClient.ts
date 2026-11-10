@@ -7,6 +7,7 @@
  * and when the writer acts, and at no other time (07D: no automatic refresh).
  */
 
+import { declaredSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
@@ -95,7 +96,8 @@ export async function requestDevelopmentalReading(
     const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/readings`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(scope ? { lens, scope } : { lens }),
+      // A reading is kept, so the request declares its Sanctuary posture; the server reads nothing in Sanctuary or when undeclared.
+      body: JSON.stringify({ ...(scope ? { lens, scope } : { lens }), ...declaredSanctuaryPosture() }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {

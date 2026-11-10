@@ -35,8 +35,11 @@ const READING = '33333333-3333-3333-3333-333333333333';
 const ctx = { params: Promise.resolve({ id: MS }) };
 const ctxOne = (readingId: string) => ({ params: Promise.resolve({ id: MS, readingId }) });
 
+/* The client always declares its Sanctuary posture (founder ruling 2026-11-09); these tests are about other laws, so they declare ordinary
+   unless a test states otherwise. The Sanctuary refusal itself is tested below and in the real-database closure probe. */
 const post = (body: unknown) => new NextRequest(`http://localhost/api/sovereign/manuscripts/${MS}/readings`, {
-  method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body),
+  method: 'POST', headers: { 'content-type': 'application/json' },
+  body: typeof body === 'string' ? body : JSON.stringify({ sanctuary: false, ...(body as object) }),
 });
 const get = (path = '') => new NextRequest(`http://localhost/api/sovereign/manuscripts/${MS}/readings${path}`, { method: 'GET' });
 
@@ -98,6 +101,15 @@ describe('POST /readings — one member gesture, one lens', () => {
       expect(res.status).toBe(400);
       expect((await res.json()).refusal).toBe('foreign_field');
     }
+    expect(mockCommission).not.toHaveBeenCalled();
+  });
+
+  it('Sanctuary closure: in Sanctuary or with an undeclared posture, nothing is commissioned', async () => {
+    const raw = (b: object) => new NextRequest(`http://localhost/api/sovereign/manuscripts/${MS}/readings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
+    const s = await POST(raw({ lens: 'voice', sanctuary: true }), ctx);
+    expect([s.status, (await s.json()).refusal]).toEqual([409, 'sanctuary_not_kept']);
+    const u = await POST(raw({ lens: 'voice' }), ctx);
+    expect([u.status, (await u.json()).refusal]).toEqual([409, 'posture_undeclared']);
     expect(mockCommission).not.toHaveBeenCalled();
   });
 

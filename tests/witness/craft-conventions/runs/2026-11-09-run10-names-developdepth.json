@@ -1,0 +1,83 @@
+{
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T16:39:35.472Z",
+  "rows": [
+    {
+      "id": "N1",
+      "depth": "guided",
+      "path": "focus",
+      "ask": "What does \"Line\" mean in this Studio, and what would an editor call it?",
+      "reply": "Line is the level where we work inside your sentences as they stand — the choice of words, the order of things within a sentence, where a sentence ends, how one sentence hands off to the next, whether a word is doing the work you meant it to. It stays close to the words on the page. It doesn't move scenes around, cut a paragraph, or change what happens; those sit at the wider levels.\n\nEditors generally call this a line edit. It's the step just past tidying up the surface, and just short of the bigger work of reshaping. Worth knowing that these names aren't fixed — different publishers and editors draw the boundaries in different places, and some use \"line edit\" and \"copyedit\" almost interchangeably while others keep them strictly apart.\n\nIn your passage, Line work would mean questions like: does a particular sentence want to be longer or shorter here, is a word carrying its weight, does the short back-and-forth of the two spoken lines sit the way you want against the longer sentences around them. Small, local decisions, all of them yours.\n\nWould you like me to look at this passage at Line, or hear what the wider levels would ask of it first?"
+    },
+    {
+      "id": "N2",
+      "depth": "guided",
+      "path": "focus",
+      "ask": "What kind of edit would help this paragraph most right now?",
+      "reply": "The sentences themselves seem to be doing what you want — short, flat, holding the feeling down rather than announcing it. \"The gulls kept their own counsel\" is the one line that lifts its head, and it can lift because everything around it stays so plain.\n\nWhat I'd look at first is who's telling this. For most of the paragraph we stand where Mara stands: the ferry, the water, the thing she refuses to do. Then we're told what Tomas thought — and he's behind her, so she can't know it. Plenty of books move freely between people, so this isn't a fault. But in eight sentences it's the only moment we step away from her, and a reader might feel the ground shift for a beat before coming back.\n\nThe other place is the last sentence. Tomas is the only man you've named, so \"his coat\" may first land as his — except he's behind her with a cigarette, not at the rail. If there's someone on that ferry we haven't met, the line is doing something quite deliberate and the pull of the paragraph depends on it. If you mean it to be unmistakable, it isn't yet.\n\nBoth of those are close-in work — a word, or one sentence turned — rather than reshaping anything. That's Line, not Shape.\n\nI'd need one thing from you before proposing wording, though, because it changes everything: is the coat at the rail someone the reader has already met, or is this the first they hear of him?"
+    },
+    {
+      "id": "N1",
+      "depth": "learning",
+      "path": "focus",
+      "ask": "What does \"Line\" mean in this Studio, and what would an editor call it?",
+      "reply": "\"Line\" is the depth where an edit reaches into the sentence itself — word choice, rhythm, the order of clauses, how one sentence hands off to the next — without altering what happens in the scene or how the chapter is built. It's a step further than Touch, which stays at the surface, and it stops short of Passage, which can reach across a paragraph or a stretch of them.\n\nAn editor would call this a line edit. Touch is close to proofreading or a light copyedit, Passage sits between line and substantive editing, Shape is substantive or structural work, Open is a rewrite, and a commissioned look at a whole chapter is close to developmental editing. Worth saying that these labels are used differently by different publishers and freelancers — one editor's \"line edit\" is another's \"stylistic edit,\" and some fold copyediting into it. If you ever hire out, it's usually worth asking what the person means by the word rather than assuming.\n\nWhat a line edit does for a reader is mostly about ease of movement: it works on how the prose travels. The cost is that voice also lives at that level — cadence, odd word choices, the particular way a sentence turns — so an edit at this depth can quietly carry away the things that make the prose yours if it's applied with a broad hand. That's why the decision about which sentences to touch stays with you.\n\nWould you like to look at this passage at Line depth, or hear more about one of the other levels?"
+    },
+    {
+      "id": "N2",
+      "depth": "learning",
+      "path": "focus",
+      "ask": "What kind of edit would help this paragraph most right now?",
+      "reply": "Plainly: nothing here reads as broken, so the useful question is less \"what needs fixing\" and more \"what is the paragraph already doing that you might want to do on purpose.\"\n\nThe thing most alive in it, to me, is vantage — who is seeing and knowing in each sentence. \"She would not cry, not here\" sits inside Mara. \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" steps into Tomas, and does it from a place Mara can't see. \"The gulls kept their own counsel\" belongs to neither of them; that's a narrator with a dry view of its own. Three positions in seven sentences, moving fast.\n\nThat's the craft idea at work: prose quietly tells a reader, sentence by sentence, whose knowledge it is carrying. Stay close to one mind and the reader borrows that mind's limits — what Mara can't see stays unseen. Widen out and the reader gets information the character doesn't have. Each move changes what the reader is allowed to know and how near they stand.\n\nSo the edit that would meet this paragraph is the one that works at how the sentences move and who holds them — in Studio terms, Line. If you'd rather look at how the whole moment is held together, including that last glimpse of the coat, that's Passage.\n\nWant to take the vantage question first, or start somewhere else in the paragraph?"
+    },
+    {
+      "id": "N1",
+      "depth": "direct",
+      "path": "focus",
+      "ask": "What does \"Line\" mean in this Studio, and what would an editor call it?",
+      "reply": "In this Studio, **Line** is the depth where an edit may reach into your sentences themselves — word choice, rhythm, the order of clauses, where a sentence breaks or joins — while leaving the passage's content, sequence and structure as you built them. It works one sentence at a time. It sits above **Touch**, which stays at the level of small corrections and light tidying, and below **Passage**, which may move or merge whole stretches, cut a beat, or reorder what happens in what order.\n\nAn editor would call it a **line edit**. For the neighbours: Touch is close to proofreading or a light copyedit, Passage sits between line editing and substantive editing, Shape is substantive or structural editing, Open is a rewrite, and a commissioned look at a whole chapter is close to developmental editing. Worth knowing that these labels are used differently by different publishers and editors — one house's \"line edit\" is another's \"copyedit,\" and some don't distinguish the two at all.\n\nThe practical difference for your pages: at Line I could propose changes to how a sentence moves, but not to which sentences are there or what order they come in. If something in the passage seemed to need a beat removed or a moment relocated, I'd flag it and leave it, because that reaches past Line.\n\nWould you like me to show you where Line's ceiling falls in this particular passage — what it could reach and what it would have to leave alone?"
+    },
+    {
+      "id": "N2",
+      "depth": "direct",
+      "path": "focus",
+      "ask": "What kind of edit would help this paragraph most right now?",
+      "reply": "The thing I'd work on first is vantage — whose seeing the paragraph is reporting. Most of it sits close behind Mara's eyes: she watches, she resolves not to cry, she can still see. Then the line about Tomas thinking she was being ridiculous reaches into a second head. That could be read two ways from these words alone: as a narrator with access to both, or as Mara's own certainty about what he thinks, which would be the sharper and more bitter reading. Right now the sentence can carry either, and the rest of the paragraph doesn't settle it.\n\nThe second thing is the referent in the last sentence. Tomas is behind her with a cigarette, so the coat at the rail appears to belong to someone not yet named — presumably whoever is on the ferry. That may be exactly the effect you want, the unnamed person held back until the last beat. But *his* currently has two possible owners in play, and a reader may reach for the nearer one.\n\nBoth of those are Passage work — between line editing and substantive. Not rephrasing, but deciding what the paragraph knows and tells.\n\nWhat I'd keep untouched: the pewter water, *not here*, and the gulls keeping their own counsel.\n\nWant to start with the vantage question, or with who is at the rail?"
+    },
+    {
+      "id": "D0",
+      "path": "develop",
+      "style": null,
+      "anchor": null,
+      "reply": "At the level of the scene: it's holding a departure open without letting anyone name it. Mara is watching someone leave — the coat at the rail belongs to a third person, not to Tomas — and the scene's work is to keep her from reacting in front of the man who is standing behind her. \"She would not cry, not here\" sets the pressure, and the exchange about coming is the only release the scene allows: two short lines, a delay requested and granted.\n\nThe other thing it does is give us two readings of the same moment. We're close to Mara's sight and her refusal, and then one clause drops into Tomas — he \"thought she was being ridiculous\" — so the reader holds both her grief and his dismissal of it at once. That one move tells us more about the pair than the dialogue does.\n\nWould it help to look at how the scene sits against whatever comes next, or stay with what it's doing on its own?"
+    },
+    {
+      "id": "D1",
+      "path": "develop",
+      "style": "plain",
+      "anchor": null,
+      "reply": "At the level of what the scene is doing: it's a departure watched from the shore, and the whole weight of it sits in what Mara withholds. The ferry has already pulled away in the first sentence, so nothing is in suspense — what's left is her standing there with it. \"She would not cry, not here\" names the effort without releasing it, and the scene then keeps her busy with surfaces: the water, the gulls, the coat at the rail.\n\nTomas works as pressure rather than company. The line about him thinking she's being ridiculous reads as her guess at him, not his own mind, which keeps us sealed inside her and makes him part of what she's enduring. His \"You coming\" and her \"In a minute\" are the only speech, and they're small enough to show how little is being said between them compared to what she's holding.\n\nThe last sentence does something the others don't: she can still see him. The ferry is gone and he isn't, quite — the parting is still in progress, which is why she can't leave yet.\n\nWould you like to stay with how the scene holds that withheld feeling, or look at where it sits in the chapter around it?"
+    },
+    {
+      "id": "D2",
+      "path": "develop",
+      "style": "expert",
+      "anchor": null,
+      "reply": "At the scale of the scene: it stages an aftermath rather than a parting. The ferry is already pulling away when we arrive, so the departure itself is withheld and what we watch instead is Mara refusing to react — \"She would not cry, not here\" sets a private discipline, and the last line tells us why she is still standing there, since someone she can still pick out at the rail is on that boat.\n\nThe second pressure is Tomas, who functions as the audience she is holding herself together for. His cigarette, his flat \"You coming\", and the narration's dip into his judgement give her restraint something to push against; \"The gulls kept their own counsel\" extends that withholding outward, so even the setting declines to comment.\n\nWorth noting as interpretive rather than established: the brief move into Tomas's thought is the one place the scene steps outside Mara, which slightly loosens whose scene it is.\n\nWould you like to stay with the scene's shape, or look at how its sentences move?"
+    },
+    {
+      "id": "D3",
+      "path": "develop",
+      "style": null,
+      "anchor": "passage",
+      "reply": "At the level of the writing itself, one thing that's doing a lot of work here is that Mara's feeling is never stated — it's only refused. \"She would not cry, not here\" tells us what she's holding off, not what she's holding. And then instead of giving us her interior, the passage hands us the water the colour of old pewter and the gulls keeping their own counsel. The reader ends up supplying the grief themselves, which tends to make it feel more theirs than if it had been named.\n\nWould you like to look at why that works, or at what it costs?"
+    },
+    {
+      "id": "D4",
+      "path": "develop",
+      "style": null,
+      "anchor": null,
+      "reply": "This is at the level of how the sentences move and who is seeing — the narration's stance.\n\nMost of the passage sits just behind Mara's eyes. She watches, she judges the water, and \"She would not cry, not here\" is her own insistence arriving in the narration's voice rather than in quotation — free indirect style, where the character's thought borrows the narrator's grammar. Then one clause steps outside her: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous.\" She can't see behind her and can't know what he thinks, so for that sentence the narration lifts away from her and becomes free to go anywhere. It drops back immediately with \"She could still see the colour of his coat at the rail.\"\n\nThat widening does something specific: it lets the reader hold two people at once and feel the gap between them, which Mara herself cannot feel. The cost is that the intimacy breaks for a beat, and some readers register the shift as the author arriving rather than the story moving. Writers do this deliberately all the time; the question is whether you want that one beat of distance there, at the moment of her not crying.\n\nThe other thing in play is the gulls. \"The gulls kept their own counsel\" is the only sentence that belongs to no one in particular — it has the cadence of a narrator with a long view, and it holds the scene still rather than advancing it. Set against the spoken exchange, which arrives bare and quick, the passage alternates between held time and moving time.\n\nWould you like to stay with the narrative distance, or look instead at how the spoken lines sit against the description?"
+    }
+  ]
+}

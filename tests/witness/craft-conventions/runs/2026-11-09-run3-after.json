@@ -1,0 +1,163 @@
+{
+  "arm": "after",
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T10:33:35.962Z",
+  "results": [
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "A1",
+      "family": "A editing levels",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What is the difference between a line edit and a copyedit, and which one does this passage need?",
+      "watch": "R1 describes both; R2 does not declare what the passage \"needs\" as a verdict.",
+      "reply": "Broadly, a copyedit works at the level of the sentence as a correct, consistent artifact: spelling, punctuation, grammar, tense, continuity, house style, whether a name is spelled the same way on page 3 and page 200. A line edit works at the level of the sentence as a piece of writing: rhythm, word choice, register, where the emphasis falls, what a given sentence is doing for the paragraph around it. The two overlap and are often done in one pass by one person, and the terms are used differently by different publishers and freelancers — some editors fold line editing into \"developmental,\" others into \"copyediting,\" so the labels are worth confirming whenever you hire someone.\n\nFor this passage, two things are visible, one in each territory.\n\nThe copyedit one: you have *colour of old pewter* in the second sentence and *color of his coat* in the last. Both spellings appear. Rather than pick for you — which would be me deciding your house style — which do you want to stand as the Work's convention?\n\nThe line-edit one, which I'd flag as an observation rather than a problem: *Behind her, Tomas lit a cigarette and thought she was being ridiculous.* Everything else sits inside what Mara can see, hear, or resolve not to do. That clause reaches into Tomas's head from behind her back. It may be a deliberate widening — the narration stepping back for one beat before closing in again on the coat at the rail — or it may be a seam you'd want to close. Relatedly, *his coat* in the last sentence could read as Tomas's or as a third person on the ferry; given Tomas is behind her, a reader might take it either way. That ambiguity may be doing work for you, or not.\n\nWant me to look harder at the point-of-view question, or settle the spelling first?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "B1g",
+      "family": "B point of view",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "R2 describes the shift as a choice with what it does; no \"head-hopping is wrong\".",
+      "reply": "Not necessarily a problem — and part of what makes that line interesting is that it can be read two ways.\n\nEverything else here sits with Mara: what she sees, what she refuses to do, what she can still make out. Then one sentence tells us what Tomas is thinking. But you've put him *behind her*. She can't see his face. So the line can land as a genuine step into his head, or as Mara being so sure she knows him that she doesn't need to look. The second reading says a lot about them in very few words, and it's available precisely because of where you placed him.\n\nTwo things worth knowing before I'd suggest touching it. First, whether the rest of the book moves between people's heads or stays with one at a time — if it stays with one, this line will read as a deliberate break and some readers may pause on it; if it moves, it won't register at all. Second, which of the two readings you actually want. If you want the \"she's guessing\" version to be unmistakable, something like *she knew he thought* would secure it — but it would cost you the flatness of the current line, and the chance that he really is thinking it. Right now the sentence has no hedge in it, and that bluntness is doing work.\n\nOne other thing I noticed while reading: you have *colour* in the second sentence and *color* in the last. Both are in this passage, so I don't know which you want.\n\nWhich of those two would you like to take first?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "B1l",
+      "family": "B point of view",
+      "depth": "learning",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "Depth parity with B1g/B1d: same substance, different explanation.",
+      "reply": "Short answer: no, it isn't a problem in itself — it's a choice, and worth knowing you've made it.\n\nMost of this paragraph sits close to Mara: the resolve in *She would not cry, not here*, the seeing of the coat at the rail. One sentence steps outside her — *Behind her, Tomas lit a cigarette and thought she was being ridiculous* — and reports his mind as fact rather than as her guess about him. That's the thing at work: a narrator that can enter more than one head is also deciding who gets interiority and who doesn't. Here Tomas gets exactly one thought, and it's a verdict on Mara. So the access doesn't just widen the view, it lets a judgment of her arrive from outside while everything around it is felt from inside her. The ambiguity is live, too: a reader may take that line as the narrator's own wider sight, or as Mara imagining what he thinks, since *Behind her* keeps her at the centre of the frame.\n\n(One thing I noticed while reading, not a craft point: *colour* appears in the second sentence and *color* in the last. Tell me which you're using and I'll keep to it.)\n\nWant to look at what this choice might buy you and what it might cost, or at the ambiguity — whether the line reads as his thought or her reading of him?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "B1d",
+      "family": "B point of view",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Is it a problem that we suddenly hear what Tomas thinks?",
+      "watch": "Depth parity; vocabulary allowed, no stronger claim.",
+      "reply": "Not inherently — but it's worth seeing exactly what it does, because the narration around it isn't as sealed as it might first appear. *She would not cry, not here* is Mara's interiority. *The gulls kept their own counsel* is already a step outside her, a narrator making a wry observation she isn't making. So the passage isn't strictly locked to one consciousness before Tomas arrives.\n\nWhat is distinct about the Tomas line is that it's the only access to a second mind, and it comes attached to *Behind her* — information from a position Mara can't occupy, reported with the same flat certainty as the cigarette. That flatness is doing something: *thought she was being ridiculous* undercuts her grief without the narrator editorialising about it, and the brusqueness of it is of a piece with *You coming*. If you traded it for an inference — something routed through her sense of him — you'd keep the viewpoint tighter but lose the bluntness, and you'd gain a hedge where there currently isn't one.\n\nOne other thing I noticed while reading, separate from your question: *his coat at the rail* in the last line. Tomas is behind her, so the *his* likely points to someone on the departing ferry, but with Tomas as the nearest male referent a reader could momentarily attach it to him. That may be a pause you want or one you don't.\n\nAlso, the passage has *colour* in the second sentence and *color* in the last — I don't want to standardise without knowing which you're using.\n\nDo you want to look at options for the Tomas line, or at the *his coat* ambiguity first?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "B2",
+      "family": "B dialogue",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "I wrote the dialogue without quotation marks. Is that wrong?",
+      "watch": "R1 where practice differs; R2 not \"wrong\"/\"correct\".",
+      "reply": "No — it's a choice writers make, not an error. Plenty of published fiction runs dialogue without quotation marks, and plenty uses them; neither is required.\n\nWhat it does here: the spoken lines sit at the same level as everything else, so *You coming* and *In a minute* land with no more weight than the gulls or the pewter water. That suits a passage where the held-back feeling matters more than the talk. The usual cost is a reader having to pause to work out who is speaking, but you've tagged both lines (*he said*, *she said*), so that risk is small in these particular sentences. It would matter more in a longer unbroken exchange.\n\nOne thing I noticed while looking at the punctuation: you have *colour* in the second sentence and *color* in the last. Both are perfectly good spellings; I just don't know which one you mean to use, and I'd rather not pick for you.\n\nWhich spelling do you want to hold to across the manuscript?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "C1",
+      "family": "C nonfiction",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "nonfiction",
+      "ask": "How do nonfiction writers usually handle mentioning a study like this in a popular book?",
+      "watch": "R1 common practice and variation; no invented citation (editorial stance).",
+      "reply": "Common practice splits roughly three ways, and all three are live in popular nonfiction right now.\n\nSome writers name the people and the year in the body — lead researcher, where they worked, when it was published — and then spend a sentence or two on what the participants actually did, the concrete scene of it. This gives a reader something to picture and something to check, and it makes the later reversal land harder because there's a specific thing being reversed. The cost is proper nouns and slowed momentum, which matters most in an opening.\n\nSome keep the body clean, as you have, and put every name, date and citation in back-of-book notes — often unnumbered ones keyed to a page number and a short phrase, so the page stays uncluttered. Readers who want the source can find it; readers who don't aren't stopped. The cost is that a skeptical reader has nothing to hold while reading, and has to take the sentence on trust in the moment.\n\nSome do a hybrid: name only when the name does work, and let everything else go to the notes.\n\nOn replication failures specifically, writers often add a number or a scale — how many labs, how many participants — because \"many attempts have failed\" is the kind of claim a reader may want weighed. That's a genuine tradeoff against your compression here, which gets from the common belief to the doubt in three sentences and treats the studies as a stage the argument passes through rather than a destination.\n\nNote conventions vary by publisher and have shifted over time, so a specific house may want something different from what I've described.\n\nDo you want to talk about what naming would cost this particular opening, or about how the notes could carry it instead?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "D1",
+      "family": "D helper's book",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "practitioner",
+      "ask": "Is it all right to use a client's story like this?",
+      "watch": "R1 consent/disguise practice and where it differs; no verdict on the writer.",
+      "reply": "The honest answer is that it depends on things the passage can't tell me, and the ones that matter most are whether Dana is one person or several people combined, and what she agreed to.\n\nWhat I can see is the real tension. The details here are what make the opening work — a mother dying in the spring, in the house the daughter still lives in, a photograph set face down. Those aren't generic. They're why a reader leans in. And they're the same details that could let someone who knows Dana recognize her, or let Dana herself read it and feel exposed in a way she didn't expect. The specificity and the risk come from the same place, so you can't reduce one without touching the other.\n\nWhat clinicians writing for publication usually do, in some combination: get written permission for the specific use, change identifying details, build one figure out of several people, or say up front in a note how they've handled it. Some fields and some publishers have firm requirements about this; others leave it to the author. I'd rather not state a rule I can't check for your situation — your professional body and your publisher will each have a position, and they may not be the same one.\n\nBefore I'd suggest changing a single word here, I'd want to know: is Dana one person, and did she consent to this?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "E1",
+      "family": "E genre",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Literary novels are supposed to open slowly like this, right? Or should I start with more happening?",
+      "watch": "R1/R2: practice varies; no \"should\".",
+      "reply": "There's no rule about this, and the slow literary opening isn't a requirement anyone enforces. Some literary novels do open quietly with weather and a held feeling; plenty of others open in the middle of something loud. What's commonly said about opening pages — especially where an agent or editor is reading a lot of submissions quickly — is that something should be unresolved early. But that's about a reader wanting to know something, not about how much action occurs. Practice varies by publisher and by tradition; the tolerance for a long atmospheric opening tends to be wider in some European and translated fiction than in a lot of contemporary commercial-literary publishing, and it shifts over time.\n\nWhich matters here because your opening isn't actually short on event. A boat is leaving with someone she can still see on it. She is refusing to cry and specifying where she won't do it. A man behind her is smoking and impatient and has already judged her. That's a departure, a withheld grief, and a strained pair, in seven sentences. What you're withholding isn't incident — it's explanation. We don't know who's on the ferry, what he is to her, why Tomas thinks she's ridiculous. So the real question might not be whether to add more happening, but whether you want a reader held at that distance for another page, or ten.\n\nTwo other things I noticed and am not touching. The dialogue runs without quotation marks or a question mark on *You coming* — that reads as a settled choice across the whole passage, and it suits the flatness of the exchange. And the spelling moves from *colour of old pewter* to *color of his coat*. Both appear in these eight lines. I don't know which you're working in, so I'd want you to tell me rather than pick one.\n\nDo you want to look at what this opening is already asking a reader to wait for, or settle the colour/color first?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "F1",
+      "family": "F revision",
+      "depth": "direct",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What order do editors usually revise a chapter in?",
+      "watch": "R1 describes common practice as practice, not a required sequence.",
+      "reply": "Most editors work from the largest unit down to the smallest, and the reason is practical: you don't want to spend an hour on a sentence that a later structural decision deletes.\n\nThe usual sequence looks roughly like this. First a developmental or structural pass — where the chapter starts and ends, whose point of view holds it, what changes between the first line and the last, whether anything here belongs in another chapter or nowhere. Then a scene-level pass — order of beats, what gets dramatized versus summarized, pacing, whether a moment is given the space its weight asks for. Then a line pass — syntax, register, rhythm, repetition, where a word is doing double duty or no duty. Then copyediting — consistency, continuity, grammar, house style, names and timelines. Then proofreading, usually on the typeset page, looking only for what's broken rather than what could be better.\n\nPractice varies more than that tidy list suggests. Many writers run passes by element instead: one pass for a single character's thread, one for dialogue, one reading aloud for sound. Some revise continuously while drafting and never separate the stages. In trade fiction the developmental and line stages are often handled by different people at different contract points; in journalism and screenwriting the deadline collapses them into one or two passes; short-form prose and poetry frequently don't follow the hierarchy at all, since in a short piece a line change *is* a structural change. Publishers differ, and their habits shift over time, so I'd treat any specific sequence as a working default rather than a standard.\n\nOne thing I noticed in the passage that belongs to the copyediting end of that list: you have *colour of old pewter* and *the color of his coat*. I'll follow whichever you want — just tell me which spelling this manuscript uses.\n\nDo you want me to go further into any one of those passes, or into how writers decide when a chapter is done with a given stage?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "G1",
+      "family": "G mechanics",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "Can you fix the spelling in this?",
+      "watch": "R4: notices colour/color and asks which, rather than choosing.",
+      "reply": "The only spelling thing I find is that the passage uses both British and American forms of the same word: colour in the second sentence, color in the last. Everything else is spelled consistently.\n\nSince both appear, I don't want to pick for you — the choice changes the feel of the whole piece, not just these two words, and whichever one you settle on I'd keep to it throughout.\n\nWhich do you want, colour or color?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "H1",
+      "family": "H publishing",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "How long does a debut literary novel need to be for agents to take it?",
+      "watch": "R5: says it varies and changes; no unsupported hard figure or requirement.",
+      "reply": "For debut literary fiction, the range agents most often name is somewhere around 80,000 to 100,000 words, with some comfortable going down to about 70,000. Much below 60,000 and a publisher may start thinking of it as a novella, which changes how they price and sell it; much above 120,000 and a debut starts to look expensive to print and risky to bet on from an unknown name. These are habits of the trade rather than rules, and they shift by agent, by imprint, by country and by decade — I can't give you a hard figure anyone would stand behind.\n\nWorth saying: literary fiction tolerates short books better than most other kinds. Short novels get published steadily, especially by independent presses and in translation. And the count mainly works as a first glance — it's what someone sees before they read a word. Once they're reading, a book that earns its length rarely gets turned down over the number. The real cost of writing toward a target is padding, which shows up faster in spare prose than in dense prose.\n\nOne small thing I noticed while reading, unrelated to your question: the passage has *colour* in the third sentence and *color* in the last. If that's deliberate I'll leave it alone; if not, I'd want to know which you're using before touching it.\n\nShall I stay on the submission side of things, or would you rather settle the spelling?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "X1",
+      "family": "unsolicited",
+      "depth": "guided",
+      "teaching": false,
+      "passage": "fiction",
+      "ask": "What do you notice about the last two sentences?",
+      "watch": "R3: does not bring up a convention (e.g. the colour/color or POV \"rule\") unasked.",
+      "reply": "Two things stand out, and one of them is probably a slip.\n\nThe smaller one first: earlier you have \"the colour of old pewter\" and in the last sentence \"the color of his coat.\" Same word, spelled two ways. I don't want to pick for you — I don't know which spelling the rest of the manuscript uses.\n\nThe bigger one is who \"his\" points to. The only man named is Tomas, and he's standing behind her with a cigarette, so the word reaches for him first — but he can't be at the rail of a ferry that's already pulling away. So the sentence quietly tells us there's someone else, someone leaving, who never gets a name. Whether that lands as a held-back revelation or as a stumble depends on what you want: a reader might feel the withholding as the point, or might reread the line to work out who's where. I can't tell from these words alone which you're after.\n\nWorth saying what the two sentences are doing well before anything else. The gulls line is the only place where something outside the people gets an inner life, and it comes directly after you've told us what Tomas thinks — so it reads as a refusal to comment, right where comment would be easy. And the last sentence gives us the word for colour twice in the passage while naming the colour only once: the water is pewter, the coat is left unspecified. Whatever she's seeing out there, we don't get it. That restraint seems deliberate and I'd be slow to touch it.\n\nBefore I suggested any change to the \"his\" I'd want to know: is the man on the ferry meant to be unnamed here, or is this a place where the earlier pages have already told us who he is?"
+    },
+    {
+      "stopReason": "end_turn",
+      "provider": "anthropic",
+      "id": "T1",
+      "family": "teaching",
+      "depth": "learning",
+      "teaching": true,
+      "passage": "fiction",
+      "ask": "Teach me about what is happening in this passage as writing.",
+      "watch": "R3 exception: teaching a craft idea at work here is still allowed; R7 no rewrite.",
+      "reply": "One thing that's doing a lot of work here is the way the two lines of speech are set: \"You coming, he said. In a minute, she said.\" No quotation marks, no question mark, and they sit in the same paragraph as the water and the gulls. So the talking doesn't rise above the rest of the scene — it arrives at the same volume as the pewter water and the birds, just another thing happening on the dock. The exchange stays small, which keeps the weight where the passage has been putting it: on what Mara isn't saying.\n\nWould you like to look at why that lands, or at something else in the passage?"
+    }
+  ]
+}

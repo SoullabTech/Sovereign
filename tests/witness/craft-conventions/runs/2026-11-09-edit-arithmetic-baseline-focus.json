@@ -1,0 +1,197 @@
+{
+  "model": "claude-opus-5",
+  "ranAt": "2026-11-09T17:14:44.966Z",
+  "rows": [
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "The first sentence is already running at about its minimum: four words, one action, no spare parts. The only cut available is \"off\" — \"The kettle clicked.\" — and I'd hesitate over it, because \"clicked off\" is the sound of something finishing, and the three sentences that follow are all about things having stopped: the dog lying still, the barking that isn't happening, the call she doesn't make. \"Clicked\" alone is just a noise. \"Clicked off\" is an ending, and it sets up the rest without announcing itself.\n\nSo my honest read is that there's nothing here to tighten, and that the sentence is doing quiet work for the whole passage. If what you're after is a faster or harder opening rather than a shorter one, that's a different job — it would probably live in the long middle sentence, where the dog's history slows things down before the stillness lands.\n\nIs it shortness you want, or speed?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "\"The kettle clicked off\" is already about as short as it can get. The only word you could lose is *off*, and *the kettle clicked* changes what happened — the click would just be a noise rather than the boil finishing, which is what hands you the quiet the rest of the paragraph depends on. The dog is still, she does not call, and the silence starts when the kettle stops.\n\nThe other direction would be joining it to what follows — *The kettle clicked off and Mara stood at the window* — but that's not really tightening, it's putting two separate moments into one breath, and you'd lose the small gap between the sound ending and her standing there.\n\nSo before I suggest anything, I'd want to know what made you want it tighter. If the sentence feels slow to you, I suspect the drag may be coming from somewhere else in the paragraph rather than from those four words.\n\nWhat is it about the opening as it stands that isn't sitting right?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Mara stood at the window\" — four words",
+          "ok": false,
+          "detail": "said 4, \"Mara stood at the window\" has 5"
+        },
+        {
+          "kind": "ordinal-count",
+          "text": "second sentence is \"Mara stood at the window\" — four words",
+          "ok": false,
+          "detail": "said 4, sentence 2 has 5"
+        }
+      ],
+      "reply": "By my count the second sentence is \"Mara stood at the window\" — four words doing three jobs: who, what she's doing, where. I can't take anything out of it without losing one of those. \"Mara stood there\" drops the window, and the window is what lets her see the yard. \"At the window, Mara stood\" is the same length and turns a plain statement into something more arranged.\n\nThe one real option is to fold it into the sentence before or after, so it stops being its own sentence. That would gain speed, and it would cost the pause — right now you have two short sentences, then the long one about the dog, then a short one. The short ones hold still around the long one, and her stillness at the window is part of why the dog's stillness registers.\n\nDid you mean the long sentence about the dog? That one has room in it — \"which had barked at every passing car since the spring the old fence came down\" carries a lot — and I'd want to know whether the fence matters later before I touched it."
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 2,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Mara stood at the window\" — four words",
+          "ok": false,
+          "detail": "said 4, \"Mara stood at the window\" has 5"
+        },
+        {
+          "kind": "ordinal-count",
+          "text": "second sentence is \"Mara stood at the window\" — four words",
+          "ok": false,
+          "detail": "said 4, sentence 2 has 5"
+        }
+      ],
+      "reply": "The second sentence is \"Mara stood at the window\" — four words, no spare parts in it. There's nothing I can take out without losing either her or the window, and the flat plainness of it is doing work next to the kettle clicking off: two small facts, stated and left alone, before the long sentence opens out across the yard.\n\nIf you meant the long one — the dog, the barking, the fence — that's the third, and I can look at it. But before I'd suggest cutting anything there, I'd want to know whether the fence and the spring it came down matter later. That clause is the only place in these four sentences where time stretches back, and it's what makes the dog's stillness register as a change rather than just a dog lying down. If the fence is load-bearing elsewhere, trimming it here could cost you a setup you need.\n\nWhich sentence did you have in mind — the short one about Mara, or the long one about the dog?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Most of that sentence is carrying weight, so the honest answer is: not much, unless you're willing to give something up.\n\nThe part about the dog barking at every passing car can't go — without it, the dog lying still is just a dog lying still. The stillness only reads as strange because you've told us what this animal normally does. \"In the long grass\" is also doing quiet work: nobody's cutting that grass, and the dog is partly hidden, which is part of why she's looking so hard.\n\nThe genuinely removable piece is \"since the spring the old fence came down.\" Cut it and you'd have something like: *Across the yard the neighbour's dog, which barked at every passing car, lay perfectly still in the long grass.* That's about a third off. What you'd lose is the fence, the season, and the sense that something changed between these two houses at a particular time — all of which arrive here without being announced. A reader might carry that detail forward without quite noticing they've been handed it.\n\nThe other thing to weigh: the three sentences around it are very short, and this one's length is part of why the paragraph works. Shortening it evens out the paragraph, and some of the held breath before \"lay perfectly still\" goes with it.\n\nBefore I'd push either way, I'd need to know whether the fence comes back. If it does, this may be the cheapest place in the book to plant it. If it doesn't, the cut costs less.\n\nDoes the fence matter later, or is it only here?"
+    },
+    {
+      "path": "focus",
+      "passage": "A",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Not much, if you want it to keep doing all of what it's doing — because the length *is* the effect. The sentence puts the dog in front of us, then makes us wait through its whole history of barking before it tells us the dog is lying still. That delay is the thing. A reader may feel the held breath of it before they know why. Shorten the wait and the sentence arrives at stillness too quickly for stillness to register as wrong.\n\nThat said, the parts aren't equally load-bearing, so here's what each one is holding:\n\n- **\"which had barked at every passing car\"** — this is the contrast. Without it the stillness is just a dog lying down.\n- **\"since the spring the old fence came down\"** — this carries the time depth and plants something that happened before the scene. It's the most cuttable piece in terms of the sentence's immediate work, and the costliest in terms of what the passage knows that it isn't saying.\n- **\"Across the yard\"** — she's at a window, so distance is partly implied. You could lose it and the sentence still stands, though you'd lose the sense of her looking *out at* something rather than near it.\n- **\"perfectly\"** and **\"in the long grass\"** — small but working hard. \"Perfectly\" is where the dread sits. The long grass means nobody's been cutting it.\n\nSo the shortest it gets while still landing is roughly: the dog, the barking, the stillness. Something like *The neighbour's dog, which had barked at every passing car, lay still in the long grass.* That keeps the delay and the contrast. It gives up the spring, the fence, and the absoluteness of \"perfectly\" — which is to say it gives up the past and some of the chill.\n\nOne more thing worth weighing: that sentence is long in a passage where everything around it is short. \"The kettle clicked off.\" \"She did not call.\" The long one stands out partly because of its neighbours. Trim it much and the four sentences start to sound alike, and \"She did not call\" may lose some of its snap.\n\nWould it help to talk about what you want the fence to be doing here — whether it's a detail the reader should carry forward or just weather?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "The thing worth saying first: that sentence's length is part of how the passage works. It runs long, then slows to a whisper, then stops — the three short sentences after it land the way they do partly because of how far the first one travels. Tightening it will buy you some speed and cost you some of that drop.\n\nTwo directions, if you want them:\n\nA light trim — *All afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window.* You lose \"through the long,\" which is a small redundancy with \"All afternoon,\" and the sentence still has room to move. Cost: \"long\" was carrying something \"all afternoon\" doesn't quite — a sense of the afternoon being endured.\n\nA firmer one — *All afternoon the rain worked along the gutters and down the cracked pane.* This cuts \"its way\" and \"of the kitchen window.\" You keep the rain's effort in \"worked.\" But \"its way\" is what makes the rain seem to be finding a route rather than just falling, and \"kitchen\" is the only thing in the passage that places a person indoors, near that cracked pane. Losing it leaves the window unattached to anyone.\n\nMy own read is that the lightest trim gives you most of what you're after, though you may want the sentence shorter than I'd take it.\n\nDo you want the sentence shorter mainly for speed, or because something in it feels overfull?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "The length of that first sentence looks like it's doing a job: it stretches out the way the afternoon does, so that \"Then it slowed... Then it stopped. Silence.\" lands as a shortening. Tighten it and you narrow that gap. Worth knowing before you choose, since the drop-off is where the paragraph's effect sits.\n\nIf you want it shorter, here are a few sizes:\n\n**Smallest cut** — \"Through the long afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window.\" Loses \"All,\" gains almost nothing, costs almost nothing. \"All\" does add a slight weariness, though.\n\n**Middle** — \"All afternoon the rain worked its way along the gutters and down the cracked pane of the kitchen window.\" Cuts \"long\" along with \"through the.\" \"All afternoon\" still carries duration, but you lose the slowness that \"long\" puts into it directly.\n\n**Most** — \"All afternoon the rain worked along the gutters and down the cracked pane.\" This drops \"its way,\" which is what makes the rain seem to be moving with effort, and drops \"of the kitchen window,\" which is what tells us someone is inside, probably watching. If the kitchen is already established in the surrounding pages, the second loss may be cheap. If this is the reader's first sight of the room, it isn't.\n\nMy own instinct is that the sentence isn't padded — the gutters and the pane are two real paths the water takes, not the same detail twice — but you may be feeling something in it that I can't see from one paragraph.\n\nIs the tightening about this sentence specifically, or are you trying to get to the silence faster?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Then it slowed to a whisper on the slate\" — eight words",
+          "ok": false,
+          "detail": "said 8, \"Then it slowed to a whisper on the slate\" has 9"
+        }
+      ],
+      "reply": "The second sentence is \"Then it slowed to a whisper on the slate\" — eight words, and most of its work is in the last three. \"On the slate\" is where the passage stops looking and starts listening: the first sentence is all sight (gutters, cracked pane), and the slate puts the rain on a roof overhead, heard rather than seen. Tightening is likely to cost you that.\n\nA few ways it could go, with what each gives up:\n\n- **Then a whisper on the slate.** Drops \"it slowed to,\" keeps the roof and the sound. Shortest option that loses least. Cost: without \"slowed,\" the shift from steady rain to faint rain is implied rather than stated, so a reader may or may not feel the diminishing.\n- **Then it slowed to a whisper.** Keeps the slowing, loses the slate — and with it the roof and the move from eye to ear.\n- **Then a whisper.** Very tight, and it makes a clean ladder down: whisper, stopped, silence. Cost: both the slowing and the slate go, and the three short sentences become almost equally bare, which could read as a pattern rather than a fading.\n\nWorth saying that the sentence is already short, and part of what makes \"Then it stopped. Silence.\" land is that something slightly longer came before it. Cutting here narrows that gap.\n\nWould you like me to look at how the last three sentences sit together before you choose, or do you want to pick from these as they stand?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "The sentence is already short — eight words — so there isn't much to take out without losing something you seem to be using.\n\nTwo places where you could cut:\n\n**\"Then it whispered on the slate.\"** Saves two words and gets rid of the slightly soft \"slowed to a whisper.\" What it costs: your version has the rain *becoming* quieter over time, and \"whispered\" makes it a state it's already in. Since the whole passage is about a gradual winding-down, that may matter more here than the saved words.\n\n**\"Then a whisper on the slate.\"** No verb at all, which lines it up with the one-word \"Silence\" at the end. Costs you the thread of \"it\" that carries from the rain in the first sentence through to \"it stopped.\"\n\nThe other cuttable word is \"Then\" — but it's doing work with the \"Then\" in the next sentence, the two of them stepping the rain down to nothing. Cut one and you'd probably want to cut both, which changes more than one sentence.\n\nHonestly, if tightening means fewer words, the gain here is small and the cost is real. If it means something else — that the sentence feels slack or overwritten to you when you read it aloud — that's a different fix and I'd want to know what you're hearing.\n\nWhich is it: fewer words, or something about how it sounds?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "ordinal-count",
+          "text": "first sentence runs 22 words",
+          "ok": true,
+          "detail": "said 22, sentence 1 has 22"
+        }
+      ],
+      "reply": "Not much, and the reason is in what comes after it. The first sentence runs 22 words, then 9, then 3, then 1. The rain stopping is felt in the sentences getting shorter, and the first one has to be long enough for that fall to register. Trim it hard and the drop becomes a small step.\n\nIf you did want to take something out, the loosest parts are \"its way\" and \"of the kitchen window\" — \"the rain worked along the gutters and down the cracked pane\" would still stand, around 15 words. The costs: \"worked its way\" gives the rain patience, something of it taking all afternoon rather than just falling; \"kitchen window\" puts a person indoors, near enough to see the crack. Lose that and the afternoon gets slightly less inhabited. \"long\" could also go, since \"All through the ... afternoon\" already stretches — though \"long\" is carrying the tedium of it.\n\nSo roughly fifteen or sixteen words looks like the floor before the shape of the thing starts to change. As it stands the sentence seems to me to be earning its length rather than drifting.\n\nIs the sentence feeling long to you when you read it, or are you checking whether it's pulling its weight?"
+    },
+    {
+      "path": "focus",
+      "passage": "B",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 2,
+      "claims": [],
+      "reply": "The honest answer is: not much, because the length is doing the work. That first sentence is long so that \"Then it stopped. Silence.\" arrives hard. Shorten it and the three short pieces have less to push against.\n\nWhere there's any give: \"long\" could go. The sentence already takes a long time to get through, so the afternoon feels long whether or not you say so. But that cut isn't free — \"long\" also carries a bit of tedium, someone enduring the afternoon rather than just measuring it, and the sentence's own slowness doesn't quite say that.\n\nThe bigger-looking cut would be dropping one of the two places the rain goes — the gutters or the pane. That would take out a chunk, but the travelling from one to the other is what makes time seem to pass, and the pane and kitchen are what put somebody inside listening. So you'd gain brevity and lose both the passing time and the person.\n\n\"worked its way\" is the slowest thing in the sentence and probably the thing you'd want least to touch.\n\nIs the aim here to trim, or are you testing whether the sentence has earned its length?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 1,
+      "claims": [
+        {
+          "kind": "quote-count",
+          "text": "\"Mara watched the ferry pull away\" is five words",
+          "ok": false,
+          "detail": "said 5, \"Mara watched the ferry pull away\" has 6"
+        }
+      ],
+      "reply": "Honestly, there isn't much fat in it. \"Mara watched the ferry pull away\" is five words, and each one is doing something: her name, the act of watching, and the slow movement away from her. If \"tighten\" means fewer words, the only real cuts are:\n\n- **\"The ferry pulled away.\"** Loses Mara as the one watching. The rest of the passage is anchored to what she sees — she would not cry, she can still see the coat — so dropping her from the opening means the reader arrives at her a sentence late. Some writers like that; it can make the reader find the person inside the scene rather than being handed her.\n- **\"Mara watched the ferry go.\"** One word shorter and faster. \"Pull away\" has the drag of a boat leaving a dock in it; \"go\" doesn't.\n\nIf \"tighten\" means something other than shorter — more pressure, less flatness — that's a different edit, and I'd want to know what you feel is slack when you read it. The sentence is deliberately plain, and that plainness is doing work against the held-back feeling of \"She would not cry, not here.\"\n\nWhat is it about the sentence as it stands that's bothering you — the length, or the flatness?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the first sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "The honest answer is that there isn't much slack in it. Six words, one subject, one action: Mara, watching, the ferry, moving off. Each piece is doing something the rest of the passage leans on.\n\nThe only two cuts I can see, and what they'd cost:\n\n**\"Mara watched the ferry go.\"** Quicker. But *pull away* carries the slow widening of water between her and the boat, and that gap is what the last sentence depends on — she can still see his coat, but only just. *Go* makes it instant and flat.\n\n**\"The ferry pulled away.\"** Tightest available. But it takes her out of the opening, and the whole passage is built on her watching — not crying, still seeing. You'd be handing the first line to the ferry instead of to her.\n\nSo my view is that the sentence is already carrying its weight, and tightening here mostly means losing something. If what's bothering you isn't the length but something else — the rhythm of it, or that it feels like a familiar way to open — that might be a different fix than cutting words.\n\nIs it the length that's nagging at you, or something else about how it sounds?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 1,
+      "claims": [],
+      "reply": "You want the second sentence shorter. A few ways it could go:\n\n- **The water was old pewter.** — Drops the comparison and lets the water simply be the metal. Fastest, and keeps \"old,\" which is doing a lot: dull, scratched, not shining.\n- **The water: old pewter.** — Even quicker, more like a glance than a thought.\n- **Pewter-coloured water.** — Tightest, but it stops being something Mara notices and becomes stage description.\n\nWhat the current version has that the short ones don't: it takes its time. \"was the colour of old pewter\" moves at the speed of someone standing still, not crying, looking at water because looking at water is something to do. Right after \"Mara watched the ferry pull away,\" that slowness might read as her stalling. Tightening speeds the moment up, which may be what you want if the pause feels like description rather than her.\n\nI'd want to know what's on either side of this paragraph before pushing one — whether the scene is already slow and needs air let out, or whether this is the one still moment before something moves.\n\nIs the slowness here something you're trying to keep, or something you've started to feel as drag?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "Tighten the second sentence for me.",
+      "rep": 2,
+      "claims": [],
+      "reply": "The sentence you've pointed at is already lean — \"The water was the colour of old pewter\" has only one piece of removable scaffolding, the phrase \"the colour of.\" Everything else is doing work: \"old\" carries the tarnish and dullness that \"pewter\" alone wouldn't.\n\nA few directions, with what each trades:\n\n- **\"The water was old pewter.\"** Drops the comparison frame and states it flat. Faster, more certain. Cost: it asserts rather than observes, which sits slightly differently against \"Mara watched\" and \"She could still see\" — sentences where we're inside her looking.\n- **\"The water was pewter.\"** Shortest. Cost: loses the dullness in \"old\"; pewter alone can read as bright.\n- **Leave it.** Worth saying: this is the one sentence in the passage that takes its time. The others are clipped — \"She would not cry, not here.\" \"In a minute, she said.\" The small extra beat here may be the place the eye rests while she's holding something down. Tightening it would make the paragraph more uniformly short, which could read as either tauter or flatter depending on what you want the rhythm to do.\n\nOne thing I'd want before pushing harder: is this water-image a one-off, or do you have a run of colour descriptions across the chapter that need to move at a consistent speed?\n\nDo you want me to look at how this sentence sits against the ones around it, or stay on just these words?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 1,
+      "claims": [],
+      "reply": "Two sentences tie for longest, at twelve words each: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" and \"She could still see the color of his coat at the rail.\" Everything else sits between four and eight.\n\nThe Tomas one is the only place we leave Mara and get inside someone else. It's also the only sentence that strings two things together with \"and\" — he does something, and he thinks something, loosely joined. That looseness may be part of why his dismissal reads as offhand rather than pointed. You could get it to eight or nine words by hanging the thought off the action instead of setting it alongside, but a reader might then hear him as sharper and more deliberate than he currently sounds. The cost of tightening here isn't clarity, it's his carelessness.\n\nThe last one is doing something different. \"could still see\" is where her effort lives — she's working to keep hold of him. And \"the color of his coat\" picks up \"the colour of old pewter\" from the second sentence; she's down to registering colour across water. You could reach about eight words by cutting \"the color of,\" and the line would still land, but you'd lose both the distance and that pull back to the water.\n\nBefore I'd suggest cutting either, I'd want to know whether Tomas's thought is the one time in the book we step out of Mara's head. If it is, its slight sprawl may be doing more than its words say, and I'd leave it alone.\n\nWhich of the two were you asking about?"
+    },
+    {
+      "path": "focus",
+      "passage": "F",
+      "ask": "How much shorter could the longest sentence get without losing what it does?",
+      "rep": 2,
+      "claims": [],
+      "reply": "Two sentences tie for longest at twelve words each: \"Behind her, Tomas lit a cigarette and thought she was being ridiculous\" and \"She could still see the color of his coat at the rail.\" Both are longer than everything around them, and in both cases that extra length looks like it's doing something.\n\nThe Tomas sentence is the only place we leave Mara's head. The \"and\" lets it happen without announcement — he lights a cigarette and, in the same breath, dismisses her. Cut to \"Behind her, Tomas lit a cigarette\" and you lose the dismissal. Cut to \"Behind her, Tomas thought she was being ridiculous\" and you lose the cigarette, which is what tells us he's comfortable, settled in, in no hurry. The only trim I can see that costs little is \"being\": \"and thought she was ridiculous.\" That saves one word, but it shifts the charge from what she's doing right now to what she is, which may not be what you want from him.\n\nThe last sentence has less slack than it looks. \"She could still see\" carries the fact that time is passing and she's holding on to the sight — \"She saw his coat at the rail\" loses the holding on. And \"the color of his coat\" picks up \"the colour of old pewter\" from earlier, so the coat registers as a spot of something against that grey. Shorten to \"She could still see his coat at the rail\" and you save three words but drop that pairing. Whether that's a loss depends on whether the pairing was deliberate.\n\nSo my honest answer is: not much, in either, without giving something up.\n\nWere you trying to get the passage shorter overall, or does one of those two sentences feel slack to you when you read it?"
+    }
+  ]
+}
