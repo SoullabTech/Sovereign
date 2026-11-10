@@ -809,6 +809,38 @@ truncated mid-sentence** (1,315 and 140 chars).
 - ⛔ **W5, W7, W7b, W8 and W11 were NOT run.** Their answers would be cut off and unscorable, and
   each attempt spends a model call on the founder's book.
 
+**Truncation — diagnosis (read-only, 2026-11-10). Attributed from source plus Anthropic API
+documentation; ⚠️ not runtime-witnessed.**
+
+1. **The model thinks by default.** The Ask path calls `claude-opus-5` (provenance:
+   `anthropic / claude-opus-5`). The request has **no `thinking` parameter**
+   (`toAnthropicParams`, `lib/ai/structured/anthropicStructuredAdapter.ts`). Per Anthropic's API
+   documentation (Claude API skill, thinking table), Claude Opus 5 **runs adaptive thinking by
+   default when `thinking` is omitted**, at default effort `high`.
+2. **Thinking tokens count against `max_tokens`.** `askReader.ts:593` sets `maxTokens: 1200`,
+   so reasoning and visible answer share 1,200 tokens. More supplied text (40 sections, about
+   60k chars) means more reasoning, and less or nothing left for the answer.
+3. **The truncation is invisible.**
+   - `askReader` keeps only `type === 'text'` blocks and **never checks `stopReason`**.
+   - The adapter does return it (`anthropicStructuredAdapter.ts:200`), but no reader under
+     `lib/manuscript` uses it.
+   - So an answer stopped at the token limit is stored and shown as if complete.
+4. **The same cap sits on sibling readers:** `developmentalAskReader.ts:221` (1200),
+   `reviewDiscussReader.ts:66` (1200), `planReader.ts:62` (1600). Likely the same exposure; not
+   verified.
+
+**What would witness it:** one Ask turn's `stop_reason` and `usage.output_tokens`. The
+prediction is `max_tokens` and 1200. Neither is stored today.
+
+**Smallest repair candidate (⛔ not authorized; separate founder decision under HOLD #1938):**
+- (a) Raise the answer budget. The documented non-streaming default is about 16,000; or set
+  `output_config.effort` explicitly.
+- (b) Treat `stop_reason === 'max_tokens'` as **incomplete**: never store or show a cut answer
+  as final.
+- (c) Record `stop_reason` and `usage` in the answer provenance, so the next walk can see it.
+- **Negative test:** a reader stub returning `stop_reason: max_tokens` must not produce a stored
+  "complete" answer.
+
 **Found while walking, not tested:**
 - **Develop mode's rail nests the whole outline** (Parts → Chapters → sub-sections, through
   Appendix and Bibliography).
