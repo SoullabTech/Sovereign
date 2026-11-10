@@ -1,4 +1,4 @@
-# WS-DEVELOP density views — spec, DRAFT 1 (2026-11-09)
+# WS-DEVELOP density views — spec, DRAFT 2 (2026-11-09, revised after ChatGPT review)
 
 Status: design spec for founder approval. Not ratified; authorizes no source change, build, merge or deploy. Inputs: parity matrix and decisions (`WS-DEVELOP_DENSITY_VIEWS_PARITY_MATRIX_DRAFT_2026-11-09.md`), scenarios (`…_ACCEPTANCE_SCENARIOS_DRAFT_…`), ChatGPT research (handoff brief §3a), source @ `ee9dcf394`.
 
@@ -36,7 +36,7 @@ Small, labelled "View", in the Develop header beside "Edit in Write" and "More";
 - All tools — "Everything open."
 (Copy is a draft; member-facing copy needs founder approval.)
 
-## 6. Persistence
+## 6. Persistence (superseded by §10 where they differ)
 Browser-only (local storage, wrapped so a private window or cleared storage falls back to Quiet without error). One default per writer; "just for this manuscript" is a temporary override for the current Work. No server storage, no migration. Account storage is a later, separately authorized step.
 
 ## 7. Acceptance
@@ -47,3 +47,19 @@ One client-side preference hook; DevelopStage and P4R1DevelopView read it to cho
 
 ## 9. Open
 The live check (does path B return when an observation is opened?); exact copy; whether Balanced is worth keeping after the beta check.
+
+## 10. Revisions after ChatGPT independent review (2026-11-09, disposition "revise before implementation"; all six required revisions accepted)
+**R1 Functional mapping, not button counts.** See matrix "Path B functional map": 92 button sites resolve to about 30 distinct handlers (capabilities). Each capability gets a direct route in every view and, where one exists, a MAIA conversational route. Build acceptance is per capability, not per button.
+**R2 Preference precedence, isolation and expiry.**
+- Storage key includes the signed-in member id: `ws.develop.view.<memberId>` (default) and `ws.develop.view.<memberId>.<workId>` (temporary override). A second writer on the same browser never inherits the first writer's setting. No member id → Quiet, nothing stored.
+- Precedence: temporary override for this Work > writer default > Quiet.
+- The temporary override lives in session storage: it survives refresh and chapter changes, ends when the tab or browser session closes, or when the writer picks "Use my default". The writer default lives in local storage until changed or browser data is cleared.
+- Storage failure (private window, blocked storage) → Quiet, no error.
+- Copy, once only, near the View control: "Remembered on this browser." Never presented as account sync.
+**R3 One view across both render paths.** Opening or closing an observation, or changing Develop field, never changes the active view and never restores the dense layout unfolded. Both DevelopStage and P4R1DevelopView read the same preference hook.
+**R4 MAIA reachable in every view.** The MAIA conversation entry is visible in every view and every observation state. Parity is checked on the request, not the wording: the view must not change the manuscript context MAIA receives, her permissions, memory handling, or which actions she can offer. Generated replies need not be identical.
+**R5 Orientation in Quiet.** Quiet minimizes persistent controls, not orientation: current chapter title, the chapter picker, the MAIA entry and the View control stay visible. Disclosure labels say what they hold ("Plan, sources, starters" rather than a bare "More"; "Ways to look" lists its five names on open).
+**R6 Authorship and provenance in immediate reach.** On an open proposal or observation: Talk, Decline / Let rest, Undo, and "what MAIA read" are visible in every view, never folded.
+**R7 Accessibility.** Folded items are removed from the tab order and accessibility tree (not merely hidden visually); disclosures carry correct expanded/collapsed state; switching view keeps focus on the View control and announces the new view; closing a panel returns focus to where it was opened; a direct "Back to the chapter" route always exists; zoom to 200% and reduced motion work in every view.
+**R8 Beta reach.** Testing uses the existing restricted beta (currently two verified participants plus individually approved additions). Testing with 6 to 8 writers needs a separate founder authorization.
+**Added falsifiers:** (e) opening an observation in Quiet shows the unfolded dense layout → FAIL; (f) writer B on writer A's browser sees A's view → FAIL; (g) any approved capability reachable in All tools but neither directly nor through MAIA in Quiet → FAIL; (h) refresh or switching Work changes the default or the temporary view unexpectedly → FAIL.

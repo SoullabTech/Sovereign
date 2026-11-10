@@ -57,3 +57,11 @@ Counts: 92 `<button>` · 22 `<summary>` disclosures · 3 `<select>` · 3 text in
 | Leave to Write | Open the text (x2) · Open in Write · Work on the writing | header "Edit in Write" only | visible | visible |
 | Housekeeping | Import details · More (x2) | fold | fold | visible |
 Authorship acts (talk, decline/let rest, undo) are never folded on an open observation in any view.
+
+## Path B functional map (handlers, deterministic grep @ `ee9dcf394`)
+Single-line `onClick` handlers captured on 45 of 92 button sites; the other 47 use multi-line handlers and need a render or a parser pass before build (owed, R1). Distinct capabilities seen so far (about 30):
+- Navigation: `onField` (5 Develop fields, 7 sites) · `onScope` (4) · `navigateMode` to Write (3) · `onShow` (see in manuscript) · `onGoToObservation` · `onSelectObservation` (previous/next) · `onRead` · `onWrite` · `onWork` · `advance`
+- Talk with MAIA: `onTalkObservation` (2) · `onDiscussCandidate` (2) · `onTalkCandidate` · `onDiscuss` · `beginWholeConversation` · `setWorkTalking` · `onTeachObservation` · `onDeepObservation`
+- Authorship / standing: `letRest` · `keepNearby` · `onMutation` (2)
+- Commission and readings: `onCommission` · `onReading` · `onPrepare` · `onScan` · `onScore` · `onBookFit` · `onMovement` · `props.onDevelopmentalMovement` · `onMinimalPath` (2)
+Rule: every capability above keeps a direct route in every view; the Talk group and the authorship group are never folded on an open item.

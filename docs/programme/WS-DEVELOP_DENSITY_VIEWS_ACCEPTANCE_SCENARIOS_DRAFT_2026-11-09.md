@@ -42,5 +42,25 @@ Fictional writers and books only. Design input, not ratified. Based only on the 
 **When** he challenges an observation ("I don't think that pattern is there")
 **Then** he can talk it through on the observation, the evidence MAIA rests on is reachable, and switching to Quiet afterwards does not change MAIA's working style or what she proposes.
 
+### Scenario 9: Render paths - observation open and close
+**Given** Ines is in Quiet on *The Salt Orchard*
+**When** she opens one of MAIA's observations, reads it, closes it, then switches to "See how it is shaped"
+**Then** the view stays Quiet throughout; the dense layout never appears unfolded; Talk, Let rest, Undo and what MAIA read are visible on the open observation.
+
+### Scenario 10: Shared browser - two writers
+**Given** Tomas set All tools on a shared library computer and signed out
+**When** Ama signs in on the same browser and opens Develop on *Nine Bridges*
+**Then** she sees Quiet, her own default, and nothing of Tomas's setting.
+
+### Scenario 11: Conversational parity
+**Given** Ama is in Quiet
+**When** she asks MAIA in conversation for each capability she can see in All tools (for example "show me how this chapter is shaped", "what did you read for that?", "let that observation rest")
+**Then** each is either done through the conversation or MAIA points her to its one-step route; and the request MAIA receives (manuscript context, permissions, available actions) is the same as in All tools.
+
+### Scenario 12: Refresh and switching Work
+**Given** Tomas's default is Balanced and he set All tools just for *Ledger of Small Hours*
+**When** he refreshes, changes chapter, opens *The Long Field*, then returns to *Ledger of Small Hours* in the same session
+**Then** *Ledger* is still All tools, *The Long Field* is Balanced; after he closes the browser and comes back, *Ledger* is Balanced again.
+
 ## Also required in every view
 Keyboard reach to the View control and every folded item, visible focus, readable contrast, zoom, screen reader names, reduced motion.
