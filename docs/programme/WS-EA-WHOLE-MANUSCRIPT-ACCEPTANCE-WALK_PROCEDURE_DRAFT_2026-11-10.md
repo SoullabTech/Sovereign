@@ -437,6 +437,106 @@ manuscript — into a cloud provider outside MAIA's sovereignty boundary. Whethe
 founder's decision about the founder's own book. ⛔ Claude Code will not prepare an export for
 it unasked. A founder reading the observations in the Studio needs no export.
 
+## 10d. ⛔ P4 REOPENED — `dd1a3718` fails W1 integrity (founder witness, 2026-11-10)
+
+**Founder witness** (production, founder's own session, Develop on `dd1a3718`, three
+screenshots): *"this is all messed up with copy — not my manuscript but parts of it."*
+
+**Shape, confirmed read-only.** Only positions, headings and lengths were read; no body text.
+
+- **Pos 0** (10,642 chars, no heading): the title page, dedication and disclaimer are merged
+  into one "Section 1", with print page numbers inline.
+- **Truncated headings**: "Chapter 3: Understanding the", "Chapter 4: The Elements of",
+  "Chapter 5: Fire — The Element". The rest of each heading flowed into the body. This is a
+  print-layout line wrap.
+- **Inconsistent granularity**: Fire is split into 13 sub-sections (pos 8–20), while Water,
+  Earth, Air, Aether and Living Spiral are each one section (pos 21–25, 20k–73k chars).
+- **Pos 26–42**: back matter (scales, chapter summaries, astrology), imported as peer sections.
+- ⭐ **Pos 43–54**: the **per-chapter bibliography**, imported under bare chapter headings
+  ("CHAPTER 1: THE JOURNEY BEGINS" … "CONCLUSION…") with **no "Bibliography" parent**. Every
+  section is citation-dense (4–13 citation patterns each). In the reading rail this reads as a
+  **second copy of the book's chapters**, which is what the founder saw.
+
+**What this changes.**
+- **The §10c "final third 7/18" finding is now attributed to the source.** Positions 37–54 are
+  appendix and bibliography, and the book's actual close (Chapter 10, pos 25) sits mid-Work.
+  Splitting into thirds by position was a misleading instrument for this Work. That finding is
+  **superseded** as a signal about MAIA, and kept here rather than deleted.
+- ⭐ **MAIA's visible answer in the founder's conversation is correct and honest.** She said the
+  material under that heading is bibliography, not chapter prose, and asked whether 43–54 is a
+  later draft or meant to coexist rather than guess. This is positive conversational evidence
+  of epistemic integrity, recorded for the walk; it is not yet scored.
+- ⛔ **`dd1a3718` cannot serve as "the complete original"** for an acceptance walk. Any
+  whole-book reading of it is a reading of a print-interior extraction with merged front matter
+  and an unlabelled bibliography presented as chapters.
+- **Not a disclosure defect.** The Work is owner-scoped and was shown only in the founder's own
+  session. The defect is **import fidelity**: how the Oct 29 illustrated print file was
+  segmented. It is recorded here and not repaired: the upload path is under the 423 edge hold,
+  and changing segmentation needs its own authorization.
+
+**Comparison: `55742458` (262 sections, 386,031 chars in the draft), heading-level shape only.**
+- Full chapter titles, not truncated.
+- An explicit **Part One / Two / Three** structure, with per-chapter Introductions and
+  Conclusions.
+- **"Appendix" (pos 226) and "Bibliography" (pos 247)** label the back matter, so the
+  per-chapter citation headings (248–260) sit *under* Bibliography.
+- ⚠️ Front matter still deserves a look: positions 0–15 include two "Elemental Alchemy"
+  sections and two "Part One — The Ground" headings, possibly a table of contents imported as
+  sections. Its later readings had partial body coverage, which W4's fresh whole reading would
+  replace.
+- **Prima facie `55742458` is the closer import of the manuscript as written.** Only the founder
+  can confirm that.
+
+**Founder decision owed: the walk's Work.** The candidates are `55742458` (recommended,
+pending a founder look at its front matter) or a clean original upload (⛔ blocked by the 423
+source-write edge hold). Until it is decided, the walk does not start.
+
+## 10e. P4 — Work re-named: `55742458` (founder, 2026-11-10)
+
+**The walk's Work is now `55742458-be2c-406a-a158-d0438cf02892`** ("ELEMENTAL_ALCHEMY", 262
+sections, 5 versions, all on Sep 7). The founder compared both Works in Write view and answered
+"Yes, use 55742458". **This supersedes §10a's choice of `dd1a3718`**, which is kept in the
+record and not edited.
+
+**Founder-witnessed shape (Write view).**
+- Front matter is in separate sections: Permissions, Dedication, Disclaimer, Contents, Preface.
+- Chapter titles are full, and Parts One, Two and Three are present.
+- ⚠️ The title runs across three short sections (1–3), and positions 8–10 look like
+  table-of-contents entries imported as headings. Both are short; MAIA may remark on them.
+- ⚠️ Five versions mean this is the founder's **working draft**, not the untouched original.
+  That is lawful for the walk, because readings and conversation bind to the current saved
+  revision. The record says "the current revision", not "the original".
+
+**D1 re-run against `55742458`** (same 300 phrases, same read-only method, booleans only):
+
+| Group | Present (source / draft) | Absent from both → markers |
+|---|---|---|
+| coreTeachings | 30 / 30 | 30 |
+| keyTeachings | 23 / 25 | 35 |
+| healingApplications | 25 / 25 | 35 |
+| earlier-edition chapters | 39 / 41 | 19 |
+| appendix | 1 / 1 | 59 |
+| **Total** | | **178** |
+
+- **The stored knowledge overlaps this Work more than `dd1a3718`**: 41/60 earlier-edition windows
+  are verbatim in the draft. Proof by path (§9) carries even more weight here.
+- ⚠️ **Four phrases are in the draft but not in Source.** The founder's Sep 7 edits introduced
+  wording that matches the stored knowledge. Recorded and not attributed.
+- **The walk uses 178 markers** (`d1_markers_55742458.json`, session scratchpad). The 232 computed
+  for `dd1a3718` do not apply to this Work.
+
+**§10c Phase A was run on `dd1a3718` and does not transfer to this Work.** The walk's W4
+commissions a fresh whole-scope reading, and that reading is what gets reviewed. W7 and W7b now
+run on the same Work: the 11-08 false denial happened here.
+
+**Walk links (founder's session on soullab.life):**
+- Develop: `/writers-studio/develop?m=55742458-be2c-406a-a158-d0438cf02892`
+- Work (canvas, Work conversation, reading permission):
+  `/writers-studio/canvas?m=55742458-be2c-406a-a158-d0438cf02892`
+
+**Precondition standing:** P1 ✅ · P2 ✅ · P3 source half ✅ (route trace, Work-independent),
+markers ✅ (178), probe half owed during the walk · **P4 ✅ `55742458`** · P5 ✅ · P6 at walk start.
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
