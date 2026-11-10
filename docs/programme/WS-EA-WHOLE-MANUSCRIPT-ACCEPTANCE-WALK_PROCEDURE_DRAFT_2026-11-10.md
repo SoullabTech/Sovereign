@@ -566,9 +566,11 @@ commissions a fresh whole-scope reading, and that reading is what gets reviewed.
 run on the same Work: the 11-08 false denial happened here.
 
 **Walk links (founder's session on soullab.life):**
-- Develop: `/writers-studio/develop?m=55742458-be2c-406a-a158-d0438cf02892`
-- Work (canvas, Work conversation, reading permission):
-  `/writers-studio/canvas?m=55742458-be2c-406a-a158-d0438cf02892`
+- Develop (Work conversation, reading permission):
+  `/writers-studio?m=55742458-be2c-406a-a158-d0438cf02892&mode=develop`
+- Write (editorial runtime, for W11): `/writers-studio?m=55742458-be2c-406a-a158-d0438cf02892&mode=write`
+- *(Corrected 2026-11-10: this entry first gave `/writers-studio/develop?…` and
+  `/writers-studio/canvas?…`. Canvas is a retained legacy surface, not the working studio.)*
 
 **Precondition standing:** P1 ✅ · P2 ✅ · P3 source half ✅ (route trace, Work-independent),
 markers ✅ (178), probe half owed during the walk · **P4 ✅ `55742458`** · P5 ✅ · P6 at walk start.
@@ -639,8 +641,8 @@ the sharpest one to put to MAIA in conversation.
 ## 10g. Founder-operated walk — readiness checklist (2026-11-10)
 
 **Route: READY.** These reach the reader and Ask paths traced in §9:
-`/writers-studio/canvas?m=55742458-be2c-406a-a158-d0438cf02892` and
-`/writers-studio/develop?m=55742458-be2c-406a-a158-d0438cf02892`.
+`/writers-studio?m=55742458-be2c-406a-a158-d0438cf02892&mode=develop` (Develop) and
+`…&mode=write` (Write). *(Corrected from canvas links; see §10e.)*
 
 **Class A #1969 condition, not circumvented.**
 - The held defect is the H1 hook `app/writers-studio/useHouseStudioH1WorkClaim.ts`:
@@ -816,6 +818,15 @@ truncated mid-sentence** (1,315 and 140 chars).
   decide what, if anything, to use." **That is the founder's W11 standard as an existing
   feature.** The control was not reachable from the section-reading view used here. Its
   location in the UI is to be found by the founder; not commissioned.
+
+**Outline and columns (from the `ws-outline-columns` session, code read of `b3f246b45` only).**
+- Resizable columns are already on canonical (`full-redesign/Shell.tsx:320`, with tests).
+- ⚠️ **Open observation:** the working-studio Write rail nests from imported `headingDepth` alone
+  (`full-redesign/liveWriteAdapter.ts:63-77`) with **0 structure units**. In other words,
+  system-inferred nesting is already shown without BUILD-08B member confirmation. No ruling
+  licensing that has been found. ⛔ Held, not adjudicated.
+- Canvas is marked `retain-legacy` (`canonicalStudioRoute.ts:104`). The A1B ruling of
+  2026-09-22: "canvas/ retired: NO". **Retiring it needs a founder ruling.**
 
 **Class A #1969:** the H1 admission hook engages whenever the Work parameter is present
 (`h1AdmissionNeeded`). The containment is unchanged: founder account only, no account switching.
