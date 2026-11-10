@@ -28,6 +28,7 @@
  * CHOOSE a different one — that distinction is the whole of §2.
  */
 
+import type { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { appendTurnWithClient } from '../ask/threadStore';
 import { UNMEASURED } from '../ask/staleness';
@@ -46,6 +47,8 @@ import type { ProposalVersion } from '../proposalChain/contract';
 
 export interface MaiaOutcomeInput {
   readonly memberId: string;
+  /** Sanctuary closure (founder ruling 2026-11-09): proof the route admitted an ordinary posture. The store refuses without it. */
+  readonly keep: KeepWitness | null;
   /** ⭐ FROZEN BEFORE COGNITION. ⛔ Never rebuilt after the answer returns. */
   readonly invocation: EditorialInvocation;
   /** ⭐ Already admitted. ⛔ This service never sees raw blocks. */
@@ -166,6 +169,7 @@ export async function persistMaiaEditorialOutcome(
   input: MaiaOutcomeInput,
 ): Promise<MaiaOutcomeResult> {
   const { memberId, invocation, outcome } = input;
+  const keep = input.keep as KeepWitness;
   try {
     return await transaction(async (tx) => {
       await proveInvocation(tx, invocation, memberId);
@@ -183,7 +187,7 @@ export async function persistMaiaEditorialOutcome(
           })
         : null;
 
-      const turnIndex = await appendTurnWithClient(tx, {
+      const turnIndex = await appendTurnWithClient(tx, { keep,
         threadId: invocation.threadId, memberId, speaker: 'maia',
         body: outcome.reply, staleness: UNMEASURED,
         answerProvenance: input.answerProvenance ?? null,

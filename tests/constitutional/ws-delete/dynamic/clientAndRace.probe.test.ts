@@ -13,6 +13,14 @@
  *
  * NOT PRODUCTION. Stub schema plus real migrations, the R20 seal replaced by a switch, no browser, no real vault bytes, no KMS.
  * Safety: disabled unless WS_DELETE_DYNAMIC=fictional-only; refuses a non-loopback database; fictional data only.
+ *
+ * LAW CHANGED ON PURPOSE (WS-DELETE-01 follow-up, 2026-11-06). "Remove this Work" and the X8 cleanup (a declaration whose writing is
+ * already gone, which ends the Work too when it declares nothing else) used to delete a Work row and write NO deletion record, and
+ * several probes below pinned that. Both now write one `member_deletion` manifest and one `living_works` tombstone in the same
+ * transaction (lib/manuscript/source/workDeletionRecord.ts), and Remove takes the recovery-capture advisory lock FIRST, exactly as a
+ * Delete does, so it now WAITS while a coherent R20 backup is capturing (DR-4 used to pin the opposite). Probes that pinned the old
+ * law were rewritten and say so where they changed. Neither path seals the independent R20 ledger (the seal mock must stay uncalled).
+ * Unchanged: a 404, a repeat, another member's Work and a Work that stays write nothing.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
@@ -45,6 +53,8 @@ import { DELETE as deleteManuscriptRoute } from '@/app/api/sovereign/manuscripts
 import { DELETE as deleteWorkRoute } from '@/app/api/sovereign/living-works/[id]/route';
 import { DELETE as deleteExpressionRoute } from '@/app/api/sovereign/living-works/[id]/expressions/route';
 import { closePool, query } from '@/lib/db/postgres';
+// The mocked seal (see jest.mock above): Remove and X8 must never call it; only a Delete of a writing does.
+import { sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 
 const enabled = process.env.WS_DELETE_DYNAMIC === 'fictional-only';
@@ -82,6 +92,55 @@ const workExists = (id: string) => count('living_works WHERE id = $1', [id]).the
 /** Declarations naming a writing that no longer exists, EXCLUDING the one Work this file seeds as already dangling (W_GHOST). */
 const dangling = () => count(`living_work_expressions e WHERE e.expression_type = 'manuscript' AND e.expression_id NOT IN ($1, $2) AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = e.expression_id)`, [MS_GHOST, MS_GHOST2]);
 const danglingGhost = () => count(`living_work_expressions e WHERE e.expression_type = 'manuscript' AND e.expression_id = $1 AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = e.expression_id)`, [MS_GHOST]);
+
+/** The act labels the writers of a deletion record use. Spelled out here on purpose: a probe must not import the text it checks. */
+const REMOVE_NOTE = 'Writer Work removed by verified member request';
+const X8_NOTE = 'Writer Work ended after its writing was already gone, by verified member request';
+const DELETE_NOTE = 'Writer manuscript custody ended by verified member request';
+const sealCalls = () => (sealR20DeletionLedger as unknown as { mock: { calls: unknown[] } }).mock.calls.length;
+const clearSealCalls = () => (sealR20DeletionLedger as unknown as { mockClear: () => void }).mockClear();
+type ManifestRow = { id: string; reason_class: string; authorized_by: string; note: string | null; executed_at: Date | null };
+const manifests = async () => (await query<ManifestRow>(`SELECT id, reason_class, authorized_by, note, executed_at FROM deletion_manifests ORDER BY created_at, id`)).rows;
+const tombstones = async () => (await query<{ manifest_id: string; object_kind: string; object_id: string }>(`SELECT manifest_id, object_kind, object_id FROM provenance_tombstones ORDER BY object_kind, object_id`)).rows;
+const tombstoneKeys = async () => (await tombstones()).map((t) => `${t.object_kind}:${t.object_id}`);
+async function expectNoRecords() {
+  expect(await count('deletion_manifests')).toBe(0);
+  expect(await count('provenance_tombstones')).toBe(0);
+}
+/**
+ * Exactly ONE Work record with the given act label and nothing else: one `member_deletion` manifest by the self-service authority with an
+ * execution time, and exactly one tombstone, of kind `living_works`, for `workId`, hanging off that manifest. `toEqual` on the whole
+ * tombstone list is what proves there is no `member_manuscripts` tombstone (neither path erases a writing) and no second tombstone.
+ */
+async function expectOneWorkRecord(workId: string, note: string) {
+  const m = await manifests();
+  expect(m).toHaveLength(1);
+  expect(m[0]).toMatchObject({ reason_class: 'member_deletion', authorized_by: 'verified-member-self-service', note });
+  expect(m[0]!.executed_at).not.toBeNull();
+  expect(await tombstones()).toEqual([{ manifest_id: m[0]!.id, object_kind: 'living_works', object_id: workId }]);
+}
+/**
+ * Shadow-only fault injection: a BEFORE INSERT trigger on `table` that RAISEs (always, or only where `when` holds on NEW). It lives only
+ * while `body` runs and is dropped in a finally, so a failing probe cannot leave it behind for the next one.
+ */
+async function withFault(table: 'provenance_tombstones' | 'deletion_manifests', when: string, body: () => Promise<void>) {
+  await query(`CREATE OR REPLACE FUNCTION fictional_record_fault() RETURNS trigger AS $$ BEGIN IF ${when} THEN RAISE EXCEPTION 'fictional record fault'; END IF; RETURN NEW; END; $$ LANGUAGE plpgsql`);
+  await query(`DROP TRIGGER IF EXISTS fictional_record_fault ON ${table}`);
+  await query(`CREATE TRIGGER fictional_record_fault BEFORE INSERT ON ${table} FOR EACH ROW EXECUTE FUNCTION fictional_record_fault()`);
+  try { await body(); } finally {
+    await query(`DROP TRIGGER IF EXISTS fictional_record_fault ON ${table}`);
+    await query(`DROP FUNCTION IF EXISTS fictional_record_fault()`);
+  }
+}
+/** Invariants that hold after EVERY probe, whatever it did. They sit under each probe's own assertions and fail the probe that broke them. */
+async function assertRecordInvariants() {
+  // A manifest is never left without the tombstone that gives it meaning.
+  expect(await count(`deletion_manifests m WHERE NOT EXISTS (SELECT 1 FROM provenance_tombstones t WHERE t.manifest_id = m.id)`)).toBe(0);
+  // A writing that still exists is never tombstoned: Remove and X8 erase no writing, and a Delete tombstones only the writing it erased.
+  expect(await count(`provenance_tombstones t JOIN member_manuscripts m ON t.object_kind = 'member_manuscripts' AND t.object_id = m.id::text`)).toBe(0);
+  // Likewise a Work that still exists (a Work that stays after a Delete, or a rolled-back Remove/X8, gets no tombstone).
+  expect(await count(`provenance_tombstones t JOIN living_works w ON t.object_kind = 'living_works' AND t.object_id = w.id::text`)).toBe(0);
+}
 
 /** The client's fetcher, pointed at the real route handlers. Every request it makes is recorded. */
 const calls: string[] = [];
@@ -126,6 +185,7 @@ async function reset() {
   await query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'material', $2)`, [W_STAY, 'f0000000-0000-4000-8000-0000000000f2']);
   asMember(MEMBER_A);
   sealMode('sealed');
+  clearSealCalls();
   calls.length = 0;
   trace.length = 0;
 }
@@ -138,18 +198,34 @@ async function holder(setup: (c: Client) => Promise<void>): Promise<Client> {
   await setup(c);
   return c;
 }
-/** Wait until PostgreSQL itself reports a backend waiting on a lock in a statement containing `needle`. */
-async function waitForLockWait(needle: string): Promise<void> {
+/** Wait until PostgreSQL itself reports (at least `atLeast`) backends waiting on a lock in a statement containing `needle`. */
+async function waitForLockWait(needle: string, atLeast = 1): Promise<void> {
   for (let i = 0; i < 200; i += 1) {
     const r = await query<{ n: string }>(
       `SELECT count(*)::int AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query LIKE $1 AND pid <> pg_backend_pid()`,
       [`%${needle}%`],
     );
-    if (Number(r.rows[0]!.n) > 0) return;
+    if (Number(r.rows[0]!.n) >= atLeast) return;
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
-  throw new Error(`no backend ever waited on a lock in a statement containing: ${needle}`);
+  throw new Error(`fewer than ${atLeast} backend(s) ever waited on a lock in a statement containing: ${needle}`);
 }
+/**
+ * What the backends that are waiting on a lock in a statement containing `needle` ALREADY HOLD: every granted lock they own other than their
+ * own virtual transaction id. A backend whose first statement is the advisory lock holds nothing yet, so this is empty for it. A backend that
+ * had already locked a table (a row lock takes a relation lock) or written anything would show it. This is what proves "first statement".
+ */
+async function heldBeforeWaiting(needle: string): Promise<string[]> {
+  const r = await query<{ locktype: string }>(
+    `SELECT l.locktype FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid
+      WHERE a.wait_event_type = 'Lock' AND a.query LIKE $1 AND a.pid <> pg_backend_pid()
+        AND l.granted AND l.locktype <> 'virtualxid'`,
+    [`%${needle}%`],
+  );
+  return r.rows.map((row) => row.locktype);
+}
+/** Takes the recovery-capture key in a second connection, as a coherent R20 backup (or a Delete in flight) does. The caller commits. */
+const holdRecoveryCapture = () => holder((c) => c.query(`SELECT pg_advisory_xact_lock(hashtextextended('${ADVISORY_KEY}', 0))`).then(() => undefined));
 
 
 /** A vault-relative path the sweep can never destroy (a symlinked parent is refused), so its queue row stays owed. */
@@ -180,6 +256,7 @@ const addVisual = (workId: string, storagePath: string) => query(
 
 let errSpy: jest.SpiedFunction<typeof console.error>;
 let logSpy: jest.SpiedFunction<typeof console.log>;
+const lines = (spy: jest.SpiedFunction<any>) => spy.mock.calls.map((c) => c.map((x: unknown) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
 
 suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real routes, and deterministic interleavings (PostgreSQL 16, fictional rows)', () => {
   beforeAll(async () => {
@@ -196,7 +273,10 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     errSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
   });
-  afterEach(() => { errSpy.mockRestore(); logSpy.mockRestore(); });
+  afterEach(async () => {
+    errSpy.mockRestore(); logSpy.mockRestore();
+    await assertRecordInvariants();
+  });
   afterAll(async () => { await closePool(); });
 
   describe('end to end: what the member\'s page does with what the database really did', () => {
@@ -214,13 +294,21 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await workExists(W_A)).toBe(false);
       expect(await manuscriptExists(MS_SHARED)).toBe(true);     // the writing is kept
       expect(await workExists(W_B)).toBe(true);
-      expect(await count('deletion_manifests')).toBe(0);
+      // LAW CHANGED (follow-up 2026-11-06): this said deletion_manifests toBe(0). The Remove of W_A now leaves exactly one Work record, and no
+      // tombstone for the writing it kept.
+      await expectOneWorkRecord(W_A, REMOVE_NOTE);
+      expect(sealCalls()).toBe(0);
 
       trace.length = 0;
       expect(await settle(runDeleteWork({ workId: W_B, manuscriptId: MS_SHARED }, serverFetcher, refresh))).toBeNull();
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
       expect(await dangling()).toBe(0);
+      // The Delete adds its own manifest (the writing and the last Work), on top of the Remove's: two in all, one per act, and only the Delete sealed.
+      expect(await count(`deletion_manifests WHERE note = $1`, [REMOVE_NOTE])).toBe(1);
+      expect(await count(`deletion_manifests WHERE note = $1`, [DELETE_NOTE])).toBe(1);
+      expect(await tombstoneKeys()).toEqual([`living_works:${W_A}`, `living_works:${W_B}`, `member_manuscripts:${MS_SHARED}`]);
+      expect(sealCalls()).toBe(1);
     });
 
     it('CE-2 a stale card: the page is re-read, then the member is told nothing was deleted; the writing and the other Work survive', async () => {
@@ -274,41 +362,102 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(calls).toEqual([`DELETE /api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`]);   // the client never sends a second request
       expect(await workExists(W_GHOST)).toBe(false);
       expect(await danglingGhost()).toBe(0);
-      expect(await count('deletion_manifests')).toBe(0);          // nothing was erased: no manifest, no tombstone
-      expect(await count('provenance_tombstones')).toBe(0);
+      // LAW CHANGED (follow-up 2026-11-06): this said "nothing was erased: no manifest, no tombstone" (both toBe(0)). The Work row really went, so
+      // X8 now records it: ONE manifest with the X8 label and ONE living_works tombstone for W_GHOST. The writing was already gone and X8 erased
+      // none, so there is no member_manuscripts tombstone (expectOneWorkRecord proves the whole tombstone list), and the ledger is not sealed.
+      await expectOneWorkRecord(W_GHOST, X8_NOTE);
+      expect(sealCalls()).toBe(0);
     });
 
-    it('CE-5b a Work that was to STAY (it holds something else too) and whose writing is already gone: ONE request; only the dangling declaration is withdrawn, the Work and its other part survive', async () => {
+    it('CE-5b a Work that was to STAY (it holds something else too) and whose writing is already gone: ONE request; only the dangling declaration is withdrawn, the Work and its other part survive, and NO record is written (nothing was deleted)', async () => {
       const err = await settle(runDeleteWork({ workId: W_STAY, manuscriptId: MS_GHOST2 }, serverFetcher, refresh));
       expect(err).toBeNull();
       expect(calls).toEqual([`DELETE /api/sovereign/manuscripts/${MS_GHOST2}?workId=${W_STAY}`]);
       expect(await workExists(W_STAY)).toBe(true);
       expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript'`, [W_STAY])).toBe(0);
       expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'material'`, [W_STAY])).toBe(1);
+      // A Work that stays wrote no deletion, so it gets no record (the follow-up writes one only where workRemovedId came back).
+      await expectNoRecords();
+      expect(sealCalls()).toBe(0);
     });
 
-    it('CE-5c the cleanup is the SERVER\'s answer, not a guess: the route says removed:true for a gone writing only when its declaration existed; a repeat of the same Delete is a plain 404 (done)', async () => {
+    it('CE-5c the cleanup is the SERVER\'s answer, not a guess: the route says removed:true for a gone writing only when its declaration existed; a repeat of the same Delete is a plain 404 (done) and adds no second record', async () => {
       const first = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
       expect(first.status).toBe(200);
       expect(await first.json()).toEqual({ removed: true, workRemoved: true });
       const again = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
       expect(again.status).toBe(404);
+      await expectOneWorkRecord(W_GHOST, X8_NOTE);
     });
 
-    it('CE-5d another member cannot use a gone-writing request to remove this member\'s Work: 404, and the Work survives', async () => {
+    it('CE-5d another member cannot use a gone-writing request to remove this member\'s Work: 404, the Work survives, and no record is written', async () => {
       asMember(MEMBER_B);
       const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
       expect(res.status).toBe(404);
       expect(await workExists(W_GHOST)).toBe(true);
       expect(await danglingGhost()).toBe(1);
+      await expectNoRecords();
     });
 
-    it('CE-5e a gone writing named through a Work that does not declare it is a plain 404: the declaration of a DIFFERENT Work is never touched', async () => {
+    it('CE-5e a gone writing named through a Work that does not declare it is a plain 404: the declaration of a DIFFERENT Work is never touched, and no record is written', async () => {
       const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_SOLO}`, { method: 'DELETE' });
       expect(res.status).toBe(404);
       expect(await workExists(W_GHOST)).toBe(true);
       expect(await danglingGhost()).toBe(1);
       expect(await workExists(W_SOLO)).toBe(true);
+      await expectNoRecords();
+    });
+
+    it('CE-5f X8 with an IMAGE: the Work, its declaration, the record and the queued image bytes are one transaction; the sweep destroys the bytes and the answer is plain success', async () => {
+      await addVisual(W_GHOST, 'work-visuals/ce5f-image-absent.png');   // an absent path is destroyed by the sweep (idempotent)
+      const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ removed: true, workRemoved: true });
+      await expectOneWorkRecord(W_GHOST, X8_NOTE);
+      expect(await count('living_work_visuals WHERE living_work_id = $1', [W_GHOST])).toBe(0);
+      expect(await count('vault_erasure_queue')).toBe(0);
+      expect(sealCalls()).toBe(0);
+    });
+
+    it('XR-1 if the Work tombstone cannot be written, the X8 cleanup ROLLS BACK: generic 500, the Work and its dangling declaration and its image row are still there, no manifest, nothing queued; the same request succeeds once the fault is gone', async () => {
+      await addVisual(W_GHOST, 'work-visuals/xr1-image-absent.png');
+      await withFault('provenance_tombstones', `NEW.object_kind = 'living_works'`, async () => {
+        const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
+        expect(res.status).toBe(500);
+        expect(await res.json()).toEqual({ error: 'Failed to remove manuscript' });     // the bare body: nothing was deleted (cf. F-2)
+        expect(await workExists(W_GHOST)).toBe(true);
+        expect(await danglingGhost()).toBe(1);                                          // the declaration is still there too
+        expect(await count('living_work_visuals WHERE living_work_id = $1', [W_GHOST])).toBe(1);
+        await expectNoRecords();
+        expect(await count('vault_erasure_queue')).toBe(0);
+        expect(sealCalls()).toBe(0);
+      });
+      const again = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
+      expect(again.status).toBe(200);
+      await expectOneWorkRecord(W_GHOST, X8_NOTE);
+    });
+
+    it('XR-2 the same when the MANIFEST cannot be written: the dangling declaration and its Work are left exactly as they were', async () => {
+      await withFault('deletion_manifests', 'true', async () => {
+        const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
+        expect(res.status).toBe(500);
+        expect(await res.json()).toEqual({ error: 'Failed to remove manuscript' });
+        expect(await workExists(W_GHOST)).toBe(true);
+        expect(await danglingGhost()).toBe(1);
+        await expectNoRecords();
+      });
+    });
+
+    it('XR-3 after X8 ended the Work, the ordinary-lane R20 refusal trigger refuses to re-insert that Work id (same kind and id spelling)', async () => {
+      // Does NOT exercise the governed restore lane (s5.restore_lane = \'governed\'), where the trigger lets the row in, or the post-restore
+      // sweep of scripts/restore-governed.sh, which is what removes it there. Lane record 6.9.5 says the governed-restore witness covers a
+      // Delete with its Work and that a restore witness for the Remove case is not done; none is claimed here for X8. What this shows is
+      // only that the tombstone X8 writes is the row the ordinary-lane trigger looks up.
+      // Needs database/migrations/20261021000001_writer_r20_restore_refusal.sql, which run-local-pg16.sh applies. Fails loudly if it is missing.
+      expect(await count(`pg_trigger WHERE tgname = 'r20_refuse_writer_tombstoned' AND NOT tgisinternal`)).toBeGreaterThanOrEqual(2);
+      expect((await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' })).status).toBe(200);
+      await expect(query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [W_GHOST, MEMBER_A])).rejects.toThrow(/r20_writer_tombstone_refusal/);
+      expect(await workExists(W_GHOST)).toBe(false);
     });
 
     it('KEEP-1 a LIVE writing in a Work that holds a second part: the writing goes, the Work STAYS with its other part, and the server says so (workRemoved:false)', async () => {
@@ -341,14 +490,17 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(gone).toEqual({ refreshed: true, alreadyGone: true });
     });
 
-    it('CE-6 a Work with several writings: Remove ends the Work and deletes NONE of the writings (the sentence the confirmation says)', async () => {
+    it('CE-6 a Work with several writings: Remove ends the Work and deletes NONE of the writings (the sentence the confirmation says); the Work is recorded, no writing is tombstoned', async () => {
       expect(await settle(runRemoveWork(W_MANY, serverFetcher, refresh))).toBeNull();
       expect(await workExists(W_MANY)).toBe(false);
       expect(await manuscriptExists(MS_M1)).toBe(true);
       expect(await manuscriptExists(MS_M2)).toBe(true);
-      expect(await count('deletion_manifests')).toBe(0);
-      expect(await count('provenance_tombstones')).toBe(0);
+      // LAW CHANGED (follow-up 2026-11-06): this said manifests 0 and tombstones 0. The Work row went, so ONE Work record exists. The tombstone
+      // list being exactly [living_works:W_MANY] is also the proof that neither writing was tombstoned (neither was erased).
+      await expectOneWorkRecord(W_MANY, REMOVE_NOTE);
+      expect(await count(`provenance_tombstones WHERE object_kind = 'member_manuscripts'`)).toBe(0);
       expect(await count('vault_erasure_queue')).toBe(0);
+      expect(sealCalls()).toBe(0);
     });
 
     it('CE-7 a Work with no writing: Delete withdraws it through the Work route, with no manuscript request at all', async () => {
@@ -414,26 +566,62 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await count('deletion_manifests')).toBe(0);
     });
 
-    it('DR-4 a Remove that arrives while a Delete holds the recovery-capture lock completes, and the Delete then acts on the committed truth', async () => {
-      const capture = await holder((c) => c.query(`SELECT pg_advisory_xact_lock(hashtextextended('${ADVISORY_KEY}', 0))`).then(() => undefined));
+    it('DR-4 a Remove that arrives while the recovery-capture lock is held WAITS for it, holding nothing meanwhile, and completes (200) once it is released; a Delete queued behind it then acts on the committed truth', async () => {
+      // LAW CHANGED (follow-up 2026-11-06). This probe used to pin the opposite: "the Work route does not queue behind the recovery-capture
+      // lock" (the Remove answered 200 while the key was still held). Remove now takes that key as its FIRST statement, exactly as a Delete does,
+      // so a coherent R20 backup that is capturing makes a Remove wait too. Run against the old law this probe would never get its 200 while the
+      // holder was open; it is inverted, not weakened: it proves the wait, that nothing was taken before it, and the completion after it.
+      const capture = await holdRecoveryCapture();
       try {
+        let removalSettled = false;
+        const removal = serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' }).finally(() => { removalSettled = true; });
+        await waitForLockWait('pg_advisory_xact_lock');           // PostgreSQL itself reports the Remove waiting on the key
+        expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);   // ...having taken NO table or row lock before it (first statement)
+        expect(removalSettled).toBe(false);
+        // A Delete of the same writing arrives behind it and queues too (a second waiter, so the order of arrival is fixed).
         const deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
-        await waitForLockWait('pg_advisory_xact_lock');
-        const removed = await serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' });
-        expect(removed.status).toBe(200);           // the Work route does not queue behind the recovery-capture lock
+        await waitForLockWait('pg_advisory_xact_lock', 2);
+        expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);
+        expect(removalSettled).toBe(false);
+        expect(await workExists(W_A)).toBe(true);                 // nothing happened while the key was held
+        await expectNoRecords();
         await capture.query('COMMIT');
-        const res = await deletion;
+        const removed = await removal;
+        expect(removed.status).toBe(200);
+        expect(await removed.json()).toEqual({ withdrawn: W_A });
+        const res = await deletion;                               // it got the key second, so it saw W_A already gone and W_B as the only claimant
         expect(res.status).toBe(200);
         expect(await res.json()).toEqual({ removed: true, workRemoved: true });
       } finally { await capture.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
+      expect(await workExists(W_A)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
       expect(await dangling()).toBe(0);
+      // Exactly the records the two winners wrote: the Remove's (W_A) and the Delete's (the writing and W_B).
+      expect(await count(`deletion_manifests WHERE note = $1`, [REMOVE_NOTE])).toBe(1);
+      expect(await count(`deletion_manifests WHERE note = $1`, [DELETE_NOTE])).toBe(1);
+      expect(await tombstoneKeys()).toEqual([`living_works:${W_A}`, `living_works:${W_B}`, `member_manuscripts:${MS_SHARED}`]);
+    });
+
+    it('DR-4b the lock is the FIRST statement and UNCONDITIONAL: a Remove of an id that does not exist, and a Remove of another member\'s Work, also wait for the key (a lock taken only after finding the row would come after a row lock) and then end in a plain 404 with no record', async () => {
+      for (const [who, target] of [[MEMBER_A, '99999999-9999-4999-8999-999999999999'], [MEMBER_B, W_A]] as const) {
+        asMember(who);
+        const capture = await holdRecoveryCapture();
+        try {
+          const removal = serverFetcher(`/api/sovereign/living-works/${target}`, { method: 'DELETE' });
+          await waitForLockWait('pg_advisory_xact_lock');
+          expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);
+          await capture.query('COMMIT');
+          expect((await removal).status).toBe(404);
+        } finally { await capture.end().catch(() => undefined); }
+        await expectNoRecords();
+        expect(await workExists(W_A)).toBe(true);
+      }
     });
 
     it('DR-5 two Deletes of the same writing from its only Work, at the same moment: exactly one erases it and the other is told it is already gone (404, which the client reads as done), and nothing is left half-way', async () => {
       await runRemoveWork(W_A, serverFetcher, refresh);
-      const capture = await holder((c) => c.query(`SELECT pg_advisory_xact_lock(hashtextextended('${ADVISORY_KEY}', 0))`).then(() => undefined));
+      const capture = await holdRecoveryCapture();
       try {
         const one = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}?workId=${W_B}`, { method: 'DELETE' });
         const two = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}?workId=${W_B}`, { method: 'DELETE' });
@@ -444,7 +632,11 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       } finally { await capture.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
-      expect(await count(`deletion_manifests WHERE reason_class = 'member_deletion'`)).toBe(1);
+      // LAW CHANGED (follow-up 2026-11-06): this said member_deletion manifests toBe(1). The Remove at the top of this probe now left its own
+      // manifest, so there are TWO, and the split is what proves "exactly one erases it": one Remove record plus ONE Delete record, never two.
+      expect(await count(`deletion_manifests WHERE reason_class = 'member_deletion'`)).toBe(2);
+      expect(await count(`deletion_manifests WHERE note = $1`, [REMOVE_NOTE])).toBe(1);
+      expect(await count(`deletion_manifests WHERE note = $1`, [DELETE_NOTE])).toBe(1);
       expect(await dangling()).toBe(0);
     });
   });
@@ -453,7 +645,8 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     it('DL-1 a Delete queued behind a removal that holds the Work row takes the Work row BEFORE any expression row, so the removal can finish its own cascade (no 40P01, no 500)', async () => {
       // The holder plays a Remove in flight: it holds the Work row and has not yet reached that Work\'s expression rows. (It is a hand-written
       // holder, so it guards the ERASE\'s order, Work row before expression rows. The Remove ROUTE\'s own order, Work row before image
-      // row, is guarded by DL-3, by DL-2\'s sole-claimant pairs, by the hermetic LOCK ORDER test and by candidates S21 and J23.)
+      // row, is guarded by DL-3b, by the hermetic LOCK ORDER test (deleteRoute.test.ts) and by candidates S21 and J23. DL-3 and DL-2 no
+      // longer reach it: the recovery-capture key serialises every Delete/Remove pair before any row lock is taken.)
       const removal = await holder((c) => c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]).then(() => undefined));
       let removalError: unknown = null;
       try {
@@ -473,29 +666,115 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await dangling()).toBe(0);
     });
 
-    it('DL-3 a Delete that holds the Work row while a Remove of the same Work arrives: the Remove waits for the WORK row (not the image row), so the pair cannot deadlock; the Delete finishes and the Remove finds the Work gone', async () => {
+    it('DL-3 a Delete that holds the recovery-capture key and the Work row while a Remove of the same Work arrives: the Remove waits at the KEY, having taken no row lock at all, so the pair cannot deadlock; the Delete finishes and the Remove finds the Work gone', async () => {
+      // RE-ANCHORED (follow-up 2026-11-06). The Remove used to be seen waiting on the Work row (waitForLockWait('FROM living_works')). Its first
+      // statement is now the advisory lock, so that is where it waits: the needle is the advisory statement, and the extra assertion below
+      // (it holds no table or row lock yet) is what keeps the old purpose, "the Remove cannot take the image row before the Work row", true in
+      // a stronger form for this pair. DL-3b keeps the Work-row-before-image-row order itself under a physical probe.
       await addVisual(W_SOLO, 'work-visuals/dl3-image.png');
       await addDestroyableOriginal(MS_SOLO, 'dl3-original.bin');
-      // Hold the Delete part-way: it will have taken the Work row, and wait at the writing\'s source arrival.
+      // Hold the Delete part-way: it will have taken the key and the Work row, and wait at the writing\'s source arrival.
       const gate = await holder((c) => c.query('SELECT id FROM manuscript_source_arrivals WHERE manuscript_id = $1 FOR UPDATE', [MS_SOLO]).then(() => undefined));
       try {
         const deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
         await waitForLockWait('manuscript_source_arrivals');
-        // The Remove arrives now. In the old order it read (and locked) the image row first and then waited for the Work row, which the
-        // Delete holds while it needs that image row: a cycle PostgreSQL broke with a 500.
+        // The Remove arrives now. In an image-first order it would lock the image row and then wait for the Work row, which the Delete holds
+        // while it needs that image row: a cycle PostgreSQL broke with a 500. Now it queues at the key before touching any row.
         const removal = serverFetcher(`/api/sovereign/living-works/${W_SOLO}`, { method: 'DELETE' });
-        await waitForLockWait('FROM living_works');
+        await waitForLockWait('pg_advisory_xact_lock');
+        expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);
         await gate.query('COMMIT');
         const [d, r] = await Promise.all([deletion, removal]);
         expect(d.status).toBe(200);
         expect(await d.json()).toEqual({ removed: true, workRemoved: true });
-        expect(r.status).toBe(404);                                   // the Work was already gone when its lock was granted
+        expect(r.status).toBe(404);                                   // the Work was already gone when the key was granted
       } finally { await gate.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SOLO)).toBe(false);
       expect(await workExists(W_SOLO)).toBe(false);
+      // Exactly the records the winner wrote: the Delete's one manifest, tombstoning the writing, its Work and its source arrival; nothing from the Remove.
+      expect(await count('deletion_manifests')).toBe(1);
+      expect(await count(`deletion_manifests WHERE note = $1`, [DELETE_NOTE])).toBe(1);
+      expect(await count(`provenance_tombstones WHERE object_kind IN ('member_manuscripts', 'living_works') AND object_id IN ($1, $2)`, [MS_SOLO, W_SOLO])).toBe(2);
+      expect(await count(`deletion_manifests WHERE note = $1`, [REMOVE_NOTE])).toBe(0);
+      expect(lines(errSpy).some((l) => /deadlock/i.test(l))).toBe(false);
     });
 
-    it('DL-2 400 simultaneous Delete/Remove pairs: no request ever answers 5xx (the pairs that used to deadlock about 1 in 80)', async () => {
+    it('DL-3b a transaction that holds the Work row while a Remove arrives: the Remove waits on the WORK row and has NOT taken the image row, so the holder can still take the image row and finish (a Remove that took the image row first would deadlock with it)', async () => {
+      // This is the physical probe of the Remove\'s row order (Work row, then image row). DL-3 can no longer see it, because there the Remove
+      // queues at the key before any row; here nothing holds the key, so the Remove gets past it and reaches its first row lock.
+      await addVisual(W_SOLO, 'work-visuals/dl3b-image.png');
+      const rival = await holder((c) => c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_SOLO]).then(() => undefined));
+      let rivalError: unknown = null;
+      let status = 0;
+      try {
+        const removal = serverFetcher(`/api/sovereign/living-works/${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('FROM living_works');
+        try {
+          // The rival now needs the image row. If the Remove had already locked it, the two would wait on each other.
+          await rival.query('SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 FOR UPDATE', [W_SOLO]);
+          await rival.query('DELETE FROM living_works WHERE id = $1', [W_SOLO]);
+          await rival.query('COMMIT');
+        } catch (e) { rivalError = e; }
+        status = (await removal).status;
+      } finally { await rival.end().catch(() => undefined); }
+      expect(rivalError).toBeNull();
+      expect(status).toBe(404);                                       // the rival removed the Work first; the Remove finds it gone
+      expect(await workExists(W_SOLO)).toBe(false);
+      await expectNoRecords();                                        // the rival wrote no record, and the losing Remove wrote none
+      expect(lines(errSpy).some((l) => /deadlock/i.test(l))).toBe(false);
+    });
+
+    it('DL-4 two requests for the same Work and writing queue behind a held recovery-capture key, the DELETE first: the Delete ends the writing and the Work and the Remove then finds nothing (404); no deadlock, and exactly the Delete\'s records exist', async () => {
+      await addVisual(W_SOLO, 'work-visuals/dl4-image-absent.png');
+      const capture = await holdRecoveryCapture();
+      let del!: Response; let rem!: Response;
+      try {
+        const deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('pg_advisory_xact_lock', 1);
+        const removal = serverFetcher(`/api/sovereign/living-works/${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('pg_advisory_xact_lock', 2);            // both are waiting, in a fixed order of arrival (the key\'s queue is first-come)
+        expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);
+        await capture.query('COMMIT');
+        [del, rem] = await Promise.all([deletion, removal]);
+      } finally { await capture.end().catch(() => undefined); }
+      expect(del.status).toBe(200);
+      expect(await del.json()).toEqual({ removed: true, workRemoved: true });
+      expect(rem.status).toBe(404);
+      expect(await manuscriptExists(MS_SOLO)).toBe(false);
+      expect(await workExists(W_SOLO)).toBe(false);
+      expect(await count('vault_erasure_queue')).toBe(0);
+      expect(await count('deletion_manifests')).toBe(1);
+      expect(await count(`deletion_manifests WHERE note = $1`, [DELETE_NOTE])).toBe(1);
+      expect(await tombstoneKeys()).toEqual([`living_works:${W_SOLO}`, `member_manuscripts:${MS_SOLO}`]);
+      expect(lines(errSpy).some((l) => /deadlock/i.test(l))).toBe(false);
+    });
+
+    it('DL-5 the same pair, the REMOVE first: the Remove ends the Work and records it, the Delete then refuses the stale card (409 work_no_longer_holds_it) and the writing is KEPT; no deadlock, and exactly the Remove\'s record exists', async () => {
+      await addVisual(W_SOLO, 'work-visuals/dl5-image-absent.png');
+      const capture = await holdRecoveryCapture();
+      let del!: Response; let rem!: Response;
+      try {
+        const removal = serverFetcher(`/api/sovereign/living-works/${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('pg_advisory_xact_lock', 1);
+        const deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('pg_advisory_xact_lock', 2);
+        expect(await heldBeforeWaiting('pg_advisory_xact_lock')).toEqual([]);
+        await capture.query('COMMIT');
+        [rem, del] = await Promise.all([removal, deletion]);
+      } finally { await capture.end().catch(() => undefined); }
+      expect(rem.status).toBe(200);
+      expect(await rem.json()).toEqual({ withdrawn: W_SOLO });
+      expect(del.status).toBe(409);
+      expect(await del.json()).toEqual({ refusal: 'work_no_longer_holds_it' });
+      expect(await manuscriptExists(MS_SOLO)).toBe(true);             // the stale card erased nothing
+      expect(await workExists(W_SOLO)).toBe(false);
+      expect(await count('vault_erasure_queue')).toBe(0);
+      await expectOneWorkRecord(W_SOLO, REMOVE_NOTE);
+      expect(sealCalls()).toBe(0);
+      expect(lines(errSpy).some((l) => /deadlock/i.test(l))).toBe(false);
+    });
+
+    it('DL-2 400 simultaneous Delete/Remove pairs: no request ever answers 5xx (a stress check: both routes take the recovery-capture key first, so every pair serialises there; the pairs used to deadlock about 1 in 80 before that)', async () => {
       let fiveHundreds = 0;
       let pairs = 0;
       let imagePairs = 0;
@@ -507,12 +786,15 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
         await reset();
         let deletion: Promise<Response>;
         if (pairs % 2 === 0) {
-          // Two Works hold the writing: a loose Delete reaches the shared refusal, a Remove of one Work races it (the expression-row cycle).
+          // Two Works hold the writing: a loose Delete reaches the shared refusal while a Remove of one Work runs. (The expression-row
+          // cycle this pair used to form is now prevented by the key, which serialises it; this is kept as a no-5xx stress, not as a
+          // row-order discriminator.)
           deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
         } else {
           // ONE Work holds the writing and that Work has an image: the Delete goes on to read the image row (removeDeclaration) while a
-          // Remove of the same Work takes its rows. Only this topology can reach the image-row cycle that an image-row-first Remove
-          // formed with the Delete (a 500 for an act that did not happen).
+          // Remove of the same Work takes its rows. This topology is kept as a no-5xx stress. It is not a row-order discriminator: the
+          // key serialises the pair, so this loop cannot tell an image-row-first Remove (candidates J23 and S21) from the current order.
+          // DL-3b and the hermetic LOCK ORDER test (deleteRoute.test.ts) guard that order.
           await query('DELETE FROM living_works WHERE id = $1', [W_B]);
           await addVisual(W_A, 'work-visuals/dl2-image.png');
           imagePairs += 1;
@@ -544,6 +826,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ withdrawn: W_IMG });
       expect(await count('vault_erasure_queue')).toBe(120);               // only the foreign rows remain
+      await expectOneWorkRecord(W_IMG, REMOVE_NOTE);                      // and the removal is recorded exactly once (follow-up 2026-11-06)
     });
 
     it('WI-1 a removed Work whose OWN image cannot be destroyed is not reported as plain success: 500, removed:true, image_bytes_owed; the row is gone and the bytes stay queued', async () => {
@@ -553,6 +836,9 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await res.json()).toEqual({ removed: true, refusal: 'image_bytes_owed', unconfirmed: { image: true } });
       expect(await workExists(W_STUCK)).toBe(false);
       expect(await count('vault_erasure_queue')).toBe(1);
+      // The deletion record is committed with the removal, whatever the image sweep then reports: the Work is gone, so it is recorded (follow-up 2026-11-06).
+      await expectOneWorkRecord(W_STUCK, REMOVE_NOTE);
+      expect(sealCalls()).toBe(0);
     });
 
     it('WI-2 the client turns that into the unconfirmed notice, re-reads the page first, and the Work is gone', async () => {
@@ -630,7 +916,8 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await settle(runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh))).toBeNull();
       expect(await manuscriptExists(MS_SOLO)).toBe(true);
       expect(await workExists(W_SOLO)).toBe(true);
-      expect(await count('deletion_manifests')).toBe(0);
+      await expectNoRecords();
+      expect(sealCalls()).toBe(0);
     });
   });
 });

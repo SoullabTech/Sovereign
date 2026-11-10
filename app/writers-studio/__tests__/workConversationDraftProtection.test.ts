@@ -129,7 +129,10 @@ it('retains the exact draft after a transport refusal instead of clearing it bef
   mockAsk.mockResolvedValue({ ok: false, refusal: 'unreachable' });
   await mount(draft); await click('Send');
   expect(mockAsk).toHaveBeenCalledWith({ manuscriptId: 'fictional-manuscript', question: draft.trim(),
-    anchor: { on: 'work' }, sectionId: 'section-a' });
+    // No saved settings on this device ⇒ the request says so, and the server uses the member's account default (founder ruling 2026-11-09).
+    anchor: { on: 'work' }, sectionId: 'section-a', sanctuary: 'no_live_settings',
+    // G-3 (WS-CRAFT-CONVENTIONS-01): the writer's working style travels with every question (no saved style ⇒ the default).
+    responseStyle: 'guided' });
   expect(input().value).toBe(draft); expect(host.textContent).toContain('That didn’t reach her');
 });
 it('retains the draft if the server records a thread but cannot produce an answer', async () => {
@@ -241,4 +244,28 @@ it('does not overwrite a draft newly composed by choosing a Keep during a pendin
   expect(newDraft).toContain('From Rain:');
   await act(async () => resolve(response));
   expect(input().value).toBe(newDraft);
+});
+
+/* Founder walk 2026-11-09: a provider 401 left the page saying nothing the writer noticed. A failed answer must be unmistakable. */
+it('a failed answer from the AI service is shown as an alert, in plain words, with the question kept in the box', async () => {
+  mockAsk.mockResolvedValue({ ok: false, refusal: 'provider_error', threadId: 'thread-a' });
+  await mount('Can you show me an edited version?'); await click('Send');
+  const alert = host.querySelector('[role="alert"][data-maia-refusal]')!;
+  expect(alert.textContent).toContain('MAIA couldn’t answer this time');
+  expect(alert.textContent).not.toContain('didn’t reach her');            // it did reach the server; the answer failed
+  expect(input().value).toBe('Can you show me an edited version?');
+  expect(mockAsk).toHaveBeenCalledTimes(1);                                // never retried by itself
+});
+it('quiet (Develop stage): secondary controls sit behind one More; all of them are still reachable', async () => {
+  await act(async () => { root.render(React.createElement(WorkConversation, {
+    work, manuscriptId: 'fictional-manuscript', sectionId: 'section-a', initialDraft: '', onClose: mockClose, quiet: true,
+  })); });
+  expect(host.querySelector('[data-reorient-work]')).toBeNull();
+  expect(host.querySelector('[data-keeps-toggle]')).toBeNull();
+  expect(host.querySelector('[data-open-in-maia]')).toBeNull();
+  await act(async () => (host.querySelector('[data-conversation-more]') as HTMLElement).click());
+  expect(host.querySelector('[data-reorient-work]')).not.toBeNull();
+  expect(host.querySelector('[data-keeps-toggle]')).not.toBeNull();
+  expect(host.querySelector('[data-open-in-maia]')).not.toBeNull();
+  expect(host.querySelector('[data-close-conversation]')).not.toBeNull();
 });

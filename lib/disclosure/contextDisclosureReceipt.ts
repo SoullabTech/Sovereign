@@ -65,7 +65,10 @@ export type DisclosureSourceClass = 'work';
  * I Ching what this means" does not authorize a consultation. The Work may
  * contain an invitation as CONTENT; only the writer can turn it into AUTHORITY.
  */
-export type DisclosureParticipationBasis = 'member_invoked';
+export type DisclosureParticipationBasis =
+  | 'member_invoked'
+  /** WS-WORK-CONTINUITY · the member's standing, revocable Work reading scope; the receipt carries the scope event as its authority. Mirrors migration `20261108000001`. */
+  | 'standing_authorization';
 
 /** The boundaries constituted in v1. Each value mirrors one migration. */
 export type DisclosureBoundary =
@@ -91,7 +94,9 @@ export type DisclosureBoundary =
    * nothing else. ⛔ A value present in SQL and absent here (or the reverse) is
    * a defect, not a convenience — the S3 lane recorded exactly that drift.
    */
-  | 'writers_studio.editorial_turn->maia_cognition';
+  | 'writers_studio.editorial_turn->maia_cognition'
+  /** WS-WORK-CONTINUITY · saved Work text read inside the Work conversation under a standing scope. Mirrors migration `20261108000001`. */
+  | 'writers_studio.work_conversation->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
@@ -112,7 +117,9 @@ export type DisclosureGesture =
    */
   | 'authorize_sections'
   /** R2-2 · the writer explicitly discusses one exact durable Review finding. */
-  | 'discuss_finding';
+  | 'discuss_finding'
+  /** WS-WORK-CONTINUITY · a read made under the member's standing reading scope. */
+  | 'standing_read_scope';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */
@@ -134,6 +141,8 @@ export interface ContextDisclosureAttempt {
    */
   readonly sectionRef?: string;
   readonly gesture: DisclosureGesture;
+  /** Present iff participationBasis is 'standing_authorization'. */
+  readonly scopeEventId?: string;
 }
 
 /**
@@ -209,15 +218,15 @@ export async function mintDisclosureAttempt(
       `INSERT INTO context_disclosure_receipts
          (disclosure_id, member_id, request_ref, boundary, source_class,
           participation_basis, source_ref, scope_kind, section_ref,
-          authorized_by, gesture, policy_version, state)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted')
+          authorized_by, gesture, policy_version, state, scope_event_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted', $12)
        ON CONFLICT (disclosure_id) DO NOTHING
        RETURNING id`,
       [
         attempt.disclosureId, attempt.memberId, attempt.requestRef, attempt.boundary,
         attempt.sourceClass, attempt.participationBasis, attempt.sourceRef,
         attempt.scopeKind, attempt.sectionRef ?? null,
-        attempt.gesture, DISCLOSURE_POLICY_VERSION,
+        attempt.gesture, DISCLOSURE_POLICY_VERSION, attempt.scopeEventId ?? null,
       ],
     );
 
@@ -229,7 +238,7 @@ export async function mintDisclosureAttempt(
     const existing = await query<Record<string, string | null>>(
       `SELECT id, member_id, request_ref, boundary, source_class, participation_basis,
               source_ref, scope_kind, section_ref, authorized_by, gesture,
-              policy_version, state
+              policy_version, state, scope_event_id
          FROM context_disclosure_receipts
         WHERE disclosure_id = $1`,
       [attempt.disclosureId],
@@ -254,8 +263,9 @@ export async function mintDisclosureAttempt(
       authorized_by: 'member',
       gesture: attempt.gesture,
       policy_version: DISCLOSURE_POLICY_VERSION,
+      scope_event_id: attempt.scopeEventId ?? null,
     };
-    const differing = Object.keys(expected).filter(k => row[k] !== expected[k]);
+    const differing = Object.keys(expected).filter(k => (row[k] ?? null) !== expected[k]);
 
     if (differing.length > 0) {
       // ⛔ The id is in use describing a different disclosure. Letting this cross

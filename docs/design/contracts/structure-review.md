@@ -5,6 +5,7 @@ human_activity: reviewing MAIA's reading of a Work — understanding what she sa
   authored structure
 surfaces:
   - app/writers-studio/canvas/StructureReview.tsx
+  - app/writers-studio/canvas/AskMaia.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE — the room is defined by the human activity of editorial review, not

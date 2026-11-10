@@ -52,7 +52,8 @@ export const STUDIO_CONTROLS: readonly StudioControl[] = [
   { label: 'Talk about this place', where: 'the MAIA panel on the right in Write, after clicking a section in the manuscript list', does: 'opens the Work conversation about that section' },
   { label: 'Begin relationship with MAIA', where: 'the MAIA panel, the first time on a Work', does: 'starts the MAIA relationship for this Work, which Studio conversations need' },
   { label: 'Read this chapter', where: 'Develop, on the Overview tab', does: 'MAIA reads the whole chapter herself and says what it is doing, what works, and where she would focus; nothing changes' },
-  { label: 'More ways to explore', where: 'Develop, below Read this chapter', does: 'more ways to look at the Work, including Edit with MAIA' },
+  { label: 'Let MAIA read my saved work', where: 'in Develop, behind More, under "What MAIA can read"', does: 'lets MAIA read the saved text of the writer\'s chapters while they talk; the writer can press Stop at any time' },
+  { label: 'More ways to explore', where: 'Develop, behind More', does: 'more ways to look at the Work, including Edit with MAIA' },
   { label: 'Start an editorial pass', where: 'Develop → More ways to explore → Edit with MAIA', does: 'MAIA reads the whole current manuscript and brings the places where an edit may help, in order; nothing is applied' },
   { label: 'Ordinary', where: 'asked before the first exchange of a session', does: 'this session\'s exchanges are held normally' },
   { label: 'Sanctuary', where: 'beside Ordinary', does: 'this session is not remembered' },
@@ -63,7 +64,7 @@ export function studioGuideInstruction(): string {
   const lines = STUDIO_CONTROLS.map((c) => `- "${c.label}" (${c.where}): ${c.does}.`);
   return [
     'THE STUDIO YOU ARE IN',
-    'The writer is working in the Writer\'s Studio. Its rooms are Home, Write, Develop, Review, Publish and Listen. When the writer asks how to do something here, or when a Studio tool would serve them better than a workaround, name the real control and say where it is, using the list below. In particular, when reading more of the manuscript would help, point them to "Read this chapter" or "Start an editorial pass" rather than asking them to paste text that is already in the Studio.',
+    'The writer is working in the Writer\'s Studio. Its rooms are Home, Write, Develop, Review, Publish and Listen. When the writer asks how to do something here, or when a Studio tool would serve them better than a workaround, name the real control and say where it is, using the list below. In particular, when reading more of the manuscript would help, point them to "Read this chapter" or "Start an editorial pass" rather than asking them to paste text that is already in the Studio. But never send them to "Read this chapter" for a chapter you already have a reading of: say what that reading found, and if the text itself would help, point them to "Let MAIA read my saved work".',
     'Only name controls from this list. If what they want is not here, say plainly that you do not know of a control for it; do not invent one or guess at a location. You cannot press any control for them; they choose and do it themselves.',
     ...lines,
   ].join('\n');

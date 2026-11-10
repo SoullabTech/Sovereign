@@ -26,6 +26,8 @@ import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
 import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
 import { PanelMemoryProvider } from './panelMemory';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
+import ProDeepReadingPanel from './ProDeepReadingPanel';
 import ProChartViews from './ProChartViews';
 import ProHouseWheel from './ProHouseWheel';
 import ProEphemerisPanel from './ProEphemerisPanel';
@@ -586,8 +588,14 @@ export default function ProAstrologyExperience() {
                   showAspects={showAspects} showHouseLines={showHouseLines}
                   maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
                   outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
+                <ProAskMaiaPanel subjectLabel="this natal chart" readsWhose={savedSubject ? `${savedSubject.label}’s chart` : 'your chart'}
+                  request={{ section: 'natal', subject: savedSubject ? savedSubject.id : 'own', houseSystem }} />
+                <ProDeepReadingPanel subject={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
+                  readsWhose={savedSubject ? `${savedSubject.label}’s chart` : 'your chart'} />
                 <ProTransitPanel natalBodies={bodies} transits={transits} showNowRequest={transitRequest}
-                  onTransits={(next) => setRing('transits', next, 'Transits')} />
+                  onTransits={(next) => setRing('transits', next, 'Transits')}
+                  ask={{ subject: savedSubject ? savedSubject.id : 'own', houseSystem,
+                    readsWhose: savedSubject ? `${savedSubject.label}’s chart` : 'your chart' }} />
                 <ProComparePanel chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
                   natalBodies={bodies} outer={ringOf('compare')}

@@ -8,6 +8,7 @@
  * ⛔ Declared Source/Idea bodies do not cross here merely because they belong
  * to the Work. This ordinary conversation receives Work declarations + C14.
  */
+import { isPostureDeclaration, resolveStudioPosture, type KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -73,7 +74,7 @@ export async function POST(
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
-  const allowed = new Set(['question', 'threadId']);
+  const allowed = new Set(['question', 'threadId', 'sanctuary']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown field' }, { status: 400 });
   }
@@ -85,6 +86,16 @@ export async function POST(
   if (question.length > MAX_QUESTION) {
     return NextResponse.json({ refusal: 'question_too_long' }, { status: 413 });
   }
+
+  /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09): a turn is kept ONLY when the request DECLARED an ordinary posture. Sanctuary, or a
+     posture the client could not read (undeclared), answers in the moment and keeps nothing: no thread opened, no turn written. */
+  if (body.sanctuary !== undefined && !isPostureDeclaration(body.sanctuary)) {
+    return NextResponse.json({ refusal: 'malformed', detail: 'sanctuary' }, { status: 400 });
+  }
+  const studioPosture = await resolveStudioPosture(memberId, body);
+  const storing = studioPosture.keep;
+  /* The store refuses any write without this witness; it exists only when storing is true. */
+  const keep = studioPosture.witness as KeepWitness;
 
   const requestedThreadId = typeof body.threadId === 'string' ? body.threadId : null;
   const existing = requestedThreadId
@@ -116,16 +127,16 @@ export async function POST(
     return NextResponse.json({ refusal: built.reason }, { status: 422 });
   }
 
-  const liveThreadId = existing?.id ?? await openLivingWorkThread({
+  const liveThreadId = existing?.id ?? (!storing ? '' : await openLivingWorkThread({ keep: keep,
     livingWorkId: workId,
     memberId,
     canonicalAtOpen: currentFingerprint,
     initiatedBy: 'author',
-  });
+  }));
 
   const priorTurns = existing?.turns ?? [];
-  if (!isHeldRetry(priorTurns, question)) {
-    await appendTurn({
+  if (storing && !isHeldRetry(priorTurns, question)) {
+    await appendTurn({ keep: keep,
       threadId: liveThreadId,
       memberId,
       speaker: 'author',
@@ -140,6 +151,9 @@ export async function POST(
       anchor: WORK_ANCHOR,
       facts: built.facts,
       staleness,
+      /* Walk defect 5, Living Work path (independent review 2026-11-09): in Sanctuary she is told so, and is not given the Studio guide
+         or the offers (reading permission, plan, keeping…), exactly as on the manuscript route. */
+      sanctuary: studioPosture.sanctuary === true,
     },
     historyFor(
       priorTurns.map((turn) => ({ speaker: turn.speaker, body: turn.body })),
@@ -150,12 +164,22 @@ export async function POST(
 
   if (!outcome.ok) {
     return NextResponse.json(
-      { threadId: liveThreadId, refusal: outcome.refusal, staleness },
+      { threadId: liveThreadId || null, refusal: outcome.refusal, staleness },
       { status: 502 },
     );
   }
 
-  await appendTurn({
+  if (!storing) {
+    // Answered in the moment, kept nowhere. An earlier ordinary thread (if continuing) is returned unchanged.
+    return NextResponse.json({
+      threadId: existing?.id ?? null,
+      thread: existing ? await loadLivingWorkThread(existing.id, memberId) : null,
+      sanctuary: { notKept: true, question, answer: outcome.answer },
+      staleness,
+    });
+  }
+
+  await appendTurn({ keep: keep,
     threadId: liveThreadId,
     memberId,
     speaker: 'maia',

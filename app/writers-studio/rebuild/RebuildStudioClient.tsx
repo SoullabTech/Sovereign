@@ -1,5 +1,6 @@
  'use client';
 
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -943,11 +944,11 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       sessionIdRef.current = sessionId;
       const res = await apiFetch('/api/writers-studio/focus', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(withKeepPosture({
           sessionId, workRef: focusWire.workRef, scopeKind: focusWire.scopeKind,
           sectionRef: focusWire.sectionRef, range: focusWire.range,
           gesture: 'ask_maia', ask: maiaAsk,
-        }),
+        })),
       });
       if (res.status === 404) {
         setMaiaFailure('Passage cognition is not enabled in this build yet. Nothing was sent.');

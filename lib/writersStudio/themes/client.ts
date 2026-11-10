@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import type { LiveThemesPayload, ThemeMutation } from './liveTypes';
 
 export type ThemesFetchOutcome =
@@ -38,7 +39,7 @@ export async function mutateTheme(
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(mutation),
+        body: JSON.stringify(withKeepPosture({ ...mutation })),
       },
     );
     const body = await res.json().catch(() => ({}));

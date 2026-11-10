@@ -13,6 +13,7 @@
  * says — only asked about the one it already holds.
  */
 
+import { declaredSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { TeachingAnchor } from './teachingTurn';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
@@ -40,6 +41,10 @@ export interface AskThreadView {
 export type AskOutcome =
   | {
       ok: true; threadId: string; thread: AskThreadView; staleness: StalenessState;
+      /** Sanctuary: this exchange was answered for the moment and NOT kept (no thread row, no turn). Shown, never stored. */
+      sanctuary?: { notKept: true; question: string; answer: string };
+      /** Which saved sections MAIA was handed for this answer (ids + headings only, never text). Present on the Work conversation. */
+      read?: readonly { sectionId: string; label: string | null }[];
       /**
        * BUILD-07E. Present only on a developmental thread, and never synthesised
        * client-side: it is the server's `observationLocation` answer, three-state.
@@ -91,6 +96,12 @@ export async function ask(input: {
    * the anchor of a resumed thread.
    */
   sectionId?: string;
+  /** The member's CURRENT Sanctuary posture. When omitted, the client declares it from saved settings (none saved ⇒ ordinary); unreadable ⇒ undeclared. */
+  sanctuary?: boolean | 'no_live_settings';
+  /** G-3: the writer's working-style preference (as the observation dialogue sends it). */
+  responseStyle?: ExplanationDepth;
+  /** G-3: the Teach me pressed. The server owns the teaching shape. */
+  teachingAnchor?: TeachingAnchor;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -102,6 +113,10 @@ export async function ask(input: {
           : { anchor: input.anchor }),
         question: input.question,
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+        ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+        ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
+        // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
+        ...(input.sanctuary !== undefined ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));
@@ -120,6 +135,8 @@ export async function ask(input: {
       threadId: j.threadId as string,
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
+      ...(Array.isArray(j.read) ? { read: j.read as { sectionId: string; label: string | null }[] } : {}),
+      ...(j.sanctuary && typeof j.sanctuary === 'object' ? { sanctuary: j.sanctuary as { notKept: true; question: string; answer: string } } : {}),
       location: j.location as CurrentLocation | undefined,
     };
   } catch {
@@ -184,7 +201,7 @@ async function rawPost(
     const res = await apiFetch(url(manuscriptId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...declaredSanctuaryPosture(), ...body }),
     });
     const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const outcome = bodyOutcomeFrom(res.status, j);
@@ -298,6 +315,7 @@ export async function askLivingWork(input: {
       body: JSON.stringify({
         question: input.question,
         ...(input.threadId ? { threadId: input.threadId } : {}),
+        ...declaredSanctuaryPosture(),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));
@@ -315,6 +333,7 @@ export async function askLivingWork(input: {
       threadId: j.threadId as string,
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
+      ...(j.sanctuary && typeof j.sanctuary === 'object' ? { sanctuary: j.sanctuary as { notKept: true; question: string; answer: string } } : {}),
     };
   } catch {
     return { ok: false, refusal: 'unreachable' };

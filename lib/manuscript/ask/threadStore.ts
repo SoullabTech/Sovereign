@@ -16,6 +16,7 @@
  * turn fails loudly at the row rather than quietly at the type.
  */
 
+import { assertKeepWitness, type KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { query, type TransactionClient } from '@/lib/db/postgres';
 import type { AskAnchor } from './anchor';
 import type { StalenessState } from './staleness';
@@ -137,7 +138,10 @@ export async function openThread(input: {
   reading: ReadingIdentity | null;
   canonicalAtOpen: string;
   initiatedBy: 'maia' | 'author';
+  /** Sanctuary closure (founder ruling 2026-11-09): proof this write was declared ordinary. No witness, no thread. */
+  keep: KeepWitness;
 }): Promise<string> {
+  assertKeepWitness(input.keep, 'ask_threads');
   const r = await query(
     `INSERT INTO ask_threads
        (manuscript_id, member_id, anchor, reading_identity, canonical_at_open, initiated_by)
@@ -164,6 +168,8 @@ export interface AppendTurnInput {
   body: string;
   staleness: StalenessState;
   answerProvenance?: unknown | null;
+  /** Sanctuary closure (founder ruling 2026-11-09): proof this write was declared ordinary. No witness, no turn. */
+  keep: KeepWitness;
 }
 
 /**
@@ -183,6 +189,7 @@ export interface AppendTurnInput {
 export async function appendTurnWithClient(
   client: TransactionClient, input: AppendTurnInput,
 ): Promise<number> {
+  assertKeepWitness(input.keep, 'ask_turns');
   const r = await client.query(
     `INSERT INTO ask_turns (thread_id, turn_index, speaker, body, staleness, answer_provenance)
      SELECT t.id,
@@ -293,7 +300,9 @@ export async function openLivingWorkThread(input: {
   memberId: string;
   canonicalAtOpen: string;
   initiatedBy: 'maia' | 'author';
+  keep: KeepWitness;
 }): Promise<string> {
+  assertKeepWitness(input.keep, 'ask_threads');
   const r = await query(
     `INSERT INTO ask_threads
        (living_work_id, member_id, anchor, reading_identity, canonical_at_open, initiated_by)
