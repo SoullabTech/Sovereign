@@ -64,9 +64,24 @@ export function workIntegrityRules(hasHistory: boolean): string {
   return hasHistory ? WORK_INTEGRITY_RULES : TEXT_ACCURACY_DIRECTIVE;
 }
 
-export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
+/* -3 (2026-11-10): answer ceiling 1,200 → ASK_MAX_TOKENS; a `max_tokens` stop is refused as `answer_incomplete`. */
+export const ASKER_VERSION = 'ws2-05b-8b-02c-3';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
+
+/**
+ * WS-ASK-ANSWER-TRUNCATION (EA acceptance walk, 2026-11-10). The ceiling on ONE answer, reasoning included.
+ *
+ * `claude-opus-5` thinks by default when the request names no `thinking` (adaptive, effort `high`), and those
+ * tokens count against `max_tokens`. At the former 1,200 the reasoning ate the budget: in the founder's walk
+ * two Work-conversation answers stopped mid-sentence at 1,315 and 140 characters, the shorter one when she had
+ * been given more of the book. 16,000 is the documented non-streaming default; it leaves room to reason AND to
+ * finish the sentence. It is a ceiling, not a target — length is still governed by the prompt.
+ */
+export const ASK_MAX_TOKENS = 16_000;
+
+/** Provider stop reasons that mean the answer was NOT finished. Anything else (including an unreported null) is not treated as a cut. */
+const INCOMPLETE_STOPS: ReadonlySet<string> = new Set(['max_tokens', 'model_context_window_exceeded']);
 
 const WRITERS_CONSTELLATION_REFERRAL = constellationReferralPrompt('writers-studio');
 
@@ -174,6 +189,10 @@ export interface AskAnswerProvenance {
   suppliedSections?: readonly { sectionId: string; digest: string }[];
   /** The passage the writer was at this turn (digest only), to notice when it changes between turns. */
   locus?: { sectionId: string; digest: string };
+  /** Why the provider stopped, as it reported it. Recorded so a walk can SEE how an answer ended, not infer it. */
+  stopReason?: string | null;
+  /** Output tokens the provider reported for this answer, reasoning included. */
+  outputTokens?: number;
 }
 
 export type AskOutcome =
@@ -181,7 +200,8 @@ export type AskOutcome =
   | { ok: true; answer: string; provenance: AskAnswerProvenance; seen?: string;
       /** What may GROUND a quotation of the writing: the system prompt and the writer's own messages, never her earlier answers. */
       seenForQuotes?: string }
-  | { ok: false; refusal: 'unreachable' | 'empty_answer' };
+  /** `answer_incomplete`: the provider stopped at the token ceiling. A cut answer is not one of hers — it is never stored or shown as final. */
+  | { ok: false; refusal: 'unreachable' | 'empty_answer' | 'answer_incomplete' };
 
 /**
  * What she is shown of the reading.
@@ -590,13 +610,19 @@ export async function askMaia(
        No `execution` either: an ordinary completion, as this has always been. */
     const outcome = await runStructured({
       model,
-      maxTokens: opts.maxTokens ?? 1200,
+      maxTokens: opts.maxTokens ?? ASK_MAX_TOKENS,
       system,
       messages,
     });
     /* A refused inference is not an answer, and must not be shown as one — the
        same ruling the transport catch below makes, for the same reason. */
     if (!outcome.ok) return { ok: false, refusal: 'unreachable' };
+    /* ⛔ A CUT ANSWER IS NOT AN ANSWER. Stopped at the ceiling means she did not finish; storing the text would put
+       words in the record she never completed, and showing it reads as her ending mid-thought. Same ruling as a
+       refused inference: reported as a failure, never rendered as one of hers. */
+    /* `model_context_window_exceeded` is the other way a turn ends unfinished (Anthropic docs, "Thinking and the context
+       window": on 4.5+ models generation that reaches the context window stops with it instead of erroring). */
+    if (INCOMPLETE_STOPS.has(outcome.result.stopReason ?? '')) return { ok: false, refusal: 'answer_incomplete' };
     const text = outcome.result.content
       .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')
       .map((b) => b.text).join('').trim();
@@ -612,6 +638,8 @@ export async function askMaia(
         promptHash: ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
+        stopReason: outcome.result.stopReason,
+        outputTokens: outcome.result.usage.outputTokens,
       },
     };
   } catch {

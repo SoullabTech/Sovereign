@@ -143,6 +143,8 @@ const TEACH_NOT_ANSWERED = 'MAIA couldn’t answer the Teach me this time. Nothi
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
+  /* WS-ASK-ANSWER-TRUNCATION: she ran out of room before finishing, so the cut answer was not kept or shown. */
+  answer_incomplete: 'MAIA ran out of room before she finished, so that answer wasn’t kept. Nothing you wrote was lost — ask again, or ask about a narrower part of the book.',
   question_too_long: 'That is longer than a question this room can carry.',
   unauthenticated: 'You are signed out. Sign in and your question will go through.',
   not_found: 'This Work could not be opened for conversation.',
