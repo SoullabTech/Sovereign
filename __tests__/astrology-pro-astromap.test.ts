@@ -3,6 +3,7 @@
  * place route's ownership and input refusals.
  */
 import * as Astronomy from 'astronomy-engine';
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NextRequest } from 'next/server';
@@ -28,6 +29,14 @@ function horizon(body: 'Venus' | 'Mars', lat: number, lng: number) {
   const eq = Astronomy.Equator(Astronomy.Body[body], time, observer, true, true);
   return Astronomy.Horizon(time, observer, eq.ra, eq.dec);
 }
+
+describe('astro-map pointer contract', () => {
+  it('opts the interactive SVG back in while land shapes remain click-through', () => {
+    const css = readFileSync('app/astrology/pro-preview/pro-astromap.module.css', 'utf8');
+    expect(css).toMatch(/\.map\s*\{[^}]*pointer-events:\s*auto/s);
+    expect(css).toMatch(/\.land\s*\{[^}]*pointer-events:\s*none/s);
+  });
+});
 
 describe('bundled world land', () => {
   it('renders dateline-safe Natural Earth outlines beneath the map lines', () => {

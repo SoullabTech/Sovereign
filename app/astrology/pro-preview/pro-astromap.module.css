@@ -1,5 +1,5 @@
 .viewport { overflow-x: auto; margin-top: 10px; border-radius: 12px; }
-.map { display: block; width: 100%; min-width: 640px; cursor: crosshair; }
+.map { display: block; width: 100%; min-width: 640px; cursor: crosshair; pointer-events: auto; }
 .land { pointer-events: none; }
 .land path { fill: none; stroke: rgba(183, 196, 204, .34); stroke-width: .85; vector-effect: non-scaling-stroke; }
 .cityDot { fill: rgba(207, 216, 219, .62); }
