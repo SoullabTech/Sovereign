@@ -57,3 +57,12 @@ The seed needs a **kept version** first (press *Keep a version* in Write), becau
 |---|---|
 | `WS-DEVELOP_P0_INTEGRATED_EXPERIENCE_WALK_2026-11-10.md` | The seven-scenario walk against `895ffbc61c42` (#2208 + canonical), the acceptance matrix, what is BLOCKED or untested, and the corrections made to my own instrument |
 | `p0-walk-repro/` | The walk, helpers, stand-in model and reset scripts, and the raw `events.jsonl`. **Container paths**: provided for audit, not as a runnable kit |
+
+## Added 2026-11-10 — P0 candidate walk
+
+⛔ **Evidence only.** The candidate source is on its own branch (`claude/ws-develop-p0-fix-20261110` @ `44a1764cf7af`), **not promoted**; #2208 is untouched and draft.
+
+| File | What it is |
+|---|---|
+| `WS-DEVELOP_P0_CANDIDATE_WALK_2026-11-10.md` | The same walk re-run on the candidate: baseline-vs-candidate matrix, gates (including the ESLint message delta), limits, founder questions |
+| `p0-walk-repro/candidate/` | Candidate `walk.mjs`, `p0lib.mjs`, `resp.mjs`, `keep.mjs`, raw `events.jsonl`, ESLint message summaries, and screens (`screens/`) at 390 / 1024 / 1440 |
