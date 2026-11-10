@@ -573,6 +573,108 @@ run on the same Work: the 11-08 false denial happened here.
 **Precondition standing:** P1 ✅ · P2 ✅ · P3 source half ✅ (route trace, Work-independent),
 markers ✅ (178), probe half owed during the walk · **P4 ✅ `55742458`** · P5 ✅ · P6 at walk start.
 
+## 10f. Eight-reading assessment of `dd1a3718` — content-minimal receipt (2026-11-10)
+
+This answers the review lane's task: assess the eight completed readings, read-only, with no new
+provider call. The full assessment paraphrases MAIA's observations about private manuscript
+content, so it is held **privately** for the founder (session scratchpad) and is ⛔ not
+committed, posted or sent to another provider. This receipt carries identifiers, counts and
+classifications only.
+
+**Authority.**
+- The founder (Work owner; `dd1a3718` and `55742458` have the same owner, verified) directed
+  the assessment in session.
+- Retrieval was a `READ ONLY … ROLLBACK` copy from production into this Claude Code session,
+  via the same provider family that produced the readings.
+- No new reading call, no write, no log of manuscript text.
+
+| Reading | Lens | Rev | Obs | Refs (front · body · back · bib) |
+|---|---|---|---|---|
+| `217e0c66` | development | 1 | 14 | 4 · 45 · 7 · 0 |
+| `8edc7fa5` | structure | 1 | 25 | 2 · 68 · 10 · 2 |
+| `82912bf2` | continuity | 1 | 13 | 2 · 28 · 0 · 0 |
+| `4c8ec5b1` | arc | 1 | 14 | 3 · 37 · 4 · 1 |
+| `d8013cc3` | themes | 1 | 17 | 2 · 77 · 1 · 0 |
+| `79d6a47d` | voice | 1 | 16 | 2 · 46 · 4 · 0 |
+| `3ff2fb7e` | coherence | 1 | 27 | 3 · 77 · 9 · 0 |
+| `8b4b9663` | reader | 1 | 21 | 4 · 53 · 10 · 0 |
+
+- All eight are bound to draft `fdc33504` revision 1, still current, with body coverage
+  55/55.
+- Non-conclusions: author-intent, reader-effect and editorial-consequence on all 147;
+  whole-work-pattern 66 · chronology 24 · authored-structure-relation 18 ·
+  across-unread-span 11 · outside-coverage 9.
+- Ranking phrases 0 · intent claims 0 · reader-effect predictions 0 · D1 markers 0/232 ·
+  refs resolving 541/541.
+
+**Classifications:**
+- whole-work understanding **PASS**;
+- developmental arc **PASS**;
+- cross-element relationships **PASS**;
+- editorial insight **PASS, with import contamination**;
+- authorship **PASS**;
+- provenance **PASS**;
+- responsiveness to correction **UNWITNESSED**.
+
+**Discrepancies, with no content in this receipt:**
+- **D-a:** at least 8 observations across 4 lenses treat print-import artifacts (mid-sentence
+  breaks, split headings, empty chapter opener, uneven Fire granularity) as features of the
+  manuscript.
+- **D-b:** a duplicated front-matter passage found by 5 lenses; real or import-made, unknown.
+- **D-c:** a bibliography "Introduction" entry with no Introduction in this Work; `55742458` has
+  Introduction sections, which suggests the print file dropped them.
+- **D-d:** `outside-coverage` and `across-unread-span` declared on 20 observations despite 55/55
+  body coverage.
+
+**Outstanding questions:**
+1. Does MAIA separate import damage from authorship once told? (W7 and W11)
+2. D-b and D-c, founder checks against the manuscript.
+3. D-d, for the developmental-reader owner.
+
+**Bearing on the walk.** These readings are of an unfaithful import and are **not** the walk's
+evidence (P4 = `55742458`). They show what the reader does with a whole book at full body
+coverage: a strong, grounded, non-prescriptive developmental report. They make D-a's question
+the sharpest one to put to MAIA in conversation.
+
+## 10g. Founder-operated walk — readiness checklist (2026-11-10)
+
+**Route: READY.** These reach the reader and Ask paths traced in §9:
+`/writers-studio/canvas?m=55742458-be2c-406a-a158-d0438cf02892` and
+`/writers-studio/develop?m=55742458-be2c-406a-a158-d0438cf02892`.
+
+**Class A #1969 condition, not circumvented.**
+- The held defect is the H1 hook `app/writers-studio/useHouseStudioH1WorkClaim.ts`:
+  *"admission can retain previous member's verdict across session changes."*
+- It is used by the P4R1 room controllers, and **only when `h1AdmissionNeeded(params)`**, i.e.
+  when arriving through the House H1 path.
+- **Walk condition:**
+  - open the Work by the direct URLs above, not through the House;
+  - use only the founder account in that browser, with no account switching during the walk;
+  - if another account was signed in there earlier, sign out and back in as the founder
+    first.
+- ⛔ This is a containment for the walk, not a clearance of #1969.
+
+**Agent-run walk: not possible now.** Claude in Chrome is not connected. If an agent drove the
+walk, the evidence class would change: founder-witness items would stay UNWITNESSED, and W11's
+founder wording cannot be supplied by an agent. **The walk is founder-operated.**
+
+| # | Step | Status now |
+|---|---|---|
+| P6 | Sanctuary off | founder, at start |
+| W1 | integrity of `55742458` | front matter checked by the founder in Write ✅; title runs across sections 1–3 and TOC entries sit at 8–10 (minor) |
+| W2 | grant "Let MAIA read my saved work" | UNWITNESSED |
+| W3 | MAIA states what she can access (revised first prompt) | UNWITNESSED |
+| W4 | fresh whole reading from Develop; note the duration | UNWITNESSED |
+| W5 | arc · missed opportunities · strongest · loss of force | UNWITNESSED |
+| W6 | three things to improve, commissioned explicitly | UNWITNESSED |
+| W7 | cross-chapter recall, opening and close; **ask about import damage vs authorship (D-a)** | UNWITNESSED |
+| W7b | 11-08 false-denial regression on this Work | UNWITNESSED · kept separate in the record |
+| W8 | leave and return, then sign out and back in | UNWITNESSED |
+| W9 | Stop (revoke) mid-thread; Sanctuary probe | UNWITNESSED |
+| W10 | manuscript stays central | founder witness only |
+| W11 | issue-after-issue pass, ≥3 issues, resume | UNWITNESSED |
+| After | Claude Code checks answers against 178 markers + reads receipts | owed |
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
