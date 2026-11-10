@@ -9,7 +9,7 @@
  *
  * Founder walk 2026-11-09 failed the earlier stage on composition ("I want to see my work … not 50 buttons"). Design basis:
  * docs/research/writers-studio/MENTOR_PRESENCE_UX_RESEARCH_2026-11-09.md (six moments, approved for implementation 2026-11-09).
- * Everything that is not the chapter or the conversation — the shape of the book, recurring words, the plan, what she read in full,
+ * The chapters are in the Studio's collapsible manuscript rail on the left. Everything else that is not the chapter or the conversation — the plan, what she read in full,
  * ways in, the book's kind, reading permission, settled decisions — lives behind ONE quiet "More" control. What she read for her last
  * answer stays visible beside the conversation (L8). Nothing here volunteers advice; MAIA speaks when the writer asks (T5).
  * ⛔ Read-only here: this component never edits, never sends, never composes words in the writer's mouth. Selecting words and choosing
@@ -18,14 +18,26 @@
 import type { ReactNode } from 'react';
 import ReadScopeControl from '@/app/writers-studio/canvas/ReadScopeControl';
 import SettledDecisions from '@/app/writers-studio/canvas/SettledDecisions';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
+import { useEffect, useRef, useState } from 'react';
+import { excerptOf, markTerm } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKindShared';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 
-export interface StageSection { draftSectionId: string; heading: string | null; body: string | null; position: number }
+export interface StageSection {
+  draftSectionId: string; heading: string | null; body: string | null; position: number;
+  /** The heading level from the writer's confirmed structure (1 = part/chapter … 3). Null/absent = unknown: shown flat, never guessed. */
+  headingDepth?: number | null;
+}
+
+/* Founder (2026-11-09): "this dropdown could work if it had proper organization, indentation". Indent by the CONFIRMED level only. */
+const INDENT = '\u00A0\u00A0\u00A0\u00A0';
+export const chapterOptionLabel = (s: StageSection): string => {
+  const d = s.headingDepth;
+  const label = s.heading?.trim() || `Section ${s.position + 1}`;
+  return typeof d === 'number' && d >= 1 && d <= 3 ? `${INDENT.repeat(d - 1)}${d === 1 ? label.toUpperCase() : label}` : label;
+};
 
 const stripHeading = (s: StageSection): string => {
   let body = s.body ?? '';
@@ -33,7 +45,6 @@ const stripHeading = (s: StageSection): string => {
   if (h && body.trimStart().startsWith(h)) body = body.trimStart().slice(h.length);
   return body.trim();
 };
-const wordsOf = (t: string): number => (t ? t.split(/\s+/).length : 0);
 const labelOf = (s: StageSection): string => s.heading?.trim() || `Section ${s.position + 1}`;
 
 const ink = { color: 'inherit' } as const;
@@ -69,20 +80,16 @@ export function DevelopStage(props: {
   openAt?: { place: string; n: number } | null;
 }) {
   const { sections } = props;
-  const [thread, setThread] = useState<string | null>(null);
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [planAsk, setPlanAsk] = useState('');
   const [more, setMore] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
-  const threads = useMemo(() => recurringThreads(sections.map((s) => ({ id: s.draftSectionId, text: stripHeading(s) }))), [sections]);
-  const activeThread = threads.find((t) => t.term === thread) ?? null;
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
   const current = sections[idx] ?? null;
   const text = current ? stripHeading(current) : '';
   const paragraphs = text ? text.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) : [];
-  const total = Math.max(1, sections.reduce((n, s) => n + wordsOf(stripHeading(s)), 0));
   const rootRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!props.openAt) return;
@@ -109,7 +116,7 @@ export function DevelopStage(props: {
         {sections.length > 0 ? (
           <select aria-label="Chapter" data-develop-chapter-select="true" value={current?.draftSectionId ?? ''} onChange={(e) => props.onSelect(e.target.value)}
             style={{ font: 'inherit', fontSize: 13, color: 'inherit', background: 'none', border: hair, borderRadius: 6, padding: '3px 6px', maxWidth: '40%' }}>
-            {sections.map((s, i) => <option key={s.draftSectionId} value={s.draftSectionId}>{i + 1} · {labelOf(s)}</option>)}
+            {sections.map((s) => <option key={s.draftSectionId} value={s.draftSectionId} data-depth={s.headingDepth ?? undefined}>{chapterOptionLabel(s)}</option>)}
           </select>
         ) : null}
         <span style={{ flex: 1 }} />
@@ -121,40 +128,10 @@ export function DevelopStage(props: {
       </header>
 
       {more ? (
-        /* behind the one quiet control: the shape of the book, the plan, what she read, ways in, and what she holds */
+        /* behind the one quiet control: the plan, what she read, ways in, and what she holds */
         <div data-develop-more-panel="true" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
-          <nav aria-label="The shape of your book" data-develop-ribbon="true" data-develop-place="chapters" style={{ display: 'flex', gap: 3, alignItems: 'stretch', height: 34, flex: '0 0 auto' }}>
-            {sections.map((s, i) => {
-              const w = wordsOf(stripHeading(s));
-              const active = i === idx;
-              const hasThread = Boolean(activeThread?.chapterIds.includes(s.draftSectionId));
-              return (
-                <button key={s.draftSectionId} type="button" onClick={() => props.onSelect(s.draftSectionId)}
-                  aria-current={active ? 'true' : undefined}
-                  aria-label={`${labelOf(s)}, about ${w} words${hasThread ? `, contains “${activeThread!.term}”` : ''}`} title={`${labelOf(s)} · ${w} words${hasThread ? ` · “${activeThread!.term}”` : ''}`}
-                  style={{ flex: `${Math.max(w / total, 0.06)} 1 0`, minWidth: 18, cursor: 'pointer', font: 'inherit', fontSize: 11, textAlign: 'left',
-                    padding: '0 8px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: 'inherit', borderRadius: 4,
-                    border: active ? '1px solid currentColor' : hair,
-                    background: hasThread ? 'color-mix(in srgb, #d9a441 30%, transparent)' : active ? 'color-mix(in srgb, currentColor 14%, transparent)' : 'color-mix(in srgb, currentColor 5%, transparent)' }}>
-                  {hasThread ? '● ' : ''}{labelOf(s)}
-                </button>
-              );
-            })}
-          </nav>
-          {threads.length > 0 ? (
-            <div data-develop-threads="true" data-develop-place="recurring" role="group" aria-label="Words that recur across your chapters" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: -10 }}>
-              <span style={{ fontSize: 11, opacity: .7 }} title="Counted across your chapters. Not interpreted.">Recurs across chapters:</span>
-              {threads.map((t) => (
-                <button key={t.term} type="button" aria-pressed={thread === t.term} onClick={() => setThread(thread === t.term ? null : t.term)}
-                  title={`“${t.term}” appears in ${t.chapterIds.length} chapters`}
-                  style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', borderRadius: 999, padding: '2px 10px',
-                    background: thread === t.term ? 'color-mix(in srgb, #d9a441 30%, transparent)' : 'none', border: hair }}>
-                  {t.term} <span style={{ opacity: .6 }}>{t.chapterIds.length}</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
-
+          {/* Founder (live, 2026-11-09): the per-chapter strip truncated to "S", "El", "P" in a long book, and the recurring-word counts read
+              as noise. Both removed. Chapters are on the left again, in the Studio's own collapsible manuscript rail. */}
           {/* the plan: MAIA's grounded steps, the writer's to edit. It never changes the manuscript; a step is opened in the passage desk. */}
           <section aria-label="Your plan" data-develop-plan="true" data-develop-place="plan" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {!props.plan?.plan ? (
@@ -284,7 +261,7 @@ export function DevelopStage(props: {
             <p style={{ opacity: .75, margin: 0 }}>{current ? 'This chapter has no text yet.' : 'Choose a chapter above.'}</p>
           ) : paragraphs.map((p, i) => (
             <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
-              {markTerm(p, focusAnchor ?? thread).map((piece, k) => piece.hit
+              {markTerm(p, focusAnchor).map((piece, k) => piece.hit
                 ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
                 : <span key={k}>{piece.text}</span>)}
             </p>
