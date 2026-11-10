@@ -680,7 +680,7 @@ function ReadingField({
   if (foundIndex < 0) {
     return (
       <div className="p4r1-reading-field">
-        <section className="p4r1-observation-index" data-develop-observation-index aria-label="Observations in this reading">
+        <section className="p4r1-observation-index" data-develop-observation-index aria-label="Observations in this reading" style={{ padding: '14px 12px 6px' }}>
           <span className="p4r1-eyebrow">MAIA’s reading</span>
           <h4>{observations.length} observation{observations.length === 1 ? '' : 's'}</h4>
           <p>Choose one to open. Nothing opens until you do.</p>
