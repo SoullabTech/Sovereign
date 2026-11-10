@@ -81,6 +81,28 @@ describe('a cut answer is not an answer', () => {
   });
 });
 
+describe('the route never stores a refused answer (source order, Work path)', () => {
+  /* The behavioural witness is route.walk W9 (needs a fictional loopback DB). This pins the ORDER that makes it true
+     everywhere: on the Work path a refused outcome returns before MAIA's turn is appended. Comments stripped first. */
+  const { readFileSync } = jest.requireActual<typeof import('fs')>('fs');
+  const route = readFileSync(`${process.cwd()}/app/api/sovereign/manuscripts/[id]/ask/route.ts`, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it('⭐ the question is appended, then a refusal returns, then (only otherwise) her answer is appended', () => {
+    const fidelity = route.indexOf('checkQuoteFidelity(outcome.answer');
+    expect(fidelity).toBeGreaterThan(-1);
+    const refused = route.indexOf('if (!outcome.ok)', fidelity);
+    const refusedReturn = route.indexOf('refusal: outcome.refusal', refused);
+    const herTurn = route.indexOf("speaker: 'maia', body: outcome.answer", fidelity);
+    const question = route.lastIndexOf("speaker: 'author', body: question", fidelity);
+    expect(question).toBeGreaterThan(-1);
+    expect(refused).toBeGreaterThan(fidelity);
+    expect(refusedReturn).toBeGreaterThan(refused);
+    expect(herTurn).toBeGreaterThan(refusedReturn);
+    expect(route.slice(refused, herTurn)).toMatch(/return NextResponse\.json\(/);
+  });
+});
+
 describe('the ceiling leaves room to reason and to finish', () => {
   it('⭐ asks with ASK_MAX_TOKENS by default — and that is far above the 1,200 that cut the walk', async () => {
     mockRun.mockResolvedValue(reply('An answer.', 'end_turn'));
