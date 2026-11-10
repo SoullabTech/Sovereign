@@ -138,5 +138,25 @@ Fictional writers and books only. Design input, not ratified. Based only on the 
 **Then** three-view acceptance requires Balanced to differ from Quiet in **how a capability is presented**, while all three keep the same authorized capabilities.
 **Today this FAILS: Balanced is not differentiated from Quiet.** Identical behaviour must not be reported as a completed implementation.
 
+### Scenario 23: A pending consent prompt survives a late reading
+
+**Given** Ines is in an observation conversation and MAIA has asked permission to read a section, which Ines has not yet answered
+**When** a reading completes
+**Then** the prompt is **still visible and still unanswered**, exactly as it was; it was not granted, withdrawn or reset; and nothing from her writing was read because of the arrival.
+> 🔴 **FAILS today** (walk W5): the prompt disappeared together with the conversation.
+
+### Scenario 24: Exploring more ways is visit-scoped
+
+**Given** Ines's saved View is Quiet
+**When** she chooses *More ways to explore*
+**Then** the View control shows the **temporary** state, her **saved View is unchanged**, and on a **new visit** she is in Quiet again. No decision event is created.
+> 🔴 **FAILS today** (walk W3): the saved View became All tools and was still All tools on return.
+
+### Scenario 25: Reading-ready is announced without taking focus
+
+**Given** Ines requested a reading and is doing something else on the page
+**When** it completes
+**Then** a **status** is announced politely, in place and in MAIA's panel; **focus does not move**; nothing is opened; and *Explore observations* opens the index.
+
 ## Also required in every view
 Keyboard reach to the View control and every folded item, visible focus, readable contrast, zoom, screen reader names, reduced motion.
