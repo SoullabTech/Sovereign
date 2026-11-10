@@ -483,6 +483,14 @@ services:
 
     volumes:
       - media_data:/app/data/media
+      # Owed-erasure consumer. scripts/run-media-worker.ts runs sweepVaultErasureQueue about every 90 s, and destroyVaultBytes reads a
+      # file that is MISSING under an EXISTING vault root as already erased. Without this mount the worker looked in the image's empty
+      # /app/data/vault, deleted the queue row, and left the bytes in maia's vault_data volume. Same named volume, same target and
+      # read-write, exactly as maia (above). No R20 configuration is given to the worker in this file: the sweep never seals (the env_file is not covered).
+      # Guarded by scripts/check-compose-vault-mount-parity.mjs (npm run check:compose-vault-parity). A worker-side change reaches
+      # the worker only on a full deploy/update, never through cutover-maia. Exposure tradeoff and the open R105 acceptance items:
+      # docs/ops/WS_R105_ERASURE_LIVENESS_AND_REDACTED_ERROR_REVIEW_20261023.md and WS-DELETE-01 lane record section 6.11.
+      - vault_data:/app/data/vault
 
     healthcheck:
       test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
