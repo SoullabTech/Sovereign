@@ -16,7 +16,7 @@ import { generateSpiralogicIntegration } from './vedicAstrology';
 import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
-import { calculateCompleteMayanProfile } from './mayanAstrology';
+import { calculateCompleteMayanProfile, type CompleteMayanProfile } from './mayanAstrology';
 import { chineseYearForIsoDate } from './chineseNewYear';
 import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
@@ -80,6 +80,12 @@ export interface ProOtherSystems {
   mayan: {
     /** The traditional day count (K'iche' / Yucatec), Haab and Long Count. */
     traditional: TraditionalMaya;
+    /**
+     * The full Dreamspell profile the Free Mayan page shows: signature, path of
+     * life (youth, adulthood, future), Haab, direction and the life-cycle reading.
+     * No birth date in it (the reading names an age, not a date).
+     */
+    profile: CompleteMayanProfile;
     /** The rest is the Dreamspell count, a modern system, labelled as such. */
     galacticSignature: string;
     daySign: { name: string; glyph: string; archetype: string; meaning: string };
@@ -199,6 +205,7 @@ export async function calculateProOtherSystems(
     },
     mayan: {
       traditional: traditionalMaya(birth.date),
+      profile: mayan,
       galacticSignature: mayan.tzolkin.galacticSignature,
       daySign: {
         name: mayan.tzolkin.daySign.name,

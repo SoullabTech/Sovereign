@@ -9,13 +9,15 @@
  * convention travel;
  * birth details stay on the server.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { ProOtherSystems } from '@/lib/astrology/proOtherSystems';
 import type { DayStart } from '@/lib/astrology/proFourPillars';
 import ProFourPillars, { type LuckDirectionChoice } from './ProFourPillars';
 import ChineseReadingView from '@/components/astrology/ChineseReadingView';
 import { VedicProfilePanel, VedicPlanetsPanel } from '@/components/astrology/VedicRoomViews';
+import { MayanSignCard, MayanPathOfLife } from '@/components/astrology/MayanRoomViews';
+import { getTodaysMayanSign } from '@/lib/astrology/mayanAstrology';
 import { DaYunTimelineView } from '@/components/astrology/DaYunTimeline';
 import { rehydrateDaYunProfile } from '@/lib/astrology/daYunProfileView';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
@@ -310,39 +312,86 @@ function ChineseView({ c, direction, onDirection, ask }: {
   );
 }
 
+type MayanRoom = 'count' | 'path' | 'signature' | 'today';
+const MAYAN_ROOMS: Array<[MayanRoom, string]> = [
+  ['count', 'Traditional count'], ['path', 'Path of life'], ['signature', 'Galactic signature'], ['today', 'Today’s energy'],
+];
+
+/**
+ * The Mayan room: the traditional count first (what daykeepers keep), then the
+ * modern Dreamspell views the Free Mayan page offers (path of life, galactic
+ * signature, today's energy), computed on the server so no birth date reaches
+ * the browser. Today's energy needs no birth data at all.
+ */
 function MayanView({ m }: { m: ProOtherSystems['mayan'] }) {
   const t = m.traditional;
+  const [room, setRoom] = useState<MayanRoom>('count');
+  const today = useMemo(() => getTodaysMayanSign(), []);
   return (
     <div role="tabpanel" aria-label="Mayan">
-      <h4 className={styles.subhead}>Traditional count</h4>
-      <p className={styles.headline}>
-        {t.number} {t.kiche} <span className={styles.muted}>(Yucatec {t.number} {t.yucatec})</span>
-      </p>
-      <dl className={styles.facts}>
-        <dt>Haab</dt><dd>{t.haab.day} {t.haab.month}</dd>
-        <dt>Long Count</dt><dd>{t.longCount}</dd>
-        <dt>Correlation</dt><dd>GMT {t.correlation}</dd>
-      </dl>
-      <p className={styles.note}>Method: {t.method}</p>
+      <div role="tablist" aria-label="Mayan astrology rooms" className={styles.rooms}>
+        {MAYAN_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
+      </div>
 
-      <h4 className={styles.subhead}>Dreamspell count (modern)</h4>
-      <p className={styles.note}>
-        Dreamspell (José Argüelles, 1987) is a modern system with its own count; it does not follow the traditional
-        day count above and is not used by Maya daykeepers.
-      </p>
-      <p className={styles.headline}>
-        <span aria-hidden="true">{m.daySign.glyph}</span> {m.galacticSignature}
-      </p>
-      <dl className={styles.facts}>
-        <dt>Day sign</dt><dd>{m.daySign.name} — {m.daySign.archetype}; {m.daySign.meaning}</dd>
-        <dt>Tone</dt><dd>{m.tone.number} {m.tone.name} — {m.tone.meaning}</dd>
-        <dt>Kin</dt><dd>{m.tzolkinNumber} of 260 · {m.wavespell}</dd>
-        <dt>Haab</dt><dd>{m.haab}</dd>
-        <dt>Direction</dt><dd className={styles.cap}>{m.direction}</dd>
-        <dt>Path of life</dt>
-        <dd>{m.pathOfLife.map((p) => `${p.stage}: ${p.signature}`).join(' · ')}</dd>
-      </dl>
-      <p className={styles.note}>Method: {m.method}</p>
+      {room === 'count' && (
+        <div role="tabpanel" aria-label="Traditional count and Dreamspell kin">
+          <h4 className={styles.subhead}>Traditional count</h4>
+          <p className={styles.headline}>
+            {t.number} {t.kiche} <span className={styles.muted}>(Yucatec {t.number} {t.yucatec})</span>
+          </p>
+          <dl className={styles.facts}>
+            <dt>Haab</dt><dd>{t.haab.day} {t.haab.month}</dd>
+            <dt>Long Count</dt><dd>{t.longCount}</dd>
+            <dt>Correlation</dt><dd>GMT {t.correlation}</dd>
+          </dl>
+          <p className={styles.note}>Method: {t.method}</p>
+
+          <h4 className={styles.subhead}>Dreamspell count (modern)</h4>
+          <p className={styles.note}>
+            Dreamspell (José Argüelles, 1987) is a modern system with its own count; it does not follow the traditional
+            day count above and is not used by Maya daykeepers.
+          </p>
+          <p className={styles.headline}>
+            <span aria-hidden="true">{m.daySign.glyph}</span> {m.galacticSignature}
+          </p>
+          <dl className={styles.facts}>
+            <dt>Day sign</dt><dd>{m.daySign.name} — {m.daySign.archetype}; {m.daySign.meaning}</dd>
+            <dt>Tone</dt><dd>{m.tone.number} {m.tone.name} — {m.tone.meaning}</dd>
+            <dt>Kin</dt><dd>{m.tzolkinNumber} of 260 · {m.wavespell}</dd>
+            <dt>Haab</dt><dd>{m.haab}</dd>
+            <dt>Direction</dt><dd className={styles.cap}>{m.direction}</dd>
+            <dt>Path of life</dt>
+            <dd>{m.pathOfLife.map((p) => `${p.stage}: ${p.signature}`).join(' · ')}</dd>
+          </dl>
+          <p className={styles.note}>Method: {m.method}</p>
+        </div>
+      )}
+
+      {room === 'path' && (
+        <div role="tabpanel" aria-label="Path of life">
+          <p className={styles.note}>The modern Dreamspell count, not the traditional day count.</p>
+          <MayanPathOfLife profile={m.profile} />
+        </div>
+      )}
+
+      {room === 'signature' && (
+        <div role="tabpanel" aria-label="Galactic signature">
+          <p className={styles.note}>The modern Dreamspell count, not the traditional day count.</p>
+          <MayanSignCard sign={m.profile.tzolkin} title="Your Galactic Signature" />
+        </div>
+      )}
+
+      {room === 'today' && (
+        <div role="tabpanel" aria-label="Today’s energy">
+          <p className={styles.note}>The modern Dreamspell count for today. It uses no birth detail.</p>
+          <MayanSignCard sign={today} title="Today's Galactic Energy" isToday />
+        </div>
+      )}
     </div>
   );
 }

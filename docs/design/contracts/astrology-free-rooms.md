@@ -16,6 +16,7 @@ surfaces:
   - components/astrology/ChineseReadingView.tsx
   - components/astrology/DashaTimeline.tsx
   - components/astrology/DaYunTimeline.tsx
+  - components/astrology/MayanRoomViews.tsx
   - components/astrology/VedicRoomViews.tsx
   - components/astrology/SacredHouseWheel.tsx
   - components/astrology/ZodiacToggle.tsx
@@ -112,3 +113,8 @@ neither room has a lesser copy.
 The Vedic lens works the same way: `VedicRoomViews` (the profile and planets panels, with `RashiCard`
 and `GrahaCard`) is extracted from the Free Vedic page and embedded by Pro's Vedic room, fed by a
 server-computed chart and profile with no birth time, place or zone in them.
+
+The Mayan lens too: `MayanRoomViews` (the galactic signature card and the Path of Life) is extracted
+from the Free Mayan page and embedded by Pro's Mayan room, fed by a server-computed profile with no
+birth date in it. Pro leads with the traditional count and keeps the modern Dreamspell views clearly
+labelled as a different system.
