@@ -19,6 +19,7 @@ import { VedicProfilePanel, VedicPlanetsPanel } from '@/components/astrology/Ved
 import { MayanSignCard, MayanPathOfLife } from '@/components/astrology/MayanRoomViews';
 import { getTodaysMayanSign } from '@/lib/astrology/mayanAstrology';
 import { DaYunTimelineView } from '@/components/astrology/DaYunTimeline';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
 import { rehydrateDaYunProfile } from '@/lib/astrology/daYunProfileView';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import styles from './pro-systems-panel.module.css';
@@ -154,12 +155,12 @@ export default function ProSystemsPanel({ subjectId, chartLabel, work, onWork }:
         {w.data && status === 'loading' && <span role="status">Recalculating…</span>}
       </div>
       {error && <p role="alert" className={styles.alert}>{error}</p>}
-      {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} />}
+      {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />}
       {w.data && w.tab === 'chinese' && (
         <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })}
           ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />
       )}
-      {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} />}
+      {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />}
     </div>
   );
 }
@@ -174,7 +175,7 @@ const VEDIC_ROOMS: Array<[VedicRoom, string]> = [['profile', 'Profile'], ['dasha
  * computed on the server so no birth detail reaches the browser. The precise
  * table of graha positions stays under Planets.
  */
-function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
+function VedicView({ v, ask }: { v: ProOtherSystems['vedic']; ask: { subject: string; readsWhose: string } }) {
   const [room, setRoom] = useState<VedicRoom>('profile');
   const profile = { ...v.profile, dasha: v.dasha, birthNakshatra: v.birthNakshatra };
   return (
@@ -183,6 +184,8 @@ function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
         Lagna <strong>{v.lagna.rashi} {fmtDeg(v.lagna.degree)}</strong> ({v.lagna.nakshatra}) ·
         Ayanamsa {v.ayanamsaLabel} {v.ayanamsaValue.toFixed(2)}°
       </p>
+      <ProAskMaiaPanel subjectLabel="the Vedic chart" readsWhose={ask.readsWhose}
+        request={{ section: 'vedic', subject: ask.subject, ayanamsa: v.ayanamsa }} />
       <div role="tablist" aria-label="Vedic astrology rooms" className={styles.rooms}>
         {VEDIC_ROOMS.map(([value, text]) => (
           <button key={value} role="tab" aria-selected={room === value}
@@ -235,7 +238,7 @@ function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
 
 type ChineseRoom = 'pillars' | 'reading' | 'daYun';
 const CHINESE_ROOMS: Array<[ChineseRoom, string]> = [
-  ['pillars', 'Pillars & year sign'], ['reading', 'Zodiac reading'], ['daYun', 'Da Yun cycles'],
+  ['pillars', 'Pillars & year sign'], ['reading', 'Zodiac reading'], ['daYun', 'Ten-year cycles'],
 ];
 
 /**
@@ -290,12 +293,12 @@ function ChineseView({ c, direction, onDirection, ask }: {
       )}
 
       {room === 'daYun' && (
-        <div role="tabpanel" aria-label="Da Yun cycles">
+        <div role="tabpanel" aria-label="Ten-year cycles (Da Yun)">
           <p className={styles.note}>
             Tradition counts forward for a man born in a yang year or a woman born in a yin year, and backward
-            otherwise. A saved chart does not record sex, so choose the direction:
+            otherwise. A saved chart does not record sex, so the cycles appear once you choose the direction:
           </p>
-          <div role="radiogroup" aria-label="Da Yun direction" className={styles.rooms}>
+          <div role="radiogroup" aria-label="Direction of the ten-year cycles" className={styles.rooms}>
             {(['forward', 'backward'] as const).map((d) => (
               <button key={d} role="radio" aria-checked={direction === d}
                 className={direction === d ? styles.tabOn : undefined} onClick={() => onDirection(d)}>
@@ -304,7 +307,7 @@ function ChineseView({ c, direction, onDirection, ask }: {
             ))}
           </div>
           {daYun
-            ? <DaYunTimelineView profile={daYun} />
+            ? <div className={styles.daYun}><DaYunTimelineView profile={daYun} /></div>
             : <p className={styles.note}>Choose a direction to see the ten-year cycles.</p>}
         </div>
       )}
@@ -323,12 +326,14 @@ const MAYAN_ROOMS: Array<[MayanRoom, string]> = [
  * signature, today's energy), computed on the server so no birth date reaches
  * the browser. Today's energy needs no birth data at all.
  */
-function MayanView({ m }: { m: ProOtherSystems['mayan'] }) {
+function MayanView({ m, ask }: { m: ProOtherSystems['mayan']; ask: { subject: string; readsWhose: string } }) {
   const t = m.traditional;
   const [room, setRoom] = useState<MayanRoom>('count');
   const today = useMemo(() => getTodaysMayanSign(), []);
   return (
     <div role="tabpanel" aria-label="Mayan">
+      <ProAskMaiaPanel subjectLabel="the Mayan count and path of life" readsWhose={ask.readsWhose}
+        request={{ section: 'mayan', subject: ask.subject }} />
       <div role="tablist" aria-label="Mayan astrology rooms" className={styles.rooms}>
         {MAYAN_ROOMS.map(([value, text]) => (
           <button key={value} role="tab" aria-selected={room === value}

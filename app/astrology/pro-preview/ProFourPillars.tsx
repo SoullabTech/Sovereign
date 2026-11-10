@@ -152,7 +152,7 @@ export default function ProFourPillars({ fp, direction, onDirection, ask }: {
         {Object.entries(fp.elements).map(([e, n]) => `${e} ${n}`).join(' · ')}
       </p>
 
-      <h4 className={styles.title}>Luck pillars · Da Yun</h4>
+      <h4 className={styles.title}>Ten-year cycles · luck pillars (Da Yun)</h4>
       <div className={direction ? styles.directionBox : `${styles.directionBox} ${styles.directionAsk}`}>
         <p className={styles.note}>
           {direction ? '' : 'Choose a direction to map the luck pillars. '}Tradition counts forward for a man

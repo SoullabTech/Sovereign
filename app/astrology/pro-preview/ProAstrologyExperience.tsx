@@ -2,6 +2,11 @@
 
 /**
  * ASTRO-PRO-03 — member-sovereign, chart-first experience candidate.
+ *
+ * Laid out as a cockpit (founder direction 2026-11-09): the wheel stays in
+ * place as the centre instrument, a rail opens and closes the tools beside it,
+ * and one MAIA dock follows whatever is open. Nothing is a long page to scroll.
+ *
  * No billing, client records, developmental scoring, auto-interpretation,
  * persistence of member notes, or MAIA runtime modifications.
  *
@@ -9,9 +14,12 @@
  * route resolves the verified session and approved birth data privately; no
  * client-supplied third-party birth record or member ID is accepted.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Compass, BookOpen, Orbit, MessageCircle, Eye, EyeOff, ChevronRight, RotateCcw, ShieldCheck, Sparkles, CircleHelp, Share2 } from 'lucide-react';
+import {
+  BookOpen, Bookmark, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock, Eye, EyeOff, FlaskConical, Globe2,
+  GraduationCap, Info, MapPin, Orbit, Send, Sparkles, Users, X, type LucideIcon,
+} from 'lucide-react';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { chartBodies, hasValidChartGeometry, selectedRelationships, geometricHouseFromCusps, type WheelBody } from '@/lib/astrology/proChartGeometry';
@@ -20,13 +28,17 @@ import ProResearchWorkbench from './ProResearchWorkbench';
 import ProStudyWorkbench from './ProStudyWorkbench';
 import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
 import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
+import ProChartSharePanel from './ProChartShareAction';
 import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
 import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
 import { PanelMemoryProvider } from './panelMemory';
-import ProAskMaiaPanel from './ProAskMaiaPanel';
+import { askKey } from './ProAskMaiaPanel';
+import ProMaiaStage, { maiaSubjectInHand } from './ProMaiaDock';
+import { MaiaDockProvider, useMaiaDock, useMaiaSubject } from './maiaDock';
+import type { ProAskSection, ProAskView } from '@/lib/astrology/proAskMaiaSections';
 import ProDeepReadingPanel from './ProDeepReadingPanel';
 import ProChartViews from './ProChartViews';
 import ProHouseWheel from './ProHouseWheel';
@@ -40,6 +52,7 @@ import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import ProSoulPortraitPanel from './ProSoulPortraitPanel';
 import styles from './astrology-pro-preview.module.css';
+import cockpit from './pro-cockpit.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
 type ViewingMode = 'facts' | 'questions' | 'meaning';
@@ -81,31 +94,80 @@ function formatBody(body: WheelBody): string {
     (motion ? ' · ' + motion : '');
 }
 
-function prepareMemberHandoff(chart: BirthChart, selected: WheelBody, note: string): string {
-  const aspects = selectedRelationships(chart, selected.name).slice(0, 5);
-  const report = [
-    'I am explicitly choosing to bring these selected chart facts into our Astrology conversation.',
-    'Please use a relational, whole-chart lens: calculated astronomy is not a description of my identity, and symbolic tradition is not evidence of destiny.',
-    'Selected point: ' + formatBody(selected),
-    ...(selected.position.motionStatus === 'stationary-uncertain'
-      ? ['Near-station motion is uncertain. Do not describe the selected body as definitively direct or retrograde, even if older chart data carries a boolean flag.']
-      : []),
-    'Whole-chart anchors: Sun ' + chart.sun.sign + ' ' + chart.sun.degree.toFixed(2) + '°, Moon ' +
-      chart.moon.sign + ' ' + chart.moon.degree.toFixed(2) + '°, Ascendant ' +
-      chart.ascendant.sign + ' ' + chart.ascendant.degree.toFixed(2) + '°.',
-    aspects.length
-      ? 'Calculator-reported relationships: ' + aspects.map((a) =>
-        a.planet1 + ' ' + a.type + ' ' + a.planet2 + ' (orb ' + a.orb.toFixed(2) + '°)').join('; ')
-      : 'No relationships are selected from the reported aspect list.',
-    note.trim()
-      ? 'My own question or observation (not a statement by the model): ' + note.trim()
-      : 'My question: What different ways could I explore the symbolism of this configuration?',
-    'Please make space for multiple perspectives, ask what I recognize, and revise if I disagree. Do not assign me a developmental stage or predict my fate.',
-  ];
-  return report.join('\n\n');
+type ToolId = 'chart' | 'timing' | 'relationships' | 'places' | 'traditions' | 'readings' | 'research' | 'study' | 'saved';
+interface ToolTab {
+  id: string;
+  label: string;
+  /** Works with no chart open (Saved charts; a Soul Portrait of your own chart). */
+  withoutChart?: boolean;
+  /** What MAIA is told the astrologer has open. */
+  view?: ProAskView;
+  /** An instrument's own subject the dock should prefer while this is open. */
+  prefer?: readonly ProAskSection[];
+  render: () => ReactNode;
+}
+interface Tool { id: ToolId; label: string; icon: LucideIcon; tabs: ToolTab[] }
+
+const STAGE_WIDTH_KEY = 'astro-pro.stage-width';
+const RAIL_WIDTH = 86;
+const STAGE_MIN = 280;
+const WORK_MIN = 360;
+
+const HOUSE_SYSTEM_NAMES = { 'whole-sign': 'Whole Sign', equal: 'Equal', porphyry: 'Porphyry', placidus: 'Placidus', koch: 'Koch' } as const;
+
+function typingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  return !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
 }
 
 export default function ProAstrologyExperience() {
+  return <MaiaDockProvider defaultOpen={false}><Cockpit /></MaiaDockProvider>;
+}
+
+function Cockpit() {
+  const dock = useMaiaDock();
+  // The tools open beside the wheel, most recently opened first; `lead` is the one in hand.
+  const [openTools, setOpenTools] = useState<ToolId[]>(['saved']);
+  const [lead, setLead] = useState<ToolId | null>('saved');
+  const [folded, setFolded] = useState<Partial<Record<ToolId, boolean>>>({});
+  const [tabOf, setTabOf] = useState<Partial<Record<ToolId, string>>>({});
+  // A tab mounts when first shown and stays mounted (hidden) so its work is kept.
+  const [shown, setShown] = useState<Record<string, true>>({});
+  const [methodOpen, setMethodOpen] = useState(false);
+  // The client link for the open saved chart: make it, copy it, view the client's page, turn it off.
+  const [shareOpen, setShareOpen] = useState(false);
+  // Width of the wheel column in px, set by dragging the divider; null = the default split.
+  // Remembered in this browser only: it is a layout preference, nothing about a chart.
+  const [stageWidth, setStageWidth] = useState<number | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    try {
+      const saved = Number(window.localStorage.getItem(STAGE_WIDTH_KEY));
+      if (Number.isFinite(saved) && saved >= STAGE_MIN) setStageWidth(saved);
+    } catch { /* storage unavailable: the default split stands */ }
+  }, []);
+  function resizeStage(next: number | null) {
+    const room = bodyRef.current?.clientWidth ?? 1400;
+    const width = next === null ? null : Math.round(Math.min(Math.max(next, STAGE_MIN), room - RAIL_WIDTH - WORK_MIN));
+    setStageWidth(width);
+    try {
+      if (width === null) window.localStorage.removeItem(STAGE_WIDTH_KEY);
+      else window.localStorage.setItem(STAGE_WIDTH_KEY, String(width));
+    } catch { /* not remembered, still applied */ }
+  }
+  function startDrag(event: { preventDefault: () => void; clientX: number }) {
+    event.preventDefault();
+    const left = (bodyRef.current?.getBoundingClientRect().left ?? 0) + RAIL_WIDTH;
+    const move = (e: PointerEvent) => resizeStage(e.clientX - left);
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      document.body.style.userSelect = '';
+    };
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  }
   const [chartStatus, setChartStatus] = useState<ChartStatus>('idle');
   const [chart, setChart] = useState<BirthChart | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -118,18 +180,8 @@ export default function ProAstrologyExperience() {
   // Up to two outer rings (biwheel / triwheel), one per source. A compared or
   // derived chart is fetched through the same owner-only routes.
   type RingKind = 'transits' | 'compare' | 'derived';
-  // "Transits" links: with a chart open, jump to the transit panel and show the
-  // sky now against the chart; without one, go to where a chart is opened.
+  // Bumped the first time Timing opens, so Transits arrives showing the sky now.
   const [transitRequest, setTransitRequest] = useState(0);
-  function openTransits(event: { preventDefault: () => void }) {
-    event.preventDefault();
-    if (!privateChart) {
-      document.getElementById('the-chart')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-    setTransitRequest((n) => n + 1);
-    document.getElementById('pro-transits')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
   const [rings, setRings] = useState<Array<{ kind: RingKind; bodies: TransitBody[]; label: string }>>([]);
   const ringOf = (kind: RingKind) => rings.find((r) => r.kind === kind)?.bodies ?? [];
   const transits = ringOf('transits');
@@ -159,7 +211,6 @@ export default function ProAstrologyExperience() {
   const [houseSystem, setHouseSystem] = useState<ProHouseSystem>('porphyry');
   // Each planet keeps its own unsaved draft; switching focus never attaches another planet's words.
   const [memberNotes, setMemberNotes] = useState<Record<string, string>>({});
-  const [draft, setDraft] = useState<string | null>(null);
   const chartRequestEpoch = useRef(0);
   const pendingShareEpoch = useRef(0);
   const [calculationQuality, setCalculationQuality] = useState<null | {
@@ -205,9 +256,9 @@ export default function ProAstrologyExperience() {
     setRings([]);
     setMemberNotes({});
     setCalculationQuality(null);
-    setDraft(null);
     setSystemsWork(null);
     setPortraitOpen(false);
+    setShareOpen(false);
     setChartStatus(reason);
   }
 
@@ -301,7 +352,6 @@ export default function ProAstrologyExperience() {
     setChart(null);
     setMemberNotes({});
     setCalculationQuality(null);
-    setDraft(null);
     setMemberId(null);
     setSourceRevision(null);
     setSavedSubject(null);
@@ -351,6 +401,7 @@ export default function ProAstrologyExperience() {
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
+      openTool('chart');
     } catch {
       if (epoch !== chartRequestEpoch.current) return;
       setChartError('Chart unavailable: verify the member session or select an authorized chart.');
@@ -368,7 +419,6 @@ export default function ProAstrologyExperience() {
     setChart(null);
     setMemberNotes({});
     setCalculationQuality(null);
-    setDraft(null);
     setMemberId(null);
     setSourceRevision(null);
     setSavedSubject(null);
@@ -414,7 +464,7 @@ export default function ProAstrologyExperience() {
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
-      document.getElementById('the-chart')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      openTool('chart');
     } catch {
       if (epoch !== chartRequestEpoch.current) return;
       setChartError('The chart is unavailable right now. Please try again.');
@@ -444,14 +494,34 @@ export default function ProAstrologyExperience() {
   function selectBody(name: string) {
     pendingShareEpoch.current += 1;
     setFocusedBody(name);
-    setDraft(null);
     setMode('facts');
+    // Selecting a point brings its figures up beside the wheel.
+    openTool('chart', 'point');
   }
 
-  function preparePrivateDraft() {
-    if (!privateChart || !selected || !memberId) return;
-    pendingShareEpoch.current += 1;
-    setDraft(prepareMemberHandoff(orbChart ?? privateChart, selected, memberNotes[selected.name] || ''));
+  function openTool(id: ToolId, tab?: string) {
+    // One tool in hand: the others stay on the desk, folded to their header bars.
+    setOpenTools((current) => [id, ...current.filter((t) => t !== id)]);
+    setFolded((current) => {
+      const next: Partial<Record<ToolId, boolean>> = {};
+      for (const t of [id, ...openTools]) next[t] = t !== id;
+      return { ...current, ...next };
+    });
+    if (tab) setTabOf((current) => ({ ...current, [id]: tab }));
+    setLead(id);
+    if (id === 'timing' && !openTools.includes('timing')) setTransitRequest((n) => n + 1);
+    // Asking for a tool leaves the conversation with MAIA and shows the tools.
+    dock?.focus(null, false);
+    dock?.setOpen(false);
+  }
+  function closeTool(id: ToolId) {
+    setOpenTools((current) => current.filter((t) => t !== id));
+    setLead((current) => (current === id ? openTools.find((t) => t !== id) ?? null : current));
+  }
+  function toggleTool(id: ToolId) {
+    // From the conversation, a tool on the rail is being asked for, never dismissed.
+    if (openTools.includes(id) && !dock?.open) closeTool(id);
+    else openTool(id);
   }
 
   // R4G legacy bypass closure: the previous GET consent check was not an
@@ -462,347 +532,456 @@ export default function ProAstrologyExperience() {
   // Panels keep their place for this member, chart revision and house system only.
   const panelScope = memberId && sourceRevision ? `${memberId}|${sourceRevision}|${houseSystem}` : null;
 
-  return (
-    <PanelMemoryProvider scope={panelScope}>
-    <main className={styles.studio} id="astrology-pro-preview">
-      <header className={styles.topbar}>
-        <Link href="/astrology" className={styles.brand} aria-label="Return to Soullab Astrology">
-          <span className={styles.brandMark}>✧</span>
-          <span>SOULLAB <b>CELESTIAL OBSERVATORY</b></span>
-        </Link>
-        <nav className={styles.navigation} aria-label="Pro Astrology work areas">
-          <a className={styles.navCurrent} href="#the-chart">Natal</a>
-          <a href="#pro-transits" onClick={openTransits}>Transits</a>
-          <a href="#saved-charts">Saved charts</a>
-          <a href="#relationships">Relationships · own-chart</a>
-          <a href="#research">Research</a>
-          <a href="#study">Study</a>
-        </nav>
-        <div className={styles.previewFlag}>PROFESSIONAL WORKSPACE · PRIVATE PREVIEW</div>
-      </header>
+  const subjectId = savedSubject ? savedSubject.id : 'own';
+  const chartLabel = savedSubject ? savedSubject.label : 'my chart';
+  const readsWhose = savedSubject ? `${savedSubject.label}’s chart` : 'your chart';
+  const systemsTab = systemsWork?.tab ?? 'vedic';
 
-      <div className={styles.content}>
-        <section className={styles.proToolbar} aria-label="Observatory instruments">
-          <div className={styles.proToolbarIdentity}>
-            <span className={styles.eyebrow}>CELESTIAL OBSERVATORY</span>
-            <h1 id="studio-title">Chart Studio</h1>
-            <p>Private natal instrument · current sky · member-led inquiry. Changing house method closes the chart and unsent notes.</p>
-          </div>
-          <div className={styles.proToolbarActions}>
-            <label htmlFor="pro-house-system" className={styles.houseMethodControl}>
-              House system
-              <select id="pro-house-system" value={houseSystem}
-                onChange={(event) => {
-                  const next = event.target.value as ProHouseSystem;
-                  if (next === houseSystem) return;
-                  closePrivateChart();
-                  setHouseSystem(next);
-                  setChartError(null);
-                }}>
-                <option value="porphyry">Porphyry</option>
-                <option value="whole-sign">Whole Sign</option>
-                <option value="equal">Equal</option>
-                <option value="placidus">Placidus</option>
-                <option value="koch">Koch</option>
-              </select>
-            </label>
-            <a href="#the-chart">Natal wheel</a>
-            <a href="#pro-transits" onClick={openTransits}>Transits</a>
-            <a href="#maia-mentor">MAIA Mentor · transfer held</a>
-          </div>
-        </section>
-
-        <section id="current-sky" className={styles.skyStrip} aria-label="Current calculated sky">
-          <div className={styles.skyIntro}>
-            <span className={styles.eyebrow}>THE SKY NOW</span>
-            <p>Our shared present</p>
-            {skyDate && <small>Calculated {new Date(skyDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</small>}
-          </div>
-          <div className={styles.skyPositions}>
-            {skyStatus === 'loading' && <p role="status">Calculating the sky…</p>}
-            {skyStatus === 'unavailable' && <p role="status">The current sky is unavailable. Your natal chart can still be explored.</p>}
-            {skyStatus === 'ready' && selectedSky.length === 0 && <p role="status">No verified sky positions were returned.</p>}
-            {skyStatus === 'ready' && selectedSky.map((body) => (
-              <div className={styles.skyPlanet} key={body.planet}>
-                <span>{body.planet}</span>
-                <strong>{body.sign} {body.degree.toFixed(1)}°
-                  {body.motionStatus === 'retrograde' ? ' ℞' : ''}
-                </strong>
-                {body.motionStatus === 'stationary-uncertain' && <small role="status">Near station · direction uncertain</small>}
-                {body.motionStatus === 'not-evaluated' && <small>Apparent motion not verified</small>}
-              </div>
-            ))}
-          </div>
-          <p className={styles.skyNote}>Astronomical calculations, not predictions. Current-sky and natal-chart direction use the same provisional geocentric method; near-station movement is explicitly uncertain. Advanced bodies use approximations.</p>
-        </section>
-
-        <section id="the-chart" className={styles.chartRoom} aria-labelledby="chart-room-title">
-          <div className={styles.chartColumn}>
-            <div className={styles.sectionHeading}>
-              <div>
-                <span className={styles.eyebrow}>THE CHART WORKBENCH</span>
-                <h2 id="chart-room-title">{savedSubject ? savedSubject.label : 'Your celestial instrument'}</h2>
-              </div>
-              {privateChart && (
-                <div className={styles.viewControls} aria-label="Chart layers">
-                  <button aria-pressed={showAspects} onClick={() => setShowAspects((s) => !s)}>
-                    {showAspects ? <Eye size={16} /> : <EyeOff size={16} />} Aspects
-                  </button>
-                  <button aria-pressed={showHouseLines} onClick={() => setShowHouseLines((s) => !s)}>
-                    <Orbit size={16} /> Houses
-                  </button>
-                  <label className={styles.orbFilterControl} htmlFor="pro-aspect-orb">
-                    Max aspect orb
-                    <select id="pro-aspect-orb" value={aspectOrbFilter}
-                      aria-describedby="pro-orb-filter-description"
-                      onChange={(event) => {
-                        const choice = event.target.value;
-                        if (choice === 'all' || choice === '1' || choice === '3' ||
-                            choice === '5' || choice === '8') setAspectOrbFilter(choice);
-                      }}>
-                      <option value="all">All reported</option>
-                      <option value="1">1°</option>
-                      <option value="3">3°</option>
-                      <option value="5">5°</option>
-                      <option value="8">8°</option>
-                    </select>
-                  </label>
-                  <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
-                  <button onClick={() => setPortraitOpen((o) => !o)} aria-expanded={portraitOpen}>Soul Portrait</button>
-                  <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
-                </div>
-              )}
+  const pointPanel = () => selected && (
+    <div className={cockpit.point}>
+      <div className={styles.lensTabs} role="tablist" aria-label="Ways of relating to this point">
+        <button role="tab" aria-selected={mode === 'facts'} onClick={() => setMode('facts')}>Calculated</button>
+        <button role="tab" aria-selected={mode === 'questions'} onClick={() => setMode('questions')}>Explore</button>
+        <button role="tab" aria-selected={mode === 'meaning'} onClick={() => setMode('meaning')}>My notes</button>
+      </div>
+      <div role="tabpanel">
+        {mode === 'facts' && (
+          <>
+            <div className={styles.factEmphasis}><span aria-hidden="true">{selected.glyph}</span>
+              <div><small>{selected.name.toUpperCase()}</small><strong>{selected.position.sign} · {selected.position.degree.toFixed(2)}°</strong><p>House {selected.position.house}</p></div>
             </div>
-
-            {privateChart ? (
-              <>
-                {portraitOpen && (
-                  <ProSoulPortraitPanel source={savedSubject ? savedSubject.id : 'mine'}
-                    label={savedSubject ? savedSubject.label : ''}
-                    chartLine={savedSubject
-                      ? `${savedSubject.label} · ${savedSubject.birthDate} · ${savedSubject.birthTime}${savedSubject.placeLabel ? ` · ${savedSubject.placeLabel}` : ''}`
-                      : "Your own chart, from your account's birth details"}
-                    birthDate={savedSubject?.birthDate} onClose={() => setPortraitOpen(false)} />
-                )}
-                <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
-                  showAspects={showAspects} showHouseLines={showHouseLines}
-                  maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
-                  outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
-                <ProAskMaiaPanel subjectLabel="this natal chart" readsWhose={savedSubject ? `${savedSubject.label}’s chart` : 'your chart'}
-                  request={{ section: 'natal', subject: savedSubject ? savedSubject.id : 'own', houseSystem }} />
-                <ProDeepReadingPanel subject={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
-                  readsWhose={savedSubject ? `${savedSubject.label}’s chart` : 'your chart'} />
-                <ProTransitPanel natalBodies={bodies} transits={transits} showNowRequest={transitRequest}
-                  onTransits={(next) => setRing('transits', next, 'Transits')}
-                  ask={{ subject: savedSubject ? savedSubject.id : 'own', houseSystem,
-                    readsWhose: savedSubject ? `${savedSubject.label}’s chart` : 'your chart' }} />
-                <ProComparePanel chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
-                  currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
-                  natalBodies={bodies} outer={ringOf('compare')}
-                  onOuter={(next, label) => setRing('compare', next, label)} />
-                <ProDerivedPanel subjectId={savedSubject ? savedSubject.id : 'own'}
-                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem}
-                  onOuter={(next, label) => setRing('derived', next, label)} />
-                <ProAspectGrid chart={orbChart ?? privateChart} declinations={declinations} onSelectBody={selectBody} />
-                <ProChartViews chart={privateChart} points={chartPoints} />
-                <ProHouseWheel chart={orbChart ?? privateChart} />
-                <ProEphemerisPanel natalBodies={bodies} />
-                <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
-                  questions={INQUIRY} />
-                <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
-                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
-                <ProSystemsPanel subjectId={savedSubject ? savedSubject.id : 'own'}
-                  chartLabel={savedSubject ? savedSubject.label : 'my chart'}
-                  work={systemsWork} onWork={setSystemsWork} />
-                <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
-                  Orbs decide which aspects are found from the calculated positions; the max orb
-                  setting then filters them for display. Neither determines applying/separating phase.
-                  Unverified aspect values are excluded from the diagram.
-                </p>
-                <div className={styles.planetIndex} aria-label="Planet selector">
-                  {bodies.map((body) => (
-                    <button key={body.name} className={body.name === focusedBody ? styles.bodySelected : ''}
-                      onClick={() => selectBody(body.name)} aria-pressed={body.name === focusedBody}>
-                      <span aria-hidden="true">{body.glyph}</span>{body.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : chart ? (
-              <div className={styles.emptyWheel} role="status" aria-live="polite">
-                <div className={styles.emptyChartInvitation}>
-                  <h3>Verifying private chart access…</h3>
-                  <p>Your chart and personal inquiry are hidden until your member session and saved chart revision have been checked.</p>
-                  <button onClick={() => closePrivateChart()}>Close my chart</button>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.emptyWheel}>
-                <div className={styles.emptyWheelCircle} aria-hidden="true"><div className={styles.emptyWheelInner}>✧</div></div>
-                <div className={styles.emptyChartInvitation}>
-                  <span className={styles.eyebrow}>YOUR CHART IS YOURS</span>
-                  <h3>Natal chart workspace · {({ 'whole-sign': 'Whole Sign', equal: 'Equal', porphyry: 'Porphyry', placidus: 'Placidus', koch: 'Koch' } as const)[houseSystem]}</h3>
-                  <p>When you choose to open it, we’ll read the birth details held by your signed-in account and calculate the chart. Nothing is inferred from another person's browser data.</p>
-                  <button className={styles.primaryAction} onClick={loadMyChart} disabled={chartStatus === 'loading'}>
-                    {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
-                  </button>
-                  <p><Link href="/account/settings">Edit my birth details</Link></p>
-                  {portraitOpen
-                    ? <ProSoulPortraitPanel source="mine" label="" chartLine="Your own chart, from your account's birth details" onClose={() => setPortraitOpen(false)} />
-                    : <p><button type="button" onClick={() => setPortraitOpen(true)}>Soul Portrait</button></p>}
-                  {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
-                  {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
-                   {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}
-                  {chartStatus === 'unavailable' && <p role="alert">{chartError}</p>}
-                </div>
-              </div>
+            {geometricHouse !== null && geometricHouse !== selected.position.house && (
+              <p className={styles.sourceLabel} role="note">
+                Exact geometric membership: house {geometricHouse}. House {selected.position.house} here reflects the separate 5° pre-angular-cusp convention. Planet longitude is unchanged.
+              </p>
             )}
-          </div>
-
-          <aside className={styles.inquiryColumn} id="maia-mentor" aria-label="Private chart inquiry, not connected to MAIA conversation">
-            <div className={styles.inquiryTop}>
-              <span className={styles.eyebrow}>PRIVATE INQUIRY · MAIA TRANSFER HELD</span>
-              <h2>{selected ? selected.name : 'Chart analysis'}</h2>
-              <p>Examine configurations, rulerships, aspects, and the structure of the whole chart.</p>
-            </div>
-            {selected ? (
-              <>
-                <div className={styles.lensTabs} role="tablist" aria-label="Ways of relating to this chart">
-                  <button role="tab" aria-selected={mode === 'facts'} onClick={() => setMode('facts')}>Calculated</button>
-                  <button role="tab" aria-selected={mode === 'questions'} onClick={() => setMode('questions')}>Explore</button>
-                  <button role="tab" aria-selected={mode === 'meaning'} onClick={() => setMode('meaning')}>My meaning</button>
-                </div>
-                <div className={styles.lensContent} role="tabpanel">
-                  {mode === 'facts' && (
-                    <>
-                      <div className={styles.factEmphasis}><span aria-hidden="true">{selected.glyph}</span>
-                        <div><small>CALCULATED POSITION</small><strong>{selected.position.sign} · {selected.position.degree.toFixed(2)}°</strong><p>House {selected.position.house}</p></div>
-                      </div>
-                      {geometricHouse !== null && geometricHouse !== selected.position.house && (
-                        <p className={styles.sourceLabel} role="note">
-                          Exact geometric membership: house {geometricHouse}. House {selected.position.house} here reflects the separate 5° pre-angular-cusp convention. Planet longitude is unchanged.
-                        </p>
-                      )}
-                      {(selected.name === 'North Node' || selected.name === 'South Node') && (
-                        <p className={styles.sourceLabel} role="note">
-                          Approximate mean lunar node; not an independently verified true-node calculation.
-                        </p>
-                      )}
-                      {selected.position.motionStatus && selected.name !== 'Sun' && selected.name !== 'Moon' && (
-                        <p className={styles.sourceLabel} role={selected.position.motionStatus === 'stationary-uncertain' ? 'status' : undefined}>
-                          Apparent motion: {motionLabel(selected)}. Close-to-station direction is provisional, not independently certified.
-                        </p>
-                      )}
-                      <h3>Relationships in this chart</h3>
-                      {relationships.length ? (
-                        <div className={styles.aspectList}>
-                          {relationships.slice(0, 6).map((aspect, index) => (
-                            <div key={index}><span>{aspect.planet1} {aspect.type} {aspect.planet2}</span><b>{aspect.orb.toFixed(2)}°</b></div>
-                          ))}
-                        </div>
-                      ) : <p>No reported aspects meet the current display filter for this point.</p>}
-                      <p className={styles.sourceLabel}>Calculated using {calculationQuality?.method || 'a declared'} house method. Professional certification remains pending. Near-station motion is labeled uncertain rather than forced into direct or retrograde. Minor-body positions and motion are provisional.</p>
-                      <details className={styles.methodDisclosure}>
-                        <summary>Calculation method and limits</summary>
-                        <p>The displayed house uses a 5° pre-angular-cusp convention where applicable; geometric membership is distinct. Lunar nodes are approximate mean positions, not certified true nodes.</p>
-                        <p>The source and accuracy of the stored birth time have not been established by this service. A time written to the minute is not automatically accurate to the minute.</p>
-                        <p>These are astronomical and interpretive method disclosures, not predictions about the person.</p>
-                      </details>
-                    </>
-                  )}
-                  {mode === 'questions' && (
-                    <>
-                      <h3>Let the symbol open a question.</h3>
-                      <p className={styles.inquiryPrompt}>{INQUIRY[selected.name] || 'What possibilities might this symbol open without defining who you are?'}</p>
-                      <p>Different astrological schools may offer distinct, sometimes contradictory meanings. The member chooses which, if any, are illuminating.</p>
-                      <button className={styles.inlineLink} onClick={() => setMode('meaning')}>Bring this into my own words <ChevronRight size={16} /></button>
-                    </>
-                  )}
-                  {mode === 'meaning' && (
-                    <>
-                      <h3>You are the author.</h3>
-                      <p>What feels true, untrue, unfinished or surprising? Your response matters more than a model's certainty.</p>
-                      <label className={styles.noteLabel} htmlFor="astrology-member-meaning">My question or observation</label>
-                      <textarea id="astrology-member-meaning" value={memberNotes[focusedBody] || ''}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          pendingShareEpoch.current += 1;
-                          setMemberNotes((prev) => ({ ...prev, [focusedBody]: value }));
-                          setDraft(null);
-                        }}
-                        rows={5} maxLength={1400}
-                        placeholder="I notice… / I disagree… / I want to explore…" />
-                      <p className={styles.sourceLabel}>Not saved by this preview. No chart material is automatically sent to MAIA.</p>
-                    </>
-                  )}
-                </div>
-
-                {!savedSubject && (
-                  <div className={styles.maiaInvite}>
-                    <div className={styles.maiaMark}><Sparkles size={19} aria-hidden="true" /></div>
-                    <div>
-                      <h3>Prepare a private question</h3>
-                      <p>You can gather the chart details and your question here. Transfer to MAIA is paused while privacy protections are reviewed.</p>
-                    </div>
-                    <button className={styles.secondaryAction} onClick={preparePrivateDraft}>
-                      <MessageCircle size={17} aria-hidden="true" /> Preview my question
-                    </button>
-                  </div>
-                )}
-                {draft && (
-                  <div className={styles.consentDraft}>
-                    <h3>Private draft — not sent to MAIA</h3>
-                    <p>This draft remains in the current page. Sending chart material to MAIA is temporarily unavailable pending independent privacy review.</p>
-                    <textarea aria-label="Prepared chart context" value={draft} readOnly rows={7} />
-                    <div className={styles.draftActions}>
-                      <button onClick={() => {
-                        pendingShareEpoch.current += 1;
-                        setDraft(null);
-                      }}>Keep it here</button>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className={styles.lensContent}>
-                <h3>Come to know the map.</h3>
-                <p>Select a chart to inspect planetary positions, house placements, aspects, and configurations.</p>
-                <p>MAIA never decides what you should become. A chart may orient your attention; the journey remains yours.</p>
-              </div>
+            {(selected.name === 'North Node' || selected.name === 'South Node') && (
+              <p className={styles.sourceLabel} role="note">
+                Approximate mean lunar node; not an independently verified true-node calculation.
+              </p>
             )}
-          </aside>
-        </section>
+            {selected.position.motionStatus && selected.name !== 'Sun' && selected.name !== 'Moon' && (
+              <p className={styles.sourceLabel} role={selected.position.motionStatus === 'stationary-uncertain' ? 'status' : undefined}>
+                Apparent motion: {motionLabel(selected)}. Close-to-station direction is provisional, not independently certified.
+              </p>
+            )}
+            <h4 className={cockpit.subhead}>Aspects to {selected.name}</h4>
+            {relationships.length ? (
+              <div className={styles.aspectList}>
+                {relationships.slice(0, 8).map((aspect, index) => (
+                  <div key={index}><span>{aspect.planet1} {aspect.type} {aspect.planet2}</span><b>{aspect.orb.toFixed(2)}°</b></div>
+                ))}
+              </div>
+            ) : <p>No reported aspects meet the current display filter for this point.</p>}
+          </>
+        )}
+        {mode === 'questions' && (
+          <>
+            <p className={styles.inquiryPrompt}>{INQUIRY[selected.name] || 'What possibilities might this symbol open without defining who you are?'}</p>
+            <p>Different astrological schools may offer distinct, sometimes contradictory meanings. The astrologer and the person choose which, if any, are illuminating.</p>
+          </>
+        )}
+        {mode === 'meaning' && (
+          <>
+            <label className={styles.noteLabel} htmlFor="astrology-member-meaning">My notes on {selected.name}</label>
+            <textarea id="astrology-member-meaning" className={cockpit.notes} value={memberNotes[focusedBody] || ''}
+              onChange={(event) => {
+                const value = event.target.value;
+                pendingShareEpoch.current += 1;
+                setMemberNotes((prev) => ({ ...prev, [focusedBody]: value }));
+              }}
+              rows={6} maxLength={1400}
+              placeholder="I notice… / I disagree… / I want to explore…" />
+            <p className={styles.sourceLabel}>Kept in this page while the chart is open. Not saved, and not sent to MAIA.</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
 
-        <ProSavedCharts
+  const tools: Tool[] = [
+    { id: 'chart', label: 'Chart', icon: CircleDot, tabs: [
+      { id: 'point', label: selected ? selected.name : 'Point', view: 'point', render: pointPanel },
+      { id: 'aspects', label: 'Aspects', view: 'aspects',
+        render: () => privateChart && <ProAspectGrid chart={orbChart ?? privateChart} declinations={declinations} onSelectBody={selectBody} /> },
+      { id: 'views', label: 'Views', view: 'chart-views',
+        render: () => privateChart && <ProChartViews chart={privateChart} points={chartPoints} /> },
+      { id: 'houses', label: 'Houses', view: 'house-wheel',
+        render: () => privateChart && <ProHouseWheel chart={orbChart ?? privateChart} /> },
+    ] },
+    { id: 'timing', label: 'Timing', icon: Clock, tabs: [
+      { id: 'transits', label: 'Transits', prefer: ['transits'],
+        render: () => <ProTransitPanel natalBodies={bodies} transits={transits} showNowRequest={transitRequest}
+          onTransits={(next) => setRing('transits', next, 'Transits')}
+          ask={{ subject: subjectId, houseSystem, readsWhose }} /> },
+      { id: 'progress', label: 'Progressions', prefer: ['progressed'],
+        render: () => <ProDerivedPanel subjectId={subjectId} chartLabel={chartLabel} houseSystem={houseSystem}
+          onOuter={(next, label) => setRing('derived', next, label)} /> },
+      { id: 'ephemeris', label: 'Ephemeris', view: 'ephemeris', render: () => <ProEphemerisPanel natalBodies={bodies} /> },
+    ] },
+    { id: 'relationships', label: 'Relationships', icon: Users, tabs: [
+      { id: 'compare', label: 'Two charts', prefer: ['biwheel', 'composite'],
+        render: () => privateChart && <ProComparePanel chart={privateChart} chartLabel={chartLabel}
+          currentSubjectId={subjectId} houseSystem={houseSystem}
+          natalBodies={bodies} outer={ringOf('compare')}
+          onOuter={(next, label) => setRing('compare', next, label)} /> },
+      { id: 'own', label: 'Questions', view: 'relationships',
+        render: () => <ProRelationshipsWorkbench chart={savedSubject ? null : privateChart} /> },
+    ] },
+    { id: 'places', label: 'Places', icon: MapPin, tabs: [
+      { id: 'map', label: 'Astro map', view: 'astro-map',
+        render: () => <ProAstroMapPanel subjectId={subjectId} chartLabel={chartLabel} houseSystem={houseSystem} /> },
+    ] },
+    { id: 'traditions', label: 'Traditions', icon: Globe2, tabs: [
+      { id: 'systems', label: 'Vedic · Chinese · Mayan',
+        prefer: [systemsTab === 'chinese' ? 'four-pillars' : systemsTab],
+        render: () => <ProSystemsPanel subjectId={subjectId} chartLabel={chartLabel} work={systemsWork} onWork={setSystemsWork} /> },
+    ] },
+    { id: 'readings', label: 'Readings', icon: BookOpen, tabs: [
+      { id: 'deep', label: 'Deep reading',
+        render: () => <ProDeepReadingPanel subject={subjectId} houseSystem={houseSystem} readsWhose={readsWhose} /> },
+      { id: 'portrait', label: 'Soul Portrait', view: 'soul-portrait', withoutChart: true,
+        render: () => <ProSoulPortraitPanel source={savedSubject ? savedSubject.id : 'mine'}
+          label={savedSubject ? savedSubject.label : ''}
+          chartLine={savedSubject
+            ? `${savedSubject.label} · ${savedSubject.birthDate} · ${savedSubject.birthTime}${savedSubject.placeLabel ? ` · ${savedSubject.placeLabel}` : ''}`
+            : "Your own chart, from your account's birth details"}
+          birthDate={savedSubject?.birthDate} onClose={() => closeTool('readings')} /> },
+      { id: 'tradition', label: 'Tradition report', view: 'tradition-report',
+        render: () => privateChart && <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={chartLabel} questions={INQUIRY} /> },
+    ] },
+    { id: 'research', label: 'Research', icon: FlaskConical, tabs: [
+      { id: 'research', label: 'Research', view: 'research', render: () => <ProResearchWorkbench chart={privateChart} /> },
+    ] },
+    { id: 'study', label: 'Study', icon: GraduationCap, tabs: [
+      { id: 'study', label: 'Study', view: 'study', render: () => <ProStudyWorkbench chart={privateChart} /> },
+    ] },
+    { id: 'saved', label: 'Saved charts', icon: Bookmark, tabs: [
+      { id: 'saved', label: 'Saved charts', withoutChart: true,
+        render: () => <ProSavedCharts
           openChartId={savedSubject?.id ?? null}
           opening={chartStatus === 'loading'}
           onOpen={(saved) => void loadSavedChart(saved)}
-          onDeleted={(chartId) => { if (savedSubject?.id === chartId) closePrivateChart(); }}
-        />
+          onDeleted={(chartId) => { if (savedSubject?.id === chartId) closePrivateChart(); }} /> },
+    ] },
+  ];
+  const activeTab = (tool: Tool): ToolTab => tool.tabs.find((t) => t.id === tabOf[tool.id]) ?? tool.tabs[0];
 
-        <section className={styles.openPaths} aria-labelledby="paths-title">
-          <div className={styles.pathsIntro}>
-            <span className={styles.eyebrow}>YOUR MAP. MANY PATHS.</span>
-            <h2 id="paths-title">Five areas for inquiry</h2>
-            <p>Natal, current sky, own-chart Relationships, Research and Study are available in this candidate. Two-person synastry and MAIA chart transfer remain held.</p>
-          </div>
-          <div className={styles.pathsGrid}>
-            <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              <ProRelationshipsWorkbench chart={savedSubject ? null : privateChart} />
+  // What the astrologer has in hand, for MAIA: the lead tool's open tab, or the wheel.
+  const leadTool = privateChart && lead && openTools.includes(lead) && !folded[lead]
+    ? tools.find((t) => t.id === lead) ?? null : null;
+  const leadTab = leadTool ? activeTab(leadTool) : null;
+  const leadView: ProAskView | undefined = leadTab ? leadTab.view : 'wheel';
+  const natalRequest = {
+    section: 'natal' as const, subject: subjectId, houseSystem,
+    ...(leadView ? { view: leadView } : {}),
+    ...(selected && (leadView === 'wheel' || leadView === 'point') ? { point: selected.name } : {}),
+  };
+  useMaiaSubject(privateChart ? {
+    key: askKey(natalRequest), request: natalRequest, readsWhose,
+    subjectLabel: savedSubject ? `${savedSubject.label}’s natal chart` : 'your natal chart',
+  } : null);
+
+  // Mark a tab as shown once it is first on screen, so it mounts then and stays.
+  const onScreen = openTools.filter((id) => !folded[id])
+    .map((id) => { const tool = tools.find((t) => t.id === id)!; return `${id}.${activeTab(tool).id}`; });
+  const onScreenKey = onScreen.join('|');
+  useEffect(() => {
+    setShown((current) => {
+      const missing = onScreen.filter((k) => !current[k]);
+      if (!missing.length) return current;
+      const next = { ...current };
+      for (const k of missing) next[k] = true;
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onScreenKey]);
+  // A closed chart forgets which instruments had been opened for it.
+  useEffect(() => { if (!panelScope) setShown({}); }, [panelScope]);
+
+  // Keys: 1–9 open or close a tool, M shows or hides MAIA. Never while typing.
+  const toggleRef = useRef<(key: string) => void>(() => {});
+  toggleRef.current = (key: string) => {
+    if (key === 'm' || key === 'M') { dock?.setOpen(!dock.open); return; }
+    const tool = tools[Number(key) - 1];
+    if (tool) toggleTool(tool.id);
+  };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || typingTarget(event.target)) return;
+      if (/^[1-9mM]$/.test(event.key)) { event.preventDefault(); toggleRef.current(event.key); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const dockOpen = !!dock?.open;
+  const inHand = dock ? maiaSubjectInHand(dock.subjects, dock.focusKey, leadTab?.prefer ?? []) : undefined;
+
+  return (
+    <PanelMemoryProvider scope={panelScope}>
+    <main className={`${styles.studio} ${cockpit.cockpit}`} id="astrology-pro-preview">
+      <header className={cockpit.statusBar}>
+        <Link href="/astrology" className={cockpit.brand} aria-label="Return to Soullab Astrology">
+          <span aria-hidden="true">✧</span> <b>Astrology Pro</b>
+        </Link>
+
+        <div className={cockpit.identity}>
+          <h1 id="studio-title">{privateChart ? (savedSubject ? savedSubject.label : 'My chart') : 'No chart open'}</h1>
+          <label htmlFor="pro-house-system" className={cockpit.field}>
+            <span>Houses</span>
+            <select id="pro-house-system" value={houseSystem}
+              title="Changing the house system closes the open chart and its unsaved notes"
+              onChange={(event) => {
+                const next = event.target.value as ProHouseSystem;
+                if (next === houseSystem) return;
+                closePrivateChart();
+                setHouseSystem(next);
+                setChartError(null);
+              }}>
+              <option value="porphyry">Porphyry</option>
+              <option value="whole-sign">Whole Sign</option>
+              <option value="equal">Equal</option>
+              <option value="placidus">Placidus</option>
+              <option value="koch">Koch</option>
+            </select>
+          </label>
+          {privateChart && (
+            <>
+              <button type="button" className={cockpit.iconButton} aria-expanded={methodOpen}
+                aria-label="Calculation method and limits" title="Calculation method and limits"
+                onClick={() => setMethodOpen((o) => !o)}>
+                <Info size={17} aria-hidden="true" />
+              </button>
+              {savedSubject && (
+                <button type="button" className={cockpit.share} aria-expanded={shareOpen}
+                  title="Make, copy or view this person’s private chart link"
+                  onClick={() => setShareOpen((o) => !o)}>
+                  <Send size={15} aria-hidden="true" /> Share with client
+                </button>
+              )}
+              <button type="button" className={cockpit.quiet} onClick={() => closePrivateChart()}>Close chart</button>
+            </>
+          )}
+        </div>
+
+        <div className={cockpit.sky} aria-label="The sky now">
+          {skyStatus === 'loading' && <span role="status">Calculating the sky…</span>}
+          {skyStatus === 'unavailable' && <span role="status">Current sky unavailable</span>}
+          {skyStatus === 'ready' && selectedSky.map((body) => (
+            <span key={body.planet} className={cockpit.skyBody}
+              title={body.motionStatus === 'stationary-uncertain' ? 'Near station · direction uncertain' : body.motionStatus === 'not-evaluated' ? 'Apparent motion not verified' : undefined}>
+              <small>{body.planet}</small> {body.sign.slice(0, 3)} {body.degree.toFixed(0)}°{body.motionStatus === 'retrograde' ? ' ℞' : ''}
+            </span>
+          ))}
+          {skyStatus === 'ready' && skyDate && (
+            <small className={cockpit.skyAt}>Sky at {new Date(skyDate).toLocaleTimeString([], { timeStyle: 'short' })}</small>
+          )}
+        </div>
+
+        <span className={cockpit.flag}>Private preview</span>
+        <button type="button" className={cockpit.maiaToggle} aria-pressed={dockOpen}
+          onClick={() => dock?.setOpen(!dockOpen)} title="Talk with MAIA, or return to the tools (M)">
+          <Sparkles size={16} aria-hidden="true" /> {dockOpen ? 'Tools' : 'Talk with MAIA'}
+        </button>
+      </header>
+
+      {shareOpen && privateChart && savedSubject && (
+        <section className={cockpit.method} aria-label={`Share ${savedSubject.label}’s chart`}>
+          <p>
+            The client’s page shows this chart and its transits, view-only, with no account needed. “View” opens
+            exactly what they will see. The same link is under Saved charts.
+          </p>
+          <ProChartSharePanel chartId={savedSubject.id} label={savedSubject.label} onClose={() => setShareOpen(false)} />
+        </section>
+      )}
+
+      {methodOpen && privateChart && (
+        <section className={cockpit.method} aria-label="Calculation method and limits">
+          <p>Calculated using {calculationQuality?.method || 'a declared'} house method. Professional certification remains pending. Near-station motion is labelled uncertain rather than forced into direct or retrograde. Minor-body positions and motion are provisional.</p>
+          <p>The displayed house uses a 5° pre-angular-cusp convention where applicable; geometric membership is distinct. Lunar nodes are approximate mean positions, not certified true nodes.</p>
+          <p>The source and accuracy of the stored birth time have not been established by this service. A time written to the minute is not automatically accurate to the minute.</p>
+          <p>Orbs decide which aspects are found from the calculated positions; the max orb setting then filters them for display. Neither determines applying or separating phase.</p>
+          <p>These are astronomical and interpretive method disclosures, not predictions about the person. Symbolism is not evidence of destiny.</p>
+          <button type="button" className={cockpit.quiet} onClick={() => setMethodOpen(false)}>Close</button>
+        </section>
+      )}
+
+      <div className={cockpit.body} ref={bodyRef}
+        style={stageWidth ? { gridTemplateColumns: `${RAIL_WIDTH}px ${stageWidth}px 9px minmax(0, 1fr)` } : undefined}>
+        <nav className={cockpit.rail} aria-label="Tools">
+          {tools.map((tool, index) => {
+            const Icon = tool.icon;
+            const on = openTools.includes(tool.id);
+            return (
+              <button key={tool.id} type="button" aria-pressed={on} className={on ? cockpit.railOn : undefined}
+                title={`${tool.label} (${index + 1})`} onClick={() => toggleTool(tool.id)}>
+                <Icon size={20} aria-hidden="true" />
+                <span>{tool.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <section id="the-chart" className={cockpit.stage} aria-labelledby="studio-title">
+          {privateChart ? (
+            <>
+              <div className={cockpit.layers} aria-label="Chart layers">
+                <button aria-pressed={showAspects} onClick={() => setShowAspects((s) => !s)}>
+                  {showAspects ? <Eye size={15} /> : <EyeOff size={15} />} Aspects
+                </button>
+                <button aria-pressed={showHouseLines} onClick={() => setShowHouseLines((s) => !s)}>
+                  <Orbit size={15} /> Houses
+                </button>
+                <label className={cockpit.field} htmlFor="pro-aspect-orb">
+                  <span>Max orb</span>
+                  <select id="pro-aspect-orb" value={aspectOrbFilter}
+                    onChange={(event) => {
+                      const choice = event.target.value;
+                      if (choice === 'all' || choice === '1' || choice === '3' ||
+                          choice === '5' || choice === '8') setAspectOrbFilter(choice);
+                    }}>
+                    <option value="all">All</option>
+                    <option value="1">1°</option>
+                    <option value="3">3°</option>
+                    <option value="5">5°</option>
+                    <option value="8">8°</option>
+                  </select>
+                </label>
+                <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
+              </div>
+              <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
+                showAspects={showAspects} showHouseLines={showHouseLines}
+                maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
+                outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
+              <div className={cockpit.bodies} aria-label="Planet selector">
+                {bodies.map((body) => (
+                  <button key={body.name} className={body.name === focusedBody ? cockpit.bodyOn : undefined}
+                    title={formatBody(body)}
+                    onClick={() => selectBody(body.name)} aria-pressed={body.name === focusedBody}>
+                    <span aria-hidden="true">{body.glyph}</span>{body.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : chart ? (
+            <div className={cockpit.invitation} role="status" aria-live="polite">
+              <h2>Verifying private chart access…</h2>
+              <p>Your chart and notes are hidden until your member session and saved chart revision have been checked.</p>
+              <button className={cockpit.quiet} onClick={() => closePrivateChart()}>Close chart</button>
             </div>
-            <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              <ProResearchWorkbench chart={privateChart} />
+          ) : (
+            <div className={cockpit.invitation}>
+              <div className={cockpit.emptyRing} aria-hidden="true">✧</div>
+              <h2>Open a chart to begin</h2>
+              <p>Your own chart is calculated from the birth details held by your signed-in account. A client’s chart opens from Saved charts.</p>
+              <div className={cockpit.invitationActions}>
+                <button className={styles.primaryAction} onClick={loadMyChart} disabled={chartStatus === 'loading'}>
+                  {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
+                </button>
+                <button type="button" className={cockpit.quiet} onClick={() => openTool('saved')}>Saved charts</button>
+              </div>
+              <p><Link href="/account/settings">Edit my birth details</Link> · {HOUSE_SYSTEM_NAMES[houseSystem]} houses</p>
+              {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
+              {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
+              {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}
+              {chartStatus === 'unavailable' && <p role="alert">{chartError}</p>}
             </div>
-            <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              <ProStudyWorkbench chart={privateChart} />
-            </div>
-          </div>
+          )}
         </section>
 
-        <footer className={styles.footer}>
-          <div><ShieldCheck size={18} aria-hidden="true" /> <span>Member sovereignty · Symbolism is not evidence of destiny · Your meaning remains yours</span></div>
-          <p>Private design preview only. Gifting, subscriptions, other-member charts and MAIA chart transmission are disabled. Professional astronomical reference certification is incomplete; claims about astrological effects are not established.</p>
-        </footer>
+        <div className={cockpit.divider} role="separator" aria-orientation="vertical" tabIndex={0}
+          aria-label="Resize the chart and the work area"
+          title="Drag to resize · double-click to reset · arrow keys to nudge"
+          onPointerDown={startDrag} onDoubleClick={() => resizeStage(null)}
+          onKeyDown={(event) => {
+            const current = stageWidth ?? (document.getElementById('the-chart')?.clientWidth ?? 520);
+            if (event.key === 'ArrowLeft') { event.preventDefault(); resizeStage(current - 40); }
+            else if (event.key === 'ArrowRight') { event.preventDefault(); resizeStage(current + 40); }
+            else if (event.key === 'Home') { event.preventDefault(); resizeStage(STAGE_MIN); }
+            else if (event.key === 'Enter') { event.preventDefault(); resizeStage(null); }
+          }} />
+        <div className={cockpit.work}>
+        <section className={cockpit.deck} aria-label="Open tools" hidden={dockOpen}>
+          {openTools.length === 0 && (
+            <p className={cockpit.deckEmpty}>No tools open. Choose one from the rail, or press 1–9.</p>
+          )}
+          {openTools.map((id) => {
+            const tool = tools.find((t) => t.id === id)!;
+            const Icon = tool.icon;
+            const tab = activeTab(tool);
+            const isFolded = !!folded[id];
+            return (
+              <article key={id} className={`${cockpit.tool} ${lead === id ? cockpit.toolLead : ''} ${isFolded ? cockpit.toolFolded : ''}`} aria-label={tool.label}
+                onPointerDownCapture={() => { if (lead !== id) { setLead(id); dock?.focus(null, false); } }}>
+                <header className={cockpit.toolHead}
+                  onClick={isFolded ? (event) => { if (!(event.target as HTMLElement).closest('button')) openTool(id); } : undefined}>
+                  <Icon size={17} aria-hidden="true" />
+                  <h2>{tool.label}</h2>
+                  {tool.tabs.length > 1 && !isFolded && (
+                    <div className={cockpit.tabs} role="tablist" aria-label={`${tool.label} views`}>
+                      {tool.tabs.map((t) => (
+                        <button key={t.id} type="button" role="tab" aria-selected={t.id === tab.id}
+                          onClick={() => { setTabOf((current) => ({ ...current, [id]: t.id })); dock?.focus(null, false); }}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <span className={cockpit.toolActions}>
+                    {privateChart && (
+                      <button type="button" className={cockpit.iconButton} aria-label={`Ask MAIA about ${tool.label}`} title="Ask MAIA about this"
+                        onClick={() => { openTool(id); dock?.focus(null); }}>
+                        <Sparkles size={16} aria-hidden="true" />
+                      </button>
+                    )}
+                    <button type="button" className={cockpit.iconButton} aria-expanded={!isFolded}
+                      aria-label={isFolded ? `Expand ${tool.label}` : `Collapse ${tool.label}`}
+                      onClick={() => (isFolded ? openTool(id) : setFolded((c) => ({ ...c, [id]: true })))}>
+                      {isFolded ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
+                    </button>
+                    <button type="button" className={cockpit.iconButton} aria-label={`Close ${tool.label}`} onClick={() => closeTool(id)}>
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  </span>
+                </header>
+                {tool.tabs.map((t) => {
+                  const visible = !isFolded && t.id === tab.id;
+                  const usable = !!privateChart || !!t.withoutChart;
+                  if (!usable) {
+                    return visible ? (
+                      <p key={t.id} className={cockpit.needsChart}>
+                        Open a chart to use {t.label === tool.label ? tool.label : `${tool.label} · ${t.label}`}.
+                      </p>
+                    ) : null;
+                  }
+                  if (!visible && !shown[`${id}.${t.id}`]) return null;
+                  return (
+                    <div key={t.id} role={tool.tabs.length > 1 ? 'tabpanel' : undefined} hidden={!visible} className={cockpit.toolBody}>
+                      {t.render()}
+                    </div>
+                  );
+                })}
+              </article>
+            );
+          })}
+        </section>
+
+        {!dockOpen && (
+          <button type="button" className={cockpit.talkBar} onClick={() => dock?.setOpen(true)}>
+            <Sparkles size={17} aria-hidden="true" />
+            <span>
+              {privateChart
+                ? <>Talk with MAIA about <b>{inHand?.subjectLabel ?? 'this chart'}</b></>
+                : 'Talk with MAIA once a chart is open'}
+            </span>
+            <small>Ask · Mentor · in depth</small>
+          </button>
+        )}
+        <ProMaiaStage chartOpen={!!privateChart}
+          whereLabel={leadTab ? (leadTab.label === leadTool?.label ? leadTab.label : `${leadTool?.label} · ${leadTab.label}`) : privateChart ? 'the chart wheel' : null}
+          preferSections={leadTab?.prefer ?? []} />
+        </div>
       </div>
     </main>
     </PanelMemoryProvider>
