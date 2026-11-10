@@ -11,7 +11,7 @@
  * The local civil date is counted. Many daykeepers begin the day at sunset or
  * sunrise, so a birth near either can belong to the neighbouring day.
  */
-import { julianDayNumber } from './proFourPillars';
+import { julianDayNumber } from './julianDay';
 
 export const GMT_CORRELATION = 584283;
 

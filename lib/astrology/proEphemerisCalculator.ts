@@ -11,6 +11,7 @@
  * - Dane Rudhyar (The Astrology of Personality)
  */
 
+import { INCLUDE_UNVERIFIED_ASTEROIDS } from './unverifiedBodies';
 import * as Astronomy from 'astronomy-engine';
 import { ASPECT_DEFINITIONS } from './proAspectOrbs';
 
@@ -66,9 +67,9 @@ export interface BirthChart {
   // Asteroids - Feminine Archetypes
   lilith: PlanetPosition;   // Black Moon Lilith - Primal Feminine
   ceres: PlanetPosition;    // Nurturing, Grief, Motherhood
-  pallas: PlanetPosition;   // Wisdom, Strategy, Creative Intelligence
-  juno: PlanetPosition;     // Partnership, Commitment, Sacred Union
-  vesta: PlanetPosition;    // Devotion, Sacred Work, Inner Flame
+  pallas?: PlanetPosition;   // Wisdom, Strategy, Creative Intelligence
+  juno?: PlanetPosition;     // Partnership, Commitment, Sacred Union
+  vesta?: PlanetPosition;    // Devotion, Sacred Work, Inner Flame
   ascendant: { sign: string; degree: number };
   midheaven: { sign: string; degree: number };
   houses: number[]; // 12 house cusps in degrees
@@ -611,22 +612,15 @@ function calculateChironApprox(date: Date): number {
  * The mean apogee precesses with a period of about 8.85 years
  */
 function calculateMeanLilith(date: Date): number {
-  // Reference: Mean Lilith was at 0° Aries on Jan 1, 2000 (J2000.0)
-  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
-  const currentDate = date.getTime();
-
-  // Days since J2000
-  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
-
-  // Mean Lilith at J2000.0 epoch: approximately 83.353° (23° Gemini)
-  const lilithAtEpoch = 83.353;
-
-  // Mean motion: ~0.111404° per day (completes circle in ~8.85 years = 3231.5 days)
-  const meanMotion = 360 / 3231.5;
-
-  const longitude = (lilithAtEpoch + (daysSince * meanMotion)) % 360;
-
-  return ((longitude % 360) + 360) % 360;
+  // Mean lunar apogee (Meeus, Astronomical Algorithms ch. 50): the mean
+  // PERIGEE is 83.3532465° at J2000 and advances 4069.0137287° per Julian
+  // century; Black Moon Lilith is the apogee, 180° opposite it. (An earlier
+  // version used the perigee itself, putting Lilith 180° from where it is:
+  // across 60 real apogees the Moon averaged 3° from this point and 177° from
+  // the perigee-based one.)
+  const T = (date.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86_400_000 / 36525;
+  const perigee = 83.3532465 + 4069.0137287 * T - 0.01032 * T * T;
+  return (((perigee + 180) % 360) + 360) % 360;
 }
 
 /**
@@ -967,16 +961,19 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     planetLongitudes.Ceres = ceresLon;
 
     // Pallas - Wisdom, Strategy, Creative Intelligence
-    const pallasLon = calculatePallasApprox(birthDate);
-    planetLongitudes.Pallas = pallasLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Pallas = calculatePallasApprox(birthDate);
+    }
 
     // Juno - Partnership, Commitment, Sacred Union
-    const junoLon = calculateJunoApprox(birthDate);
-    planetLongitudes.Juno = junoLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Juno = calculateJunoApprox(birthDate);
+    }
 
     // Vesta - Devotion, Sacred Work, Inner Flame
-    const vestaLon = calculateVestaApprox(birthDate);
-    planetLongitudes.Vesta = vestaLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Vesta = calculateVestaApprox(birthDate);
+    }
 
     // The calculated longitude vector is never written to server logs.
 
@@ -1072,23 +1069,29 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
       retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
     };
 
-    const pallas = {
-      ...longitudeToZodiac(planetLongitudes.Pallas),
-      house: calculateHouse(planetLongitudes.Pallas, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const pallas = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Pallas),
+          house: calculateHouse(planetLongitudes.Pallas, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
-    const juno = {
-      ...longitudeToZodiac(planetLongitudes.Juno),
-      house: calculateHouse(planetLongitudes.Juno, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const juno = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Juno),
+          house: calculateHouse(planetLongitudes.Juno, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
-    const vesta = {
-      ...longitudeToZodiac(planetLongitudes.Vesta),
-      house: calculateHouse(planetLongitudes.Vesta, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const vesta = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Vesta),
+          house: calculateHouse(planetLongitudes.Vesta, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
     // Report horizon and meridian angles independently of the chosen house
     // cusps. Whole Sign house 1 begins at 0 degrees of the rising sign, not

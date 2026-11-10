@@ -90,6 +90,8 @@ interface BirthChartData {
   southNode?: PlanetPosition;
   lilith?: PlanetPosition;
   ceres?: PlanetPosition;
+  /** The house system actually used; differs from the one requested only where it cannot exist (polar latitudes). */
+  houseSystemApplied?: string;
   pallas?: PlanetPosition;
   juno?: PlanetPosition;
   vesta?: PlanetPosition;
@@ -182,12 +184,12 @@ function ProAstrologyPreviewNotice() {
   );
 }
 
-const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string; fallback?: boolean }[] = [
+const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string }[] = [
   { value: 'porphyry', label: 'Porphyry', description: 'Destiny spine — crisp identity + vocation clarity' },
-  { value: 'placidus', label: 'Placidus*', description: 'Lived experience — where life pressure actually lands', fallback: true },
+  { value: 'placidus', label: 'Placidus', description: 'Lived experience — where life pressure actually lands' },
   { value: 'whole-sign', label: 'Whole Sign', description: 'Mythic map — each sign a clear chapter of your journey' },
   { value: 'equal', label: 'Equal', description: 'Clean structure — stable, straightforward house map' },
-  { value: 'koch', label: 'Koch*', description: 'Inner growth — how you unfold through thresholds', fallback: true },
+  { value: 'koch', label: 'Koch', description: 'Inner growth — how you unfold through thresholds' },
 ];
 
 // Transit position interface for current sky
@@ -1096,14 +1098,14 @@ export default function AstrologyPage() {
                 </div>
               </div>
 
-              {/* House System Description + Fallback footnote */}
+              {/* House System Description + polar-latitude note */}
               <div className="mb-3">
                 <p className="text-amber-200/70 text-xs text-center italic">
                   {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.description || 'Click a planet on the wheel for insights'}
                 </p>
-                {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.fallback && (
+                {chartData?.houseSystemApplied && chartData.houseSystemApplied !== houseSystem && (
                   <p className="text-amber-200/60 text-[10px] mt-1 text-center">
-                    *Uses Porphyry calculation — true {houseSystem === 'placidus' ? 'Placidus' : 'Koch'} requires complex iterative solving
+                    {houseSystem === 'placidus' ? 'Placidus' : 'Koch'} does not exist at this latitude, so the chart uses Porphyry houses.
                   </p>
                 )}
               </div>
