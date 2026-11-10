@@ -239,6 +239,11 @@ function cmdOpen() {
   const cfg = config();
   const unit = opt('--unit') || die('usage: open --unit <id> --branch <branch> [--worktree <p>] [--model <m>] [--read-only] [--queue] [--override "<reason>"]');
   const branch = opt('--branch') || die('--branch required (the branch this unit will write on)');
+  // `--worktree` given with no value means the caller's claim failed (ain-delegate
+  // passes "$wt"; on 2026-11-09 a claim failed on a full disk and it was empty). Falling
+  // back to the current directory then records whatever checkout the command was typed
+  // in as this unit's worktree. Only an absent flag may mean "here".
+  if (args.includes('--worktree') && !opt('--worktree')) die('open: --worktree was given with no path; refusing to fall back to the current directory', 2);
   const worktree = canonicalWorktree(opt('--worktree') || process.cwd());
   const model = opt('--model') || process.env.BUILDER_SESSION_MODEL || 'UNKNOWN';
   const mode = flag('--read-only') ? 'read-only' : 'write';
