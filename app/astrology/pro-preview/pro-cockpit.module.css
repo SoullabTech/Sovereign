@@ -64,16 +64,21 @@
 .method button { justify-self: start; }
 
 /* ── Body grid ──────────────────────────────────────────────── */
-.body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 42fr) minmax(400px, 58fr); }
+.body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 42fr) 9px minmax(400px, 58fr); }
+/* The divider between the wheel and the work area: drag it, or double-click to reset. */
+.divider { cursor: col-resize; background: transparent; border-left: 1px solid var(--line); position: relative; touch-action: none; }
+.divider::after { content: ""; position: absolute; top: 50%; left: 2px; width: 3px; height: 44px; margin-top: -22px; border-radius: 3px; background: var(--line); }
+.divider:hover, .divider:focus-visible { background: rgba(226, 196, 143, .12); }
+.divider:hover::after, .divider:focus-visible::after { background: var(--brass); }
 .body > * { min-height: 0; min-width: 0; }
 
-.rail { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; border-right: 1px solid var(--line); background: #0b1018; overflow-y: auto; }
+.rail { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; background: #0b1018; overflow-y: auto; }
 .rail button { color: var(--ink-soft); display: grid; justify-items: center; gap: 3px; padding: 8px 2px 6px; background: transparent; border: 1px solid transparent; border-radius: 8px; color: var(--ink-soft); }
 .rail button span { font-size: .66rem; line-height: 1.15; text-align: center; }
 .rail button:hover { color: var(--ink); background: rgba(255, 255, 255, .04); }
 .rail button.railOn { color: var(--brass); background: rgba(226, 196, 143, .1); border-color: var(--line); }
 
-.stage { overflow-y: auto; padding: 10px 16px 16px; background: radial-gradient(circle at 50% 42%, rgba(155, 118, 62, .1), transparent 62%), #0c1119; border-right: 1px solid var(--line); }
+.stage { overflow-y: auto; padding: 10px 16px 16px; background: radial-gradient(circle at 50% 42%, rgba(155, 118, 62, .1), transparent 62%), #0c1119; }
 .layers { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .layers > button { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 50px; padding: 5px 10px; color: var(--ink-soft); }
 .layers > button[aria-pressed="true"] { border-color: var(--line); color: var(--brass); background: rgba(226, 196, 143, .08); }
@@ -157,7 +162,8 @@
   .identity h1 { max-width: 100%; }
   .sky { flex: 1 1 100%; padding-left: 0; overflow-x: auto; }
   .toolBody { overflow-x: auto; }
-  .body { display: block; }
+  .body { display: block !important; }
+  .divider { display: none; }
   .rail { flex-direction: row; position: sticky; top: 0; z-index: 5; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
   .rail button { min-width: 68px; }
   .stage, .deck, .maiaColumn { overflow: visible; border: none; max-height: none; }

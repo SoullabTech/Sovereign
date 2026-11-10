@@ -108,6 +108,11 @@ interface ToolTab {
 }
 interface Tool { id: ToolId; label: string; icon: LucideIcon; tabs: ToolTab[] }
 
+const STAGE_WIDTH_KEY = 'astro-pro.stage-width';
+const RAIL_WIDTH = 86;
+const STAGE_MIN = 280;
+const WORK_MIN = 360;
+
 const HOUSE_SYSTEM_NAMES = { 'whole-sign': 'Whole Sign', equal: 'Equal', porphyry: 'Porphyry', placidus: 'Placidus', koch: 'Koch' } as const;
 
 function typingTarget(target: EventTarget | null): boolean {
@@ -131,6 +136,38 @@ function Cockpit() {
   const [methodOpen, setMethodOpen] = useState(false);
   // The client link for the open saved chart: make it, copy it, view the client's page, turn it off.
   const [shareOpen, setShareOpen] = useState(false);
+  // Width of the wheel column in px, set by dragging the divider; null = the default split.
+  // Remembered in this browser only: it is a layout preference, nothing about a chart.
+  const [stageWidth, setStageWidth] = useState<number | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    try {
+      const saved = Number(window.localStorage.getItem(STAGE_WIDTH_KEY));
+      if (Number.isFinite(saved) && saved >= STAGE_MIN) setStageWidth(saved);
+    } catch { /* storage unavailable: the default split stands */ }
+  }, []);
+  function resizeStage(next: number | null) {
+    const room = bodyRef.current?.clientWidth ?? 1400;
+    const width = next === null ? null : Math.round(Math.min(Math.max(next, STAGE_MIN), room - RAIL_WIDTH - WORK_MIN));
+    setStageWidth(width);
+    try {
+      if (width === null) window.localStorage.removeItem(STAGE_WIDTH_KEY);
+      else window.localStorage.setItem(STAGE_WIDTH_KEY, String(width));
+    } catch { /* not remembered, still applied */ }
+  }
+  function startDrag(event: { preventDefault: () => void; clientX: number }) {
+    event.preventDefault();
+    const left = (bodyRef.current?.getBoundingClientRect().left ?? 0) + RAIL_WIDTH;
+    const move = (e: PointerEvent) => resizeStage(e.clientX - left);
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      document.body.style.userSelect = '';
+    };
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  }
   const [chartStatus, setChartStatus] = useState<ChartStatus>('idle');
   const [chart, setChart] = useState<BirthChart | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -770,7 +807,8 @@ function Cockpit() {
         </section>
       )}
 
-      <div className={cockpit.body}>
+      <div className={cockpit.body} ref={bodyRef}
+        style={stageWidth ? { gridTemplateColumns: `${RAIL_WIDTH}px ${stageWidth}px 9px minmax(0, 1fr)` } : undefined}>
         <nav className={cockpit.rail} aria-label="Tools">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
@@ -852,6 +890,17 @@ function Cockpit() {
           )}
         </section>
 
+        <div className={cockpit.divider} role="separator" aria-orientation="vertical" tabIndex={0}
+          aria-label="Resize the chart and the work area"
+          title="Drag to resize · double-click to reset · arrow keys to nudge"
+          onPointerDown={startDrag} onDoubleClick={() => resizeStage(null)}
+          onKeyDown={(event) => {
+            const current = stageWidth ?? (document.getElementById('the-chart')?.clientWidth ?? 520);
+            if (event.key === 'ArrowLeft') { event.preventDefault(); resizeStage(current - 40); }
+            else if (event.key === 'ArrowRight') { event.preventDefault(); resizeStage(current + 40); }
+            else if (event.key === 'Home') { event.preventDefault(); resizeStage(STAGE_MIN); }
+            else if (event.key === 'Enter') { event.preventDefault(); resizeStage(null); }
+          }} />
         <div className={cockpit.work}>
         <section className={cockpit.deck} aria-label="Open tools" hidden={dockOpen}>
           {openTools.length === 0 && (
