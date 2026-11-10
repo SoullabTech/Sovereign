@@ -12,6 +12,7 @@
 import { calculateBirthChart, type BirthData } from './ephemerisCalculator';
 import { convertToVedicChart } from './vedicChartFromTropical';
 import { calculateVimshottariDasha } from './vimshottariDasha';
+import { generateSpiralogicIntegration } from './vedicAstrology';
 import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
@@ -22,7 +23,7 @@ import { calculateFourPillars, type DayStart, type FourPillars } from './proFour
 import { buildChineseReading, type ChineseReadingData } from './chineseReading';
 import { daYunByDirection, type DaYunByDirection } from './proDaYun';
 import type {
-  AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
+  AyanamsaType, CompleteVedicProfile, GrahaName, NakshatraInfo, VimshottariDashaProfile,
 } from './types/vedic';
 import type { SavedChartBirth } from './proSavedCharts';
 
@@ -49,6 +50,12 @@ export interface ProOtherSystems {
     birthNakshatra: NakshatraInfo;
     moonPada: 1 | 2 | 3 | 4;
     dasha: VimshottariDashaProfile;
+    /**
+     * What the Free Vedic page's profile and planets views need beyond the above:
+     * the full sidereal chart and the three signs. The room joins it with `dasha`
+     * and `birthNakshatra` (kept once, not repeated here). No birth detail in it.
+     */
+    profile: Omit<CompleteVedicProfile, 'dasha' | 'birthNakshatra'>;
     method: string;
   };
   chinese: {
@@ -164,6 +171,13 @@ export async function calculateProOtherSystems(
       birthNakshatra: moon.nakshatra,
       moonPada: moon.nakshatraPada,
       dasha: dashaProfileToDay(dasha),
+      profile: {
+        chart,
+        moonSign: chart.grahas.Chandra.rashi,
+        sunSign: chart.grahas.Surya.rashi,
+        ascendantSign: chart.ascendant.rashi,
+        spiralogicIntegration: generateSpiralogicIntegration(chart.grahas.Chandra.rashi, moon.nakshatra),
+      },
       method: 'Sidereal positions from the Free Vedic calculator: Soullab provisional ayanamsa approximation, whole-sign houses from the Lagna, Vimshottari dasha from the Moon, dates to the day. Not yet checked against a reference ephemeris.',
     },
     chinese: {

@@ -16,6 +16,7 @@ surfaces:
   - components/astrology/ChineseReadingView.tsx
   - components/astrology/DashaTimeline.tsx
   - components/astrology/DaYunTimeline.tsx
+  - components/astrology/VedicRoomViews.tsx
   - components/astrology/SacredHouseWheel.tsx
   - components/astrology/ZodiacToggle.tsx
 change_class: experiential
@@ -107,3 +108,7 @@ luck cycles) are the Chinese lens room's own surfaces. The Pro preview's Chinese
 profile that carry no birth date, time or gender. The Free page keeps its own path: it computes the
 reading in the browser and `DaYunTimeline` fetches its profile. One experience, two sources of data;
 neither room has a lesser copy.
+
+The Vedic lens works the same way: `VedicRoomViews` (the profile and planets panels, with `RashiCard`
+and `GrahaCard`) is extracted from the Free Vedic page and embedded by Pro's Vedic room, fed by a
+server-computed chart and profile with no birth time, place or zone in them.
