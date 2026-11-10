@@ -134,7 +134,8 @@ export interface TransitForce {
   effect: string;
   elementalInteraction: string;
   bodyAwareness?: string;
-  applying: boolean;
+  /** Orb closing, opening, or null when not established (exact, or no motion data). */
+  applying: boolean | null;
   source: AstroSource;       // derived_interpretation | fallback
   confidence: ConfidenceLevel; // always 'derived' (aspect detection is calculated)
 }
@@ -180,14 +181,15 @@ type ComputedAspect = {
   transitPlanet: string;
   aspectType: AspectType;
   orb: number;
-  applying: boolean;
+  applying: boolean | null;
 };
 
 function detectAspects(
   natalDeg: number,
   transitDeg: number,
   natalPlanet: string,
-  transitPlanet: string
+  transitPlanet: string,
+  transitRetrograde: boolean
 ): ComputedAspect | null {
   const diff = angularDiff(natalDeg, transitDeg);
 
@@ -202,9 +204,13 @@ function detectAspects(
   for (const { angle, type } of targets) {
     const orb = Math.abs(diff - angle);
     if (orb <= ORB_THRESHOLD) {
-      // applying = transiting planet approaching (getting closer to exact)
-      // Simplified: if transit is ahead of natal in zodiac, it's applying for conjunction
-      const applying = transitDeg < natalDeg || (natalDeg - transitDeg + 360) % 360 > 180;
+      // applying = the orb to this exact aspect is closing. With the natal
+      // point fixed, that depends on which side of the exact angle the transit
+      // stands AND on the direction it is moving (retrograde reverses it).
+      const signedDiff = ((((transitDeg - natalDeg) % 360) + 540) % 360) - 180;
+      const direction = transitRetrograde ? -1 : 1;
+      const slope = Math.sign(diff - angle) * Math.sign(signedDiff) * direction;
+      const applying = orb <= 1e-9 || slope === 0 ? null : slope < 0;
       return { natalPlanet, transitPlanet, aspectType: type, orb: Math.round(orb * 10) / 10, applying };
     }
   }
@@ -243,7 +249,7 @@ export function buildTransitImpacts(
     for (const [nPlanet, nPos] of Object.entries(natalPositions)) {
       if (!nPos?.sign) continue;
       const nDeg = absoluteDegree(nPos.sign, nPos.degree);
-      const aspect = detectAspects(nDeg, tDeg, nPlanet, tPlanet);
+      const aspect = detectAspects(nDeg, tDeg, nPlanet, tPlanet, transit.retrograde === true);
       if (aspect) computedAspects.push(aspect);
     }
   }
@@ -450,7 +456,7 @@ export function formatTransitImpacts(impacts: TransitImpact[]): string {
     out += `**${cap(impact.natalPlanet)} (${cap(impact.element)} / ${impact.domain})**\n`;
 
     for (const force of impact.forces) {
-      const tag = force.applying ? '↗ applying' : '↘ separating';
+      const tag = force.applying === null ? 'phase not established' : force.applying ? '↗ applying' : '↘ separating';
       out += `- ${cap(force.transitPlanet)} ${force.aspectType} (${force.orb}° ${tag})\n`;
       out += `  → ${force.elementalInteraction}\n`;
       out += `  → ${force.effect}\n`;

@@ -42,13 +42,37 @@ before anyone else can see it.
 
 ## Arrival
 
-> **Soullab Celestial Observatory · Chart Studio** — *Private natal instrument · current sky · member-led inquiry*, labelled *Professional workspace · Private preview*.
+> **Astrology Pro**, with the open chart's name beside it, the house system, the sky now and *Private preview*.
+
+**The cockpit (2026-11-09, founder direction).** The room is one screen, not a page to
+scroll. A status bar names the chart, the house system and the sky now. A rail of
+nine tools (Chart, Timing, Relationships, Places, Traditions, Readings, Research,
+Study, Saved charts) opens and closes panels beside the wheel; the wheel stays in
+place. A tool that needs a chart says so in one line instead of showing an empty
+block.
+
+**MAIA is a conversation, not a sidebar (2026-11-09, founder direction, after Writer's
+Studio's conversation stage).** A bar at the foot of the tools reads "Talk with MAIA
+about …". Opening it gives the conversation the whole working area beside the wheel:
+what it is about at the top with "Back to the tools", the thread, ways to begin, and
+the box to ask at the foot. Follow-ups build on the earlier turns of the visit. Unlike
+the Studio, MAIA does not speak first: nothing of a chart goes to MAIA until the
+astrologer asks.
+
+Not yet walked by the founder or on a phone. The 2026-10-30 verification above
+describes the earlier single-page layout and its screenshots are of that layout.
 
 ## Gestures
 
 | Gesture | Language used | Why this wording |
 |---|---|---|
-| Move between work areas | the area's name (Chart Studio, Relationships, Research, Study) | a professional's working vocabulary |
+| Open or close a tool | the tool's name on the rail (Chart, Timing, Relationships, Places, Traditions, Readings, Research, Study, Saved charts); keys 1–9 | a professional's working vocabulary |
+| Collapse or close an open tool | the chevron and the × on its header | the astrologer arranges the desk |
+| Talk with MAIA | "Talk with MAIA about…" at the foot of the tools or on an instrument; key M | a conversation, entered by choice |
+| Return to the tools | "Back to the tools"; key M | the conversation is a place, not a trap |
+| Ask MAIA to teach | "Mentor" | the technique, with this chart only as the example |
+| Ask for more | "In depth"; "Say more"; "Draw on all systems" | depth and breadth are the astrologer's call |
+| Bring MAIA's knowledge of me | "Read this with what you know about me" (own chart only, off until chosen in each conversation) | the astrologer chooses it each time; it is never assumed |
 | Return to Astrology | "Return to Soullab Astrology" | the Free room stays the home |
 
 ## Known wart
@@ -61,6 +85,32 @@ The dark and non-founder responses carry HTTP 200 around the not-found page rath
 - presenting the preview as a member feature, tier or entitlement
 - MAIA speaking as astrological authority
 - sending chart material to MAIA
+
+## Contract drift, for founder ruling
+
+Two lines above, "MAIA speaking as astrological authority" and "sending chart material
+to MAIA", predate Ask MAIA inside Pro (founder request 2026-11-07, merged 2026-11-08),
+which sends a section's calculated facts to MAIA when the astrologer asks: never a name
+or birth details, nothing kept, and MAIA told the chart is symbolic and the astrologer
+is the author. The cockpit's dock uses that same route and adds a Mentor mode. The
+"Forbidden here" list has not been edited: whether it should now read "sending chart
+material to MAIA except as the astrologer's own question, facts only" is the founder's
+to rule. The separate hold on transferring a chart into the main MAIA conversation
+(R4F, #1817) is untouched; the dock does not use the main conversation or its memory.
+
+## Founder ruling 2026-11-09: MAIA may read the astrologer's own chart with what she knows of them
+
+Ruled in conversation: for the astrologer's **own chart only**, and **chosen each time**,
+MAIA may read the chart alongside what the astrologer has chosen to keep with her.
+
+- What is read: the member's kept memory atoms, through the existing loader and its
+  consent filters (active, allowed to return, never sacred-protected). Nothing else:
+  not prior conversation turns, not system-derived memories.
+- Never for a saved (client) chart or a two-chart reading. The server refuses it.
+- One direction only. Memory informs the answer; no chart material is written to the
+  conversation, to memory or anywhere else. The R4F hold (#1817), which concerns
+  chart passages entering the main conversation and being recalled later, is untouched.
+- After such an answer the page says how many kept things MAIA read, including zero.
 
 ## The two brand tests
 

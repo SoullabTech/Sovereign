@@ -1,3 +1,4 @@
+import { traditionalMaya, HAAB_MONTHS as TRADITIONAL_HAAB_MONTHS, type TraditionalMaya } from './proTraditionalMaya';
 // @ts-nocheck
 /**
  * MAYAN ASTROLOGY LIBRARY
@@ -163,6 +164,8 @@ export interface PathOfLife {
 export interface CompleteMayanProfile {
   tzolkin: MayanBirthSign;
   haab: HaabDate;
+  /** Traditional GMT count for the same date — a different system from the Dreamspell tzolkin. */
+  traditional: TraditionalMaya;
   pathOfLife: PathOfLife;
   cardinalDirection: CardinalDirectionInfo;
   lifeCycleInsight: string;
@@ -525,40 +528,67 @@ export const GALACTIC_TONES: Record<GalacticTone, GalacticToneInfo> = {
 };
 
 /**
+ * Dreamspell (José Argüelles) Kin of 26 July 1987 — the Dreamspell new year.
+ * Cross-checked against 21 Dec 2012 = Kin 207 (Blue Crystal Hand).
+ * (An earlier version treated this epoch as position 0 and counted Feb 29,
+ * which put every date 30 Kin off; 3 Sep 2003 read Kin 163 instead of 193.)
+ */
+const DREAMSPELL_EPOCH_UTC = Date.UTC(1987, 6, 26);
+const DREAMSPELL_EPOCH_KIN = 34;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+/**
+ * Dreamspell Kin 1-260 for a calendar date. Counts the UTC calendar date,
+ * and skips 29 February (it shares the Kin of 28 February).
+ */
+export function dreamspellKin(date: Date): number {
+  let y = date.getUTCFullYear();
+  let m = date.getUTCMonth();
+  let d = date.getUTCDate();
+  if (m === 1 && d === 29) d = 28;
+  const target = Date.UTC(y, m, d);
+  let days = Math.round((target - DREAMSPELL_EPOCH_UTC) / MS_PER_DAY);
+  const lo = Math.min(target, DREAMSPELL_EPOCH_UTC);
+  const hi = Math.max(target, DREAMSPELL_EPOCH_UTC);
+  let leapDays = 0;
+  for (let yr = new Date(lo).getUTCFullYear(); yr <= new Date(hi).getUTCFullYear(); yr++) {
+    if (!isLeapYear(yr)) continue;
+    const feb29 = Date.UTC(yr, 1, 29);
+    if (feb29 > lo && feb29 <= hi) leapDays++;
+  }
+  days += days >= 0 ? -leapDays : leapDays;
+  return ((((DREAMSPELL_EPOCH_KIN - 1 + days) % 260) + 260) % 260) + 1;
+}
+
+/**
  * Calculate Mayan birth sign from Gregorian date
- * Uses correlation: July 26, 1987 = 1 Imix (Dreamspell/Jose Arguelles correlation)
+ * Dreamspell count: 26 July 1987 = Kin 34 (see dreamspellKin).
  */
 export function calculateMayanBirthSign(birthDate: Date): MayanBirthSign {
-  // Dreamspell epoch: July 26, 1987 = 0 Imix 0
-  const dreamspellEpoch = new Date('1987-07-26');
-  const daysSinceEpoch = Math.floor(
-    (birthDate.getTime() - dreamspellEpoch.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const kin = dreamspellKin(birthDate); // 1-260
+  const kinIndex = kin - 1; // 0-259
 
-  // Calculate position in 260-day cycle
-  const tzolkinNumber = ((daysSinceEpoch % 260) + 260) % 260; // Handle negative numbers
-  const tzolkinDay = tzolkinNumber === 0 ? 260 : tzolkinNumber;
-
-  // Calculate tone (1-13)
-  const toneNumber = ((tzolkinNumber % 13) + 1) as GalacticTone;
-  if (toneNumber === 0) toneNumber as GalacticTone;
-
-  // Calculate day sign (0-19 maps to signs)
-  const daySignIndex = tzolkinNumber % 20;
+  // Tone cycles 1-13; day sign cycles through the 20 signs from Imix.
+  const toneNumber = ((kinIndex % 13) + 1) as GalacticTone;
   const daySignKeys = Object.keys(MAYAN_DAY_SIGNS) as MayanDaySign[];
-  const daySignKey = daySignKeys[daySignIndex];
+  const daySignKey = daySignKeys[kinIndex % 20];
 
   const daySign = MAYAN_DAY_SIGNS[daySignKey];
   const tone = GALACTIC_TONES[toneNumber];
 
-  // Calculate wavespell (groups of 13 days)
-  const wavespellNumber = Math.floor(tzolkinNumber / 13) + 1;
-  const wavespellSign = daySignKeys[((wavespellNumber - 1) % 20)];
+  // Wavespell = the 13-Kin group; named for the sign of its first Kin
+  // (tone 1), which is Kin 13 * (wavespell - 1) + 1.
+  const wavespellIndex = Math.floor(kinIndex / 13); // 0-19
+  const wavespellSign = daySignKeys[(wavespellIndex * 13) % 20];
 
   return {
     daySign,
     tone,
-    tzolkinNumber: tzolkinDay,
+    tzolkinNumber: kin,
     wavespell: `${MAYAN_DAY_SIGNS[wavespellSign].name} Wavespell`,
     galacticSignature: `${tone.name} ${daySign.name}`,
   };
@@ -589,43 +619,28 @@ export function synthesizeMayanWestern(
 }
 
 /**
- * Calculate Haab date from Gregorian date
- * The Haab is a 365-day solar calendar with 18 months of 20 days + 5 Wayeb days
- * Correlation: July 26, 1987 = 0 Pop (New Year in Dreamspell)
+ * Haab date (traditional 365-day solar count, GMT 584283) for a civil date.
+ * The Dreamspell has no Haab; an earlier version counted from the Dreamspell
+ * epoch as "0 Pop", which is not a Maya date (3 Sep 2003 read 3 Sip, correct
+ * is 11 Mol).
  */
 export function calculateHaabDate(date: Date): HaabDate {
-  // Haab epoch aligned with Dreamspell: July 26, 1987 = 0 Pop
-  const haabEpoch = new Date('1987-07-26');
-  const daysSinceEpoch = Math.floor(
-    (date.getTime() - haabEpoch.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  // Position in 365-day Haab cycle
-  const haabPosition = ((daysSinceEpoch % 365) + 365) % 365;
-
-  // First 360 days are 18 months of 20 days each
-  if (haabPosition < 360) {
-    const monthIndex = Math.floor(haabPosition / 20);
-    const dayInMonth = haabPosition % 20;
-    const month = HAAB_MONTHS[monthIndex];
-
+  const { haab } = traditionalMaya(civilDate(date));
+  const monthIndex = TRADITIONAL_HAAB_MONTHS.indexOf(haab.month as typeof TRADITIONAL_HAAB_MONTHS[number]);
+  if (monthIndex === 18) {
+    const wayebDay = haab.day + 1; // 1-5
     return {
-      day: dayInMonth,
-      month,
-      isWayeb: false,
-      fullDate: `${dayInMonth} ${month.name}`,
-    };
-  } else {
-    // Last 5 days are Wayeb (unlucky days)
-    const wayebDay = haabPosition - 359; // 1-5
-    return {
-      day: wayebDay,
-      month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
-      isWayeb: true,
-      wayebDay,
-      fullDate: `Wayeb ${wayebDay}`,
+      day: haab.day, month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
+      isWayeb: true, wayebDay, fullDate: `Wayeb ${wayebDay}`,
     };
   }
+  const monthInfo = HAAB_MONTHS[monthIndex];
+  return { day: haab.day, month: monthInfo, isWayeb: false, fullDate: `${haab.day} ${monthInfo.name}` };
+}
+
+/** The UTC calendar date of an instant, YYYY-MM-DD. */
+function civilDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
 
 /**
@@ -713,9 +728,12 @@ export function calculateCompleteMayanProfile(birthDate: Date): CompleteMayanPro
   const cardinalDirection = getCardinalDirection(daySignKey);
   const lifeCycleInsight = generateLifeCycleInsight(birthDate, pathOfLife);
 
+  const traditional = traditionalMaya(civilDate(birthDate));
+
   return {
     tzolkin,
     haab,
+    traditional,
     pathOfLife,
     cardinalDirection,
     lifeCycleInsight,
