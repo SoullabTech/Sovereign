@@ -136,6 +136,41 @@ history alone), and nothing needs reintroducing.
 
 *Pass:* each behaves as T5, T7 and T4 require.
 
+**W11 — The editorial pass: issue after issue** (founder standard, 2026-11-10).
+*The founder's standard:* "I want our platform to function conversationally on the level
+chatgpt did with me when editing my work. It offered options, refined my own offerings and
+walked me through issue after issue until we refined the full book."
+
+Run after W4–W8, in the Work conversation and Write on `55742458`. Take **at least three
+issues in three different chapters** all the way through:
+
+1. MAIA raises the issue, grounded in a passage. Issues come in manuscript order, or in an
+   order the founder commissions ("take me through the arc problems").
+2. She offers options: alternatives, or questions with answer buttons.
+3. The founder counters with their own wording.
+4. She refines **the founder's version**. She doesn't replace it with hers.
+5. The founder adopts it, adjusts it, or declines.
+6. She carries what was decided, and why, into the next issue without being asked.
+7. After the third issue, leave. Then return in a new session and say "let's keep going".
+
+*Pass:*
+- each step happens in conversation, without the founder re-explaining the book;
+- what was settled stays settled and is not re-raised;
+- adopted changes appear in the manuscript only through the founder's adoption;
+- on return, she knows which issues were settled and offers the next one.
+
+*Record per step:* worked · worked with friction (name it) · absent (name the missing
+crossing). **"Absent" is a design finding, not a walk failure.** The crossings found absent are
+the evidence for designing the pass (Convergence step 7). They are not grounds for a repair
+during the walk.
+
+*Watch for:*
+- options that steer, where buttons carry MAIA's preferred answer;
+- refinement that drifts into MAIA's voice;
+- an implied ranking ("the most important issue is…") that was never commissioned;
+- a decision lost between issues;
+- "which issue were we on?" on return.
+
 **W10 — Manuscript stays central.** Throughout, the manuscript remains the primary surface, and
 no observation takes over the conversation without the writer choosing it.
 *This is founder witness only.*
@@ -154,6 +189,7 @@ no observation takes over the conversation without the writer choosing it.
 | Honest memory | W7 | over-budget stated | implies reading she didn't do |
 | Source not recollection | W4–W7 | refs resolve to manuscript text | wording traceable to EA knowledge |
 | Boundaries | W9 | revoke and Sanctuary honoured | body after revoke |
+| Editorial pass | W11 | ≥3 issues carried through options → founder wording → refinement → adoption → next; resumes after leaving | lost decisions, steering options, MAIA's voice replacing the founder's, no resume |
 
 **A stop yields NO EVIDENCE, never a partial pass.** A technical pass cannot override a failure
 the founder experienced.
