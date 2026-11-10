@@ -44,6 +44,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { livingWorkIdForManuscript } from './workOfManuscript';
 /* ⭐ THE PROJECTION LAW COMES FROM ITS OWN ADDRESS, and the address is the point.
    ⛔ Importing it from `saveSection` pulled that module's mutating exports into
    the Ask route's transitive value-import graph, and `askRouteEffectFamily`
@@ -164,19 +165,11 @@ export async function buildWorkContext(input: {
   /* ⭐ The Work the member DECLARED over this manuscript — their own act, in
      `living_work_expressions`. ⛔ Not inferred, and not the manuscript row
      wearing a Work's clothes. */
-  const decl = await query<{ living_work_id: string }>(
-    `SELECT e.living_work_id
-       FROM living_work_expressions e
-       JOIN member_manuscripts m ON m.id = e.expression_id
-      WHERE e.expression_type = 'manuscript'
-        AND e.expression_id = $1
-        AND m.member_id = $2
-      LIMIT 1`,
-    [manuscriptId, memberId]);
-  if (decl.rows.length === 0) return { ok: false, reason: 'work_unresolved' };
+  const declaredWorkId = await livingWorkIdForManuscript(manuscriptId, memberId);
+  if (!declaredWorkId) return { ok: false, reason: 'work_unresolved' };
 
   /* ⭐ THE RATIFIED READER, unchanged. Member-scoped in its own WHERE. */
-  const work = await resolveSituatedWork(memberId, decl.rows[0].living_work_id);
+  const work = await resolveSituatedWork(memberId, declaredWorkId);
   if (!work) return { ok: false, reason: 'work_unresolved' };
 
   const draft = await query<{ id: string; version: string }>(

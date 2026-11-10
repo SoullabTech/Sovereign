@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { usePanelState } from './panelMemory';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { hasValidChartGeometry } from '@/lib/astrology/proChartGeometry';
@@ -126,6 +127,10 @@ export default function ProDerivedPanel({
           </p>
           <CelestialChartWheel chart={result.chart} focusedBody={focus} onFocusBody={setFocus} showAspects showHouseLines />
         </>
+      )}
+      {date && (
+        <ProAskMaiaPanel subjectLabel="progressions and solar arcs" readsWhose={`${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart`}
+          request={{ section: 'progressed', subject: subjectId, houseSystem, at: `${date}T12:00:00` }} />
       )}
     </div>
   );

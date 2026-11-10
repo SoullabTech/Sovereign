@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from './writerUnderstanding';
 
 export async function fetchWriterUnderstanding(workId: string): Promise<
@@ -31,7 +32,7 @@ export async function saveWriterUnderstanding(
       {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(withKeepPosture({ ...draft })),
       },
     );
     const body = await res.json().catch(() => null);

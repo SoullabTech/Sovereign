@@ -99,8 +99,18 @@ describe('while standing is enabled', () => {
       outcome: 'appended',
       event: { id: 'e1', observationKey: 'o1', standing: 'keep', eventIndex: 0, recordedAt: '2026-09-06T20:00:00Z' },
     });
-    const res = await POST(post({ observationKey: 'o1', standing: 'keep', expectedCurrentEventId: null }), { params });
+    // A standing is kept, so the request declares an ordinary posture (founder ruling 2026-11-09).
+    const res = await POST(post({ observationKey: 'o1', standing: 'keep', expectedCurrentEventId: null, sanctuary: false }), { params });
     expect(res.status).toBe(200);
     expect(mockRecordStanding).toHaveBeenCalledTimes(1);
+  });
+
+  it('Sanctuary closure: in Sanctuary or undeclared, no standing is recorded', async () => {
+    mockRecordStanding.mockClear();
+    const s = await POST(post({ observationKey: 'o1', standing: 'keep', expectedCurrentEventId: null, sanctuary: true }), { params });
+    expect([s.status, (await s.json()).refusal]).toEqual([409, 'sanctuary_not_kept']);
+    const u = await POST(post({ observationKey: 'o1', standing: 'keep', expectedCurrentEventId: null }), { params });
+    expect([u.status, (await u.json()).refusal]).toEqual([409, 'posture_undeclared']);
+    expect(mockRecordStanding).not.toHaveBeenCalled();
   });
 });

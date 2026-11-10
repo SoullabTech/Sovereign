@@ -20,6 +20,7 @@ export const dynamic = 'force-dynamic';
  *     opens — never pushed, never notified.
  */
 
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -40,6 +41,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+    /* Founder ruling 2026-11-09: collections group Keeps, which are Sanctuary-bound — creating one is refused in Sanctuary. */
+    { const refused = await keepGate(memberId, body); if (refused) return refused; }
     const { name } = (body ?? {}) as { name?: unknown };
     if (typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
@@ -100,6 +103,8 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
         { status: 400 },
       );
     }
+    /* Placing a Keep into a collection is refused in Sanctuary; ⛔ removing one never is (founder ruling 2026-11-09). */
+    if (op === 'place') { const refused = await keepGate(memberId, body); if (refused) return refused; }
 
     // Both objects must belong to this member and this manuscript.
     const owns = await query(
