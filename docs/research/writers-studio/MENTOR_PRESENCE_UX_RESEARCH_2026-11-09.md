@@ -117,6 +117,41 @@ Three presentation states, selected by a clearly labelled **View** control in th
 
 ⚠️ **These priorities are not yet reconciled against Develop source.** They are ranked from the walk evidence and the design records; the owed next step is a source-exact control inventory mapping every existing Develop control onto the parity matrix — what Quiet hides, where it lives, which keyboard route reaches it — checked against `assertStudioMapHonest()` so that All tools cannot present an unbuilt destination as live.
 
+### P0 investigated: the split is one condition, and it is deliberate
+
+A source read of the Develop stage gate (2026-11-10, read-only, canonical `de8c3d04`) locates the split exactly. `app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx:3346`:
+
+```ts
+const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && props.field === 'overview' && !selectedObservation
+  && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
+```
+
+Seven conditions. Four are readiness — a Work is declared, nothing is preparing, sections exist — and those are correct: there is no calm way to show a chapter that is not there. **Two are the split:**
+
+| Condition | Consequence |
+|---|---|
+| `props.field === 'overview'` | Of the nine `DEVELOP_FIELDS` (`overview · development · structure · arc · themes · voice · coherence · continuity · reader`), the calm stage serves **one**. The other eight render the older composition. |
+| `!selectedObservation` | The moment the writer opens one of MAIA's observations, the stage is replaced by the dense room. |
+
+Measured either side of that line:
+
+| | File | Lines | `<button>` |
+|---|---|---|---|
+| Calm stage | `DevelopStage.tsx` | 363 | **18** |
+| Dense fallback | `P4R1DevelopView.tsx` | 3,422 | **92** |
+
+⭐ The 92 is not a new count. It is the same 92 the design candidate reported (§0, "Behind it the full Develop has **92 buttons**"), independently reproduced here by counting the file — which is what identifies this component as the surface the walk failed on, rather than one of the other Develop rooms.
+
+⛔ **This is not a defect. It is the redesign's declared scope**, stated in the source comment above the gate: *"Used for the plain overview with a Work declared. Observations, the Full view, themes and the other fields keep their existing rooms."* So the finding is not that something broke — it is that **the calm default was scoped to one field of nine and to the state before MAIA has been consulted.**
+
+The consequence for the writer is the sentence P0 was ranked on, and it is now source-confirmed rather than inferred: **Develop opens calm, and stops being calm the moment MAIA says something the writer wants to look at.** An 18-control surface becomes a 92-control surface on the click that accepts MAIA's offer — the one click the whole lane exists to make inviting.
+
+⚠️ **What this does NOT establish.** Button counts are a census of one file, not of what renders: `P4R1DevelopView.tsx` is a single component holding all nine fields, so no writer ever sees 92 at once, and the walk's own on-screen census was about **25**. The 18-vs-92 pair bounds the *authoring* difference between the two compositions; it is not a measurement of either screen. A per-field rendered-control census is owed before the parity matrix claims what any one view costs.
+
+⭐ **The question this puts to the founder**, which the source cannot answer: was the one-field scope a **staging step** — calm proven on the simplest field first, then extended — or the **intended end state**, with the dense rooms kept for the eight analytic fields? The three-view contract answers differently in each case. If staging, Quiet/Balanced/All tools is the vehicle for extending calm to the other eight fields and P2 absorbs P0. If intended, then a writer in Quiet must still meet the old composition on eight of nine fields, and the View control would be a promise the interface breaks — in which case P0 is not a precondition of P2 but a replacement for it.
+
+⛔ No source change is proposed here, and none is authorized. The owed next step is unchanged: the per-field, source-exact control inventory, checked against `assertStudioMapHonest()`.
+
 ### External references for the calm default
 
 Three public design guidelines support the direction. Graded by this document's own convention, all three are **PRINCIPLE**: they are expert guidance with no outcome measured, and none of them is evidence that a calmer interface improves writing.
