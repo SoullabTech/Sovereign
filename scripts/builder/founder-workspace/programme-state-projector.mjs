@@ -11,7 +11,10 @@
  * FD-3, as implemented (every rule is a named, replaceable decision so the
  * matrix can kill a wrong version of each one):
  *   population  = every *.md under docs/programme/** + every bullet of the
- *                 CLAUDE.md "Current priority thread"
+ *                 "Current priority thread", read from docs/PRIORITY_THREAD_LOG.md
+ *                 (where it has lived since 2026-11-09) and from CLAUDE.md
+ *                 (where it lived before, and where a stray new bullet would
+ *                 otherwise go unread)
  *   association = R-A1 filename prefix id · R-A2 evidence/<ID>/ directory ·
  *                 R-A3 first backticked id in a thread bullet · else UNCLASSIFIED
  *   precedence  = (1) founder adjudication / rulings / ratification record with an
@@ -60,6 +63,8 @@ const TIER1_FILE_RE = /FOUNDER_ADJUDICATION|FOUNDER_RULINGS|_RATIFICATION/;
 const EXTERNAL_RE = /EXTERNAL PROTECTED DEPENDENCY/;
 const THREAD_START = /^## Current priority thread/m;
 const THREAD_END = /^## Re-entry vow/m;
+/** Where the priority thread has lived since it was moved out of CLAUDE.md (2026-11-09). */
+export const THREAD_LOG = 'docs/PRIORITY_THREAD_LOG.md';
 
 /**
  * @typedef {{ id: string, kind: 'file'|'thread-bullet', path: string, text: string|null, error: string|null, date: string|null, first_add_ts?: number|null, ops_lane_id?: string }} Subject
@@ -92,10 +97,20 @@ export function readTree(opts) {
     }
   };
   if (existsSync(dir)) walk(dir); else subjects.push({ id: rel(root, dir), kind: 'file', path: rel(root, dir), text: null, error: 'docs/programme absent', date: null });
-  // thread bullets
+  // thread bullets: CLAUDE.md first, then the log the thread was moved to. Both are
+  // read, so a bullet added to either is in the population; a missing log is not an
+  // error (trees from before the move have none), an unreadable one is.
   let claudeText = null;
   try { claudeText = readFileSync(claude, 'utf8'); } catch (e) { subjects.push({ id: 'CLAUDE.md', kind: 'thread-bullet', path: 'CLAUDE.md', text: null, error: `read: ${msg(e)}`, date: null }); }
-  if (claudeText !== null) for (const b of threadBullets(claudeText)) subjects.push(b);
+  let threadCount = 0;
+  if (claudeText !== null) for (const b of threadBullets(claudeText)) { subjects.push(b); threadCount++; }
+  const threadLogRel = opts.threadLog || THREAD_LOG;
+  const threadLog = path.join(root, threadLogRel);
+  if (existsSync(threadLog)) {
+    let logText = null;
+    try { logText = readFileSync(threadLog, 'utf8'); } catch (e) { subjects.push({ id: threadLogRel, kind: 'thread-bullet', path: threadLogRel, text: null, error: `read: ${msg(e)}`, date: null }); }
+    if (logText !== null) for (const b of threadBullets(logText, threadCount)) subjects.push(b);
+  }
   // R-O1: governed docs/ops lanes enter the population ONLY by name (the map), never the whole directory
   for (const lane of (opts.opsSelect || DECISIONS.opsLanes)(map, root)) {
     const p = path.join(root, lane.path);
@@ -120,14 +135,21 @@ function firstAddIndex(_root, git) {
   return m;
 }
 
-/** @param {string} text */
-export function threadBullets(text) {
+/**
+ * A bullet's address stays `CLAUDE.md#thread-bullet-NNN` wherever the thread is
+ * stored: it is the thread's logical address, and the founder-adjudicated map
+ * (programme-projection-map.v1) classifies bullets by it. Renaming it would
+ * silently change which programmes are projected. `population.source` says
+ * which files the bullets are actually read from.
+ * @param {string} text @param {number} [startAt] bullets already numbered from an earlier file
+ */
+export function threadBullets(text, startAt = 0) {
   const s = text.search(THREAD_START); const e = text.search(THREAD_END);
   if (s < 0) return [];
   const block = text.slice(s, e > s ? e : undefined);
   /** @type {Subject[]} */ const out = [];
   const lines = block.split('\n');
-  let n = 0;
+  let n = startAt;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!/^- \*\*/.test(line)) continue;
@@ -399,7 +421,7 @@ export function project(tree, opts) {
   const complete = D.complete(counts);
   const population = {
     definition: 'a programme = a hyphenated programme id deterministically associated with at least one subject (R-A0 declaration · R-O1 map-named ops lane · R-A4 map alias · R-A1 filename prefix · R-A2 evidence/<ID>/ · R-F1 family canonical · R-A3/R-A3b/R-A3c thread bullet · R-A5/R-A6 citation) or named external by the D-01 rule; map classifications (RM-3) are examined and are never programmes',
-    source: 'docs/programme/**/*.md + CLAUDE.md "Current priority thread" bullets + the docs/ops lanes named by programme-projection-map.v1, read by the projector',
+    source: 'docs/programme/**/*.md + "Current priority thread" bullets (docs/PRIORITY_THREAD_LOG.md and CLAUDE.md) + the docs/ops lanes named by programme-projection-map.v1, read by the projector',
     subjects: { total: subjects.length, files: subjects.filter((s) => s.kind === 'file').length, thread_bullets: subjects.filter((s) => s.kind === 'thread-bullet').length, associated: subjects.length - unclassified.length - unreadable.length - excluded.length },
     examined: counts.examined, emitted: counts.emitted,
     excluded_by_rule: excluded, classified, unclassified, unreadable,
