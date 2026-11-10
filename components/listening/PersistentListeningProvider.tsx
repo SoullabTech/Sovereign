@@ -24,6 +24,9 @@ import {
 } from '@/lib/listening/receptiveField';
 import type { ReceptiveControls, ReceptiveFieldRecipe } from '@/lib/listening/receptiveField';
 import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
+import { apiFetch, apiUrl, isNativeCapacitor } from '@/lib/http/apiBase';
+import { createMediaTicketCache, refreshMaySwap, sourcePathOf } from '@/lib/listening/mediaTicketClient';
+import type { MediaTicket, MediaTicketCache } from '@/lib/listening/mediaTicketClient';
 import {
   acquireAudioOutput, AUDIO_OUTPUT_TAB_NONCE, SOULLAB_AUDIO_PREFLIGHT_VERSION,
 } from '@/lib/listening/audioOutputLock';
@@ -119,6 +122,10 @@ export type ListeningTransport = {
     mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback, soundscape?: SoundscapeSpec,
   ) => Promise<boolean>;
   playExperienceMedia: (manifest: SoundExperienceManifest) => Promise<boolean>;
+  /** Native shell only: fetch media tickets now, before the play gesture. A no-op on the web. */
+  prepareExperienceMedia: (manifest: SoundExperienceManifest) => void;
+  /** Synchronous: can a tap start this manifest now? Always true on the web. */
+  experienceMediaReady: (manifest: SoundExperienceManifest) => boolean;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
@@ -382,6 +389,30 @@ export function PersistentListeningProvider({
     elapsedMs: number;
     startedAt: number | null;
   } | null>(null);
+  // LISTEN-01 · media tickets, native shell only. The iOS static shell's <audio> cannot send the session
+  // header or cookie, so there it loads gated files by short-lived ticket URL. The web never uses these.
+  const ticketCache = useRef<MediaTicketCache | null>(null);
+  if (!ticketCache.current) {
+    ticketCache.current = createMediaTicketCache({
+      fetchTickets: async (paths: string[]): Promise<MediaTicket[]> => {
+        const response = await apiFetch('/api/listen/media-ticket', {
+          method: 'POST', body: JSON.stringify({ paths }),
+        });
+        if (!response.ok) return [];
+        const body = await response.json().catch(() => null) as { tickets?: MediaTicket[] } | null;
+        return Array.isArray(body?.tickets) ? body.tickets : [];
+      },
+      absolute: apiUrl,
+    });
+  }
+  const tickets = ticketCache.current;
+  const ticketTimer = useRef<number | null>(null);
+  const refreshTicketsRef = useRef<() => Promise<void>>(async () => undefined);
+  const clearTicketRefresh = useCallback(() => {
+    if (ticketTimer.current !== null) window.clearTimeout(ticketTimer.current);
+    ticketTimer.current = null;
+  }, []);
+
   const releaseOutput = useCallback(() => {
     keepAlive.current?.pause();
     outputLease.current?.release();
@@ -476,6 +507,7 @@ export function PersistentListeningProvider({
 
   const stopAll = useCallback(() => {
     ++epoch.current;
+    clearTicketRefresh();
     media.current?.pause();
     if (media.current) {
       media.current.loop = false;
@@ -502,7 +534,7 @@ export function PersistentListeningProvider({
     shapeRef.current={...ORIGINAL_RECEPTIVE_CONTROLS};
     saveShape(shapeRef.current);
     setSnapshot(defaultSnapshot);
-  }, [releaseOutput]);
+  }, [clearTicketRefresh, releaseOutput]);
 
   const commitFocusSession = useCallback((next: FocusSession | null) => {
     focusSessionRef.current = next;
@@ -655,10 +687,11 @@ export function PersistentListeningProvider({
       // An authenticated member switch must never inherit the prior File.
       lastMember.current = reviewMemberKey;
       stopAll();
+      tickets.clear();
       clearPrivateFields();
       commitFocusSession(null);
     }
-  }, [reviewMemberKey, stopAll, clearPrivateFields, commitFocusSession]);
+  }, [reviewMemberKey, stopAll, clearPrivateFields, commitFocusSession, tickets]);
 
   useEffect(() => {
     if (focusSession?.status !== 'running') return;
@@ -873,6 +906,105 @@ export function PersistentListeningProvider({
     }
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause, experienceElapsed]);
 
+  /**
+   * The URL to give the element for `path`: the plain session path on the web, a fresh cached ticket URL
+   * in the native shell, or null there when none is cached yet. Synchronous by design: it is read inside
+   * the member's tap, where iOS forbids any await before `play()`.
+   */
+  const mediaSource = useCallback((path: string): string | null =>
+    isNativeCapacitor() ? tickets.freshUrl(path) : path, [tickets]);
+
+  /** Is a play gesture for this manifest a resume of the part already on the element? */
+  const continuingExperience = useCallback((manifest: SoundExperienceManifest): boolean => {
+    const currentSegment = reviewSequence.current[reviewSegmentIndex.current];
+    return kind.current === 'review-media' &&
+      reviewManifest.current?.manifestId === manifest.manifestId &&
+      Boolean(currentSegment?.path) &&
+      sourcePathOf(media.current?.getAttribute('src')) === currentSegment?.path;
+  }, []);
+
+  /** The part a play gesture would start or resume for this manifest. */
+  const experiencePlayPath = useCallback((manifest: SoundExperienceManifest): string | null => {
+    if (continuingExperience(manifest)) return reviewSequence.current[reviewSegmentIndex.current]?.path ?? null;
+    const sequence = reviewMediaSequence(manifest);
+    return (sequence?.[0] ?? reviewMediaEdition(manifest))?.path ?? null;
+  }, [continuingExperience]);
+
+  /** Native shell only: fetch tickets for every part now, when the work is opened, before any tap. */
+  const prepareExperienceMedia = useCallback((manifest: SoundExperienceManifest) => {
+    if (!isNativeCapacitor()) return;
+    const paths = (reviewMediaSequence(manifest) ?? [])
+      .map(edition => edition.path).filter((path): path is string => Boolean(path));
+    if (paths.length) void tickets.prefetch(paths);
+  }, [tickets]);
+
+  const experienceMediaReady = useCallback((manifest: SoundExperienceManifest): boolean => {
+    const path = experiencePlayPath(manifest);
+    return Boolean(path && mediaSource(path));
+  }, [experiencePlayPath, mediaSource]);
+
+  /** Swap the element to a new URL for the same file and return to the same moment in it. */
+  const swapSourceKeepingPosition = (audio: HTMLAudioElement, url: string, at: number) => {
+    const seek = () => { try { audio.currentTime = at; } catch { /* not seekable yet */ } };
+    audio.addEventListener('loadedmetadata', seek, { once: true });
+    audio.src = url;
+    audio.preload = 'auto';
+    audio.load();
+    seek();
+  };
+
+  /**
+   * Native shell only: refresh the loaded part's ticket at about 10 minutes, well before its 15-minute
+   * expiry, so later byte-range requests of a 49–60 minute file keep working. While playing, swap to the
+   * new URL at the same position. Never start sound: after Stop, Pause, an interruption or MAIA speech the
+   * cache is refreshed but the element is left as the member left it.
+   */
+  const scheduleTicketRefresh = useCallback(() => {
+    clearTicketRefresh();
+    if (!isNativeCapacitor() || kind.current !== 'review-media') return;
+    const path = reviewSequence.current[reviewSegmentIndex.current]?.path;
+    if (!path) return;
+    ticketTimer.current = window.setTimeout(() => {
+      ticketTimer.current = null;
+      void refreshTicketsRef.current();
+    }, Math.max(30_000, tickets.refreshDelayMs(path)));
+  }, [clearTicketRefresh, tickets]);
+
+  refreshTicketsRef.current = async () => {
+    const audio = media.current;
+    const index = reviewSegmentIndex.current;
+    const path = reviewSequence.current[index]?.path;
+    if (!audio || kind.current !== 'review-media' || !path) return;
+    const generationAtStart = epoch.current;
+    const wasPlaying = !audio.paused && !segmentTransitioning.current;
+    const next = reviewSequence.current[index + 1]?.path;
+    await tickets.prefetch(next ? [path, next] : [path], true);
+    if (kind.current !== 'review-media') return;
+    const url = tickets.freshUrl(path);
+    const swap = Boolean(url) && url !== audio.getAttribute('src') && refreshMaySwap({
+      generationAtStart, generationNow: epoch.current, wasPlaying,
+      pausedNow: audio.paused, maiaSpeaking: isMaiaSpeechActive(),
+      samePath: reviewSegmentIndex.current === index && sourcePathOf(audio.getAttribute('src')) === path,
+    });
+    if (swap && url) {
+      const generation = epoch.current;
+      segmentTransitioning.current = true;
+      swapSourceKeepingPosition(audio, url, audio.currentTime);
+      void audio.play().then(() => {
+        segmentTransitioning.current = false;
+        if (generation !== epoch.current) { audio.pause(); return; }
+        if (isMaiaSpeechActive()) { audio.pause(); releaseOutput(); refuseDuringMaiaSpeech(); }
+      }).catch(() => {
+        segmentTransitioning.current = false;
+        if (generation !== epoch.current) return;
+        releaseOutput();
+        setSnapshot(old => ({ ...old, playback: 'error',
+          message: 'The recording lost its connection. Tap play to continue from here.' }));
+      });
+    }
+    scheduleTicketRefresh();
+  };
+
   const playExperienceMedia = useCallback(async (
     manifest: SoundExperienceManifest,
   ): Promise<boolean> => {
@@ -886,6 +1018,16 @@ export function PersistentListeningProvider({
     if (refuseDuringMaiaSpeech()) return false;
     const audio = media.current;
     if (!audio) return false;
+    // Choose the source now, synchronously, before any await. In the native shell that is a ticket URL
+    // fetched earlier; if none is fresh, do not fetch inside the tap: say so, and let the member tap again.
+    const continuing = continuingExperience(manifest);
+    const playPath = experiencePlayPath(manifest) ?? edition.path;
+    const source = mediaSource(playPath);
+    if (!source) {
+      prepareExperienceMedia(manifest);
+      setSnapshot(old => ({ ...old, message: 'Preparing sound… tap play again in a moment.' }));
+      return false;
+    }
     if (outputLease.current) pause();
     const generation = ++epoch.current;
     const lease = await acquireAudioOutput('listening-music');
@@ -900,10 +1042,10 @@ export function PersistentListeningProvider({
     }
     outputLease.current = lease;
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
-    const currentSegment = reviewSequence.current[reviewSegmentIndex.current];
-    const continuing = kind.current === 'review-media' &&
-      reviewManifest.current?.manifestId === manifest.manifestId &&
-      Boolean(currentSegment?.path) && audio.getAttribute('src') === currentSegment?.path;
+    if (continuing && source !== audio.getAttribute('src')) {
+      // Native shell, resuming on a refreshed ticket: same file, same moment.
+      swapSourceKeepingPosition(audio, source, audio.currentTime);
+    }
     if (!continuing) {
       audio.pause();
       audio.loop = false;
@@ -913,7 +1055,7 @@ export function PersistentListeningProvider({
       reviewSegmentIndex.current = 0;
       reviewContinuationCycles.current = 0;
       segmentTransitioning.current = false;
-      audio.src = edition.path;
+      audio.src = source;
       audio.preload = 'auto';
       audio.load();
       kind.current = 'review-media';
@@ -942,6 +1084,7 @@ export function PersistentListeningProvider({
           : `${edition.codecLabel} · exact private-review media.`,
       });
     }
+    scheduleTicketRefresh();
     try {
       audio.volume = volumeRef.current / 100;
       await audio.play();
@@ -977,7 +1120,8 @@ export function PersistentListeningProvider({
         message: 'This browser could not decode or play the accepted review recording.' }));
       return false;
     }
-  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput, reviewElapsedMs]);
+  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput, reviewElapsedMs,
+    continuingExperience, experiencePlayPath, mediaSource, prepareExperienceMedia, scheduleTicketRefresh]);
 
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
@@ -1109,41 +1253,61 @@ export function PersistentListeningProvider({
     const next = reviewSequence.current[nextIndex];
     if (next?.path) {
       const audio = media.current;
-      const offsetMs = reviewSequence.current.slice(0, nextIndex)
-        .reduce((sum, item) => sum + item.durationMs, 0);
-      reviewSegmentIndex.current = nextIndex;
+      const nextPath = next.path;
+      const handOver = (source: string) => {
+        const offsetMs = reviewSequence.current.slice(0, nextIndex)
+          .reduce((sum, item) => sum + item.durationMs, 0);
+        reviewSegmentIndex.current = nextIndex;
+        segmentTransitioning.current = true;
+        audio.loop = false;
+        selected.current = { title: manifest.title, format: next.codecLabel };
+        audio.src = source;
+        audio.preload = 'auto';
+        audio.load();
+        scheduleTicketRefresh();
+        if (experience.current) {
+          experience.current.elapsedMs = Math.min(manifest.durationMs, offsetMs);
+          experience.current.startedAt = null;
+        }
+        setSnapshot(old => old.experienceId === manifest.experienceId ? {
+          ...old, playback: isMaiaSpeechActive() ? 'paused' : 'playing',
+          elapsedMs: Math.min(manifest.durationMs, offsetMs),
+          passage: soundPassageAt(manifest.passages, offsetMs)?.label ?? null,
+          fileFormat: next.codecLabel,
+          continuation: manifest.continuation ? 'until-stop' : old.continuation,
+          continuationCycle: reviewContinuationCycles.current,
+          message: isMaiaSpeechActive()
+            ? 'The next part is ready. MAIA is speaking; resume only when you choose.'
+            : manifest.continuation
+              ? 'Nicole has left. The continuous music core is now playing and will repeat until Stop.'
+              : `${manifest.title} continues without returning to guidance.`,
+        } : old);
+        if (isMaiaSpeechActive()) {
+          segmentTransitioning.current = false;
+          releaseOutput();
+          return;
+        }
+        void audio.play().then(() => {
+          segmentTransitioning.current = false;
+          claimFocus();
+        }).catch(() => {
+          segmentTransitioning.current = false;
+          releaseOutput();
+          setSnapshot(old => ({ ...old, playback: 'error',
+            message: 'The next part of this private-review experience could not begin.' }));
+        });
+      };
+      // The next part needs its own ticket before the handover. The refresh fetched it already; if it
+      // did not, fetch it now (an ended event, not a tap) and hand over only if nothing changed meanwhile.
+      const ready = mediaSource(nextPath);
+      if (ready) { handOver(ready); return; }
+      const generation = epoch.current;
       segmentTransitioning.current = true;
-      audio.loop = false;
-      selected.current = { title: manifest.title, format: next.codecLabel };
-      audio.src = next.path;
-      audio.preload = 'auto';
-      audio.load();
-      if (experience.current) {
-        experience.current.elapsedMs = Math.min(manifest.durationMs, offsetMs);
-        experience.current.startedAt = null;
-      }
-      setSnapshot(old => old.experienceId === manifest.experienceId ? {
-        ...old, playback: isMaiaSpeechActive() ? 'paused' : 'playing',
-        elapsedMs: Math.min(manifest.durationMs, offsetMs),
-        passage: soundPassageAt(manifest.passages, offsetMs)?.label ?? null,
-        fileFormat: next.codecLabel,
-        continuation: manifest.continuation ? 'until-stop' : old.continuation,
-        continuationCycle: reviewContinuationCycles.current,
-        message: isMaiaSpeechActive()
-          ? 'The next part is ready. MAIA is speaking; resume only when you choose.'
-          : manifest.continuation
-            ? 'Nicole has left. The continuous music core is now playing and will repeat until Stop.'
-            : `${manifest.title} continues without returning to guidance.`,
-      } : old);
-      if (isMaiaSpeechActive()) {
-        segmentTransitioning.current = false;
-        releaseOutput();
-        return;
-      }
-      void audio.play().then(() => {
-        segmentTransitioning.current = false;
-        claimFocus();
-      }).catch(() => {
+      void tickets.prefetch([nextPath]).then(() => {
+        const source = mediaSource(nextPath);
+        if (generation !== epoch.current || kind.current !== 'review-media' ||
+            reviewManifest.current !== manifest) { segmentTransitioning.current = false; return; }
+        if (source) { handOver(source); return; }
         segmentTransitioning.current = false;
         releaseOutput();
         setSnapshot(old => ({ ...old, playback: 'error',
@@ -1204,7 +1368,7 @@ export function PersistentListeningProvider({
       passage: manifest.passages[manifest.passages.length - 1]?.label ?? null,
       message: `${manifest.title} is complete. It will not restart automatically.`,
     } : old);
-  }, [claimFocus, releaseOutput, reviewOffsetMs]);
+  }, [claimFocus, releaseOutput, reviewOffsetMs, mediaSource, scheduleTicketRefresh, tickets]);
 
   // What the soundscape follows: the running session's plan, else the choices as the member is shaping them.
   const liveSoundscapeInput = useMemo<SoundscapeInput>(() => {
@@ -1240,7 +1404,7 @@ export function PersistentListeningProvider({
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
-    playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
+    playSketch, playExperienceMedia, prepareExperienceMedia, experienceMediaReady, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     focusTimeDisplay, setFocusTimeDisplay,

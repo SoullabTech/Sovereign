@@ -102,7 +102,9 @@ test('exact media reuses one persistent HTML audio element and existing output l
   assert.match(provider, /acquireAudioOutput\('listening-music'\)/);
   assert.match(provider, /const playExperienceMedia/);
   assert.match(provider, /kind\.current = 'review-media'/);
-  assert.match(provider, /audio\.src = edition\.path/);
+  // The element gets the session path on the web, or a ticket URL in the native shell (listen79).
+  assert.match(provider, /const playPath = experiencePlayPath\(manifest\) \?\? edition\.path/);
+  assert.match(provider, /audio\.src = source/);
 });
 
 test('MAIA Stop sees exact review media as the same existing local player', () => {
