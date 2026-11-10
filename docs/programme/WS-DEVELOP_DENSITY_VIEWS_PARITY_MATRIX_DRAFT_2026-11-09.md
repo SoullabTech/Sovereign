@@ -45,3 +45,15 @@ Still open: the live check (does the dense view return when an observation is op
 
 ## Not authorized
 Source edits, merge, deploy, migrations, member-facing copy, builds.
+
+## Path B control inventory (deterministic grep of `P4R1DevelopView.tsx` @ `ee9dcf394`, 2026-11-09)
+Counts: 92 `<button>` · 22 `<summary>` disclosures · 3 `<select>` · 3 text inputs. Most labels are dynamic (built from data), so a full per-button list needs a render, not a grep. Literal labels found, grouped:
+| Group | Labels | Q | B | A |
+|---|---|---|---|---|
+| Field switches | See how it is shaped · Follow its movement · Notice what returns · See what carries through · Meet it as a reader | fold (one "Ways to look" disclosure) | visible | visible |
+| Per-observation acts | Talk about it here · Help me understand · Go deeper · Talk first · Talk about this · Let rest · See in manuscript · Previous | visible on the open observation only | visible | visible |
+| Why / evidence | Why MAIA thinks this (x3) · Why MAIA brought this forward · See the evidence and limits | fold | fold | open |
+| Exploration | More ways to explore · Other ways to explore, if useful · Other thing MAIA noticed · See the full editorial map | fold | fold | visible |
+| Leave to Write | Open the text (x2) · Open in Write · Work on the writing | header "Edit in Write" only | visible | visible |
+| Housekeeping | Import details · More (x2) | fold | fold | visible |
+Authorship acts (talk, decline/let rest, undo) are never folded on an open observation in any view.
