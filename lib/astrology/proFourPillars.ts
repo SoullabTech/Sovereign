@@ -116,6 +116,14 @@ export interface LuckDirection {
   pillars: LuckPillar[];
 }
 
+/** The pillar of one solar year (Liu Nian), which begins at Lichun, early February. */
+export interface AnnualPillar {
+  year: number;
+  stem: PillarPart;
+  branch: PillarPart & { animal: string };
+  tenGod: TenGod;
+}
+
 export interface FourPillars {
   pillars: [Pillar, Pillar, Pillar, Pillar];
   dayMaster: PillarPart;
@@ -123,6 +131,12 @@ export interface FourPillars {
   elements: Record<'Wood' | 'Fire' | 'Earth' | 'Metal' | 'Water', number>;
   yearPolarity: 'yin' | 'yang';
   luck: { forward: LuckDirection; backward: LuckDirection };
+  /** Elapsed years from birth to the moment of calculation. */
+  ageNow: number;
+  /** The year of the moment of calculation, and the solar year it falls in. */
+  now: { calendarYear: number; solarYear: number };
+  /** Annual pillars from the solar year of birth, one per year, for a century. */
+  annual: AnnualPillar[];
   dayStart: DayStart;
   method: string;
 }
@@ -161,7 +175,7 @@ const DAY_MS = 86_400_000;
  * @param localTime the local clock time, HH:MM
  */
 export function calculateFourPillars(
-  instant: Date, localDate: string, localTime: string, dayStart: DayStart = 'midnight',
+  instant: Date, localDate: string, localTime: string, dayStart: DayStart = 'midnight', now: Date = new Date(),
 ): FourPillars {
   const [y, mo, d] = localDate.split('-').map(Number);
   const [hh, mm] = localTime.split(':').map(Number);
@@ -243,6 +257,20 @@ export function calculateFourPillars(
       forward: luck(1, (nextTerm.getTime() - instant.getTime()) / DAY_MS),
       backward: luck(-1, (instant.getTime() - previousTerm.getTime()) / DAY_MS),
     },
+    ageNow: Number(((now.getTime() - instant.getTime()) / (365.2425 * DAY_MS)).toFixed(2)),
+    now: {
+      calendarYear: now.getUTCFullYear(),
+      solarYear: now.getTime() < lichun(now.getUTCFullYear()).getTime() ? now.getUTCFullYear() - 1 : now.getUTCFullYear(),
+    },
+    annual: Array.from({ length: 101 }, (_, k) => {
+      const year = solarYear + k;
+      return {
+        year,
+        stem: stemPart(mod(year - 4, 10)),
+        branch: branchPart(mod(year - 4, 12)),
+        tenGod: tenGod(dayStem, mod(year - 4, 10)),
+      };
+    }),
     dayStart,
     method: 'Year and month pillars turn at the solar terms (the year at Lichun, the Sun at 315°), calculated for the birth instant. The day pillar is the 60-day count of the local birth date; the hour pillar uses local clock time, not true solar time. Hidden stems and Ten Gods are the standard tables. Luck pillars begin after three days to the neighbouring solar term per year of age, rounded to the month; ages are elapsed years and the calendar year each begins is approximate.',
   };

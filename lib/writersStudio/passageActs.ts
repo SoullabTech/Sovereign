@@ -77,9 +77,11 @@ function body(act: PassageAct): readonly string[] {
       'Stay inside this exact local edit. Preserve my intention, voice, cadence, imagery, worldview, and intentional ambiguity.',
       'Do not broaden the rewrite. Return one bounded alternative and explain its tradeoff briefly.',
     ];
-    // Step 5b: moved from Craftsman's Table's "Ask MAIA where next", not reworded.
+    // Step 5b: moved from Craftsman's Table's "Ask MAIA where next". First line replaced by founder
+    // ruling G-5 (2026-11-09, option (a) with fallback): the choice rests on the writer's own focus,
+    // in manuscript order, with no implied importance; with no focus, MAIA asks. Lines 2–3 unchanged.
     case 'where-next': return [
-      'Which one or two exact passages should I consider next?',
+      'Which one or two exact passages could I look at next, given what I have been working on in this conversation? Name them in the order they appear in my manuscript, say in a sentence how each relates to what I have been working on, and do not say or imply that either matters more. If nothing in this conversation tells you what I am working on, ask me instead of choosing.',
       'Use only the text already authorized in this conversation. If that is insufficient, ask me to choose.',
       'Do not move focus or propose a revision.',
     ];

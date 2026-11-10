@@ -94,6 +94,7 @@
     "review:custody:migration-gate": "npx tsx scripts/review-custody-migration-gate.ts",
     "typecheck:review-custody": "tsc -p tsconfig.review-custody.json",
     "verify:review-custody-freeze": "npx tsx scripts/verify-review-custody-freeze.ts",
+    "verify:ws-continuity-freeze": "node scripts/verify-ws-continuity-freeze.mjs",
     "verify:ws-academy-freeze": "npx tsx scripts/verify-ws-academy-freeze.ts",
     "matrix:jarvis-o5-r1": "node tests/constitutional/jarvis-o5-r1/matrix.mjs",
     "verify:jarvis-o5-r1-freeze": "node scripts/verify-jarvis-o5-r1-freeze.mjs",

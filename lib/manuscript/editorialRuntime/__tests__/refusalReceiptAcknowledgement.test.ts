@@ -14,6 +14,7 @@ jest.mock('@/lib/disclosure/disclosureBoundary', () => ({
 jest.mock('@/lib/disclosure/contextDisclosureReceipt', () => ({
   confirmDisclosureCrossed: jest.fn(),
 }));
+jest.mock('@/lib/writersStudio/decisionRecord', () => ({ decisionContextForManuscript: () => Promise.resolve('') }));
 jest.mock('@/lib/writersStudio/writerUnderstandingServer', () => ({
   writerUnderstandingContextForManuscript: jest.fn(async () => null),
 }));

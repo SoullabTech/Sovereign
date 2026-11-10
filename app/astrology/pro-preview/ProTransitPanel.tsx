@@ -8,6 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePanelState } from './panelMemory';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
 import { apiFetch } from '@/lib/http/apiBase';
 import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { WheelBody } from '@/lib/astrology/proChartGeometry';
@@ -39,8 +40,10 @@ function proSkyUrl(isoInstant: string): string {
 }
 
 export default function ProTransitPanel({
-  natalBodies, transits, onTransits, showNowRequest = 0, skyUrl = proSkyUrl,
+  natalBodies, transits, onTransits, showNowRequest = 0, skyUrl = proSkyUrl, ask,
 }: {
+  /** Pro only: Ask MAIA about these transits. A shared client page passes none. */
+  ask?: { subject: string; houseSystem: string; readsWhose: string };
   /** Where to read the sky; a shared chart reads it through its own link. */
   skyUrl?: (isoInstant: string) => string;
   natalBodies: readonly WheelBody[];
@@ -193,6 +196,10 @@ export default function ProTransitPanel({
                 </li>
               ))}
             </ul>
+          )}
+          {ask && (
+            <ProAskMaiaPanel subjectLabel="these transits" readsWhose={ask.readsWhose}
+              request={{ section: 'transits', subject: ask.subject, houseSystem: ask.houseSystem, at: shownAt ?? undefined }} />
           )}
         </>
       )}

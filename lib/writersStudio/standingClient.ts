@@ -11,6 +11,7 @@
  * ordering authority over two member acts (design §4).
  */
 
+import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { StandingWire } from './observationStanding';
 
@@ -48,7 +49,7 @@ export async function postStanding(
     const res = await apiFetch(url(manuscriptId, readingId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(withKeepPosture({ ...body })),
     });
     const payload = (await res.json().catch(() => null)) as
       { outcome?: 'appended' | 'unchanged'; standing?: StandingWire; refusal?: string } | null;

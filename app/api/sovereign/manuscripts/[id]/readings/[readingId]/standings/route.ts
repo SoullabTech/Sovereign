@@ -21,6 +21,7 @@
  * `lib/manuscript/standing/__tests__/standingOutsideCognition.test.ts`.
  */
 
+import { keepGate } from '@/lib/sanctuary/keepGate';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { parseStandingRequest } from '@/lib/manuscript/standing/contract';
@@ -123,7 +124,10 @@ export async function POST(
   const gate = await addressed(req, manuscriptId, readingId);
   if (gate instanceof NextResponse) return gate;
 
-  const parsed = parseStandingRequest(await req.json().catch(() => null));
+  const rawBody: unknown = await req.json().catch(() => null);
+  /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
+  { const refused = await keepGate(gate.memberId, rawBody); if (refused) return refused; }
+  const parsed = parseStandingRequest(rawBody);
   if (!parsed.ok) return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
 
   const result = await recordStanding(gate.memberId, readingId, parsed.request);
