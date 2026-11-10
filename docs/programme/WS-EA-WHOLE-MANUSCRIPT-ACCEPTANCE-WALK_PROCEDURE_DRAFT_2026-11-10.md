@@ -675,6 +675,33 @@ founder wording cannot be supplied by an agent. **The walk is founder-operated.*
 | W11 | issue-after-issue pass, ≥3 issues, resume | UNWITNESSED |
 | After | Claude Code checks answers against 178 markers + reads receipts | owed |
 
+## 10h. Developmental understanding — independent criterion (review lane, adopted 2026-11-10)
+
+This is scored **separately** from the pass/fail ledger, on evidence from W3–W8 and W11.
+
+| Ability | What is scored |
+|---|---|
+| **Recognition** | MAIA sees that the book explores the elements' relationship to lived experience, not merely a categorization of states |
+| **Reorganization** | after the author's correction (checklist item 6), she genuinely revises her account of the architecture, rather than repeating the correction in agreeable language, and still names any evidence against the revised view |
+| **Integration** | in a later session she brings the revised understanding back, grounds it in sections, and can still acknowledge contrary evidence |
+
+**Scale:** 0 failed · 1 superficial · 2 grounded · 3 sustained and revisable · **UNWITNESSED**
+when there is no evidence. ⛔ **No developmental score compensates for a source,
+authorization or provenance failure.**
+
+**Classification note.**
+- The §10f assessment is **Claude Code's** read of the eight readings. It is **not** an
+  independent evaluation and **not** the founder's editorial verdict.
+- The interpretive quality of those readings stays **UNWITNESSED by the founder** until the
+  founder reads them.
+
+**Walk status as of this entry** (read-only check of production metadata):
+- No scope grant events for this Work.
+- No reading of `55742458` in the last two days.
+- One Work conversation thread, from 2026-11-09 23:49Z (2 turns), which predates the walk.
+- **The founder walk has not yet run.** The eight-item companion checklist is a template, and all
+  eight items are open.
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
