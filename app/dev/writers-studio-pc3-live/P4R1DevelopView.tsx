@@ -3370,6 +3370,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onDeletePlan={deletePlan}
       onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
       openAt={stageOpenAt}
+      view={developView}
+      onView={chooseDevelopView}
       holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
     />
   ) : null;
