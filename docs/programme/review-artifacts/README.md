@@ -35,3 +35,16 @@ needs no part of `cd1235d3`'s ancestry.
 
 ⛔ No P0 code fix, PR merge, deployment or release authorization follows from these
 files existing. Release ledger #1938 remains HOLD.
+
+## Added 2026-11-10 — P0 observation-state qualification (draft PR #2208 candidate `a70bd1cc6`)
+
+⛔ **Unapplied, as above.** Nothing here lands on PR #2208, #2207, canonical or any source file.
+
+| File | What it is |
+|---|---|
+| `WS-DEVELOP_P0_OBSERVATION_STATE_RESULTS_2026-11-10.md` | The record: gating answer, reachability, scenario PASS/FAIL/NOT TESTED, findings F1–F5, the #2207/#2208 approval reconciliation, founder visual questions |
+| `WS-DEVELOP_P0_PATCH-3_OBSERVATION_NO_AUTOSELECT_FOR_PR2208_2026-11-10.diff` | **+5 / −2, one file.** Stops the two *automatic* observation selections on `overview`. Applies cleanly to `a70bd1cc6`. `sha256` prefix `30709f35e124b0a3`. **Requires source-owner authorization.** |
+| `p0-observation-repro/p0_seed.ts` | Freezes two **hand-authored fictional** readings through the product's own capture/freeze/store (the model calls are skipped; provenance says so) |
+| `p0-observation-repro/p0-accept.mjs` | The acceptance run. Parameterised by `P0_MS` `P0_MS2` `P0_RA` `P0_RB` `P0_OUT` `CHROMIUM`; assumes `ws-continuity-walk.sh up` and the two fictional writers `bwriter` / `cwriter` |
+
+The seed needs a **kept version** first (press *Keep a version* in Write), because the product correctly refuses to read a draft with no revision.

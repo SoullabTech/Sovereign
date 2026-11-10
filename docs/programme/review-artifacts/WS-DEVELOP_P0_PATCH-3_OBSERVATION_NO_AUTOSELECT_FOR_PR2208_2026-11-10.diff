@@ -1,0 +1,26 @@
+diff --git a/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx b/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
+index 588482e67..ac329f0e8 100644
+--- a/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
++++ b/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
+@@ -2084,8 +2084,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
+   const sourceIntakeHref = '/writers-studio/sources?returnTo=' + encodeURIComponent(
+     livePathname + (liveSearch ? '?' + liveSearch : ''),
+   );
++  /* A reading that merely ARRIVES does not choose an observation for the writer on the overview. No overview branch draws a selected
++     observation, so selecting one replaces the manuscript with a menu while MAIA speaks "with this observation" of something the
++     writer cannot see. Lens pages present observation 1 on purpose, and every explicit selection below is unchanged. */
+   const [selectedObservationKey, setSelectedObservationKey] = useState<string | null>(
+-    props.reading?.observations[0]?.key ?? null,
++    props.field === 'overview' ? null : props.reading?.observations[0]?.key ?? null,
+   );
+   const [talking, setTalking] = useState(false);
+   const [dialoguePrompt, setDialoguePrompt] = useState('');
+@@ -2262,7 +2265,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
+   };
+ 
+   useEffect(() => {
+-    setSelectedObservationKey(props.reading?.observations[0]?.key ?? null);
++    setSelectedObservationKey(props.field === 'overview' ? null : props.reading?.observations[0]?.key ?? null);
+     setTalking(false);
+     setDialoguePrompt('');
+   }, [props.reading?.id]);
