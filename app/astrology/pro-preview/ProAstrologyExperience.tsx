@@ -29,6 +29,7 @@ import { PanelMemoryProvider } from './panelMemory';
 import ProAskMaiaPanel from './ProAskMaiaPanel';
 import ProDeepReadingPanel from './ProDeepReadingPanel';
 import ProChartViews from './ProChartViews';
+import ProHouseWheel from './ProHouseWheel';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
 import ProTraditionReport from './ProTraditionReport';
@@ -604,6 +605,7 @@ export default function ProAstrologyExperience() {
                   onOuter={(next, label) => setRing('derived', next, label)} />
                 <ProAspectGrid chart={orbChart ?? privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <ProChartViews chart={privateChart} points={chartPoints} />
+                <ProHouseWheel chart={orbChart ?? privateChart} />
                 <ProEphemerisPanel natalBodies={bodies} />
                 <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   questions={INQUIRY} />
