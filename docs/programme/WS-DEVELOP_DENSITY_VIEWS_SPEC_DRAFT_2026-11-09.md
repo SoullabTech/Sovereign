@@ -1,6 +1,8 @@
-# WS-DEVELOP density views — spec, DRAFT 2 APPROVED by founder 2026-11-09, with §11 reconciliation
+# WS-DEVELOP density views — spec, DRAFT 2 APPROVED by founder 2026-11-09, with §11 reconciliation *(approval wording superseded — see §14)*
 
-Status: design APPROVED by the founder 2026-11-09 (draft 2 + §11-§13). Approval covers the design and the B1-B5 build on a branch; it does not authorize merge, deploy, migration or beta expansion. Inputs: parity matrix and decisions (`WS-DEVELOP_DENSITY_VIEWS_PARITY_MATRIX_DRAFT_2026-11-09.md`), scenarios (`…_ACCEPTANCE_SCENARIOS_DRAFT_…`), ChatGPT research (handoff brief §3a), source @ `ee9dcf394`.
+**Status (amended 2026-11-10 — see §14):** design direction accepted **PROVISIONALLY** by the founder on 2026-11-10, subject to §14. Authorizes the B1–B5 build **on a branch only.** Does **not** authorize merge, deploy, migration, beta expansion or release. **Whether the founder approved §11–§13 on 2026-11-09 is not established by this record, and this amendment does not assert it.**
+
+*Superseded status line, retained verbatim (history is not rewritten):* `Status: design APPROVED by the founder 2026-11-09 (draft 2 + §11-§13). Approval covers the design and the B1-B5 build on a branch; it does not authorize merge, deploy, migration or beta expansion. Inputs: parity matrix and decisions (`WS-DEVELOP_DENSITY_VIEWS_PARITY_MATRIX_DRAFT_2026-11-09.md`), scenarios (`…_ACCEPTANCE_SCENARIOS_DRAFT_…`), ChatGPT research (handoff brief §3a), source @ `ee9dcf394`.`
 
 ## 1. Goal
 Writer's Studio Develop is quiet enough to disappear into the writing and capable enough that every tool and MAIA are always within reach. Built for writers who need few stimuli (many are ADHD), writers who need visible structure, and writers who want to tailor it.
@@ -46,7 +48,7 @@ The eight scenarios plus: keyboard, visible focus, contrast, zoom, screen reader
 One client-side preference hook; DevelopStage and P4R1DevelopView read it to choose folded/open; one View control in the header. Tests: the four falsifiers, persistence fallback, both render paths. Review Custody before merge; founder walk on soullab.life after deploy.
 
 ## 9. Open
-The live check (does path B return when an observation is opened?); exact copy; whether Balanced is worth keeping after the beta check.
+~~The live check (does path B return when an observation is opened?)~~ **CLOSED 2026-11-10** by source read and isolated browser run — see the parity matrix, *P0 — the calm/dense split*, and §14. Still open: exact copy; **whether and how Balanced is differentiated** (it is currently *not* — §14.7).
 
 ## 10. Revisions after ChatGPT independent review (2026-11-09, disposition "revise before implementation"; all six required revisions accepted)
 **R1 Functional mapping, not button counts.** See matrix "Path B functional map": 92 button sites resolve to 56 handler entries (first regex pass found about 30; superseded by the AST pass in §11.6). Handler entries are not capabilities: see §13 capability table. Each capability gets a direct route in every view and, where one exists, a MAIA conversational route. Build acceptance is per capability, not per button.
@@ -103,3 +105,24 @@ Owed before merge: verify or mark each "unverified" MAIA route in the walk; no c
 3. **Preserve existing behaviour.** Stored values `focused`/`guided`/`full` unchanged; `proposePresentationRequest` (MAIA's "simplify / show more" proposals) keeps working and writes through the scoped store; `WriterPreferencesMenu` uses the same scoped store; cross-tab `storage` event still syncs (scoped key).
 4. **Tests added to B5:** account switch on one browser (falsifier f), storage failure, cross-tab change, temporary override and its expiry, refresh and session restore, both render paths (e), keyboard/aria.
 5. **Release sequence.** Fictional-account acceptance walk runs on the exact candidate build BEFORE merge (local or preview); after an authorized deploy, a separate production walk.
+
+## 14. Governance amendment — 2026-11-10 (founder direction, recorded by the engineering executor; forward-only)
+
+**14.1 Status correction.** The line *"design APPROVED by the founder 2026-11-09 (draft 2 + §11-§13)"* has **no attributable record.** At `ebe0715be`, the commit titled *"density spec approved"*, this file's own Status line still read *"design spec for founder approval. Not ratified; authorizes no source change, build, merge or deploy."* The APPROVED wording first appears in `090a6ba9e`, five minutes later, in the commit that **adds §13** (corrections from an external review) — text the line claims to cover. No founder statement or comment id is recorded here. It is **superseded, not erased**; the original line is retained above and in Git history.
+
+**14.2 Provisional acceptance (founder, 2026-11-10, in session).** *"I accept the design direction provisionally, subject to the following corrections and acceptance evidence."* P0 remains **HOLD** pending the integrated experience walk. #2208 stays **draft.** No deployment or release authorization is given.
+
+**14.3 P0 includes the existing lens experience.** Develop remains manuscript-centred across Overview, observations and lens navigation. A lens page that removes the manuscript does not satisfy it. The chapter stays a readable working surface without a full lens-system redesign; if that cannot be done in a bounded patch, it is reported as an **unresolved acceptance condition.**
+
+**14.4 Observations never seize attention.** A completed reading does not automatically select an observation, replace the manuscript, move focus, or interrupt a conversation. An **unobtrusive reading-ready state** is used. **"Explore observations" opens the observation index, never observation 1.** **"Let rest" remains an explicit per-observation decision; there is no bulk dismissal.**
+
+**14.5 The conversation with MAIA is protected.** A late reading does not reset conversation state, clear the writer's unsent prompt, or end an active exchange. MAIA's contextual offer lives **inside her existing panel**, not as an intervention inside the manuscript. When the writer explicitly explores an observation, MAIA shows the **authorized passage and the basis of her interpretation**, by **extending the existing answer-provenance presentation** rather than adding a competing indicator.
+
+**14.6 The writer's place is preserved.** Reading completion, observation navigation and returning to the chapter preserve the chosen chapter, scroll position, selection and in-progress unsaved work. On reopening Develop, **View and chapter are restored.** ⭐ **DESIGN DECISION (recommended default, adopted provisionally): temporary observation focus is cleared on a new visit; saved conversation history is not deleted.** Account isolation stays strict.
+
+**14.7 Quiet, Balanced, All tools.** Quiet protects reading and composition. Balanced eventually provides contextual assistance alongside the manuscript without overtaking it. All tools makes the complete capability set available. ⛔ **Balanced is currently NOT differentiated from Quiet** (measured 38 vs 38 visible controls on the stage, candidate `a70bd1cc6`) and is recorded as such — **not** as a completed implementation. Its distinct inline assistance is built **after** the P0 non-interruption and manuscript-continuity walk. **Full three-view acceptance remains open.**
+
+**14.8 Custody.** PATCH-2 (invitation wording) keeps its existing scope and source custody. PATCH-3 (no automatic observation selection on the overview) is an **isolated candidate only, not integrated evidence.** The conversation-reset behaviour (Scenario 17) is examined as a **separate P0 defect.**
+
+**14.9 Acceptance evidence required.** The original scenarios run against the **integrated candidate**, including **actual reading completion** rather than a simulated URL change, with isolated tests, browser simulation, authenticated model behaviour and production verification **kept distinct.** See Scenarios 9, 13–22.
+

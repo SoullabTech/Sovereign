@@ -47,6 +47,14 @@ Fictional writers and books only. Design input, not ratified. Based only on the 
 **When** she opens one of MAIA's observations, reads it, closes it, then switches to "See how it is shaped"
 **Then** the view stays Quiet throughout; the dense layout never appears unfolded; Talk, Let rest, Undo and what MAIA read are visible on the open observation.
 
+> 🔴 **PARTLY RED AGAINST SOURCE, AND NOT YET WALKED** (read 2026-11-10, `de8c3d04b` and `a70bd1cc6`). Two findings, kept apart:
+>
+> ⭐ **CONFIRMED (source).** `P4R1DevelopView.tsx:3346` gates the calm stage on `!selectedObservation`, so opening an observation **exits the calm-stage render path**. This scenario's second clause — *"the view stays Quiet throughout"* — is therefore not satisfied by one mechanism; it is at best satisfied by two mechanisms agreeing.
+>
+> 🔶 **UNVERIFIED (runtime).** *"The dense layout never appears unfolded"* is **not** established. Path B carries its own density control, default `focused` (spec §11). The exit may well land folded. Proving or falsifying this clause needs the journey executed, not a file read.
+>
+> ⭐ **Keep this scenario exactly as written.** It predeclared the right behaviour before the read, and it is the falsifier for P0. Rewriting it to match the source would destroy the only predeclared evidence P0 has — and over-reading it as fully red would claim a visual failure nobody has yet observed.
+
 ### Scenario 10: Shared browser - two writers
 **Given** Tomas set All tools on a shared library computer and signed out
 **When** Ama signs in on the same browser and opens Develop on *Nine Bridges*
@@ -61,6 +69,74 @@ Fictional writers and books only. Design input, not ratified. Based only on the 
 **Given** Tomas's default is Balanced and he set All tools just for *Ledger of Small Hours*
 **When** he refreshes, changes chapter, opens *The Long Field*, then returns to *Ledger of Small Hours* in the same session
 **Then** *Ledger* is still All tools, *The Long Field* is Balanced; after he closes the browser and comes back, *Ledger* is Balanced again.
+
+### Scenario 13: The whole journey — attention and authorship end to end
+
+**Given** Ines opens Chapter 10 of *The Salt Orchard* in Quiet
+**When** she inspects one of MAIA's observations, talks with MAIA about it, switches to All tools, returns to Quiet, leaves Develop entirely, and later resumes
+**Then** across every step: her manuscript position is Chapter 10; her presentation preference is the one she last chose; MAIA's **authorized** reading history is intact and unchanged in extent; her decisions (what she set to rest, declined, undid) are intact; and every one of the 56 mapped capabilities is still reachable.
+**And** no step in that journey silently authorized a read, began an edit, or altered MAIA's reasoning — in particular neither of the two view changes.
+
+> ⭐ This is the decisive scenario, and it is decisive because it is the only one that crosses **all four** transitions the parity matrix names (observation · conversation · view change · leaving and resuming). Scenarios 4, 9 and 12 each cover a segment; none covers the journey, and a writer's attention is lost at the seams rather than inside them.
+
+### Scenario 14: R1 — presentation does not turn an encounter into an interrogation
+
+**Given** MAIA has made one grounded observation on Chapter 10
+**When** Ines reads it in Quiet, then in All tools
+**Then** in both views the encounter **notices once** and stops; further inquiry happens only if Ines opens the discussion act.
+**And** All tools does not expose a second or third pass over the same passage as a visible control, in any form — more visible surface is not more licence to speak (R1: `ENCOUNTER notice only` / `DISCUSSION notice → inquire → hear writer → update understanding`).
+
+### Scenario 15: R2 — ordering stays legible in every view
+
+**Given** MAIA has several lawful observations on one chapter
+**When** Ines views them in Quiet, Balanced and All tools
+**Then** the order is the same and its basis is stateable in each; nothing is withheld in Quiet that is shown in All tools.
+**And** no view labels or implies "the three most important things" — selection chooses which lawful things to raise first and is auditable; it is never a ranking by importance, and Quiet's smaller surface must not become screening (R2: *selection is not screening*).
+
+### Scenario 16: R3 — agreement that erases tension fails in every view
+
+**Given** MAIA holds a grounded observation and Ines clarifies an intent that cuts against it
+**When** this happens in Quiet, and again in All tools
+**Then** MAIA neither ignores the clarification nor agrees in a way that erases the tension; she updates her understanding while the tension remains visible and stateable.
+**And** the outcome is identical in all three views: a calmer presentation must not make capitulation easier to produce or harder to see (R3: `update ≠ capitulate`).
+
+### Scenario 17: A late reading cannot interrupt a conversation
+
+**Given** Ines is mid-exchange with MAIA on Chapter 10 and has typed, but not sent, a follow-up
+**When** a reading completes
+**Then** MAIA's conversation state is unchanged, **Ines's unsent prompt is intact**, the exchange is not ended, focus does not move, and the only visible change is an unobtrusive *reading ready* state.
+
+> 🔴 **A source-level RISK, not yet demonstrated.** The effect keyed on `props.reading?.id` runs `setTalking(false)` and `setDialoguePrompt('')` whenever the reading changes, so an arrival during an observation conversation would end it and clear the prompt. Recorded as a **separate P0 defect**; the observation-selection patch does not repair it.
+
+### Scenario 18: Reading ready is not reading opened
+
+**Given** a reading has completed
+**When** Ines chooses **Explore observations**
+**Then** the **observation index** opens, **no observation is selected**, and each observation opens only by her explicit choice. *Explore observations* must never open observation 1.
+
+### Scenario 19: Let rest is per-observation, always
+
+**Given** a reading with several observations
+**Then** *Let rest* exists only on an individual observation, in every view. **There is no bulk dismissal and no control that rests more than one observation at once.**
+
+### Scenario 20: Existing lens routes preserve manuscript continuity
+
+**Given** Ines is on Chapter 10 in Quiet
+**When** she moves from Overview into each existing lens page and back
+**Then** the chapter remains a **readable working surface** throughout, and on return her chapter, scroll position, selection and any **unsaved in-progress text** are exactly as she left them.
+**And** if a lens page cannot keep the chapter readable within the bounded patch, that is reported as an **unresolved acceptance condition**, not a pass.
+
+### Scenario 21: Reopening restores the view and chapter, and clears temporary focus
+
+**Given** Ines left Develop with an observation open and a saved conversation about it
+**When** she reopens Develop on a new visit
+**Then** her **View and chapter** are restored, the **temporary observation focus is cleared**, and her **saved conversation history is still there.**
+
+### Scenario 22: Balanced is not credited until it is different
+
+**Given** Quiet, Balanced and All tools
+**Then** three-view acceptance requires Balanced to differ from Quiet in **how a capability is presented**, while all three keep the same authorized capabilities.
+**Today this FAILS: Balanced is not differentiated from Quiet.** Identical behaviour must not be reported as a completed implementation.
 
 ## Also required in every view
 Keyboard reach to the View control and every folded item, visible focus, readable contrast, zoom, screen reader names, reduced motion.
