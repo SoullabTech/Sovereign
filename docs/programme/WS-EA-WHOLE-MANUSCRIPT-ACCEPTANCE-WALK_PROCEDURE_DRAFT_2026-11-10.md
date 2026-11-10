@@ -391,6 +391,52 @@ become the recollection markers for W4–W7.
 **P3 standing:** source half ✅ · markers ✅ prepared · **probe half completes only when W4–W7
 outputs are checked against the markers.** P3 is therefore not yet passed.
 
+## 10c. Phase A — structural review of the eight existing readings (2026-11-10, read-only)
+
+Requested by the review lane: review the existing readings with their revision and coverage
+evidence, **without a new provider request.** Each check ran in a `READ ONLY … ROLLBACK`
+session. Only counts and booleans returned; no observation or manuscript text entered this
+record.
+
+| Check | Result |
+|---|---|
+| Custody | all eight bound to draft `fdc33504…` **revision 1**, one shared `input_fingerprint` (`95ce1f2d70fa…`) |
+| Staleness | the current draft is still revision 1 → **no text has moved** since the readings were frozen |
+| Coverage | 55/55 sections in body for every lens (§10) |
+| Reader | `anthropic` / `claude-opus-5`, all eight |
+| Observations | **147** in total, each with `observationId`, `basisFingerprint`, `position` and `admissionIndex` (OBSERVATION-IDENTITY-01 present) |
+| Non-conclusions | every one of 147 carries a non-empty `doesNotEstablish` |
+| **D2 ref resolution** | **541/541 evidence refs resolve** to sections of the current draft (452 passage · 41 section · 8 section-run) |
+| **D1 markers on existing output** | **0 of 232 markers** appear in the 147 observations |
+| Spread across the book | refs touch **44 of 55** sections. By thirds of the book: **18/18 · 19/19 · 7/18** |
+
+**What this establishes.**
+- The existing readings are structurally sound. They are anchored to the exact current text,
+  they cite real passages, they carry their non-conclusions, and they show no trace of the
+  stored EA knowledge. This is the first actual output-side evidence for P3. It covers existing
+  readings only; W4–W7 still owe the live check.
+
+**What it does not establish.**
+- Quality. Whether they grasp the book's organizing vision is the founder's judgment in Phase A
+  proper, made by reading them in the Studio.
+- ⚠️ **The final third is thinly cited (7 of 18 sections).** Whatever the readings say about how
+  the book closes rests on far less of the close than of the opening. That is a pointed question
+  for W5 ("does the close answer the opening?"), and the founder should check it when reading
+  them. ⛔ It is not attributed: sparse citation could reflect the readings, or the shape of
+  the closing sections. Not determined.
+
+**Added step — W7b, the 11-08 regression on `55742458…`** (review lane's proposal, adopted).
+Passing on `dd1a3718` does not show the 11-08 false-denial is fixed on the Work where it
+occurred. In W7b, grant the Work-level scope on `55742458`, read one chapter there, and ask the
+same kind of follow-up. *Pass:* she answers from saved text, and the receipt names the section.
+*Fail:* she sends the writer back to "Read this chapter".
+
+**Note on independent evaluation outside MAIA.** The review lane offers to evaluate these
+readings itself. Doing that means copying MAIA's observations — which cite and quote the
+manuscript — into a cloud provider outside MAIA's sovereignty boundary. Whether to do so is the
+founder's decision about the founder's own book. ⛔ Claude Code will not prepare an export for
+it unasked. A founder reading the observations in the Studio needs no export.
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
