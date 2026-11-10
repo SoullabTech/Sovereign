@@ -19,6 +19,17 @@ export const PRESENTATION_STORAGE_KEY = 'writers-studio:presentation:v1';
 export const PRESENTATION_EVENT = 'writers-studio:presentation-changed';
 export const DEFAULT_PRESENTATION: StudioPresentation = { depth: 'focused' };
 
+/** On-screen names (density spec §11.2). Stored values are unchanged; "Guided" is not used
+ * on screen because it is the name of a MAIA working style, a different axis. */
+export const STUDIO_DEPTHS: readonly StudioDepth[] = ['focused', 'guided', 'full'];
+export const STUDIO_DEPTH_LABEL: Record<StudioDepth, string> = {
+  focused: 'Quiet', guided: 'Balanced', full: 'All tools',
+};
+export const STUDIO_DEPTH_HINT: Record<StudioDepth, string> = {
+  focused: 'your writing and MAIA; everything else one step away',
+  guided: 'chapters and ways to look in view',
+  full: 'everything open',
+};
 export function isStudioDepth(v: unknown): v is StudioDepth {
   return v === 'focused' || v === 'guided' || v === 'full';
 }

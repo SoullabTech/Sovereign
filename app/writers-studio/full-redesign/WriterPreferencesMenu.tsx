@@ -7,6 +7,7 @@ import {
 } from '@/lib/writersStudio/workingStyle';
 import {
   isStudioDepth, readStudioPresentation, writeStudioPresentation,
+  STUDIO_DEPTHS, STUDIO_DEPTH_LABEL, STUDIO_DEPTH_HINT,
   subscribeStudioPresentation, proposePresentationRequest,
   type StudioDepth, type SafePresentationProposal,
 } from '@/lib/writersStudio/presentationRequests';
@@ -91,9 +92,7 @@ export default function WriterPreferencesMenu() {
           <label>How much to show
             <select aria-label="Studio display depth" value={depth}
               onChange={event => { const v=event.target.value; if(isStudioDepth(v)){setDepth(v);writeStudioPresentation({depth:v});}}}>
-              <option value="focused">Focused · just what matters now</option>
-              <option value="guided">Guided · unfold a little more</option>
-              <option value="full">Full · all editorial tools</option>
+              {STUDIO_DEPTHS.map(d => <option key={d} value={d}>{STUDIO_DEPTH_LABEL[d]} · {STUDIO_DEPTH_HINT[d]}</option>)}
             </select>
           </label>
           <label>Working pace
