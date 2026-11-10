@@ -15,6 +15,9 @@ import type { ProOtherSystems } from '@/lib/astrology/proOtherSystems';
 import type { DayStart } from '@/lib/astrology/proFourPillars';
 import ProFourPillars, { type LuckDirectionChoice } from './ProFourPillars';
 import NakshatraCard from '@/components/astrology/NakshatraCard';
+import ChineseReadingView from '@/components/astrology/ChineseReadingView';
+import { DaYunTimelineView } from '@/components/astrology/DaYunTimeline';
+import { rehydrateDaYunProfile } from '@/lib/astrology/daYunProfileView';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import styles from './pro-systems-panel.module.css';
 
@@ -193,27 +196,81 @@ function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
   );
 }
 
+type ChineseRoom = 'pillars' | 'reading' | 'daYun';
+const CHINESE_ROOMS: Array<[ChineseRoom, string]> = [
+  ['pillars', 'Pillars & year sign'], ['reading', 'Zodiac reading'], ['daYun', 'Da Yun cycles'],
+];
+
+/**
+ * The Chinese room: the Four Pillars and year sign, the full zodiac reading
+ * and the ten-year luck cycles (with their organ, spirit and health teaching),
+ * each the same experience the Free Chinese page offers, computed on the
+ * server so no birth detail reaches the browser.
+ */
 function ChineseView({ c, direction, onDirection, ask }: {
   ask: { subject: string; readsWhose: string };
   c: ProOtherSystems['chinese']; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
 }) {
+  const [room, setRoom] = useState<ChineseRoom>('pillars');
+  const chosen = direction ? c.daYun?.[direction] : undefined;
+  const daYun = chosen ? rehydrateDaYunProfile(chosen) : null;
   return (
     <div role="tabpanel" aria-label="Chinese">
-      <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
-      <h4 className={styles.subhead}>Year sign</h4>
-      <p className={styles.headline}>
-        <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}
-        <span className={styles.cap}>{c.element}</span> {c.animal}{' '}
-        <span className={styles.muted}>({c.elementChineseName} {c.chineseName})</span>
-      </p>
-      <dl className={styles.facts}>
-        <dt>Archetype</dt><dd>{c.archetype}</dd>
-        <dt>60-year cycle</dt><dd>Year {c.cyclePosition} of 60</dd>
-        <dt>Characteristics</dt><dd>{c.characteristics.join(', ')}</dd>
-        <dt>Harmonious with</dt><dd>{c.compatibility.join(', ')}</dd>
-        <dt>Challenging with</dt><dd>{c.incompatible.join(', ')}</dd>
-      </dl>
-      <p className={styles.note}>Method: {c.method}</p>
+      <div role="tablist" aria-label="Chinese astrology rooms" className={styles.rooms}>
+        {CHINESE_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
+      </div>
+
+      {room === 'pillars' && (
+        <div role="tabpanel" aria-label="Pillars and year sign">
+          <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
+          <h4 className={styles.subhead}>Year sign</h4>
+          <p className={styles.headline}>
+            <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}
+            <span className={styles.cap}>{c.element}</span> {c.animal}{' '}
+            <span className={styles.muted}>({c.elementChineseName} {c.chineseName})</span>
+          </p>
+          <dl className={styles.facts}>
+            <dt>Archetype</dt><dd>{c.archetype}</dd>
+            <dt>60-year cycle</dt><dd>Year {c.cyclePosition} of 60</dd>
+            <dt>Characteristics</dt><dd>{c.characteristics.join(', ')}</dd>
+            <dt>Harmonious with</dt><dd>{c.compatibility.join(', ')}</dd>
+            <dt>Challenging with</dt><dd>{c.incompatible.join(', ')}</dd>
+          </dl>
+          <p className={styles.note}>Method: {c.method}</p>
+        </div>
+      )}
+
+      {room === 'reading' && (
+        <div role="tabpanel" aria-label="Zodiac reading">
+          <ChineseReadingView reading={c.reading} />
+          <p className={styles.note}>The reading follows from the Chinese year alone: {c.method}</p>
+        </div>
+      )}
+
+      {room === 'daYun' && (
+        <div role="tabpanel" aria-label="Da Yun cycles">
+          <p className={styles.note}>
+            Tradition counts forward for a man born in a yang year or a woman born in a yin year, and backward
+            otherwise. A saved chart does not record sex, so choose the direction:
+          </p>
+          <div role="radiogroup" aria-label="Da Yun direction" className={styles.rooms}>
+            {(['forward', 'backward'] as const).map((d) => (
+              <button key={d} role="radio" aria-checked={direction === d}
+                className={direction === d ? styles.tabOn : undefined} onClick={() => onDirection(d)}>
+                {d === 'forward' ? 'Forward' : 'Backward'}
+              </button>
+            ))}
+          </div>
+          {daYun
+            ? <DaYunTimelineView profile={daYun} />
+            : <p className={styles.note}>Choose a direction to see the ten-year cycles.</p>}
+        </div>
+      )}
     </div>
   );
 }

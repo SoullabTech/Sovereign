@@ -8,6 +8,10 @@
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .tabs button { background: transparent; border-color: rgba(159, 208, 216, .35); }
 .tabs .tabOn { background: rgba(127, 179, 188, .32); border-color: #9fd0d8; }
+/* Room tabs and choices inside a system (the same look as the system tabs, outside the controls bar). */
+.rooms { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 12px; }
+.rooms button { border: 1px solid rgba(159, 208, 216, .35); background: transparent; color: #dff0f2; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.rooms .tabOn { background: rgba(127, 179, 188, .32); border-color: #9fd0d8; }
 .summary { margin: 14px 0 8px; font-size: .92rem; }
 .headline { margin: 14px 0 8px; font-family: Georgia, serif; font-size: 1.3rem; color: #eef3f3; }
 .muted { color: #9fb2b9; font-size: .95rem; }

@@ -19,6 +19,8 @@ import { calculateCompleteMayanProfile } from './mayanAstrology';
 import { chineseYearForIsoDate } from './chineseNewYear';
 import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
+import { buildChineseReading, type ChineseReadingData } from './chineseReading';
+import { daYunByDirection, type DaYunByDirection } from './proDaYun';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
 } from './types/vedic';
@@ -62,6 +64,10 @@ export interface ProOtherSystems {
     compatibility: string[];
     incompatible: string[];
     fourPillars: FourPillars;
+    /** The full zodiac reading (animal, element, strengths, compatibility, holistic profile). A function of the Chinese year only. */
+    reading: ChineseReadingData;
+    /** Ten-year luck cycles for both directions, with no birth details in them. */
+    daYun: DaYunByDirection;
     method: string;
   };
   mayan: {
@@ -173,6 +179,8 @@ export async function calculateProOtherSystems(
       compatibility: animal.compatibility,
       incompatible: animal.incompatible,
       fourPillars: calculateFourPillars(instant, birth.date, birth.time.slice(0, 5), dayStart),
+      reading: buildChineseReading(year),
+      daYun: daYunByDirection(instant, civilOffsetMinutes(instant, birth.date, birth.time), birth.time.slice(0, 5)),
       method: 'Year sign from the Free Chinese calculator. The year turns at Chinese New Year (China Standard Time, 1900–2100 table from astronomical new moons and the December solstice), so a January or early-February birth can belong to the previous year’s sign. The calendar date is used, not the birth hour.',
     },
     mayan: {
@@ -199,4 +207,11 @@ export async function calculateProOtherSystems(
       method: 'Galactic signature, Kin and wavespell use the modern Dreamspell count (26 July 1987 = Kin 34, 29 February skipped). Haab and the traditional date use the Goodman–Martínez–Thompson correlation (584283). The Dreamspell is not the traditional Maya or K’iche’ day count.',
     },
   };
+}
+
+/** Local offset from UTC at birth, in minutes, from the instant and the local civil date and time. */
+function civilOffsetMinutes(instant: Date, localDate: string, localTime: string): number {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const [hh, mm] = localTime.split(':').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d, hh, mm) - instant.getTime()) / 60_000);
 }
