@@ -80,6 +80,9 @@ const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
  */
 export const ASK_MAX_TOKENS = 16_000;
 
+/** Provider stop reasons that mean the answer was NOT finished. Anything else (including an unreported null) is not treated as a cut. */
+const INCOMPLETE_STOPS: ReadonlySet<string> = new Set(['max_tokens', 'model_context_window_exceeded']);
+
 const WRITERS_CONSTELLATION_REFERRAL = constellationReferralPrompt('writers-studio');
 
 const STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about a reading of its structure that you made earlier.
@@ -617,7 +620,9 @@ export async function askMaia(
     /* ⛔ A CUT ANSWER IS NOT AN ANSWER. Stopped at the ceiling means she did not finish; storing the text would put
        words in the record she never completed, and showing it reads as her ending mid-thought. Same ruling as a
        refused inference: reported as a failure, never rendered as one of hers. */
-    if (outcome.result.stopReason === 'max_tokens') return { ok: false, refusal: 'answer_incomplete' };
+    /* `model_context_window_exceeded` is the other way a turn ends unfinished (Anthropic docs, "Thinking and the context
+       window": on 4.5+ models generation that reaches the context window stops with it instead of erroring). */
+    if (INCOMPLETE_STOPS.has(outcome.result.stopReason ?? '')) return { ok: false, refusal: 'answer_incomplete' };
     const text = outcome.result.content
       .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')
       .map((b) => b.text).join('').trim();

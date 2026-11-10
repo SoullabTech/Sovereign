@@ -57,6 +57,12 @@ describe('a cut answer is not an answer', () => {
     expect(out).toEqual({ ok: false, refusal: 'answer_incomplete' });
   });
 
+  it('⛔ a context-window stop is also unfinished and refused the same way', async () => {
+    mockRun.mockResolvedValue(reply('The harbour returns in the last chapter, where', 'model_context_window_exceeded'));
+    const out = await askMaia(workCtx(), [], 'Q');
+    expect(out).toEqual({ ok: false, refusal: 'answer_incomplete' });
+  });
+
   it('⭐ a finished answer still comes back, with how it ended recorded', async () => {
     mockRun.mockResolvedValue(reply('The harbour opens and closes the book.', 'end_turn', 812));
     const out = await askMaia(workCtx(), [], 'Q');
