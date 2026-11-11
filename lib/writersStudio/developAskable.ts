@@ -28,6 +28,7 @@ export const DEVELOP_CAPABILITIES: readonly DevelopCapability[] = [
   { key: 'ways-in', what: 'starter questions', controls: ['data-develop-starters'], reach: { kind: 'conversation' } },
   { key: 'reorient', what: 'Where are we?', controls: ['data-reorient-work', 'data-reorientation-confirm'], reach: { kind: 'conversation' } },
   { key: 'presentation', what: 'change how the Studio looks, by asking in words', controls: ['data-maia-presentation-confirm'], reach: { kind: 'conversation' } },
+  { key: 'view', what: 'choose the View (Quiet / Balanced / All tools); asking in words ("simplify", "show me all the tools") offers the same change', controls: ['data-develop-view'], reach: { kind: 'conversation' } },
   { key: 'resume-conversation', what: 'continue an earlier conversation', controls: ['data-discovery'], reach: { kind: 'conversation' } },
   { key: 'send', what: 'ask MAIA', controls: ['data-maia-composer'], reach: { kind: 'conversation' } },
   { key: 'correct-maia', what: 'correct MAIA’s understanding', controls: ['data-maia-correction'], reach: { kind: 'conversation' } },
