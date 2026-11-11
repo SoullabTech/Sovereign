@@ -1,6 +1,6 @@
-# Writer's Studio — relational architecture: design concept (DRAFT 1, 2026-11-11)
+# Writer's Studio — relational architecture: design concept (DRAFT 2, founder rulings recorded 2026-11-11)
 
-**Status:** design concept for founder review. It authorizes nothing: no build, migration, deploy or release. Owner record #1800, continuity #1982. HOLD #1938 and Class A #1969 are unchanged.
+**Status:** design direction RULED by the founder on 2026-11-11 (§6a). The rulings settle the design; they authorize no build, migration, deploy or release. Each build step in §7 still needs its own act and review. Owner record #1800, continuity #1982. HOLD #1938 and Class A #1969 are unchanged.
 
 **The question (founder, 2026-11-11):** what does it mean for MAIA to genuinely understand and accompany a writer across an entire manuscript?
 
@@ -68,6 +68,18 @@ This is what makes "she knows my book" true across devices, visits and months. I
 3. **Order of places.** Book order (current ruling: unranked), or the editor's macro-to-micro order when the writer asks for a "walk"? Proposed: book order by default; macro-to-micro only as an explicit choice.
 4. **Server-side decisions.** May "intended" and "later" be stored on the server per Work? This needs a small migration.
 5. **Durable passes.** May the editorial pass run as a server job that survives closing the page? This is new infrastructure and needs its own design.
+
+## 6a. Founder rulings (2026-11-11, Claude Code session)
+
+The founder was asked whether to take the five rulings "as proposed, with the narrowed ruling 1" and answered **"yes"**.
+
+1. **Automatic reading: RULED, narrowed.** MAIA may read an opened book by herself under the writer's standing whole-Work permission, never in Sanctuary. It starts as a setting turned on **for the founder's account only**. Its cost is measured on the founder's book before it is offered to any other writer. Ceiling: changed sections only, at most once per draft.
+2. **One surface: RULED.** Write is the single working surface. Lenses open beside the manuscript and never replace it.
+3. **Order of places: RULED.** Book order by default. An editor's macro-to-micro order only when the writer explicitly asks for it.
+4. **Decisions on the server: RULED in direction.** "Intended" and "later" are to be stored per Work. The migration is its own reviewed change and is not authorized by this ruling.
+5. **Durable passes: RULED in direction.** The editorial pass is to survive closing the page. It needs its own design before any build.
+
+**Not ruled:** provider cost ceilings in numbers; the migration itself; any deploy; any change to HOLD #1938 or Class A #1969.
 
 ## 7. Suggested build order (after rulings; each its own reviewed change)
 
