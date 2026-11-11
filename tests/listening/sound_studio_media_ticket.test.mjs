@@ -28,7 +28,9 @@ test('a ticket opens exactly its own file, for its own member, until it expires'
 
 test('tampering with any byte, or malformed input, is refused', () => {
   const { ticket } = issueMediaTicket(MEMBER, A, NOW, SECRET);
-  for (let i = 0; i < ticket.length; i += 7) {
+  // The final base64url character carries padding bits: swapping A<->B there can decode to the identical bytes
+  // (not a forgery, just the same ticket), which made this test fail ~1 run in 4. Tamper only significant chars.
+  for (let i = 0; i < ticket.length - 1; i += 7) {
     const c = ticket[i] === 'A' ? 'B' : 'A';
     assert.equal(verifyMediaTicket(ticket.slice(0, i) + c + ticket.slice(i + 1), A, NOW, SECRET), null, `byte ${i}`);
   }
