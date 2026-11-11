@@ -24,6 +24,7 @@ import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKindShared';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
+import { STUDIO_DEPTHS, STUDIO_DEPTH_HINT, STUDIO_DEPTH_LABEL, isStudioDepth, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 
 /* ── Founder design 2026-11-11 ("it shouldn't be a treasure hunt"): the ways to explore are always in view above the chapter; MAIA reads the
@@ -145,6 +146,10 @@ export function DevelopStage(props: {
   holdings?: ReactNode;
   /** MAIA's "show" offer, clicked by the writer: open More at this place (`data-develop-place`). */
   openAt?: { place: string; n: number } | null;
+  /** The writer's View (density spec §10-§11): presentation only; never what MAIA reads or does.
+   * All tools opens what Quiet and Balanced keep one step away, beside the chapter, not instead of it. */
+  view?: StudioDepth;
+  onView?: (next: StudioDepth) => void;
   /** the ways to explore, always in view above the chapter (lenses), and the whole-book editorial pass */
   ways?: readonly StageWay[];
   onWay?: (key: string) => void;
@@ -156,6 +161,7 @@ export function DevelopStage(props: {
   onReadChapter?: () => void;
 }) {
   const { sections } = props;
+  const allTools = props.view === 'full';
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
@@ -200,6 +206,16 @@ export function DevelopStage(props: {
           </select>
         ) : null}
         <span style={{ flex: 1 }} />
+        {props.view && props.onView ? (
+          <label data-develop-view="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}>
+            View
+            <select aria-label={`View: ${STUDIO_DEPTH_LABEL[props.view]}. How much of Develop to show`} value={props.view}
+              onChange={(e) => { if (isStudioDepth(e.target.value)) props.onView?.(e.target.value); }}
+              style={{ font: 'inherit', fontSize: 12, color: 'inherit', background: 'none', border: hair, borderRadius: 6, padding: '2px 6px' }}>
+              {STUDIO_DEPTHS.map((d) => <option key={d} value={d} title={STUDIO_DEPTH_HINT[d]}>{STUDIO_DEPTH_LABEL[d]}</option>)}
+            </select>
+          </label>
+        ) : null}
         {props.reading && props.onReadChapter && (props.reading.status === 'idle' || props.reading.status === 'error') ? (
           <button type="button" data-develop-read-chapter="true" onClick={props.onReadChapter}
             style={{ font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'color-mix(in srgb, currentColor 10%, transparent)', border: hair, borderRadius: 999, padding: '4px 14px', whiteSpace: 'nowrap' }}>
@@ -207,10 +223,12 @@ export function DevelopStage(props: {
           </button>
         ) : null}
         <button type="button" data-develop-edit-in-write="true" onClick={props.onOpenWrite} style={quiet}>Edit in Write</button>
-        <button type="button" data-develop-more="true" aria-expanded={more} onClick={() => setMore((v) => !v)}
-          style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: more ? 'color-mix(in srgb, currentColor 10%, transparent)' : 'none', border: hair, borderRadius: 999, padding: '3px 12px' }}>
-          {more ? 'Back to the chapter' : 'More'}
-        </button>
+        {allTools ? null : (
+          <button type="button" data-develop-more="true" aria-expanded={more} onClick={() => setMore((v) => !v)}
+            style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: more ? 'color-mix(in srgb, currentColor 10%, transparent)' : 'none', border: hair, borderRadius: 999, padding: '3px 12px' }}>
+            {more ? 'Back to the chapter' : 'More'}
+          </button>
+        )}
       </header>
 
       {/* the ways to explore: always in view, never behind a menu */}
@@ -251,9 +269,9 @@ export function DevelopStage(props: {
         </div>
       ) : null}
 
-      {more ? (
+      {more || allTools ? (
         /* behind the one quiet control: the plan, what she read, ways in, and what she holds */
-        <div data-develop-more-panel="true" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
+        <div data-develop-more-panel="true" data-develop-panel-open={allTools ? 'all-tools' : 'more'} style={{ order: allTools ? 2 : 0, flex: allTools ? '0 1 40%' : '1 1 auto', borderTop: allTools ? hair : undefined, paddingTop: allTools ? 10 : undefined, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
           {/* Founder (live, 2026-11-09): the per-chapter strip truncated to "S", "El", "P" in a long book, and the recurring-word counts read
               as noise. Both removed. Chapters are on the left again, in the Studio's own collapsible manuscript rail. */}
           {/* the plan: MAIA's grounded steps, the writer's to edit. It never changes the manuscript; a step is opened in the passage desk. */}
@@ -374,9 +392,9 @@ export function DevelopStage(props: {
 
       {/* the chapter, in the writer's own words: the whole of it, filling the centre */}
       <article aria-label={current ? `${labelOf(current)}, as you wrote it` : 'Your chapter'} data-develop-chapter={current?.draftSectionId}
-        hidden={more}
+        hidden={more && !allTools}
         onMouseUp={(e) => notePick(e.currentTarget)} onKeyUp={(e) => notePick(e.currentTarget)}
-        style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '18px 8px 40px', display: more ? 'none' : 'block' }}>
+        style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '18px 8px 40px', display: more && !allTools ? 'none' : 'block', order: 1 }}>
         <div style={{ maxWidth: '66ch', margin: '0 auto' }}>
           <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
             {current ? labelOf(current) : 'Your Work'}
@@ -401,9 +419,9 @@ export function DevelopStage(props: {
         </div>
       </article>
 
-      {picked && !more ? (
+      {picked && (!more || allTools) ? (
         <div data-develop-picked="true" role="group" aria-label="The words you selected"
-          style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10, border: hair, borderRadius: 10, padding: '8px 12px', fontSize: 13 }}>
+          style={{ order: 3, flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10, border: hair, borderRadius: 10, padding: '8px 12px', fontSize: 13 }}>
           <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>“{picked}”</span>
           <button type="button" data-develop-ask-about="true" onClick={() => { props.onAskAbout?.(picked); setPicked(null); }}
             style={{ font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 12px', whiteSpace: 'nowrap' }}>
