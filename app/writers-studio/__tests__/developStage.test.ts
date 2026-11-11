@@ -230,3 +230,48 @@ test('founder (2026-11-09): the chapter control shows the confirmed structure, i
   expect(opts).toEqual(['PART THREE — THE SPIRAL', `${NB}Chapter 10: The Living Spiral`, `${NB}${NB}I. The Living Spiral`, 'Gathering the Fire']);
   expect(opts.some((o) => /^\d+ · /.test(o ?? ''))).toBe(false);          // no flat running numbers
 });
+
+describe('density View on the stage (spec §10-§11, B3)', () => {
+  test('the View control shows the writer’s current view by name and changes only presentation', () => {
+    const onView = jest.fn();
+    const p = mount({ closed: true, view: 'focused', onView });
+    const sel = q('[data-develop-view] select') as HTMLSelectElement;
+    expect([...sel.options].map((o) => o.textContent)).toEqual(['Quiet', 'Balanced', 'All tools']);
+    expect(sel.getAttribute('aria-label')).toContain('View: Quiet');
+    act(() => { sel.value = 'full'; sel.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(onView).toHaveBeenCalledWith('full');
+    expect(p.onStarter).not.toHaveBeenCalled(); expect(p.onMakePlan).not.toHaveBeenCalled();
+  });
+
+  test('Quiet: the chapter is the face of the stage; the plan is one step away behind More', () => {
+    mount({ closed: true, view: 'focused', onView: jest.fn() });
+    expect(q('[data-develop-chapter="s1"]')!.hidden).toBe(false);
+    expect(q('[data-develop-plan]')).toBeNull();
+    expect(q('[data-develop-more]')).not.toBeNull();
+  });
+
+  test('All tools: the plan and starters are open beside the chapter, not instead of it (falsifier a)', () => {
+    mount({ closed: true, view: 'full', onView: jest.fn() });
+    expect(q('[data-develop-chapter="s1"]')!.hidden).toBe(false);
+    expect(q('[data-develop-more-panel]')!.getAttribute('data-develop-panel-open')).toBe('all-tools');
+    expect(q('[data-develop-plan]')).not.toBeNull();
+    expect(q('[data-develop-more]')).toBeNull();
+  });
+
+  test('every control reachable in All tools is reachable from Quiet within one step (falsifier a)', () => {
+    const names = (root: HTMLElement) => [...root.querySelectorAll('button, select, textarea, input')]
+      .map((el) => el.getAttribute('data-develop-plan-start') ?? el.getAttribute('aria-label') ?? el.textContent?.trim() ?? '')
+      .filter((n) => n && n !== 'More' && n !== 'Back to the chapter' && !n.startsWith('View:')).sort();
+    mount({ closed: true, view: 'full', onView: jest.fn() });
+    const all = names(host);
+    act(() => root.unmount()); host.remove(); host = document.createElement('div'); document.body.append(host); root = createRoot(host);
+    mount({ view: 'focused', onView: jest.fn() }); // opens More once
+    expect(names(host)).toEqual(all);
+  });
+
+  test('without a View setting supplied, the stage is exactly as before', () => {
+    mount({ closed: true });
+    expect(q('[data-develop-view]')).toBeNull();
+    expect(host.querySelectorAll('button').length).toBe(2);
+  });
+});
