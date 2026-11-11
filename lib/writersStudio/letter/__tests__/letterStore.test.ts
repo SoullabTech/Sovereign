@@ -47,7 +47,7 @@ describe('the boundary (source)', () => {
   it('⭐ MUST FAIL IF a client can write a letter: only the synthesis route saves one, from the map it built, for a whole-book pass', () => {
     const writers = ['app/api/sovereign/manuscripts/[id]/editorial-letter/route.ts', 'app/api/sovereign/manuscripts/[id]/editorial-letter/decisions/route.ts'];
     for (const w of writers) expect(read(w)).not.toMatch(/saveLetter/);
-    expect(synth).toMatch(/if \(deepMode && body\.keepAsLetter === true\) \{[\s\S]{0,200}keepRefusal\(memberId, body\)[\s\S]{0,200}saveLetter\(memberId, manuscriptId, revisionNumber, map\)/);
+    expect(synth).toMatch(/if \(deepMode && body\.keepAsLetter === true\) \{[\s\S]{0,200}keepRefusal\(memberId, body\)[\s\S]{0,300}saveLetter\(memberId, manuscriptId, revisionNumber, \{ \.\.\.map, opening \}\)/);
   });
   it('⭐ letters and decisions are append-only, and a letter keeps the draft it was of', () => {
     expect(migration).toMatch(/BEFORE UPDATE ON work_editorial_letters/);

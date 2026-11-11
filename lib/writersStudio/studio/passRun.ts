@@ -21,6 +21,7 @@ import { LENS_ORDER } from '@/lib/writersStudio/developPresentation';
 import { synthesizeAttentionMap } from '@/lib/writersStudio/studio/synthesizeAttentionMap';
 import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPassRequest';
 import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
+import { composeOpening } from '@/lib/writersStudio/studio/letterOpening';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 
 export type RunState = 'queued' | 'reading' | 'lens_done' | 'lens_refused' | 'synthesizing' | 'done' | 'failed' | 'stopped' | 'cancelled';
@@ -48,6 +49,7 @@ export interface RunDeps {
   sanctuaryDefault: (memberId: string) => Promise<boolean | null>;
   synthesize: typeof synthesizeAttentionMap;
   keepLetter: typeof saveLetter;
+  opening: typeof composeOpening;
 }
 export const defaultDeps: RunDeps = {
   q: query,
@@ -66,6 +68,7 @@ export const defaultDeps: RunDeps = {
   },
   synthesize: synthesizeAttentionMap,
   keepLetter: saveLetter,
+  opening: composeOpening,
 };
 
 /* ── reading the run ───────────────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -182,7 +185,8 @@ export async function advanceRun(memberId: string, manuscriptId: string, deps: R
     const synthesis = await deps.synthesize(memberId, manuscriptId, deep, EDITORIAL_PASS_REQUEST);
     if (!synthesis.ok) { await record(deps, run!.id, 'failed', { refusal: `synthesis:${synthesis.error}` }); return viewRun(memberId, manuscriptId, deps); }
     if ((await deps.sanctuaryDefault(memberId)) !== false) { await record(deps, run!.id, 'stopped', { refusal: 'sanctuary' }); return viewRun(memberId, manuscriptId, deps); }
-    const letterId = await deps.keepLetter(memberId, manuscriptId, synthesis.revisionNumber, synthesis.map);
+    const opening = await deps.opening(memberId, manuscriptId, synthesis.readingIds);
+    const letterId = await deps.keepLetter(memberId, manuscriptId, synthesis.revisionNumber, { ...synthesis.map, opening });
     await record(deps, run!.id, 'done', { letterId });
     return viewRun(memberId, manuscriptId, deps);
   } finally {

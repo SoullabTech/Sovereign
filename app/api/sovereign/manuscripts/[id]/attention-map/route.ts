@@ -3,6 +3,7 @@ import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { synthesizeAttentionMap } from '@/lib/writersStudio/studio/synthesizeAttentionMap';
+import { composeOpening } from '@/lib/writersStudio/studio/letterOpening';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,8 @@ export async function POST(
       { status: synthesis.status },
     );
   }
-  const { map, deepMode, revisionNumber, readingIds } = synthesis;
+  const { deepMode, revisionNumber, readingIds } = synthesis;
+  const map = { ...synthesis.map };
 
   /* WS-RELATIONAL-ARCHITECTURE step 2: a whole-book editorial pass is kept as MAIA's letter for this Work, so it is there when the
      writer comes back, on any device. Only this route writes a letter, and only from the map it just built. It is kept only when the
@@ -43,7 +45,12 @@ export async function POST(
   if (deepMode && body.keepAsLetter === true) {
     const refused = await keepRefusal(memberId, body);
     if (refused) letterKept = refused.body.refusal;
-    else { letterId = await saveLetter(memberId, manuscriptId, revisionNumber, map); letterKept = 'kept'; }
+    else {
+      const opening = await composeOpening(memberId, manuscriptId, readingIds);
+      letterId = await saveLetter(memberId, manuscriptId, revisionNumber, { ...map, opening });
+      map.opening = opening;
+      letterKept = 'kept';
+    }
   }
 
   return NextResponse.json({

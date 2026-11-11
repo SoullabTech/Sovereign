@@ -248,3 +248,26 @@ describe('step 4: the pass runs on the server and survives closing the page', ()
     expect(runPass).not.toHaveBeenCalled();
   });
 });
+
+
+describe('step 5: the letter opens with her reading of the book, as a question', () => {
+  const OPENING = { reachingFor: 'The book reaches for grief as a passage. Is that right?', working: [{ text: 'The opening carries it.', quote: 'Marta held the key', sectionId: 's1' }], divergence: null, droppedUnverified: 0 };
+  beforeEach(() => savePass('m', { draftRevision: 5, map: { ...MAP, opening: OPENING } as any }));
+  it('⭐ shows what she thinks the book is reaching for, and asks; nothing is decided for the writer', async () => {
+    await mount();
+    expect(q('[data-letter-opening]')?.textContent).toContain('grief as a passage');
+    expect(q('[data-opening-yes]')).not.toBeNull();
+    expect(q('[data-letter-working]')?.textContent).toContain('“Marta held the key”');
+  });
+  it('"Not quite" opens the conversation in the writer\'s own words; it never edits the letter', async () => {
+    const p = await mount();
+    act(() => q('[data-opening-not-quite]')!.click());
+    expect((p.onTalk as jest.Mock).mock.calls[0][0]).toContain('Not quite. What I’m reaching for is');
+    expect(q('[data-letter-opening]')?.textContent).toContain('grief as a passage');
+  });
+  it('"Show me where" on a working quotation is the writer\'s call', async () => {
+    const p = await mount();
+    act(() => q('[data-working-where="0"]')!.click());
+    expect(p.onShowSection).toHaveBeenCalledWith('s1');
+  });
+});

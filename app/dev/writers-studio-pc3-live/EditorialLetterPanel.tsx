@@ -85,6 +85,7 @@ export function EditorialLetterPanel(props: {
      page does not stop it; this panel only shows its true state and checks back. Without that permission the writer's click still reads
      the book from this page, as before. */
   const [run, setRun] = useState<RunView | null>(null);
+  const [openingAnswer, setOpeningAnswer] = useState<'yes' | 'not_quite' | null>(null);
   const watch = useRef<number | null>(null);
   const stopWatching = () => { if (watch.current !== null) { window.clearInterval(watch.current); watch.current = null; } };
   const followRun = useCallback(() => {
@@ -288,6 +289,30 @@ export function EditorialLetterPanel(props: {
       ) : null}
       {error ? <p role="alert" style={{ margin: 0, fontSize: 12 }}>{error}</p> : null}
       {note ? <p role="note" data-letter-note="true" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
+      {pass.map.opening ? (
+        <div data-letter-opening="true" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <p style={{ margin: 0, lineHeight: 1.6, fontFamily: "'Iowan Old Style','Charter',Georgia,serif", fontSize: 15 }}>{pass.map.opening.reachingFor}</p>
+          {openingAnswer === null ? (
+            <div role="group" aria-label="Is that right?" style={{ display: 'flex', gap: 6 }}>
+              <button type="button" data-opening-yes="true" onClick={() => setOpeningAnswer('yes')} style={btn}>Yes</button>
+              <button type="button" data-opening-not-quite="true" onClick={() => { setOpeningAnswer('not_quite'); props.onTalk(`You read my book as reaching for this: “${pass.map.opening!.reachingFor}” Not quite. What I’m reaching for is `); }} style={btn}>Not quite</button>
+            </div>
+          ) : <p role="status" style={{ margin: 0, fontSize: 12, opacity: .8 }}>{openingAnswer === 'yes' ? 'Good. I’ll read with that in mind.' : 'Tell me in your own words; I’ve opened our conversation.'}</p>}
+          {pass.map.opening.working.length > 0 ? (
+            <div data-letter-working="true">
+              <p style={{ margin: '4px 0 2px', fontWeight: 500 }}>What’s working</p>
+              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {pass.map.opening.working.map((w, i) => (
+                  <li key={i} style={{ lineHeight: 1.5 }}>{w.text} <span style={{ fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>“{w.quote}”</span>
+                    {w.sectionId ? <> <button type="button" data-working-where={i} onClick={() => props.onShowSection(w.sectionId!)} style={quiet}>Show me where</button></> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {pass.map.opening.divergence ? <p data-letter-divergence="true" style={{ margin: 0, lineHeight: 1.55 }}>{pass.map.opening.divergence}</p> : null}
+        </div>
+      ) : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
       ) : (
