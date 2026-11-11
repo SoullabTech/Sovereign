@@ -24,6 +24,73 @@ import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKindShared';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
+import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
+
+/* ── Founder design 2026-11-11 ("it shouldn't be a treasure hunt"): the ways to explore are always in view above the chapter; MAIA reads the
+   chapter the writer opened (only under the writer's standing read permission) while the chapter stays exactly where it is; when she has
+   read it, the words her observations quote are marked in the writer's own text, and beside the conversation she says what she found and
+   asks what the writer would like to do. An observation is an invitation to attention, never an instruction: nothing is selected, scrolled,
+   focused or sent for the writer. */
+export type StageReadingStatus = 'idle' | 'reading' | 'ready' | 'error';
+export interface StageReading {
+  status: StageReadingStatus;
+  progress: string | null;
+  error: string | null;
+  /** the chapter MAIA reads: its label and how many words it holds (counted from the writer's own copy, never estimated) */
+  chapterLabel: string;
+  chapterWords: number | null;
+  items: readonly AttentionItem[];
+}
+export interface StageEditorialPass { status: 'none' | 'running' | 'ready' | 'error'; progress: string | null; error: string | null }
+export interface StageWay { key: string; label: string }
+
+/** Words in the chapter from `from` to `to` (inclusive, by manuscript position), from the writer's own text. */
+export function chapterWordCount(sections: readonly StageSection[], fromId: string | null, toId: string | null): number | null {
+  if (!fromId || !toId) return null;
+  const a = sections.findIndex((s) => s.draftSectionId === fromId);
+  const b = sections.findIndex((s) => s.draftSectionId === toId);
+  if (a < 0 || b < a) return null;
+  return sections.slice(a, b + 1).reduce((n, s) => n + (stripHeading(s).match(/\S+/g)?.length ?? 0), 0);
+}
+
+/** The exact phrases MAIA's observations quote (in “…” or "…", 12+ characters), each with the number of the item that quotes it.
+ *  Only verbatim quotations are ever marked; nothing is matched loosely, so a mark is evidence and never a guess. */
+export function evidenceSpans(items: readonly AttentionItem[]): { text: string; n: number }[] {
+  const out: { text: string; n: number }[] = [];
+  const seen = new Set<string>();
+  items.forEach((item, i) => {
+    const sources = [item.notice, item.whyItMatters, ...item.evidence.map((e) => e.observation)];
+    for (const src of sources) {
+      for (const m of (src ?? '').matchAll(/[“"]([^”"]{12,400})[”"]/g)) {
+        const t = m[1]!.trim().replace(/[.,;:]$/, '');
+        if (t.length >= 12 && !seen.has(t)) { seen.add(t); out.push({ text: t, n: i + 1 }); }
+      }
+    }
+  });
+  return out;
+}
+
+/** Split a paragraph at the exact evidence phrases it contains; non-overlapping, first occurrence of each phrase. */
+export function markEvidence(paragraph: string, spans: readonly { text: string; n: number }[]): { text: string; n: number | null }[] {
+  const hits: { at: number; end: number; n: number }[] = [];
+  for (const sp of spans) {
+    const at = paragraph.indexOf(sp.text);
+    if (at < 0) continue;
+    const end = at + sp.text.length;
+    if (hits.some((h) => at < h.end && end > h.at)) continue;
+    hits.push({ at, end, n: sp.n });
+  }
+  hits.sort((x, y) => x.at - y.at);
+  const pieces: { text: string; n: number | null }[] = [];
+  let pos = 0;
+  for (const h of hits) {
+    if (h.at > pos) pieces.push({ text: paragraph.slice(pos, h.at), n: null });
+    pieces.push({ text: paragraph.slice(h.at, h.end), n: h.n });
+    pos = h.end;
+  }
+  if (pos < paragraph.length) pieces.push({ text: paragraph.slice(pos), n: null });
+  return pieces.length ? pieces : [{ text: paragraph, n: null }];
+}
 
 export interface StageSection {
   draftSectionId: string; heading: string | null; body: string | null; position: number;
@@ -78,6 +145,15 @@ export function DevelopStage(props: {
   holdings?: ReactNode;
   /** MAIA's "show" offer, clicked by the writer: open More at this place (`data-develop-place`). */
   openAt?: { place: string; n: number } | null;
+  /** the ways to explore, always in view above the chapter (lenses), and the whole-book editorial pass */
+  ways?: readonly StageWay[];
+  onWay?: (key: string) => void;
+  editorialPass?: StageEditorialPass;
+  onEditorialPass?: () => void;
+  onOpenEditorialPass?: () => void;
+  /** MAIA's reading of the chapter the writer is on; the chapter itself never moves while she reads */
+  reading?: StageReading | null;
+  onReadChapter?: () => void;
 }) {
   const { sections } = props;
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
@@ -89,6 +165,10 @@ export function DevelopStage(props: {
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
   const current = sections[idx] ?? null;
   const text = current ? stripHeading(current) : '';
+  const spans = props.reading?.status === 'ready' ? evidenceSpans(props.reading.items) : [];
+  const citedHere = props.reading?.status === 'ready' && current
+    ? props.reading.items.map((it, i) => (it.sectionIds.includes(current.draftSectionId) ? i + 1 : 0)).filter(Boolean)
+    : [];
   const paragraphs = text ? text.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) : [];
   const rootRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -120,12 +200,56 @@ export function DevelopStage(props: {
           </select>
         ) : null}
         <span style={{ flex: 1 }} />
+        {props.reading && props.onReadChapter && (props.reading.status === 'idle' || props.reading.status === 'error') ? (
+          <button type="button" data-develop-read-chapter="true" onClick={props.onReadChapter}
+            style={{ font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'color-mix(in srgb, currentColor 10%, transparent)', border: hair, borderRadius: 999, padding: '4px 14px', whiteSpace: 'nowrap' }}>
+            Read this chapter with MAIA
+          </button>
+        ) : null}
         <button type="button" data-develop-edit-in-write="true" onClick={props.onOpenWrite} style={quiet}>Edit in Write</button>
         <button type="button" data-develop-more="true" aria-expanded={more} onClick={() => setMore((v) => !v)}
           style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: more ? 'color-mix(in srgb, currentColor 10%, transparent)' : 'none', border: hair, borderRadius: 999, padding: '3px 12px' }}>
           {more ? 'Back to the chapter' : 'More'}
         </button>
       </header>
+
+      {/* the ways to explore: always in view, never behind a menu */}
+      {props.ways && props.ways.length > 0 && !more ? (
+        <nav aria-label="Ways to explore your Work" data-develop-ways="true" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, flex: '0 0 auto' }}>
+          {props.ways.map((w) => (
+            <button key={w.key} type="button" data-develop-way={w.key} onClick={() => props.onWay?.(w.key)}
+              style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>
+              {w.label}
+            </button>
+          ))}
+          {props.editorialPass && props.onEditorialPass ? (
+            props.editorialPass.status === 'ready' ? (
+              <button type="button" data-develop-way="editorial-pass" data-develop-pass="ready" onClick={props.onOpenEditorialPass}
+                style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'color-mix(in srgb, currentColor 10%, transparent)', border: hair, borderRadius: 999, padding: '3px 11px' }}>
+                Whole book · editorial pass ready
+              </button>
+            ) : (
+              <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={props.onEditorialPass}
+                style={{ font: 'inherit', fontSize: 12, cursor: props.editorialPass.status === 'running' ? 'default' : 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>
+                Whole book · editorial pass
+              </button>
+            )
+          ) : null}
+        </nav>
+      ) : null}
+
+      {/* one quiet line: what MAIA is reading, or has read. It never replaces or moves the chapter. */}
+      {!more && (props.reading?.status === 'reading' || props.reading?.status === 'ready' || props.reading?.status === 'error'
+        || props.editorialPass?.status === 'running' || props.editorialPass?.status === 'error') ? (
+        <div role="status" aria-live="polite" data-develop-reading-line={props.reading?.status ?? 'none'}
+          style={{ flex: '0 0 auto', fontSize: 12, opacity: .85, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {props.reading?.status === 'reading' ? <span>MAIA is reading {props.reading.chapterLabel}{props.reading.chapterWords ? ` · ${props.reading.chapterWords.toLocaleString()} words, all of it` : ''}. Keep writing or talking; she won’t interrupt.{props.reading.progress ? ` ${props.reading.progress}` : ''}</span> : null}
+          {props.reading?.status === 'ready' ? <span>MAIA read {props.reading.chapterLabel}{props.reading.chapterWords ? ` · all ${props.reading.chapterWords.toLocaleString()} words` : ''} · {props.reading.items.length} thing{props.reading.items.length === 1 ? '' : 's'} noticed{spans.length > 0 ? '; the words she quotes are marked in your text' : ''}.</span> : null}
+          {props.reading?.status === 'error' ? <span>{props.reading.error ?? 'MAIA could not finish reading this chapter. Nothing in your writing changed.'}</span> : null}
+          {props.editorialPass?.status === 'running' ? <span data-develop-pass-progress="true">Editorial pass of the whole book: {props.editorialPass.progress ?? 'MAIA is reading…'} Keep this page open until she finishes.</span> : null}
+          {props.editorialPass?.status === 'error' ? <span>{props.editorialPass.error}</span> : null}
+        </div>
+      ) : null}
 
       {more ? (
         /* behind the one quiet control: the plan, what she read, ways in, and what she holds */
@@ -257,11 +381,19 @@ export function DevelopStage(props: {
           <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
             {current ? labelOf(current) : 'Your Work'}
           </h2>
+          {citedHere.length > 0 ? (
+            <p data-develop-cited-here="true" style={{ margin: '-6px 0 14px', fontSize: 12, opacity: .8 }}>
+              MAIA’s {citedHere.length === 1 ? 'observation' : 'observations'} {citedHere.join(' · ')} {citedHere.length === 1 ? 'comes' : 'come'} from this section.
+            </p>
+          ) : null}
           {paragraphs.length === 0 ? (
             <p style={{ opacity: .75, margin: 0 }}>{current ? 'This chapter has no text yet.' : 'Choose a chapter above.'}</p>
           ) : paragraphs.map((p, i) => (
             <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
-              {markTerm(p, focusAnchor).map((piece, k) => piece.hit
+              {!focusAnchor && spans.length > 0 ? markEvidence(p, spans).map((piece, k) => piece.n === null
+                ? <span key={k}>{piece.text}</span>
+                : <span key={k} data-develop-evidence={piece.n} style={{ borderBottom: '2px solid color-mix(in srgb, #7c9ce0 70%, transparent)' }}>{piece.text}<sup aria-label={`MAIA’s observation ${piece.n} quotes this`} style={{ fontFamily: 'system-ui, sans-serif', fontSize: 10, marginLeft: 2, opacity: .85 }}>{piece.n}</sup></span>)
+              : markTerm(p, focusAnchor).map((piece, k) => piece.hit
                 ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
                 : <span key={k}>{piece.text}</span>)}
             </p>
@@ -285,18 +417,19 @@ export function DevelopStage(props: {
 }
 
 /** MAIA beside the work: one conversation, and — always visible, never behind a menu (L8) — which chapters she was handed for her last answer. */
-export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null }) {
+export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode }) {
   /* At the top, not the bottom: the floating "Report a bug" control covered it there (founder screenshot 2026-11-09). */
   return (
     <div data-develop-companion="true" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 8, ...ink }}>
       <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderBottom: hair, paddingBottom: 6 }}>
         {props.lastRead === null
           /* Before an answer in this visit we do not know what she was handed earlier, so we do not claim "nothing". */
-          ? 'MAIA reads only what you ask her to. After her next answer, this line shows exactly what she read for it.'
+          ? 'MAIA reads the chapter you open only if you have let her read your saved work; otherwise she reads what you ask. After her next answer, this line shows exactly what she read for it.'
           : props.lastRead.length === 0
             ? 'Read for her last answer: only the chapter you were on.'
             : `Read for her last answer: ${props.lastRead.map((r) => r.label ?? 'a section').join(' · ')}`}
       </p>
+      {props.reading ?? null}
       <section aria-label="Talk with MAIA about this chapter" data-develop-conversation="true" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {props.conversation}
       </section>
@@ -359,5 +492,56 @@ export function DevelopHoldings(props: {
         <SettledDecisions workId={props.workId} />
       </div>
     </div>
+  );
+}
+
+/** Beside the conversation, above it: what MAIA found in the chapter she read, then one question — what would you like to do?
+ *  The four answers are the writer's. Nothing is chosen, opened or sent for them; "Leave it for now" folds the card to one line. The card
+ *  never touches the conversation below it: an unsent message and an exchange in progress are left exactly as they are. */
+export function StageReadingCard(props: {
+  reading: StageReading;
+  /** the writer chose to work toward a revision: their own sentence goes into the composer, unsent */
+  onWorkTowardRevision?: () => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const [list, setList] = useState(false);
+  const [hint, setHint] = useState(false);
+  const r = props.reading;
+  if (r.status !== 'ready' || r.items.length === 0) return null;
+  const btn = { font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 8, padding: '5px 10px', textAlign: 'left' as const, width: '100%' };
+  if (!open) {
+    return (
+      <div data-develop-reading-card="folded" style={{ flex: '0 0 auto', fontSize: 12, display: 'flex', gap: 8, alignItems: 'center', ...ink }}>
+        <span style={{ opacity: .8 }}>Her reading of {r.chapterLabel} is here when you want it.</span>
+        <button type="button" onClick={() => setOpen(true)} style={{ ...btn, width: 'auto' }}>Open</button>
+      </div>
+    );
+  }
+  const lead = r.items[0]!;
+  return (
+    <section aria-label={`MAIA's reading of ${r.chapterLabel}`} data-develop-reading-card="open"
+      style={{ flex: '0 1 auto', maxHeight: '55%', overflowY: 'auto', border: hair, borderRadius: 12, padding: '10px 12px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6, ...ink }}>
+      <div style={{ fontSize: 11, opacity: .75 }}>MAIA · read all of {r.chapterLabel}{r.chapterWords ? ` (${r.chapterWords.toLocaleString()} words)` : ''}</div>
+      <p style={{ margin: 0, lineHeight: 1.55 }}><strong style={{ fontWeight: 500 }}>{lead.label}.</strong> {lead.notice}</p>
+      {list ? (
+        <ol data-develop-reading-items="true" style={{ margin: '4px 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {r.items.map((it, i) => (
+            <li key={it.id} data-develop-reading-item={i + 1} style={{ lineHeight: 1.5 }}>
+              <strong style={{ fontWeight: 500 }}>{it.label}.</strong> {it.notice}
+              {it.whyItMatters ? <div style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>Why it matters: {it.whyItMatters}</div> : null}
+              {it.uncertainty ? <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>What she isn’t sure of: {it.uncertainty}</div> : null}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      <div style={{ fontWeight: 500, marginTop: 4 }}>What would you like to do?</div>
+      <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <button type="button" data-develop-choice="noticed" aria-expanded={list} onClick={() => setList((v) => !v)} style={btn}>{list ? 'Hide what she noticed' : 'Go through what she noticed'}</button>
+        <button type="button" data-develop-choice="passage" onClick={() => setHint(true)} style={btn}>Talk about one passage</button>
+        {hint ? <p role="note" style={{ margin: '0 2px', fontSize: 12, opacity: .85 }}>Select the words in your chapter, then choose “Ask MAIA about this”.</p> : null}
+        {props.onWorkTowardRevision ? <button type="button" data-develop-choice="revise" onClick={props.onWorkTowardRevision} style={btn}>Work toward a revision</button> : null}
+        <button type="button" data-develop-choice="rest" onClick={() => setOpen(false)} style={btn}>Leave it for now</button>
+      </div>
+    </section>
   );
 }
