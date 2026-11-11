@@ -1,0 +1,58 @@
+buttons 92 distinct 56
+  8 onField
+  5 onScope
+  4 onMutation
+  4 onCommission
+  4 beginWholeConversation + placeStarter
+  4 navigateMode
+  3 document.querySelector('[data-developmen + document.querySelector
+  3 requestConversationDeparture + onIntent
+  2 onReading
+  2 onTalkObservation
+  2 onSelectObservation
+  2 onDiscussCandidate
+  2 onMinimalPath
+  2 onEdit
+  2 onDevelopmentalMovement
+  2 onCheckpointAndCommission
+  2 setDialoguePrompt + setTalking
+  1 onSection
+  1 requestStructureReading
+  1 onWorkWithObservation
+  1 onGoToObservation
+  1 onTeachObservation
+  1 onDeepObservation
+  1 draft.trim + onMutation
+  1 setSelectedThemeId
+  1 onTalkCandidate
+  1 keepNearby
+  1 letRest
+  1 setCandidateIndex
+  1 onPrepare
+  1 window.location.assign
+  1 onScan
+  1 onInvestigateChapter
+  1 document.querySelector('[data-lineage-pa + document.querySelector
+  1 onShowCandidate
+  1 (no onClick: submit or form)
+  1 onCheckpointAndRead
+  1 onRead
+  1 onBookFit
+  1 onMovement
+  1 onWrite
+  1 onScore
+  1 onWork
+  1 onDiscuss
+  1 onShow
+  1 advance
+  1 items.findIndex
+  1 preferences.querySelector<HTMLInputEleme + preferences.querySelector
+  1 chooseDevelopView
+  1 beginWholeConversation + [
+                                  `I w
+  1 onReflectDevelopmentalProcess
+  1 handleGuidedMove
+  1 openReading + latestForField
+  1 d.scrollIntoView
+  1 teachingQuestion
+  1 setWorkTalking
