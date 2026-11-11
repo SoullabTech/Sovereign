@@ -1,3 +1,5 @@
+import { keepRefusal } from '@/lib/sanctuary/studioPosture';
+import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -238,8 +240,22 @@ export async function POST(
     return NextResponse.json({ error: valid.reason }, { status: 502 });
   }
 
+  /* WS-RELATIONAL-ARCHITECTURE step 2: a whole-book editorial pass is kept as MAIA's letter for this Work, so it is there when the
+     writer comes back, on any device. Only this route writes a letter, and only from the map it just built. It is kept only when the
+     writer asked for it to be kept (keepAsLetter) AND the keep gate allows it: in Sanctuary, or with the posture unreadable, the pass
+     is still returned and simply not kept. */
+  let letterId: string | null = null;
+  let letterKept: 'kept' | 'not_asked' | 'sanctuary_not_kept' | 'posture_undeclared' = 'not_asked';
+  if (deepMode && body.keepAsLetter === true) {
+    const refused = await keepRefusal(memberId, body);
+    if (refused) letterKept = refused.body.refusal;
+    else { letterId = await saveLetter(memberId, manuscriptId, revisionNumber, map); letterKept = 'kept'; }
+  }
+
   return NextResponse.json({
     map,
+    letterId,
+    letterKept,
     provenance: {
       provider: structured.result.provenance.provider,
       model: structured.result.provenance.model,

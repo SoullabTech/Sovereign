@@ -9,6 +9,9 @@ const scope = jest.fn();
 const posture = jest.fn();
 const insight = jest.fn();
 const runPass = jest.fn();
+const fetchLetter = jest.fn();
+const postDecision = jest.fn();
+jest.mock('@/lib/writersStudio/letter/letterClient', () => ({ fetchLetter: (...a: unknown[]) => fetchLetter(...a), postDecision: (...a: unknown[]) => postDecision(...a) }));
 jest.mock('@/lib/writersStudio/readScopeClient', () => ({ getReadScope: (...a: unknown[]) => scope(...a) }));
 jest.mock('@/lib/sanctuary/currentClientPosture', () => ({ readCurrentSanctuaryPosture: () => posture() }));
 jest.mock('@/lib/writersStudio/insightCanvas', () => ({ loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
@@ -38,6 +41,8 @@ beforeEach(() => {
   window.localStorage.clear();
   scope.mockReset(); posture.mockReset(); insight.mockReset(); runPass.mockReset();
   scope.mockResolvedValue(null); posture.mockReturnValue({ resolved: true, sanctuary: false });
+  fetchLetter.mockReset(); postDecision.mockReset();
+  fetchLetter.mockResolvedValue({ letter: null, decisions: {} }); postDecision.mockResolvedValue(null);
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); });
@@ -153,5 +158,44 @@ describe('the letter and the walk', () => {
   it('the panel never scrolls or takes focus', () => {
     const src = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'app/dev/writers-studio-pc3-live/EditorialLetterPanel.tsx'), 'utf8');
     expect(src.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/\.focus\(|scrollIntoView|scrollTo\(/);
+  });
+});
+
+describe('step 2: the letter and decisions are kept on the server', () => {
+  const SERVER = { id: '11111111-1111-4111-8111-111111111111', draftRevision: 5, map: MAP, createdAt: 'now' };
+  it('⭐ a letter on the server is shown on a device that has none, with its decisions', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: { b: 'later' } });
+    await mount();
+    expect(host.querySelectorAll('[data-letter-open]').length).toBe(2);
+    expect(host.textContent).toContain('later');
+  });
+  it('⭐ a decision on a kept letter goes to the server, not this device', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: {} });
+    await mount();
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="intended"]')!.click(); await Promise.resolve(); });
+    expect(postDecision).toHaveBeenCalledWith('m', SERVER.id, 'a', 'intended');
+    expect(loadPassDecisions('m')).toEqual({});
+    expect(q('[data-letter-decision="intended"]')).not.toBeNull();
+  });
+  it('⭐ a refused decision (Sanctuary) is said, and nothing is recorded as decided', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: {} });
+    postDecision.mockResolvedValue('sanctuary_not_kept');
+    await mount();
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="later"]')!.click(); await Promise.resolve(); });
+    expect(q('[data-letter-decision]')).toBeNull();
+    expect(host.textContent).toContain('Sanctuary is on');
+  });
+  it('a letter of an earlier draft on the server is labelled as such', async () => {
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, draftRevision: 4 }, decisions: {} });
+    await mount();
+    expect(q('[data-letter-stale]')).not.toBeNull();
+  });
+  it('she reads the book with the letter kept (the keep gate decides on the server)', async () => {
+    runPass.mockResolvedValue({ ok: true, map: MAP, letterId: SERVER.id, letterKept: 'kept' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(runPass.mock.calls[0][0]).toMatchObject({ keepAsLetter: true });
   });
 });
