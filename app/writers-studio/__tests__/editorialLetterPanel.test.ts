@@ -9,6 +9,15 @@ const scope = jest.fn();
 const posture = jest.fn();
 const insight = jest.fn();
 const runPass = jest.fn();
+const fetchLetter = jest.fn();
+const postDecision = jest.fn();
+const fetchRun = jest.fn();
+const startPassRun = jest.fn();
+const cancelPassRun = jest.fn();
+jest.mock('@/lib/writersStudio/studio/passRunClient', () => ({
+  fetchRun: (...a: unknown[]) => fetchRun(...a), startPassRun: (...a: unknown[]) => startPassRun(...a), cancelPassRun: (...a: unknown[]) => cancelPassRun(...a),
+}));
+jest.mock('@/lib/writersStudio/letter/letterClient', () => ({ fetchLetter: (...a: unknown[]) => fetchLetter(...a), postDecision: (...a: unknown[]) => postDecision(...a) }));
 jest.mock('@/lib/writersStudio/readScopeClient', () => ({ getReadScope: (...a: unknown[]) => scope(...a) }));
 jest.mock('@/lib/sanctuary/currentClientPosture', () => ({ readCurrentSanctuaryPosture: () => posture() }));
 jest.mock('@/lib/writersStudio/insightCanvas', () => ({ loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
@@ -38,6 +47,10 @@ beforeEach(() => {
   window.localStorage.clear();
   scope.mockReset(); posture.mockReset(); insight.mockReset(); runPass.mockReset();
   scope.mockResolvedValue(null); posture.mockReturnValue({ resolved: true, sanctuary: false });
+  fetchLetter.mockReset(); postDecision.mockReset();
+  fetchLetter.mockResolvedValue({ letter: null, decisions: {} }); postDecision.mockResolvedValue(null);
+  fetchRun.mockReset(); startPassRun.mockReset(); cancelPassRun.mockReset();
+  fetchRun.mockResolvedValue(null); startPassRun.mockResolvedValue({ ok: false, refusal: 'not_permitted' }); cancelPassRun.mockResolvedValue(true);
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); });
@@ -153,5 +166,108 @@ describe('the letter and the walk', () => {
   it('the panel never scrolls or takes focus', () => {
     const src = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'app/dev/writers-studio-pc3-live/EditorialLetterPanel.tsx'), 'utf8');
     expect(src.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/\.focus\(|scrollIntoView|scrollTo\(/);
+  });
+});
+
+describe('step 2: the letter and decisions are kept on the server', () => {
+  const SERVER = { id: '11111111-1111-4111-8111-111111111111', draftRevision: 5, map: MAP, createdAt: 'now' };
+  it('⭐ a letter on the server is shown on a device that has none, with its decisions', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: { b: 'later' } });
+    await mount();
+    expect(host.querySelectorAll('[data-letter-open]').length).toBe(2);
+    expect(host.textContent).toContain('later');
+  });
+  it('⭐ a decision on a kept letter goes to the server, not this device', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: {} });
+    await mount();
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="intended"]')!.click(); await Promise.resolve(); });
+    expect(postDecision).toHaveBeenCalledWith('m', SERVER.id, 'a', 'intended');
+    expect(loadPassDecisions('m')).toEqual({});
+    expect(q('[data-letter-decision="intended"]')).not.toBeNull();
+  });
+  it('⭐ a refused decision (Sanctuary) is said, and nothing is recorded as decided', async () => {
+    fetchLetter.mockResolvedValue({ letter: SERVER, decisions: {} });
+    postDecision.mockResolvedValue('sanctuary_not_kept');
+    await mount();
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="later"]')!.click(); await Promise.resolve(); });
+    expect(q('[data-letter-decision]')).toBeNull();
+    expect(host.textContent).toContain('Sanctuary is on');
+  });
+  it('a letter of an earlier draft on the server is labelled as such', async () => {
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, draftRevision: 4 }, decisions: {} });
+    await mount();
+    expect(q('[data-letter-stale]')).not.toBeNull();
+  });
+  it('she reads the book with the letter kept (the keep gate decides on the server)', async () => {
+    runPass.mockResolvedValue({ ok: true, map: MAP, letterId: SERVER.id, letterKept: 'kept' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(runPass.mock.calls[0][0]).toMatchObject({ keepAsLetter: true });
+  });
+});
+
+
+describe('step 4: the pass runs on the server and survives closing the page', () => {
+  const running = { id: 'run1', draftRevision: 5, state: 'lens_done', done: 5, total: 9, lens: 'arc', refusal: null, letterId: null, createdAt: 'now' };
+  it('⭐ an unfinished run is shown truthfully when the page opens ("5 of 9 readings done"), and can be stopped', async () => {
+    fetchRun.mockResolvedValue(running);
+    await mount();
+    expect(q('[data-editorial-letter="running"]')?.textContent).toContain('5 of 9 readings done');
+    expect(host.textContent).toContain('close this page; I’ll carry on');
+    await act(async () => { q('[data-letter-cancel]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(cancelPassRun).toHaveBeenCalledWith('m');
+  });
+  it('⭐ with whole-Work permission, "Read my book" starts the server run, not the page loop', async () => {
+    startPassRun.mockResolvedValue({ ok: true, run: { ...running, state: 'queued', done: 0 } });
+    await mount();
+    fetchRun.mockResolvedValue({ ...running, state: 'reading', done: 1 });   // the server now reports the run it started
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(startPassRun).toHaveBeenCalledWith('m');
+    expect(runPass).not.toHaveBeenCalled();
+    expect(q('[data-editorial-letter="running"]')).not.toBeNull();
+  });
+  it('without whole-Work permission, the writer\'s click still reads from this page', async () => {
+    runPass.mockResolvedValue({ ok: true, map: MAP, letterId: null, letterKept: 'not_asked' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+    expect(runPass).toHaveBeenCalledTimes(1);
+  });
+  it('⭐ a stopped run says why, keeps what was done, and offers Continue', async () => {
+    fetchRun.mockResolvedValue({ ...running, state: 'stopped', refusal: 'permission_withdrawn' });
+    await mount();
+    expect(q('[data-letter-run-ended="stopped"]')?.textContent).toContain('you withdrew my permission');
+    expect(q('[data-letter-continue]')).not.toBeNull();
+  });
+  it('the daily limit is said in words', async () => {
+    startPassRun.mockResolvedValue({ ok: false, refusal: 'daily_limit' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(host.textContent).toContain('as many times today as your setting allows');
+    expect(runPass).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('step 5: the letter opens with her reading of the book, as a question', () => {
+  const OPENING = { reachingFor: 'The book reaches for grief as a passage. Is that right?', working: [{ text: 'The opening carries it.', quote: 'Marta held the key', sectionId: 's1' }], divergence: null, droppedUnverified: 0 };
+  beforeEach(() => savePass('m', { draftRevision: 5, map: { ...MAP, opening: OPENING } as any }));
+  it('⭐ shows what she thinks the book is reaching for, and asks; nothing is decided for the writer', async () => {
+    await mount();
+    expect(q('[data-letter-opening]')?.textContent).toContain('grief as a passage');
+    expect(q('[data-opening-yes]')).not.toBeNull();
+    expect(q('[data-letter-working]')?.textContent).toContain('“Marta held the key”');
+  });
+  it('"Not quite" opens the conversation in the writer\'s own words; it never edits the letter', async () => {
+    const p = await mount();
+    act(() => q('[data-opening-not-quite]')!.click());
+    expect((p.onTalk as jest.Mock).mock.calls[0][0]).toContain('Not quite. What I’m reaching for is');
+    expect(q('[data-letter-opening]')?.textContent).toContain('grief as a passage');
+  });
+  it('"Show me where" on a working quotation is the writer\'s call', async () => {
+    const p = await mount();
+    act(() => q('[data-working-where="0"]')!.click());
+    expect(p.onShowSection).toHaveBeenCalledWith('s1');
   });
 });

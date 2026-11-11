@@ -21,6 +21,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClient';
+import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studio/passRunClient';
+import type { RunView } from '@/lib/writersStudio/studio/passRun';
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
   inBookOrder, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
@@ -43,6 +47,8 @@ export function EditorialLetterPanel(props: {
   onShowSection: (sectionId: string) => void;
   onEditOptions: (target: PassIssueTarget) => void;
   onTalk: (words: string) => void;
+  /** she finished reading (so what she has read can be re-checked) */
+  onRead?: () => void;
 }) {
   const { manuscriptId, sections, draftRevision } = props;
   const [pass, setPass] = useState<SavedPass | null>(null);
@@ -56,25 +62,88 @@ export function EditorialLetterPanel(props: {
   const [mayAutoRead, setMayAutoRead] = useState<boolean | null>(null);
   const autoAsked = useRef(false);
 
+  /* Step 2: the letter and decisions live on the server, per Work, so they are there on any device and after any visit. The copy on
+     this device is used only when the server has none (a pass made in Sanctuary, or before letters were kept). */
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
+    let cancelled = false;
     setPass(loadSavedPass(manuscriptId));
     setDecisions(loadPassDecisions(manuscriptId));
-    setCursor(null); setError(null); setNote(null); autoAsked.current = false;
+    setCursor(null); setError(null); setNote(null); autoAsked.current = false; setLoaded(false);
+    void fetchLetter(manuscriptId).then((out) => {
+      if (cancelled) return;
+      if (out?.letter) {
+        setPass({ draftRevision: out.letter.draftRevision, map: out.letter.map, letterId: out.letter.id });
+        setDecisions(out.decisions);
+      }
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
   }, [manuscriptId]);
 
+  /* Step 4 (founder ruling 2026-11-11, "Let it run on its own"): with whole-Work permission the pass runs ON THE SERVER, so closing the
+     page does not stop it; this panel only shows its true state and checks back. Without that permission the writer's click still reads
+     the book from this page, as before. */
+  const [run, setRun] = useState<RunView | null>(null);
+  const [openingAnswer, setOpeningAnswer] = useState<'yes' | 'not_quite' | null>(null);
+  const watch = useRef<number | null>(null);
+  const stopWatching = () => { if (watch.current !== null) { window.clearInterval(watch.current); watch.current = null; } };
+  const followRun = useCallback(() => {
+    stopWatching();
+    const tick = async () => {
+      const r = await fetchRun(manuscriptId);
+      if (r === undefined) return;
+      setRun(r);
+      if (!r || ['done', 'failed', 'stopped', 'cancelled'].includes(r.state)) {
+        stopWatching();
+        if (r?.state === 'done') {
+          const out = await fetchLetter(manuscriptId);
+          if (out?.letter) { setPass({ draftRevision: out.letter.draftRevision, map: out.letter.map, letterId: out.letter.id }); setDecisions(out.decisions); setCursor(null); props.onRead?.(); }
+        }
+      }
+    };
+    void tick();
+    watch.current = window.setInterval(() => { void tick(); }, 5000);
+  }, [manuscriptId, props.onRead]);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchRun(manuscriptId).then((r) => {
+      if (cancelled || !r) return;
+      setRun(r);
+      if (!['done', 'failed', 'stopped', 'cancelled'].includes(r.state)) followRun();
+    });
+    return () => { cancelled = true; stopWatching(); };
+  }, [manuscriptId, followRun]);
+  const runActive = run !== null && !['done', 'failed', 'stopped', 'cancelled'].includes(run.state);
+
+  const readOnServer = useCallback(async (): Promise<boolean> => {
+    const out = await startPassRun(manuscriptId);
+    if (!out.ok) {
+      if (out.refusal === 'daily_limit') { setError('I’ve already read this book as many times today as your setting allows. Try again tomorrow.'); return true; }
+      if (out.refusal === 'sanctuary_not_kept' || out.refusal === 'posture_undeclared') { setError(keepRefusalCopy(out.refusal)); return true; }
+      return false;   // no whole-Work permission (or not established): read from this page instead
+    }
+    setRun(out.run); setError(null); followRun();
+    return true;
+  }, [manuscriptId, followRun]);
+
   const read = useCallback(async () => {
-    if (busy || draftRevision === null) return;
+    if (busy || runActive || draftRevision === null) return;
+    if (await readOnServer()) return;
     setBusy(true); setError(null); setNote(null);
     setProgress('MAIA is reading your book…');
     try {
-      const out = await runEditorialPass({ manuscriptId, revisionNumber: draftRevision, sectionIds: sections.map((s) => s.draftSectionId), onProgress: setProgress });
+      const out = await runEditorialPass({ manuscriptId, revisionNumber: draftRevision, sectionIds: sections.map((s) => s.draftSectionId), onProgress: setProgress, keepAsLetter: true });
       if (!out.ok) { setError(out.message); return; }
-      const saved = { draftRevision, map: out.map };
+      const saved = { draftRevision, map: out.map, letterId: out.letterId };
+      if (out.letterKept && out.letterKept !== 'kept') setNote(keepRefusalCopy(out.letterKept) ?? 'This letter is on this device only.');
+      setDecisions(out.letterId ? {} : loadPassDecisions(manuscriptId));
       savePass(manuscriptId, saved);
       setPass(saved);
       setCursor(null);
+      props.onRead?.();
     } finally { setBusy(false); setProgress(null); }
-  }, [busy, draftRevision, manuscriptId, sections]);
+  }, [busy, runActive, readOnServer, draftRevision, manuscriptId, sections, props.onRead]);
 
   /* She has read the book already when the writer has let her read the whole Work: no letter yet → she reads, once. */
   useEffect(() => {
@@ -90,18 +159,24 @@ export function EditorialLetterPanel(props: {
     /* Off unless NEXT_PUBLIC_WS_AUTO_READ=1: reading the whole book is nine paid readings and a synthesis, so reading by herself
        waits for a cost ceiling and owner review (review of #2215, 2026-11-11). Until then: "Read my book". */
     if (process.env.NEXT_PUBLIC_WS_AUTO_READ !== '1') return;
-    if (mayAutoRead !== true || autoAsked.current || busy || draftRevision === null || sections.length === 0) return;
-    if (loadSavedPass(manuscriptId)) return;
+    if (!loaded || mayAutoRead !== true || autoAsked.current || busy || draftRevision === null || sections.length === 0) return;
+    if (pass || loadSavedPass(manuscriptId)) return;
     autoAsked.current = true;
     void read();
-  }, [mayAutoRead, busy, draftRevision, sections.length, manuscriptId, read]);
+  }, [loaded, pass, mayAutoRead, busy, draftRevision, sections.length, manuscriptId, read]);
 
   const places = useMemo(
     () => (pass ? inBookOrder(pass.map.items.filter((it) => it.sectionIds.length > 0), sections.map((s) => s.draftSectionId)) : []),
     [pass, sections],
   );
   const stale = pass !== null && draftRevision !== null && pass.draftRevision !== draftRevision;
-  const decide = (id: string, d: PassDecision | null) => {
+  const decide = async (id: string, d: PassDecision | null) => {
+    if (pass?.letterId) {
+      const refused = await postDecision(manuscriptId, pass.letterId, id, d ?? 'cleared');
+      if (refused) { setNote(keepRefusalCopy(refused) ?? 'That decision could not be kept just now. Nothing changed.'); return; }
+      setDecisions((prev) => { const next = { ...prev }; if (d) next[id] = d; else delete next[id]; return next; });
+      return;
+    }
     setDecisions((prev) => {
       const next = { ...prev };
       if (d) next[id] = d; else delete next[id];
@@ -125,6 +200,16 @@ export function EditorialLetterPanel(props: {
   };
 
   /* ── reading, or nothing yet ── */
+  if (runActive && run) {
+    return (
+      <section data-editorial-letter="running" role="status" aria-live="polite" className="fr-say">
+        <p style={{ margin: 0 }}>I’m reading your book{run.done > 0 ? `: ${run.done} of ${run.total} readings done` : ''}{run.state === 'synthesizing' ? ', and gathering what I found' : ''}.</p>
+        <p style={{ margin: '6px 0 0', fontSize: 12, opacity: .8 }}>Keep writing, or close this page; I’ll carry on and the letter will be here when you come back.</p>
+        <button type="button" data-letter-cancel="true" onClick={() => { void cancelPassRun(manuscriptId).then(() => fetchRun(manuscriptId)).then((r) => { if (r !== undefined) setRun(r); stopWatching(); }); }}
+          style={{ ...quiet, marginTop: 6 }}>Stop reading</button>
+      </section>
+    );
+  }
   if (busy) {
     return (
       <section data-editorial-letter="reading" role="status" aria-live="polite" className="fr-say">
@@ -133,6 +218,15 @@ export function EditorialLetterPanel(props: {
       </section>
     );
   }
+  const runEnded = run && (run.state === 'failed' || run.state === 'stopped') ? (
+    <p role="note" data-letter-run-ended={run.state} style={{ margin: '6px 0 0', fontSize: 12 }}>
+      {run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
+        : run.state === 'stopped' && run.refusal === 'permission_withdrawn' ? 'I stopped reading because you withdrew my permission to read the whole book.'
+        : run.state === 'stopped' && run.refusal === 'draft_changed' ? 'I stopped because the book changed while I was reading.'
+        : `I couldn’t finish the ${run.lens ?? ''} reading (${run.done} of ${run.total} were done; they are kept).`}
+      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>Continue</button>
+    </p>
+  ) : null;
   if (!pass) {
     return (
       <section data-editorial-letter="none" className="fr-say">
@@ -142,6 +236,7 @@ export function EditorialLetterPanel(props: {
             : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
         </p>
         {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}>{error}</p> : null}
+        {runEnded}
         {draftRevision !== null ? <button type="button" data-letter-read="true" className="p4r1-talk" onClick={() => void read()} style={{ marginTop: 8 }}>Read my book</button> : null}
       </section>
     );
@@ -163,13 +258,13 @@ export function EditorialLetterPanel(props: {
         {it.whyItMatters ? <p style={{ margin: 0, fontSize: 12, opacity: .85 }}>Why it may matter: {it.whyItMatters}</p> : null}
         {it.uncertainty ? <p style={{ margin: 0, fontSize: 12, opacity: .75 }}>What I’m not sure of: {it.uncertainty}</p> : null}
         <p style={{ margin: '2px 0 0', fontWeight: 500 }}>Is this intended?</p>
-        {d ? <p data-letter-decision={d} role="status" style={{ margin: 0, fontSize: 12 }}>You said: {d === 'intended' ? 'it’s intended.' : 'later.'} <button type="button" onClick={() => decide(it.id, null)} style={quiet}>Change</button></p> : null}
+        {d ? <p data-letter-decision={d} role="status" style={{ margin: 0, fontSize: 12 }}>You said: {d === 'intended' ? 'it’s intended.' : 'later.'} <button type="button" onClick={() => void decide(it.id, null)} style={quiet}>Change</button></p> : null}
         <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {sec ? <button type="button" data-letter-act="where" onClick={() => props.onShowSection(sec.draftSectionId)} style={btn}>Show me where</button> : null}
           <button type="button" data-letter-act="options" disabled={resolving} onClick={() => void options(it)} style={btn}>{resolving ? 'Finding the words…' : 'Show me options'}</button>
           <button type="button" data-letter-act="talk" onClick={() => props.onTalk(`About “${it.label}” in ${labelOf(sec)}: you noticed that ${it.notice} `)} style={btn}>Talk about it</button>
-          <button type="button" data-letter-act="intended" onClick={() => decide(it.id, 'intended')} style={btn}>It’s intended</button>
-          <button type="button" data-letter-act="later" onClick={() => decide(it.id, 'later')} style={btn}>Later</button>
+          <button type="button" data-letter-act="intended" onClick={() => void decide(it.id, 'intended')} style={btn}>It’s intended</button>
+          <button type="button" data-letter-act="later" onClick={() => void decide(it.id, 'later')} style={btn}>Later</button>
         </div>
         {note ? <p role="note" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -193,6 +288,31 @@ export function EditorialLetterPanel(props: {
         </p>
       ) : null}
       {error ? <p role="alert" style={{ margin: 0, fontSize: 12 }}>{error}</p> : null}
+      {note ? <p role="note" data-letter-note="true" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
+      {pass.map.opening ? (
+        <div data-letter-opening="true" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <p style={{ margin: 0, lineHeight: 1.6, fontFamily: "'Iowan Old Style','Charter',Georgia,serif", fontSize: 15 }}>{pass.map.opening.reachingFor}</p>
+          {openingAnswer === null ? (
+            <div role="group" aria-label="Is that right?" style={{ display: 'flex', gap: 6 }}>
+              <button type="button" data-opening-yes="true" onClick={() => setOpeningAnswer('yes')} style={btn}>Yes</button>
+              <button type="button" data-opening-not-quite="true" onClick={() => { setOpeningAnswer('not_quite'); props.onTalk(`You read my book as reaching for this: “${pass.map.opening!.reachingFor}” Not quite. What I’m reaching for is `); }} style={btn}>Not quite</button>
+            </div>
+          ) : <p role="status" style={{ margin: 0, fontSize: 12, opacity: .8 }}>{openingAnswer === 'yes' ? 'Good. I’ll read with that in mind.' : 'Tell me in your own words; I’ve opened our conversation.'}</p>}
+          {pass.map.opening.working.length > 0 ? (
+            <div data-letter-working="true">
+              <p style={{ margin: '4px 0 2px', fontWeight: 500 }}>What’s working</p>
+              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {pass.map.opening.working.map((w, i) => (
+                  <li key={i} style={{ lineHeight: 1.5 }}>{w.text} <span style={{ fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>“{w.quote}”</span>
+                    {w.sectionId ? <> <button type="button" data-working-where={i} onClick={() => props.onShowSection(w.sectionId!)} style={quiet}>Show me where</button></> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {pass.map.opening.divergence ? <p data-letter-divergence="true" style={{ margin: 0, lineHeight: 1.55 }}>{pass.map.opening.divergence}</p> : null}
+        </div>
+      ) : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
       ) : (

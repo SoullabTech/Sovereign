@@ -171,6 +171,11 @@ export interface WorkConversationProps {
   sectionId: string | null;
   /** Optional member-facing starter held in the composer. Never auto-sent. */
   initialDraft?: string;
+  /** Place words into the EXISTING composer (a starter, or the writer's selected words) without re-creating the conversation.
+   *  A new `n` places `text` once: into an empty composer it replaces; after the writer's own unsent text it is added below, never
+   *  replacing it. Never sent. (Founder P0 direction 2026-11-11: a late or placed text must not reset the conversation or clear
+   *  the writer's unsent prompt.) */
+  placeDraft?: { text: string; n: number };
   /** Design 1B: open a Develop place MAIA offered (navigation only). Absent → no such button. */
   onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
   /** The Develop stage keeps MAIA's holdings (reading permission, what you have settled) in its own column, so the conversation stays a conversation. */
@@ -219,7 +224,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
+  work, manuscriptId, sectionId, initialDraft = '', placeDraft, onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -286,7 +291,19 @@ function ScopedWorkConversation({
   const [carryScope, setCarryScope] = useState<'here' | 'whole_book'>('here');
   const offerWholeBook = carryScope === 'here' && WHOLE_BOOK_OFFER.test(draft);
   // The Studio's starter, as placed; never sent on its own.
-  const [starter] = useState(initialDraft);
+  const [starter, setStarter] = useState(initialDraft);
+  const placedRef = useRef(placeDraft?.n ?? 0);
+  const draftNowRef = useRef(draft);
+  draftNowRef.current = draft;
+  useEffect(() => {
+    if (!placeDraft || placeDraft.n === placedRef.current) return;
+    placedRef.current = placeDraft.n;
+    const text = placeDraft.text;
+    if (!text) return;
+    const current = draftNowRef.current;
+    if (current.length === 0 || current === starter) { setDraft(text); setStarter(text); }
+    else setDraft(`${current}\n\n${text}`);
+  }, [placeDraft, starter]);
   const [reorientationOffered, setReorientationOffered] = useState(false);
   const [presentationConfirmation, setPresentationConfirmation] = useState<SafePresentationProposal | null>(null);
   const [presentationNotice, setPresentationNotice] = useState<string | null>(null);
