@@ -209,3 +209,64 @@ This step adds a worker and a job table, so it gets its own design review before
 - Whether macro-to-micro order, when asked for, is produced by MAIA ranking places (which needs the consequence-judgment licence the convergence charter withheld) or by scale alone (whole book, chapter, passage), which ranks nothing. Proposed: scale alone.
 - The Write and Develop room names once Write is the one surface.
 - How this design reconciles with draft PR #2208 (Quiet / Balanced / All tools), which touches the same files.
+
+---
+
+# Part 3 — Build status and the specs for steps 4 and 5 (2026-11-11)
+
+## 17. Built (draft PRs, stacked, none merged)
+
+| Step | PR | What | Migration |
+|---|---|---|---|
+| 1 Coverage map | #2216 | per-section read / changed / position-only / not read, derived from frozen readings; a line in MAIA's column | none |
+| 2 Letter and decisions on the server | #2217 (on #2216) | letters kept by the synthesis route only, through the keep gate; decisions append-only | `20261111000001` (additive) |
+| 3 One surface | #2218 (on #2217) | a lens opens beside the chapter; the stage conversation is never re-created | none |
+
+Already live on production (`323c859cb`): the letter and walk in Write, and the editorial-pass fix (#2215).
+
+## 18. Step 4 spec: a pass that survives closing the page
+
+**Why it is not yet code:** it starts paid model work that no open page is watching. That needs a cost ceiling and a stop rule that are founder acts (§14), and an owner review of the job runner.
+
+**Smallest lawful shape (no new container):**
+1. `editorial_pass_runs` (append-only state events): run id, member, manuscript, draft revision, state, per-lens outcome, letter id.
+2. `POST /editorial-pass` creates a run (one per manuscript at a time), behind the keep gate. Then it advances the run inside the existing app server. Every lens reading it saves is already durable.
+3. `GET /editorial-pass` returns the run's true state ("5 of 9 readings done").
+4. A writer-pressed **Continue** resumes any run that stopped (after a server restart, a refusal, or a page close). Finished lenses are reused and never paid twice.
+5. Before each lens, the server re-checks the read permission and Sanctuary. If either fails, it stops.
+6. To make this possible, the synthesis now inside `attention-map/route.ts` moves into a library function that both the route and the run call. There must be one synthesis, never two.
+
+**Must fail if:**
+- a run continues after the read permission is withdrawn;
+- a refused reading counts as done;
+- reopening the page pays again for a saved lens;
+- two runs proceed on one manuscript;
+- the run and the route produce different letters from the same readings.
+
+**Founder acts needed:** a daily ceiling of runs per writer; whether a run may continue with no page open, or only resume on request (proposed: resume on request first).
+
+## 19. Step 5 spec: the letter's opening
+
+**Why it is not yet code:** it changes what the synthesis returns. The letter gains an opening that is checked against the text. That is a change to an evidence-bound contract, so its falsifiers come first.
+
+**Shape:**
+1. The synthesis tool's output gains an optional `opening` object:
+   - `reachingFor`: what she thinks the book is reaching for, phrased as a question;
+   - `working`: two or three items, each tied to a frozen observation reference and a quotation;
+   - `divergence`: optional. Shown only when the writer has stated an intention, phrased both ways ("is the book changing, or are these chapters?").
+2. The server keeps a `working` item only if its quotation is found verbatim in the current draft. Otherwise the item is dropped, and the drop is recorded.
+3. The writer's stated intention orients the opening but is never evidence. The opening may say "you told me". It may say "the text does" only where an observation the opening cites supports it.
+4. Panel: the opening sits above the places, ending with "Is that right?" and two answers: **Yes** and **Not quite**. "Not quite" opens the existing corrections record in the writer's own words.
+
+**Must fail if:**
+- the opening states the writer's intention as a fact about the text;
+- a `working` quotation does not resolve verbatim in the current draft;
+- praise appears without a quotation;
+- the opening is shown for a letter of an earlier draft without saying so.
+
+## 20. Rereading only what changed (step 2, deferred part)
+
+The synthesis route accepts only a complete eight-lens set over the whole current draft. To reread only changed chapters, it must accept a set of readings that **together** cover every section of the current draft at body depth, with matching digests. The coverage map (step 1) is that check. This change gets its own falsifiers:
+- a section with no current reading;
+- a stale digest;
+- two readings of different drafts mixed together.
