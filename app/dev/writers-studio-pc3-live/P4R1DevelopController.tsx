@@ -34,7 +34,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
-import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
+import { runWholeManuscriptReview, wholeReviewComplete } from '@/lib/writersStudio/studio/wholeManuscriptReview';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import {
@@ -1466,26 +1466,39 @@ export default function P4R1DevelopController() {
     setAttentionError(null);
     setAttentionProgress('MAIA is reading through the manuscript for edit opportunities…');
     try {
-      const bundle = await runWholeManuscriptReview(
+      /* EA walk 2026-11-11 (production): the pass could never finish. Overview joined the whole-manuscript review (09077d3f1), so the
+         review runs 9 readings, but this check still demanded exactly 8 and the synthesis route accepts exactly the 8 deep lenses.
+         Completeness is now the review's own rule; the overview reading is kept out of the synthesis set, as the route requires.
+         One refused lens reading (seen live: a claim citing a section the reading did not hold) is tried once more; completed readings
+         are reused, never repeated. A refusal is never repaired or worked around: a second refusal stops the pass, as before. */
+      const runReview = () => runWholeManuscriptReview(
         context.manuscriptId,
         (done, total, lens) => setAttentionProgress(
           done >= total ? `${total} readings complete. Preparing edit suggestions…`
             : `Reading ${done + 1} of ${total}: ${lens}…`,
         ),
         {
-          revisionNumber: context.draftRevision,
+          revisionNumber: context.draftRevision!,
           sectionIds: context.sections.map((section) => section.draftSectionId),
         },
       );
+      let bundle = await runReview();
+      if (!wholeReviewComplete(bundle) && bundle.remaining.length === 0 && bundle.failures.length > 0) {
+        await loadSummaries();
+        bundle = await runReview();
+      }
       await loadSummaries();
-      if (bundle.failures.length > 0 || bundle.remaining.length > 0 || bundle.readingIds.length !== 8) {
+      if (!wholeReviewComplete(bundle)) {
         setAttentionError('MAIA did not finish reading the whole manuscript, so the editorial pass is incomplete. The readings she completed are still available.');
         return;
       }
+      const deepReadingIds = bundle.payloads
+        .filter((payload) => payload.reading.scope.commissionedLens !== 'overview')
+        .map((payload) => payload.reading.id);
       setAttentionProgress('Preparing the editorial pass…');
       const synthesized = await requestAttentionMap(
         context.manuscriptId,
-        bundle.readingIds,
+        deepReadingIds,
         'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.',
       );
       if (!synthesized.ok) {
