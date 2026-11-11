@@ -130,13 +130,13 @@ test('per-recording release: testers hear only released files; founders hear eve
   assert.equal(mediaAllowedFor(['open-ground', 'unknown.m4a'], true), false);
 });
 
-test('the cohort module fails closed and is read only by the two Sound Studio doors', () => {
+test('the cohort module fails closed and is read only by the Sound Studio doors and the review gate', () => {
   const mod = code(read('lib/listening/listenBetaAccess.ts'));
   assert.match(mod, /parseMemberIdList\(process\.env\.SOULLAB_LISTEN_BETA_MEMBER_IDS\)/);
   assert.doesNotMatch(mod, /getListenBetaCohortSize[\s\S]*return [^;]*LISTEN_BETA_MEMBER_IDS(?!\.size)/);
   const users = execFileSync('git', ['grep', '-l', 'listenBetaAccess', '--', 'app', 'components', 'lib'], { cwd: root, encoding: 'utf8' })
     .trim().split('\n').filter(f => f !== 'lib/listening/listenBetaAccess.ts').sort();
-  assert.deepEqual(users, ['app/api/listen/media-ticket/route.ts', 'app/listen/page.tsx', 'app/media/sound-studio/[...path]/route.ts']);
+  assert.deepEqual(users, ['app/api/listen/media-ticket/route.ts', 'app/listen/page.tsx', 'app/media/sound-studio/[...path]/route.ts', 'lib/listening/listenReviewerGate.ts']);
   const page = code(read('app/listen/page.tsx'));
   assert.ok(page.indexOf('requireMemberId()') < page.indexOf('hasListenBetaAccess(memberId)'), 'session before cohort');
   assert.match(page, /if \(!hasListenBetaAccess\(memberId\)\) notFound\(\)/);

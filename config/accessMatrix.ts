@@ -122,6 +122,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // Never a public asset: no file is served without those checks (tests/listening/sound_studio_media_ticket.test.mjs).
   { prefix: '/media/sound-studio/', public: true, notes: 'Sound Studio review audio — route-enforced: flag + session or media ticket + named beta + allowlist; 404 otherwise' },
   { exact: '/api/listen/media-ticket', minTier: 'free', notes: 'Issue short-lived Sound Studio media tickets; flag + verified session + named beta' },
+  { exact: '/api/listen/review', minTier: 'free', notes: 'Sound Studio review conversation (LISTEN-01 phase 1) — own reviews list and save; route also requires the review flag and named-beta membership' },
+  { prefix: '/api/listen/review/', minTier: 'free', notes: 'Sound Studio review guide turn, summary and own-review delete; same flag + named-beta conditions as /listen' },
 
   // LISTEN-45 — exact authenticated Sound Field door and exact current-session
   // receipt. The page remains disabled-by-default behind
