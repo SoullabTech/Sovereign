@@ -102,6 +102,8 @@ export async function ask(input: {
   responseStyle?: ExplanationDepth;
   /** G-3: the Teach me pressed. The server owns the teaching shape. */
   teachingAnchor?: TeachingAnchor;
+  /** WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope ("About: where I am · the whole book"). Omitted = where I am. */
+  carryScope?: 'here' | 'whole_book';
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -115,6 +117,7 @@ export async function ask(input: {
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
         ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
         ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
+        ...(input.carryScope === 'whole_book' ? { carryScope: 'whole_book' } : {}),
         // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
         ...(input.sanctuary !== undefined ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),

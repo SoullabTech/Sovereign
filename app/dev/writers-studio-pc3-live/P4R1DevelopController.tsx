@@ -13,6 +13,7 @@ import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
+import { readDevelopPlace, resolveDevelopSection, writeDevelopPlace } from '@/lib/writersStudio/developPlace';
 import {
   fetchReading,
   fetchReadingSummaries,
@@ -34,7 +35,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
-import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
+import { runEditorialPass, savePass } from '@/lib/writersStudio/studio/editorialPassRunner';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import {
@@ -300,13 +301,21 @@ export default function P4R1DevelopController() {
     return () => { cancelled = true; };
   }, [manuscriptId, selectedReadingId]);
 
-  const currentSectionId = useMemo(() => {
-    if (!context?.sections.length) return null;
-    if (requestedSectionId && context.sections.some((section) => section.draftSectionId === requestedSectionId)) {
-      return requestedSectionId;
+  // Founder P0 item 4 (2026-11-11): reopening Develop returns the writer to the chapter they last
+  // chose, per writer and per manuscript, in this browser only. The address still wins.
+  const [rememberedSectionId, setRememberedSectionId] = useState<string | null>(null);
+  useEffect(() => { setRememberedSectionId(readDevelopPlace(manuscriptId)); }, [manuscriptId]);
+  const currentSectionId = useMemo(
+    () => resolveDevelopSection(context?.sections ?? [], requestedSectionId, rememberedSectionId),
+    [context, requestedSectionId, rememberedSectionId],
+  );
+  // Remember only a chapter the writer actually chose (it is in the address), so the first-chapter
+  // fallback can never overwrite the remembered place before it is read.
+  useEffect(() => {
+    if (requestedSectionId && context?.sections.some((s) => s.draftSectionId === requestedSectionId)) {
+      writeDevelopPlace(manuscriptId, requestedSectionId);
     }
-    return context.sections[0]?.draftSectionId ?? null;
-  }, [context, requestedSectionId]);
+  }, [manuscriptId, requestedSectionId, context]);
 
   const currentSection = useMemo(
     () => context?.sections.find((section) => section.draftSectionId === currentSectionId) ?? null,
@@ -1466,32 +1475,22 @@ export default function P4R1DevelopController() {
     setAttentionError(null);
     setAttentionProgress('MAIA is reading through the manuscript for edit opportunities…');
     try {
-      const bundle = await runWholeManuscriptReview(
-        context.manuscriptId,
-        (done, total, lens) => setAttentionProgress(
-          done >= total ? `${total} readings complete. Preparing edit suggestions…`
-            : `Reading ${done + 1} of ${total}: ${lens}…`,
-        ),
-        {
-          revisionNumber: context.draftRevision,
-          sectionIds: context.sections.map((section) => section.draftSectionId),
-        },
-      );
+      /* One runner for every room (lib/writersStudio/studio/editorialPassRunner.ts): completeness is the review's own rule, the
+         overview reading stays out of the synthesis set, and one refused lens is tried once more. */
+      const outcome = await runEditorialPass({
+        manuscriptId: context.manuscriptId,
+        revisionNumber: context.draftRevision,
+        sectionIds: context.sections.map((section) => section.draftSectionId),
+        onProgress: setAttentionProgress,
+        keepAsLetter: true,
+      });
       await loadSummaries();
-      if (bundle.failures.length > 0 || bundle.remaining.length > 0 || bundle.readingIds.length !== 8) {
-        setAttentionError('MAIA did not finish reading the whole manuscript, so the editorial pass is incomplete. The readings she completed are still available.');
+      if (!outcome.ok) {
+        setAttentionError(outcome.message);
         return;
       }
-      setAttentionProgress('Preparing the editorial pass…');
-      const synthesized = await requestAttentionMap(
-        context.manuscriptId,
-        bundle.readingIds,
-        'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.',
-      );
-      if (!synthesized.ok) {
-        setAttentionError('MAIA finished the readings, but could not prepare the editorial pass just now. The readings remain available and nothing in the manuscript changed.');
-        return;
-      }
+      const synthesized = outcome;
+      savePass(context.manuscriptId, { draftRevision: context.draftRevision, map: outcome.map });
       setAttentionMap(synthesized.map);
       if (typeof window !== 'undefined') {
         const key = `writers-studio:editorial-pass:v1:${context.manuscriptId}`;

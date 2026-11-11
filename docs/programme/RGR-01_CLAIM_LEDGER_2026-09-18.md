@@ -218,6 +218,15 @@ Every entry retains an epistemic class. No entry may be silently promoted by pro
 - Reason: multiple independent lines support relation-first and geometric analysis, but they use different objects, tasks, metrics, and meanings of "geometry."
 - Strongest counterpoint: simpler relational/symbolic/graph/predictive accounts remain viable and often competitive.
 
+## CL-27
+**Claim:** A relational-reasoning system may need two complementary properties: *relational invariance* (what matters is preserved when only the surface expression changes) and *relational sensitivity* (the interpretation is revised when the underlying relation actually changes).
+
+- Class: HYPOTHESIS — CANDIDATE VOCABULARY ONLY
+- Support basis: RGR-04 relation-preserving / relation-breaking constraints (existing structure, relabelled) + Team Paper 02 (2026-10-31, discussion draft) + Sophontic paired-perturbation proposal (company claim, independent validation pending)
+- Recorded: 2026-10-31 by founder answer ("yes") to mapping note question 2: `RGR_TEAM_PAPER_02_MAPPING_NOTE_DRAFT_2026-10-31.md`
+- Required future test: none designed; any test is a separate founder act.
+- What it does NOT establish: that the pairing is a new requirement beyond RGR-04, that it holds for human meaning or MAIA, or any geometric advantage. Confers no authority for experiments or MAIA change.
+
 ---
 
 # Claim-ledger standing
