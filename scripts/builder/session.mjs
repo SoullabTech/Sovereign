@@ -304,6 +304,31 @@ function cmdOpen() {
   // single-user machine every concurrent lane resolves to the identical owner string.
   // Only the fingerprint is persisted — the record is world-readable, so storing the
   // token itself would hand the authority to every reader.
+  // ── invariant 4: a write claim's baseline is the worktree the unit DECLARED.
+  // The baseline is measured from `worktree`, which falls back to the caller's cwd when
+  // --worktree is omitted. On 2026-11-09 a write claim for branch
+  // feature/astro-pro-client-page-20261109 recorded a baseline taken from a Writer's
+  // Studio worktree on fix/ws-develop-chapters-rail-no-word-counts (session s-4a946557):
+  // the record named one branch and measured another, so its head_sha described work
+  // the unit never owned. A baseline from a worktree that is not on the declared branch
+  // is not this unit's baseline, so the claim is refused rather than recorded.
+  // A worktree that does not exist (or is not a git checkout) measures as null and is
+  // left to the existing callers, which may legitimately name one before creating it.
+  // Read-only lanes record no baseline and are exempt.
+  if (mode === 'write') {
+    const measuredBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'], worktree);
+    if (measuredBranch !== null && measuredBranch !== branch) {
+      ledger({ event: 'refused', reason: 'baseline-branch-mismatch', work_unit: unit, branch, worktree, measured_branch: measuredBranch });
+      console.error(`\n🛑 REFUSED — the worktree is not on the branch this unit declares.`);
+      console.error(`   declared  ${branch}`);
+      console.error(`   worktree  ${worktree}${opt('--worktree') ? '' : '   (defaulted from the current directory)'}`);
+      console.error(`   on        ${measuredBranch}`);
+      console.error(`\n   A baseline measured here would describe another unit's work.`);
+      console.error(`   Pass --worktree for this unit's own worktree, or claim one:  scripts/ain-worktree-claim.sh claim ${unit} ${branch}\n`);
+      process.exit(1);
+    }
+  }
+
   const leaseToken = randomBytes(16).toString('hex');
   const rec = {
     session_id: sid, work_unit: unit, branch, worktree, owner: owner(), pid: process.ppid,
