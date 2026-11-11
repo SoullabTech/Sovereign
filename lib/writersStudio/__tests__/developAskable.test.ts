@@ -17,7 +17,7 @@ const NOT_CONTROLS = new Set([
   'data-chapter-reading', 'data-correction-status', 'data-maia-focus', 'data-maia-refusal', 'data-maia-work-conversation',
   'data-pending-question', 'data-resume', 'data-sanctuary-turn', 'data-sanctuary-turns', 'data-send-mode', 'data-studio-act-status',
   'data-studio-action', 'data-turn', 'data-work-thread', 'data-studio-conversation', 'data-maia-presentation-notice',
-  'data-develop-place',
+  'data-develop-place', 'data-develop-panel-open',
 ]);
 
 it('every control on the Develop stage and in its conversation is classified against the rule', () => {

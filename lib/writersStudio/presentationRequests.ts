@@ -11,6 +11,7 @@ import {
   type WriterWorkingStyle,
 } from './workingStyle';
 import type { StudioReadingSize } from './readingSizePreference';
+import { getValidMemberId } from '@/lib/http/apiBase';
 
 export type StudioDepth = 'focused' | 'guided' | 'full';
 export interface StudioPresentation { depth: StudioDepth }
@@ -18,6 +19,17 @@ export const PRESENTATION_STORAGE_KEY = 'writers-studio:presentation:v1';
 export const PRESENTATION_EVENT = 'writers-studio:presentation-changed';
 export const DEFAULT_PRESENTATION: StudioPresentation = { depth: 'focused' };
 
+/** On-screen names (density spec §11.2). Stored values are unchanged; "Guided" is not used
+ * on screen because it is the name of a MAIA working style, a different axis. */
+export const STUDIO_DEPTHS: readonly StudioDepth[] = ['focused', 'guided', 'full'];
+export const STUDIO_DEPTH_LABEL: Record<StudioDepth, string> = {
+  focused: 'Quiet', guided: 'Balanced', full: 'All tools',
+};
+export const STUDIO_DEPTH_HINT: Record<StudioDepth, string> = {
+  focused: 'your writing and MAIA; everything else one step away',
+  guided: 'chapters and ways to look in view',
+  full: 'everything open',
+};
 export function isStudioDepth(v: unknown): v is StudioDepth {
   return v === 'focused' || v === 'guided' || v === 'full';
 }
@@ -32,25 +44,121 @@ export function parseStudioPresentation(raw: string | null): StudioPresentation 
   } catch { /* A malformed preference is never a product error. */ }
   return DEFAULT_PRESENTATION;
 }
-export function readStudioPresentation(): StudioPresentation {
+/*
+ * WS-DEVELOP density views (spec §10 R2, §11.4, §13.1, 2026-11-09):
+ * - The preference belongs to ONE signed-in writer: the key carries the member id, so a
+ *   second writer on the same browser never inherits it. No member id → default, no write.
+ * - The legacy unscoped key (PRESENTATION_STORAGE_KEY) has no verifiable owner, so it is
+ *   never read and never adopted. It is left untouched, not deleted.
+ * - A temporary choice "just for this Work" lives in sessionStorage: it survives refresh and
+ *   chapter changes and ends with the browser session, or when cleared.
+ * - Precedence: Work override > writer default > 'focused'.
+ * Stored values stay 'focused' | 'guided' | 'full'; only on-screen labels change elsewhere.
+ */
+export const PRESENTATION_OVERRIDE_PREFIX = 'writers-studio:presentation-override:v1';
+export type PresentationScope = { workId?: string | null };
+
+let memberResolver: () => string | null = () => getValidMemberId();
+/** Test seam only: replace how the signed-in member is resolved. */
+export function __setPresentationMemberResolver(resolve: (() => string | null) | null): void {
+  memberResolver = resolve ?? (() => getValidMemberId());
+}
+function currentMember(): string | null {
+  try { const id = memberResolver(); return id && id.trim() ? id : null; } catch { return null; }
+}
+export function presentationKeyFor(memberId: string): string {
+  return `${PRESENTATION_STORAGE_KEY}:${memberId}`;
+}
+export function presentationOverrideKeyFor(memberId: string, workId: string): string {
+  return `${PRESENTATION_OVERRIDE_PREFIX}:${memberId}:${workId}`;
+}
+function readKey(store: 'localStorage' | 'sessionStorage', key: string): string | null {
+  try { return window[store].getItem(key); } catch { return null; }
+}
+function hasDepth(raw: string | null): boolean {
+  if (!raw) return false;
+  try { const d: unknown = JSON.parse(raw); return typeof d === 'object' && d !== null && isStudioDepth((d as {depth?: unknown}).depth); }
+  catch { return false; }
+}
+
+export function readStudioPresentation(scope: PresentationScope = {}): StudioPresentation {
   if (typeof window === 'undefined') return DEFAULT_PRESENTATION;
-  try { return parseStudioPresentation(window.localStorage.getItem(PRESENTATION_STORAGE_KEY)); }
-  catch { return DEFAULT_PRESENTATION; }
+  const member = currentMember();
+  if (!member) return DEFAULT_PRESENTATION;
+  if (scope.workId) {
+    const override = readKey('sessionStorage', presentationOverrideKeyFor(member, scope.workId));
+    if (hasDepth(override)) return parseStudioPresentation(override);
+  }
+  return parseStudioPresentation(readKey('localStorage', presentationKeyFor(member)));
 }
-export function writeStudioPresentation(presentation: StudioPresentation): void {
+/** True when this Work has a temporary choice in effect for the signed-in writer. */
+export function hasWorkPresentationOverride(workId: string | null | undefined): boolean {
+  if (typeof window === 'undefined' || !workId) return false;
+  const member = currentMember();
+  return member ? hasDepth(readKey('sessionStorage', presentationOverrideKeyFor(member, workId))) : false;
+}
+/** In-tab change notice. It carries the choice itself, so a choice that could not be
+ * stored (no signed-in writer, blocked storage) still holds for this session. */
+export type PresentationChange = StudioPresentation & { workId: string | null; temporary: boolean };
+function announce(presentation: StudioPresentation, workId: string | null = null, temporary = false): void {
+  window.dispatchEvent(new CustomEvent<PresentationChange>(PRESENTATION_EVENT, {
+    detail: { depth: presentation.depth, workId, temporary },
+  }));
+}
+/**
+ * Default: sets the writer's own default. With `{ workId, temporary: true }`: a choice for
+ * this Work only, for this browser session.
+ */
+export function writeStudioPresentation(
+  presentation: StudioPresentation,
+  options: { workId?: string | null; temporary?: boolean } = {},
+): void {
   if (!isStudioDepth(presentation.depth) || typeof window === 'undefined') return;
-  try { window.localStorage.setItem(PRESENTATION_STORAGE_KEY, JSON.stringify(presentation)); }
-  catch { /* Browser privacy mode still permits an in-session choice. */ }
-  window.dispatchEvent(new CustomEvent<StudioPresentation>(PRESENTATION_EVENT, { detail: presentation }));
+  const member = currentMember();
+  if (member) {
+    try {
+      if (options.temporary && options.workId) {
+        window.sessionStorage.setItem(presentationOverrideKeyFor(member, options.workId), JSON.stringify(presentation));
+      } else {
+        window.localStorage.setItem(presentationKeyFor(member), JSON.stringify(presentation));
+      }
+    } catch { /* Browser privacy mode still permits an in-session choice. */ }
+  }
+  const temporary = Boolean(options.temporary && options.workId);
+  announce(presentation, temporary ? options.workId ?? null : null, temporary);
 }
-export function subscribeStudioPresentation(onChange: (next: StudioPresentation) => void): () => void {
+/** Ends the temporary choice for this Work; the writer's default applies again. */
+export function clearWorkPresentationOverride(workId: string | null | undefined): void {
+  if (typeof window === 'undefined' || !workId) return;
+  const member = currentMember();
+  if (member) {
+    try { window.sessionStorage.removeItem(presentationOverrideKeyFor(member, workId)); } catch { /* nothing held */ }
+  }
+  announce(readStudioPresentation({ workId }), workId, true);
+}
+/**
+ * Precedence holds for subscribers too: a temporary choice reaches only its own Work; a
+ * change of default does not reach a Work whose temporary choice is still in effect.
+ * Cross-tab changes are read back only from the signed-in writer's own key.
+ */
+export function subscribeStudioPresentation(
+  onChange: (next: StudioPresentation) => void,
+  scope: PresentationScope = {},
+): () => void {
   if (typeof window === 'undefined') return () => {};
   const local = (event: Event) => {
-    const data = (event as CustomEvent<StudioPresentation>).detail;
-    if (data && isStudioDepth(data.depth)) onChange(data);
+    const change = (event as CustomEvent<Partial<PresentationChange>>).detail;
+    if (!change || !isStudioDepth(change.depth)) return;
+    if (change.temporary) {
+      if (change.workId && change.workId === scope.workId) onChange({ depth: change.depth });
+      return;
+    }
+    if (scope.workId && hasWorkPresentationOverride(scope.workId)) return;
+    onChange({ depth: change.depth });
   };
   const storage = (event: StorageEvent) => {
-    if (event.key === PRESENTATION_STORAGE_KEY) onChange(parseStudioPresentation(event.newValue));
+    const member = currentMember();
+    if (member && event.key === presentationKeyFor(member)) onChange(readStudioPresentation(scope));
   };
   window.addEventListener(PRESENTATION_EVENT, local);
   window.addEventListener('storage', storage);

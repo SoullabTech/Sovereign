@@ -31,7 +31,7 @@ import type {
 import type { DevelopmentalOrientation } from '@/lib/writersStudio/developmentalOrientation';
 import { observeTextExtent } from '@/lib/writersStudio/workMaturity';
 import { nextMoveOptions, type WriterNextMove } from '@/lib/writersStudio/writerNextMoves';
-import { readStudioPresentation, subscribeStudioPresentation, writeStudioPresentation, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
+import { readStudioPresentation, subscribeStudioPresentation, writeStudioPresentation, STUDIO_DEPTHS, STUDIO_DEPTH_LABEL, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
 import { lineageProcessForState } from '@/lib/writersStudio/intellectualLineageProcess';
 import {
   sourceVerificationOptions,
@@ -2249,10 +2249,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   // Founder-accepted R6: Focused by default; Guided and Full only on request.
   // This changes the density of UI, not reader authority or available evidence.
   const [developView, setDevelopView] = useState<StudioDepth>('focused');
+  // Density spec §10 R2-R3: one setting per writer (and per Work while a temporary choice
+  // is in effect), read by both Develop render paths.
+  const densityWorkId = props.work?.id ?? null;
   useEffect(() => {
-    setDevelopView(readStudioPresentation().depth);
-    return subscribeStudioPresentation(next => setDevelopView(next.depth));
-  }, []);
+    setDevelopView(readStudioPresentation({ workId: densityWorkId }).depth);
+    return subscribeStudioPresentation(next => setDevelopView(next.depth), { workId: densityWorkId });
+  }, [densityWorkId]);
   /* EA acceptance walk 2026-11-11: with the stage on, "More ways to explore" changed only the depth preference, which the stage never
      consulted — so the writer stayed on the stage and the Develop map (lens tabs, editorial pass) was unreachable. Leaving the stage is its
      own explicit choice: it is NOT inferred from the depth preference, so a writer whose preference is already "Full" still opens on the work. */
@@ -2524,9 +2527,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           value={developView}
           onChange={(event) => chooseDevelopView(event.target.value as StudioDepth)}
         >
-          <option value="focused">Focused</option>
-          <option value="guided">Guided</option>
-          <option value="full">Full</option>
+          {STUDIO_DEPTHS.map(d => <option key={d} value={d}>{STUDIO_DEPTH_LABEL[d]}</option>)}
         </select>
         <button type="button" className="p4r1-develop-prefs-link"
           aria-label="Open writing preferences"
@@ -2638,7 +2639,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   })}
                 </div>
                 {props.summaries.length > 0 ? (
-                  <p>Your saved readings are still here in Full view. Nothing has been discarded.</p>
+                  <p>Your saved readings are still here in the All tools view. Nothing has been discarded.</p>
                 ) : null}
               </details>
             ) : null}
@@ -3427,6 +3428,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onDeletePlan={deletePlan}
       onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
       openAt={stageOpenAt}
+      view={developView}
+      onView={chooseDevelopView}
       ways={DEVELOP_FIELDS.filter((f) => f !== 'overview').map((f) => ({ key: f, label: NAV_LABEL[f] }))}
       onWay={(key) => props.onField(key as DevelopField)}
       editorialPass={stagePass}
