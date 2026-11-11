@@ -87,9 +87,10 @@ discover_roots() {
             git -C "$HOME_DIR/MAIA-SOVEREIGN" worktree list --porcelain 2>/dev/null \
                 | sed -n 's|^worktree ||p' \
                 | sed 's|/[^/]*$||' \
-                | grep -v "^$HOME_DIR/MAIA-SOVEREIGN$" || true
+                | grep -v "^$HOME_DIR/MAIA-SOVEREIGN$" \
+                | grep -v "^$HOME_DIR$" || true
         fi
-    } | sort -u
+    } | sort -u | grep -v "^$HOME_DIR$"
 }
 
 size_kb() { du -sk "$1" 2>/dev/null | cut -f1; }
@@ -144,7 +145,8 @@ n_reclaim=0; n_held=0; n_orphan=0; n_active=0
 echo "checkout lifecycle — $( [ "$APPLY" -eq 1 ] && echo APPLY || echo 'report only' ), active window ${ACTIVE_DAYS}d"
 echo
 
-for root in $(discover_roots); do
+while IFS= read -r root; do
+    [ -n "$root" ] || continue
     is_protected "$root" && continue
     printf '%s\n' "$root"
     found=0
@@ -195,7 +197,9 @@ for root in $(discover_roots); do
 
     [ "$found" -eq 0 ] && echo "  (empty)"
     echo
-done
+done <<ROOTS
+$(discover_roots)
+ROOTS
 
 echo "----------------------------------------------------------------"
 printf 'trees: %d reclaimable, %d held (uncommitted/unpushed), %d active, %d orphaned\n' \
