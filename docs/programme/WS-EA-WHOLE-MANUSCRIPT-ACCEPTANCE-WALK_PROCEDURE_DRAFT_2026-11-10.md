@@ -864,6 +864,63 @@ prediction is `max_tokens` and 1200. Neither is stored today.
 (`h1AdmissionNeeded`). The containment is unchanged: founder account only, no account switching.
 Prefer links without `from=house` for the walk.
 
+## 10j. Editorial pass reachable; attention principle; next milestone (2026-11-11)
+
+**Reachability: fixed and witnessed live.**
+- PR #2214 merged as `089f6d98b`. Deployed through the split lane:
+  - `prepare-maia` built candidate image `fad8a44b…`;
+  - founder-authorized `cutover-maia` (rollback `72c788944`);
+  - provenance verified as `089f6d98b` in all three places;
+  - Co-Lab gate 32 passed / 0 failed / 0 warned; no migrations pending.
+- **Founder walk on production:** Develop → stage More → "More ways to explore" → the map shows
+  "← Back to the reading" and the lens tabs. The map's own "▸ More ways to explore" disclosure
+  then shows "Start an editorial pass". The fix is witnessed up to the button. The pass itself
+  has not yet been run in this record.
+- ⚠️ **Finding, not repaired:** two different controls carry the same label, "More ways to
+  explore": the stage's button and the map's disclosure. The editorial pass sits behind the
+  second. A writer must pass through two identical labels to reach it.
+
+**Design principle (founder-relayed review direction, 2026-11-11; recorded as guidance, ⛔ not
+ratified canon).**
+- *An observation is an invitation to attention, not an instruction to change attention.* This
+  applies to the interface and to MAIA alike.
+- The writer may:
+  - stay with a paragraph while MAIA finishes reading;
+  - discuss one observation while others remain unexplored;
+  - return to the manuscript without dismissing, explaining or defending that choice.
+- The system introduces no agenda of its own.
+- **Candidate acceptance criterion:** *the manuscript remains the writer's living center of
+  attention. MAIA can deepen, question, illuminate and accompany that work, but the writer
+  chooses when and where attention moves.*
+
+**Next milestone: integrated P0 experience walk** (defined here; ⛔ not yet run). Witness on
+`55742458`, in one sitting, the following.
+1. **Manuscript continuity.** The writer's place (section, scroll position, cursor or
+   selection) survives each of these:
+   - starting the pass;
+   - the pass finishing;
+   - an observation arriving;
+   - opening and closing an observation;
+   - leaving Develop and returning.
+2. **Non-interrupting observations.**
+   - No observation moves focus, scrolls the manuscript, opens a panel or changes the room
+     unless the writer chooses it.
+   - Observations that are never opened remain available, with no badge pressure, no
+     "dismiss" step and no expiry demand.
+   - The writer can ignore all of them and keep writing.
+3. **Uninterrupted MAIA conversation.**
+   - A conversation in progress is not reset, replaced or re-anchored when the pass runs,
+     finishes, or when the writer looks at an observation.
+   - Discussing an observation continues the current conversation, or asks first before
+     departing. The code carries a `requestConversationDeparture()` guard on the map's
+     observation actions; this is a code read, ⛔ not a witness.
+4. **Each failure is recorded as the crossing where attention moved without the writer.**
+   Severity: blocker if text, place or conversation is lost; defect if focus or scroll is
+   taken; finding if something only nags.
+
+**Kept separate (not part of P0):** standing read scope and cross-chapter continuity work;
+whole-book conversation qualification; Class A #1969; release HOLD #1938.
+
 ## 11. Not authorized by this document
 
 Code changes · migrations · making EA knowledge unreachable · deploys · posting this to #1800 ·
