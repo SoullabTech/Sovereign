@@ -54,7 +54,7 @@ import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness'
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manuscript/ask/askReader';
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, loadEarlierLocusDigests } from '@/lib/disclosure/workReadScopeRead';
-import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
+import { chaptersInPlay, loadCarriedReadings, type CarryScope } from '@/lib/manuscript/ask/carriedReadings';
 import { selectSections, movedSince, digestOf, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork, dismissedObservationKeys } from '@/lib/writersStudio/decisionRecord';
 import { livingWorkKind } from '@/lib/writersStudio/workKind';
@@ -279,6 +279,9 @@ export async function POST(
     return NextResponse.json({ refusal: 'malformed', detail: 'teachingAnchor' }, { status: 400 });
   }
   const teachingAnchor: TeachingAnchor | undefined = body.teachingAnchor;
+  /* WS-WHOLE-BOOK-CONVERSATION (founder approval 2026-11-10, D1): the carried account's scope is DECLARED by the writer's "About" control.
+     ⛔ Never inferred from the question text: anything but an explicit 'whole_book' is the ordinary chapter scope. */
+  const carryScope: CarryScope = body.carryScope === 'whole_book' ? 'whole_book' : 'here';
 
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -423,7 +426,7 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ keep: studioPosture.witness, manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, posture: turnPosture, postureKnown: postureDeclared,
+                      question, sectionId: bodySectionId, carryScope, posture: turnPosture, postureKnown: postureDeclared,
                       responseStyle, teachingAnchor });
   }
 
@@ -592,8 +595,11 @@ async function workTurn(input: {
   /** WS-CRAFT-CONVENTIONS-01 · G-3: the writer's working style and a pressed Teach me. */
   responseStyle?: ExplanationDepth;
   teachingAnchor?: TeachingAnchor;
+  /** WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope for her carried account. */
+  carryScope?: CarryScope;
 }): Promise<NextResponse> {
   const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown, responseStyle, teachingAnchor } = input;
+  const carryScope: CarryScope = input.carryScope ?? 'here';
   const keep = input.keep as KeepWitness;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
@@ -731,7 +737,7 @@ async function workTurn(input: {
      whether each chapter changed since. Carried on the commission's consent; never chapter text; nothing in Sanctuary or an unstated posture. */
   const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? { readings: [], relevant: 0, searchFull: false }
     : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections,
-        (readingIds) => dismissedObservationKeys(memberId, readingIds));
+        (readingIds) => dismissedObservationKeys(memberId, readingIds), { scope: carryScope });
   /* Walk finding (2026-11-09): when the passage the writer is at changed between turns, nothing told her, so she concluded her own
      earlier quotation had been wrong. Compare with the digest recorded the last time she was given this passage in this conversation. */
   const locusMovedSinceEarlier = Boolean(existing && built.facts.locus
@@ -799,6 +805,8 @@ async function workTurn(input: {
     staleness, answerProvenance: {
       ...outcome.provenance,
       ...(carriedReadings.readings.length > 0 ? { carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) } : {}),
+      /* WB7 · the writer's declared scope is part of what this answer was made from. */
+      ...(carryScope === 'whole_book' ? { carryScope } : {}),
       ...(supplied.length > 0 ? { suppliedSections: supplied.map((x) => ({ sectionId: x.id, digest: x.digest })) } : {}),
       /* The passage the writer is at, as she was given it this turn (digest only), so a later turn can tell her it changed. */
       ...(built.facts.locus ? { locus: { sectionId: built.facts.locus.sectionId, digest: digestOf(built.facts.locus.body) } } : {}),
@@ -808,7 +816,7 @@ async function workTurn(input: {
   const thread = await loadThread(liveThreadId, memberId);
   /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */
   const read = supplied.map((x) => ({ sectionId: x.id, label: x.label }));
-  return NextResponse.json({ threadId: liveThreadId, thread, staleness, read });
+  return NextResponse.json({ threadId: liveThreadId, thread, staleness, read, ...(carryScope === 'whole_book' ? { carryScope } : {}) });
 }
 
 /**

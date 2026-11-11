@@ -1,7 +1,10 @@
 # Whole-book conversation — MAIA carries her complete earlier readings (DESIGN, for founder review)
 
 ```
-STATUS:     DESIGN — for founder review. ⛔ No code until it is approved.
+STATUS:     APPROVED (founder, 2026-11-10: "Approve as recommended") — D1 (c), D2 200,000 chars,
+            D3 partial readings labelled and only when no complete one, D4 separate. Implementation
+            per §6 on feature/ws-whole-book-conversation-20261110. Merge and deploy remain separate
+            founder decisions under HOLD #1938.
 OWNER:      Writer's Studio #1800 · governed by #1982 · release HOLD #1938 in force
 CANONICAL:  c3798a420 (clean-main-no-secrets, includes #2210)
 ORIGIN:     Elemental Alchemy acceptance walk, 2026-11-10 (walk record §10i)
@@ -175,6 +178,61 @@ Only then implement. Fictional manuscripts only.
    readings.
 5. The founder's acceptance walk resumes after deploy, under HOLD #1938, on `55742458`, ideally
    after a fresh whole-Work editorial pass so complete readings exist for it.
+
+## 6a. Implementation evidence (2026-11-10, branch `feature/ws-whole-book-conversation-20261110`)
+
+**Built:**
+- `carriedReadings.ts`: `selectCarried`, `buildCarriedSet`, `WHOLE_BOOK_CARRY_CHARS = 200_000`. The loader now uses them.
+- `askReader.ts`: the whole-book wording, with the same header and end markers so that
+  `withoutCarriedReadings` still strips it; `carryScope` on the provenance.
+- The route: `carryScope` comes **only** from `body.carryScope === 'whole_book'`; it is recorded in
+  the answer's provenance and returned.
+- `askClient.ts` sends it.
+- `WorkConversation.tsx`: the **"About: where I am · the whole book"** control. A matching phrase
+  shows an **offer** ("Ask about the whole book?") and never switches the scope. State is held in
+  the component only: this surface's existing law forbids browser storage, so the scope resets to
+  "where I am" when the conversation is reopened.
+
+**Laws:** `lib/manuscript/ask/__tests__/wholeBookCarry.test.ts`, **15/15 pass.**
+
+**Lethality:** every defeat candidate fails its named law:
+
+| Candidate | Wrong implementation | Result |
+|---|---|---|
+| DC-WB1 | 8-per-reading cap | killed |
+| DC-WB2 | 600-char cut | killed |
+| DC-WB3 | latest-wins regardless of coverage | killed |
+| DC-WB4 | drop newest instead of oldest | killed |
+| DC-WB4b | silent drop | killed |
+| DC-WB5 | "here" loses its limits | killed |
+| DC-WB6 | scope inferred from the question | killed |
+| DC-WB7 | scope not saved in provenance | killed |
+| DC-WB8 | block not stripped from quote grounding | killed |
+| DC-WB9 | dismissed observations carried | killed |
+| DC-WB10 | older-revision line removed | killed |
+
+⭐ **DC-WB7 first SURVIVED.** The test matched the scope in the response JSON as well as in the
+provenance. The test was repaired, not the code: it now looks inside the `answerProvenance`
+block. After the repair, DC-WB7 is killed.
+
+**Route walk:** `tests/constitutional/ws-whole-book/dynamic/route.walk.test.ts`, gated by
+`WS_WHOLE_BOOK_DYNAMIC=fictional-only` and a loopback `DATABASE_URL`.
+- It ran on a **disposable database** built like CI's empty-database reconstruction (baseline,
+  then all migrations), which was **dropped afterwards**. The dev database was not touched.
+- **4/4 pass:**
+  - WBW1: the whole book declared means all 10 arc observations, uncut; the scope is saved in
+    `ask_turns.answer_provenance` and returned.
+  - WBW2: the default scope keeps the chapter limits, and *does* carry her reading (not vacuous).
+  - WBW3: a whole-book phrase alone does not switch the scope.
+  - WBW4: Sanctuary carries nothing.
+- With the route forced to ignore the declared scope, **WBW1 fails.**
+
+**Wider suites:** the Ask and Writer's Studio suites pass **1,761/1,762**. The one failure,
+`askSourceCloseout` "a developmental thread never reaches the structure frozen side", fails
+identically on unmodified canonical. `npm run typecheck` shows **no TypeScript regressions.**
+
+**Not established:** model behaviour, cost and latency on real readings, and the founder's
+experience. Those come from the walk after a deploy, under HOLD #1938.
 
 ## 7. Not authorized by this document
 
