@@ -129,6 +129,9 @@ import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrection
 
 export const WORK_CONVERSATION_PLACEHOLDER = 'Ask MAIA about this work…';
 
+/** Offer-only: phrasings that suggest the writer may mean the whole book. It NEVER sets the scope (D1); it only shows the offer. */
+export const WHOLE_BOOK_OFFER = /\b(whole|entire|this)\s+(book|manuscript)\b|\bthroughout\b|\boverall\b|\bfundamentally\b|\bfrom (the )?(start|beginning) to (the )?end\b/i;
+
 const WORK_ANCHOR = { on: 'work' } as const;
 
 const REORIENTATION_PROMPT = [
@@ -276,6 +279,12 @@ function ScopedWorkConversation({
   }, [onStudioAct]);
 
   const [draft, setDraft] = useState(initialDraft);
+  /* WS-WHOLE-BOOK-CONVERSATION (founder approval 2026-11-10, D1): the writer DECLARES what a question is about. "where I am" is the
+     default; "the whole book" carries her complete account. ⛔ A phrase in the draft may only OFFER the whole book, never switch to it. */
+  /* Held in component state only: this surface reads and writes no browser storage (identity-is-server-truth law). It lasts while the
+     conversation is open and resets to "where I am" when it is reopened. */
+  const [carryScope, setCarryScope] = useState<'here' | 'whole_book'>('here');
+  const offerWholeBook = carryScope === 'here' && WHOLE_BOOK_OFFER.test(draft);
   // The Studio's starter, as placed; never sent on its own.
   const [starter] = useState(initialDraft);
   const [reorientationOffered, setReorientationOffered] = useState(false);
@@ -468,6 +477,8 @@ function ScopedWorkConversation({
             /* G-3: the writer's own working-style preference, as the observation dialogue sends it; and a pressed Teach me. */
             responseStyle: readWorkingStyle().explanation,
             ...(teach ? { teachingAnchor: teach } : {}),
+            /* WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope, exactly as the "About" control shows it. */
+            ...(carryScope === 'whole_book' ? { carryScope } : {}),
             /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
             ...declaredSanctuaryPosture(),
           })
@@ -969,6 +980,32 @@ function ScopedWorkConversation({
           <StudioText role="panelLabel" as="span">Ask MAIA</StudioText>
           <StudioText role="metadata" tone="quiet" as="span">Write naturally · Enter sends · Shift+Enter adds a line</StudioText>
         </div>
+        {manuscriptId ? (
+          <div role="group" aria-label="What this question is about" data-carry-scope={carryScope}
+            style={{ display: 'flex', alignItems: 'center', gap: SPACE.tight, flexWrap: 'wrap', marginBottom: SPACE.tight }}>
+            <StudioText role="metadata" tone="quiet" as="span">About:</StudioText>
+            {(['here', 'whole_book'] as const).map((s) => (
+              <button key={s} type="button" aria-pressed={carryScope === s} onClick={() => setCarryScope(s)}
+                style={{ fontSize: 12, padding: '2px 8px', borderRadius: RADIUS.sm, cursor: 'pointer',
+                  border: `1px solid ${carryScope === s ? INK.primary : RULE.soft}`,
+                  background: carryScope === s ? GROUND.base : 'transparent', color: INK.primary,
+                  fontWeight: carryScope === s ? 600 : 400 }}>
+                {s === 'here' ? 'where I am' : 'the whole book'}
+              </button>
+            ))}
+            {carryScope === 'whole_book' ? (
+              <StudioText role="metadata" tone="quiet" as="span" data-whole-book-on="true">
+                Every question here is about the whole book until you choose “where I am”.
+              </StudioText>
+            ) : null}
+            {offerWholeBook ? (
+              <button type="button" data-whole-book-offer="true" onClick={() => setCarryScope('whole_book')}
+                style={{ fontSize: 12, padding: '2px 8px', border: 'none', background: 'transparent', color: INK.secondary, textDecoration: 'underline', cursor: 'pointer' }}>
+                Ask about the whole book?
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <textarea
           value={draft}
           onChange={(e) => { draftRevisionRef.current += 1; setDraft(e.target.value); setPresentationConfirmation(null); setPresentationNotice(null); }}

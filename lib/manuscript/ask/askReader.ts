@@ -184,11 +184,15 @@ export interface AskAnswerProvenance {
   askerVersion: string;
   answeredAt: string;
   /** G6 · which of her completed readings she was given for this answer (ids and revisions; never text). Saved with the answer, atomically. */
-  carriedReadings?: readonly { readingId: string; revisionNumber: number }[];
+  carriedReadings?: readonly { readingId: string; revisionNumber: number; observationsGiven?: number; observationsTotal?: number }[];
+  /** WS-WHOLE-BOOK-CONVERSATION · readings left out of her whole-book account for size (lens + date), so the record shows what she lacked. */
+  carryDropped?: readonly { lens: string; frozenAt: string }[];
   /** Which saved sections' text she was supplied for this answer, with a digest of the exact bytes (never the text). Saved with the answer. */
   suppliedSections?: readonly { sectionId: string; digest: string }[];
   /** The passage the writer was at this turn (digest only), to notice when it changes between turns. */
   locus?: { sectionId: string; digest: string };
+  /** WS-WHOLE-BOOK-CONVERSATION · present when the writer declared the whole book as this turn's scope. */
+  carryScope?: 'whole_book';
   /** Why the provider stopped, as it reported it. Recorded so a walk can SEE how an answer ended, not infer it. */
   stopReason?: string | null;
   /** Output tokens the provider reported for this answer, reasoning included. */
@@ -304,6 +308,7 @@ export function withoutCarriedReadings(seen: string): string {
 
 /** G6 · her own account from readings the writer commissioned, labelled so she can say which reading and which revision. */
 export function carriedReadingsSays(set: CarriedSet): string {
+  if (set.scope === 'whole_book') return wholeBookReadingsSays(set);
   const readings: readonly CarriedReading[] = set.readings;
   const lines = [
     `${CARRIED_READINGS_HEADER} (your own account, made when the writer asked you to read; it may be wrong; it is not the writer's view and not a fact about the text):`,
@@ -324,6 +329,43 @@ export function carriedReadingsSays(set: CarriedSet): string {
     'Use them when the writer follows up: say which reading you mean and that it was made from that revision. If a chapter has changed since, say your reading may not fit it now.',
     'A reading is your ACCOUNT, not the chapter text: quote the writing only from text you were given this turn.',
     'If the text itself would help and you were not given it, say exactly what you do have, and suggest the writer choose "Let MAIA read my saved work" in Develop. Do NOT send them to "Read this chapter" for a chapter you already have a reading of.',
+    CARRIED_READINGS_END);
+  return lines.join('\n');
+}
+
+/**
+ * WS-WHOLE-BOOK-CONVERSATION · the writer asked about the WHOLE BOOK (their declared scope). Her complete account: every observation of
+ * the latest reading per lens, uncut, in manuscript order, each with where in the book it was seen. Same header and end markers as the
+ * chapter-scoped block, so `withoutCarriedReadings` strips it from quote grounding exactly the same way (WB8).
+ */
+function wholeBookReadingsSays(set: CarriedSet): string {
+  const lines = [
+    `${CARRIED_READINGS_HEADER} — THE WHOLE BOOK (the writer has asked about the whole book. This is your complete account from the readings the writer commissioned: your account, it may be wrong, it is not the writer's view, and it is not the text):`,
+  ];
+  for (const r of set.readings) {
+    const cov = r.coverage ? (r.coverage.read === r.coverage.of ? `all ${r.coverage.of} sections read in full` : `only ${r.coverage.read} of ${r.coverage.of} sections read in full`) : '';
+    const changed = r.chapters.filter((c) => c.changedSince === true).map((c) => c.label ?? '(no heading)');
+    const older = r.newerRevision !== undefined
+      ? ` This reading was made from revision ${r.revisionNumber}; the current draft is revision ${r.newerRevision} (an older revision).` : '';
+    lines.push('', `- Through the ${r.lens} lens, read ${r.frozenAt.slice(0, 10)}, from revision ${r.revisionNumber}; ${cov}.${older}`
+      + (changed.length ? ` CHANGED since you read them: ${changed.join(', ')}.` : ''));
+    if (r.observationsTotal > r.observations.length) {
+      lines.push(`    (You are seeing ${r.observations.length} of the ${r.observationsTotal} observations in this reading; the rest did not fit and are not in front of you.)`);
+    }
+    for (const o of r.observations) {
+      lines.push(`    • ${o.where && o.where.length ? `[${o.where.join('; ')}] ` : ''}${o.text}${o.doesNotEstablish.length ? `  [this does not establish: ${o.doesNotEstablish.join(', ')}]` : ''}`);
+    }
+  }
+  if (set.dropped && set.dropped.length > 0) {
+    lines.push('', `Left out because your whole account would not fit: ${set.dropped.map((d) => `the ${d.lens} reading of ${d.frozenAt.slice(0, 10)}`).join('; ')}. Do not speak as if you remember them.`);
+  }
+  if (set.searchFull) {
+    lines.push('', 'Your readings of this Work are more than could be searched, so an older reading under some lens may exist that you were not given. Do not speak as if you remember one you were not given.');
+  }
+  if (set.readings.length === 0) lines.push('', 'You have no completed reading of this Work that read its text. Say so plainly; do not answer about the whole book as if you had read it.');
+  lines.push('',
+    'When you answer about the whole book, say which reading or readings you are drawing on and that each was made from its revision. Never present an earlier observation as something you have just re-read.',
+    'A reading is your ACCOUNT, not the text: quote the writing only from text you were given this turn. If an answer needs the words of a passage, ask the writer to point you to it.',
     CARRIED_READINGS_END);
   return lines.join('\n');
 }
@@ -411,7 +453,9 @@ function workSays(ctx: WorkContext): string {
   }
   if (ctx.sanctuary) parts.push(SANCTUARY_SAYS);
   if (ctx.practiceOffer && !ctx.sanctuary) parts.push(ctx.practiceOffer);
-  if (ctx.carriedReadings && ctx.carriedReadings.readings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
+  /* Whole-book scope is said even when no reading exists, so she knows the writer asked about the whole book and that she has no account of it
+     (independent review 2026-11-10, finding 2). Chapter scope is unchanged: nothing to say, nothing said. */
+  if (ctx.carriedReadings && (ctx.carriedReadings.readings.length > 0 || ctx.carriedReadings.scope === 'whole_book')) parts.push(carriedReadingsSays(ctx.carriedReadings));
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
   } else if (!locus) {
