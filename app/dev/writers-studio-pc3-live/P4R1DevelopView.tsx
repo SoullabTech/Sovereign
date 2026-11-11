@@ -2253,6 +2253,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setDevelopView(readStudioPresentation().depth);
     return subscribeStudioPresentation(next => setDevelopView(next.depth));
   }, []);
+  /* EA acceptance walk 2026-11-11: with the stage on, "More ways to explore" changed only the depth preference, which the stage never
+     consulted — so the writer stayed on the stage and the Develop map (lens tabs, editorial pass) was unreachable. Leaving the stage is its
+     own explicit choice: it is NOT inferred from the depth preference, so a writer whose preference is already "Full" still opens on the work. */
+  const [leftStage, setLeftStage] = useState(false);
   const chooseDevelopView = (next: StudioDepth) => {
     setDevelopView(next);
     writeStudioPresentation({ depth: next });
@@ -2473,6 +2477,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
 
   const center = (
     <div className="fr-dev">
+      {leftStage && process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' ? (
+        <button type="button" className="p4r1-develop-back" data-develop-back-to-stage="true" onClick={() => setLeftStage(false)}>
+          ← Back to the reading
+        </button>
+      ) : null}
       <div className="fr-dev-head">
         <DevelopMark />
         <h1>{title}</h1>
@@ -3344,7 +3353,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   /* Founder walk 2026-11-09: "I want to see my work. I want it to be center, not 50 buttons and options." A remembered "Full" depth
      silently hid the whole stage, so the stage no longer depends on it: Develop opens on the work itself; lens tools stay one choice away. */
   const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && props.field === 'overview' && !selectedObservation
-    && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
+    && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0 && !leftStage;
   const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
   const stageLabel = stageSection?.heading?.trim() || 'this chapter';
   const stageNext = props.sections[props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1];
@@ -3358,7 +3367,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       starters={stageStarters}
       onStarter={(words) => setAttentionConversationDraft(words)}
       onOpenWrite={() => navigateMode('write')}
-      onMoreWays={() => chooseDevelopView('full')}
+      onMoreWays={() => { setLeftStage(true); chooseDevelopView('full'); }}
       lastRead={lastRead}
       plan={planView}
       planBusy={planBusy}
