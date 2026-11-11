@@ -52,6 +52,15 @@ export async function resolveEntitlements(memberId: string): Promise<Entitlement
   return set;
 }
 
+/**
+ * `writing.wholeWork` alone, for the executors that need only this key (the whole-book synthesis and the server editorial-pass
+ * run). Same source as the full set, without resolving unrelated keys. Throws when the lookup fails; callers refuse, never
+ * default.
+ */
+export async function holdsWholeWork(memberId: string): Promise<boolean> {
+  return (await resolveWholeWork(memberId)).entitled;
+}
+
 export function hasEntitlement(set: EntitlementSet, key: EntitlementKey): boolean {
   return set.has(key);
 }

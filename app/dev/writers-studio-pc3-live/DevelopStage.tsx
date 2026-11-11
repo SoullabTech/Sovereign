@@ -435,10 +435,11 @@ export function DevelopStage(props: {
 }
 
 /** MAIA beside the work: one conversation, and — always visible, never behind a menu (L8) — which chapters she was handed for her last answer. */
-export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode }) {
+export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode; coverage?: ReactNode }) {
   /* At the top, not the bottom: the floating "Report a bug" control covered it there (founder screenshot 2026-11-09). */
   return (
     <div data-develop-companion="true" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 8, ...ink }}>
+      {props.coverage ?? null}
       <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderBottom: hair, paddingBottom: 6 }}>
         {props.lastRead === null
           /* Before an answer in this visit we do not know what she was handed earlier, so we do not claim "nothing". */
@@ -561,5 +562,29 @@ export function StageReadingCard(props: {
         <button type="button" data-develop-choice="rest" onClick={() => setOpen(false)} style={btn}>Leave it for now</button>
       </div>
     </section>
+  );
+}
+
+
+/** The chapter as the writer wrote it, read-only, kept in the centre while a lens reading sits beside it in MAIA's column. */
+export function ChapterReadingPane(props: { section: StageSection; lensLabel: string; onBackToReading: () => void }) {
+  const text = stripHeading(props.section);
+  const paragraphs = text ? text.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) : [];
+  return (
+    <div data-lens-chapter={props.section.draftSectionId} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, padding: '8px 6px 12px', boxSizing: 'border-box', ...ink }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto', fontSize: 13 }}>
+        <button type="button" data-lens-back="true" onClick={props.onBackToReading}
+          style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>← Back to the reading</button>
+        <span style={{ opacity: .75 }}>Your chapter, beside MAIA’s {props.lensLabel.toLowerCase()} reading</span>
+      </header>
+      <article aria-label={`${labelOf(props.section)}, as you wrote it`} style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '18px 8px 40px' }}>
+        <div style={{ maxWidth: '66ch', margin: '0 auto' }}>
+          <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{labelOf(props.section)}</h2>
+          {paragraphs.length === 0
+            ? <p style={{ opacity: .75, margin: 0 }}>This chapter has no text yet.</p>
+            : paragraphs.map((p, i) => <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{p}</p>)}
+        </div>
+      </article>
+    </div>
   );
 }

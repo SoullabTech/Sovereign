@@ -1473,6 +1473,7 @@ export default function P4R1DevelopController() {
         revisionNumber: context.draftRevision,
         sectionIds: context.sections.map((section) => section.draftSectionId),
         onProgress: setAttentionProgress,
+        keepAsLetter: true,
       });
       await loadSummaries();
       if (!outcome.ok) {

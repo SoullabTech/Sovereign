@@ -14,10 +14,11 @@ import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL, wholeWorkAllowed } from '@/lib/writersStudio/wholeWorkAccess';
 
-export const EDITORIAL_PASS_REQUEST = 'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.';
+import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPassRequest';
+export { EDITORIAL_PASS_REQUEST };
 
 export type EditorialPassOutcome =
-  | { ok: true; map: WholeManuscriptAttentionMap }
+  | { ok: true; map: WholeManuscriptAttentionMap; letterId: string | null; letterKept: string | undefined }
   | { ok: false; stage: 'entitlement' | 'readings' | 'synthesis'; message: string };
 
 export async function runEditorialPass(input: {
@@ -25,6 +26,8 @@ export async function runEditorialPass(input: {
   revisionNumber: number;
   sectionIds: readonly string[];
   onProgress?: (text: string) => void;
+  /** keep the result as MAIA's letter for this Work, on the server (the keep gate refuses it in Sanctuary) */
+  keepAsLetter?: boolean;
   /** Injected in tests; defaults to asking the entitlement layer. */
   checkAccess?: () => Promise<boolean | null>;
 }): Promise<EditorialPassOutcome> {
@@ -51,21 +54,21 @@ export async function runEditorialPass(input: {
     .filter((payload) => payload.reading.scope.commissionedLens !== 'overview')
     .map((payload) => payload.reading.id);
   input.onProgress?.('Preparing the editorial pass…');
-  const synthesized = await requestAttentionMap(input.manuscriptId, deepReadingIds, EDITORIAL_PASS_REQUEST);
+  const synthesized = await requestAttentionMap(input.manuscriptId, deepReadingIds, EDITORIAL_PASS_REQUEST, { keepAsLetter: input.keepAsLetter });
   if (!synthesized.ok && synthesized.refusal === WHOLE_WORK_REFUSAL) {
     return { ok: false, stage: 'entitlement', message: WHOLE_WORK_MESSAGE };
   }
   if (!synthesized.ok) {
     return { ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now. The readings remain available and nothing in the manuscript changed.' };
   }
-  return { ok: true, map: synthesized.map };
+  return { ok: true, map: synthesized.map, letterId: synthesized.letterId ?? null, letterKept: synthesized.letterKept };
 }
 
 /* ── keeping the pass for when the writer comes back ─────────────────────────────────────────────────────────────────────────
    Kept in this browser only (the writer's own device), keyed by manuscript. A pass of an earlier draft is kept and SAID to be of
    an earlier draft — never presented as a reading of the current text. */
 const KEY = (manuscriptId: string) => `writers-studio:editorial-pass:v2:${manuscriptId}`;
-export interface SavedPass { draftRevision: number; map: WholeManuscriptAttentionMap }
+export interface SavedPass { draftRevision: number; map: WholeManuscriptAttentionMap; /** set when the letter is kept on the server */ letterId?: string | null }
 
 export function loadSavedPass(manuscriptId: string): SavedPass | null {
   if (typeof window === 'undefined') return null;

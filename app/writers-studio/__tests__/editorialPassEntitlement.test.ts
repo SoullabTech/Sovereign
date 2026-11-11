@@ -61,15 +61,26 @@ describe('editorial pass × writing.wholeWork', () => {
 });
 
 describe('the server gate sits on the whole-book synthesis only', () => {
-  const src = fs.readFileSync(
-    path.join(process.cwd(), 'app/api/sovereign/manuscripts/[id]/attention-map/route.ts'), 'utf8',
-  );
+  const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), 'utf8');
+  /* The one synthesis used by BOTH the attention-map route and the server-side editorial pass run. */
+  const src = read('lib/writersStudio/studio/synthesizeAttentionMap.ts');
   it('⭐ checks the entitlement (never tier) inside the deep-mode branch, before any model call', () => {
-    const gate = src.indexOf("hasEntitlement(entitlements, 'writing.wholeWork')");
+    const gate = src.indexOf('holdsWholeWork(memberId)');
     expect(gate).toBeGreaterThan(-1);
     expect(src.lastIndexOf('if (deepMode) {', gate)).toBeGreaterThan(src.indexOf('const deepMode ='));
     expect(gate).toBeLessThan(src.indexOf('runStructured('));
     expect(src).not.toMatch(/\btier\b/);
+  });
+  it('the route and the server run both reach the model only through that synthesis', () => {
+    expect(read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts')).not.toMatch(/runStructured\(/);
+    expect(read('lib/writersStudio/studio/passRun.ts')).not.toMatch(/runStructured\(/);
+    expect(read('lib/writersStudio/studio/passRun.ts')).toMatch(/synthesize: synthesizeAttentionMap/);
+  });
+  it('⭐ the letter panel does not fall back to reading from the page after a Pro refusal', () => {
+    const panel = read('app/dev/writers-studio-pc3-live/EditorialLetterPanel.tsx');
+    const refusal = panel.indexOf('out.refusal === WHOLE_WORK_REFUSAL');
+    expect(refusal).toBeGreaterThan(-1);
+    expect(panel.slice(refusal, refusal + 120)).toMatch(/return true/);
   });
   it('the #2221 per-destination tier table is retired: one place decides this', () => {
     expect(fs.existsSync(path.join(process.cwd(), 'lib/writersStudio/entitlements.ts'))).toBe(false);
