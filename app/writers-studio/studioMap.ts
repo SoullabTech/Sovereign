@@ -33,6 +33,8 @@
 
 import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript } from './canvasIdentity';
 import { locationForSection } from '@/lib/writersStudio/placeInWork';
+import { isEntitled } from '@/lib/writersStudio/entitlements';
+import type { Tier } from '@/config/accessMatrix';
 
 export type StudioAvailability = 'available' | 'later';
 
@@ -291,13 +293,23 @@ export function assertStudioMapHonest(map: StudioGroup[] = STUDIO_MAP): void {
 export function visibleDestinations(
   hasManuscript: boolean,
   map: StudioGroup[] = STUDIO_MAP,
+  /**
+   * Membership the viewer holds. OMITTED = no entitlement filtering (the
+   * historical behaviour, unchanged). When given, a destination the table in
+   * lib/writersStudio/entitlements.ts reserves for a higher tier is dropped.
+   * This is presentation only; the route must refuse it server-side too.
+   */
+  tier?: Tier,
+  entitlements?: Readonly<Record<string, Tier>>,
 ): StudioGroup[] {
   return map
     .map((g) => ({
       ...g,
       destinations: g.destinations.filter(
         (d) =>
-          d.availability === 'available' && (!d.requiresManuscript || hasManuscript),
+          d.availability === 'available' &&
+          (!d.requiresManuscript || hasManuscript) &&
+          (tier === undefined || isEntitled(d.id, tier, entitlements)),
       ),
     }))
     .filter((g) => g.destinations.length > 0);
