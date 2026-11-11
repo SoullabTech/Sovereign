@@ -94,3 +94,118 @@ The founder was asked whether to take the five rulings "as proposed, with the na
 - Nothing here is built except what is in draft PR #2215 (the letter and walk in Write, device-only decisions, the pass fix).
 - No claim is made about how the experience feels to a writer. That needs the founder's walk and, later, another writer's.
 - Research basis: `docs/research/writers-studio/AI_EDITORIAL_FLOW_RESEARCH_2026-11-11.md` (web sources; product notes are not hands-on).
+
+---
+
+# Part 2 — Full design (2026-11-11)
+
+This part turns the ruled direction into a design a builder can follow. Each step is its own reviewed change and still needs its own act. Facts about the current code were read from canonical on 2026-11-11 and should be re-checked at build time.
+
+## 9. Step 1 — Coverage map (read-only; no migration)
+
+**Purpose:** one truthful answer to "what has MAIA read of this book, and is it still current?"
+
+**Source of truth (already stored):** every frozen reading holds, per section, the revision it was read at, the exact range, a SHA-256 digest of the text, and the depth it was read at (`readState.sections`, coverage `position | body`).
+
+**Derivation, per section of the current draft:**
+- `read`: some reading covers it at body depth, and its digest equals the current section digest.
+- `changed`: a body-depth reading exists, but the digest differs.
+- `not_read`: no body-depth reading exists.
+- `position_only`: read for its place in the structure, not its prose.
+
+Per Work: counts of each, the newest reading time, and which lenses cover the whole current draft.
+
+**Shape:** `GET /api/sovereign/manuscripts/[id]/coverage` returns `{ draftRevision, sections: [{ sectionId, state, readAt, lenses }], whole: { read, changed, notRead } }`. It carries ids, states and times only. No prose.
+
+**Where it shows:** one line at the top of MAIA's column in Write and Develop ("I've read 172 of 178 sections of this draft; 6 have changed since"). The detail opens on the writer's click. The rail may mark changed sections quietly.
+
+**Must fail if:**
+- a section edited after its reading still shows `read`;
+- a position-only reading counts as read;
+- another member's reading counts;
+- any state is shown while the draft revision cannot be established.
+
+## 10. Step 2 — Letter and decisions on the server; reread only what changed
+
+**New records (one migration, its own review):**
+- `work_editorial_letters`: member, manuscript, draft revision, the synthesized map (which already has no manuscript prose beyond frozen observation text), created time. Append-only; the newest row for a manuscript is current. A letter of an older draft is kept and labelled as such.
+- `work_place_decisions`: member, manuscript, letter id, place id, decision (`intended | later`), decided time. Append-only events; the newest event per place is current; a `cleared` event withdraws it. Only the member's own request writes here. Sanctuary: writes fail closed, as the settled-decisions route already does.
+
+**Reread only what changed:** the review reuses a frozen reading only when the whole section set and revision match. The change: commission readings scoped to the changed chapters, and build the letter from the newest valid reading per section. The synthesis route's "exactly eight whole-book readings" rule then needs a ruled alternative (a set of readings that together cover the current draft). This is the one place where an existing constitutional check changes, so it gets its own falsifiers before any code.
+
+**Must fail if:**
+- a decision is written by anything but the member's act;
+- a letter of an older draft is presented as current;
+- a stale reading contributes to a letter presented as current;
+- a member can read another member's letter or decisions.
+
+## 11. Step 3 — One surface
+
+- Write is the working surface. MAIA's column holds, in order: the coverage line, the letter or current place, and the conversation.
+- A lens (arc, voice, structure and the rest) opens in MAIA's column as a reading of the chapter or book. It never replaces the manuscript.
+- Develop's stage stays as a reading-first view. Its "work on this" actions open the same column in Write.
+- The Develop conversation is no longer re-created when a starter or selection is used. The starter text goes into the existing composer, unsent.
+- Small screens: manuscript and MAIA alternate as two panes that keep their state.
+
+**Must fail if:**
+- any lens route renders without the chapter text;
+- using a starter loses an unsent message or the conversation;
+- an observation arriving moves scroll, selection or focus.
+
+## 12. Step 4 — A pass that survives closing the page
+
+**Fact that makes this small:** each finished lens reading is already saved on the server, and the review already reuses finished readings. Today only the loop and the final synthesis live in the browser.
+
+**Design:**
+- `editorial_pass_runs`: member, manuscript, draft revision, state (`queued | reading | synthesizing | done | failed | cancelled`), per-lens outcome (reading id or refusal), started and finished times, letter id when done.
+- The writer's click creates the run. A server worker advances it one lens at a time, using the same reader and the same refusals as today. A refused lens is retried once, then the run stops as `failed` at that lens, with the reason shown and a writer-pressed "Try that reading again".
+- On opening the page: the run's true state is shown ("5 of 9 readings done; continuing"). Nothing restarts paid work that is already saved.
+- The writer can cancel. Withdrawing the read permission or turning on Sanctuary stops the run before its next reading.
+- One run per manuscript at a time. A ceiling on runs per day is set before automatic reading is offered beyond the founder.
+
+**Must fail if:**
+- a run continues after permission is withdrawn;
+- a refused reading is counted as done;
+- reopening the page triggers a second paid reading of a lens already saved;
+- two runs proceed on one manuscript.
+
+This step adds a worker and a job table, so it gets its own design review before build.
+
+## 13. Step 5 — The letter's opening
+
+- Source: the overview reading's observations and the writer's own stated intention.
+- Form: "This is what I think the book is reaching for: … Is that right?" followed by "What's working", with exact quotations that resolve in the current draft.
+- When the writer has stated a purpose, she says how her reading compares, in both directions: "You said the book is about X. I read chapters 4 to 6 as doing Y. Is the book changing, or are these chapters?"
+- The writer's answer can be kept as a correction (the corrections record exists) or as a change to their stated intention. That is the writer's act.
+
+**Must fail if:**
+- the opening states the writer's intention as a fact about the text;
+- a quotation does not resolve in the current draft;
+- praise appears without a quotation.
+
+## 14. Automatic reading (ruling 1, narrowed)
+
+- A per-member setting, default off, turned on by the member. First enabled for the founder's account only.
+- When on: on opening a Work with whole-Work read permission and Sanctuary off, MAIA brings the coverage up to date. Changed sections only, at most once per draft revision, through the durable run in §12.
+- Before it is offered to other writers: record the measured cost per run on the founder's book, and set a numeric ceiling. Both are founder acts.
+
+## 15. Acceptance
+
+**Mechanical (tests):** the "must fail if" lists above, each with a deliberately wrong version that the test must catch before the real code is written.
+
+**Founder walk (human witness):** on the founder's own book, in one sitting:
+1. Open the book and see truthful coverage.
+2. Read the letter and say whether it understands the book.
+3. Walk three places; take options on one; use and undo.
+4. Ask about a distant chapter and check what she read to answer.
+5. Close the page mid-pass and come back.
+6. Return the next day and find the decisions and place kept.
+
+**Another writer's walk** before any release decision. Founder use is not witness.
+
+## 16. Open questions that remain
+
+- The numeric cost ceiling for automatic reading.
+- Whether macro-to-micro order, when asked for, is produced by MAIA ranking places (which needs the consequence-judgment licence the convergence charter withheld) or by scale alone (whole book, chapter, passage), which ranks nothing. Proposed: scale alone.
+- The Write and Develop room names once Write is the one surface.
+- How this design reconciles with draft PR #2208 (Quiet / Balanced / All tools), which touches the same files.
