@@ -21,6 +21,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClient';
+import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
   inBookOrder, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
@@ -58,10 +60,23 @@ export function EditorialLetterPanel(props: {
   const [mayAutoRead, setMayAutoRead] = useState<boolean | null>(null);
   const autoAsked = useRef(false);
 
+  /* Step 2: the letter and decisions live on the server, per Work, so they are there on any device and after any visit. The copy on
+     this device is used only when the server has none (a pass made in Sanctuary, or before letters were kept). */
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
+    let cancelled = false;
     setPass(loadSavedPass(manuscriptId));
     setDecisions(loadPassDecisions(manuscriptId));
-    setCursor(null); setError(null); setNote(null); autoAsked.current = false;
+    setCursor(null); setError(null); setNote(null); autoAsked.current = false; setLoaded(false);
+    void fetchLetter(manuscriptId).then((out) => {
+      if (cancelled) return;
+      if (out?.letter) {
+        setPass({ draftRevision: out.letter.draftRevision, map: out.letter.map, letterId: out.letter.id });
+        setDecisions(out.decisions);
+      }
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
   }, [manuscriptId]);
 
   const read = useCallback(async () => {
@@ -69,9 +84,11 @@ export function EditorialLetterPanel(props: {
     setBusy(true); setError(null); setNote(null);
     setProgress('MAIA is reading your book…');
     try {
-      const out = await runEditorialPass({ manuscriptId, revisionNumber: draftRevision, sectionIds: sections.map((s) => s.draftSectionId), onProgress: setProgress });
+      const out = await runEditorialPass({ manuscriptId, revisionNumber: draftRevision, sectionIds: sections.map((s) => s.draftSectionId), onProgress: setProgress, keepAsLetter: true });
       if (!out.ok) { setError(out.message); return; }
-      const saved = { draftRevision, map: out.map };
+      const saved = { draftRevision, map: out.map, letterId: out.letterId };
+      if (out.letterKept && out.letterKept !== 'kept') setNote(keepRefusalCopy(out.letterKept) ?? 'This letter is on this device only.');
+      setDecisions(out.letterId ? {} : loadPassDecisions(manuscriptId));
       savePass(manuscriptId, saved);
       setPass(saved);
       setCursor(null);
@@ -93,18 +110,24 @@ export function EditorialLetterPanel(props: {
     /* Off unless NEXT_PUBLIC_WS_AUTO_READ=1: reading the whole book is nine paid readings and a synthesis, so reading by herself
        waits for a cost ceiling and owner review (review of #2215, 2026-11-11). Until then: "Read my book". */
     if (process.env.NEXT_PUBLIC_WS_AUTO_READ !== '1') return;
-    if (mayAutoRead !== true || autoAsked.current || busy || draftRevision === null || sections.length === 0) return;
-    if (loadSavedPass(manuscriptId)) return;
+    if (!loaded || mayAutoRead !== true || autoAsked.current || busy || draftRevision === null || sections.length === 0) return;
+    if (pass || loadSavedPass(manuscriptId)) return;
     autoAsked.current = true;
     void read();
-  }, [mayAutoRead, busy, draftRevision, sections.length, manuscriptId, read]);
+  }, [loaded, pass, mayAutoRead, busy, draftRevision, sections.length, manuscriptId, read]);
 
   const places = useMemo(
     () => (pass ? inBookOrder(pass.map.items.filter((it) => it.sectionIds.length > 0), sections.map((s) => s.draftSectionId)) : []),
     [pass, sections],
   );
   const stale = pass !== null && draftRevision !== null && pass.draftRevision !== draftRevision;
-  const decide = (id: string, d: PassDecision | null) => {
+  const decide = async (id: string, d: PassDecision | null) => {
+    if (pass?.letterId) {
+      const refused = await postDecision(manuscriptId, pass.letterId, id, d ?? 'cleared');
+      if (refused) { setNote(keepRefusalCopy(refused) ?? 'That decision could not be kept just now. Nothing changed.'); return; }
+      setDecisions((prev) => { const next = { ...prev }; if (d) next[id] = d; else delete next[id]; return next; });
+      return;
+    }
     setDecisions((prev) => {
       const next = { ...prev };
       if (d) next[id] = d; else delete next[id];
@@ -166,13 +189,13 @@ export function EditorialLetterPanel(props: {
         {it.whyItMatters ? <p style={{ margin: 0, fontSize: 12, opacity: .85 }}>Why it may matter: {it.whyItMatters}</p> : null}
         {it.uncertainty ? <p style={{ margin: 0, fontSize: 12, opacity: .75 }}>What I’m not sure of: {it.uncertainty}</p> : null}
         <p style={{ margin: '2px 0 0', fontWeight: 500 }}>Is this intended?</p>
-        {d ? <p data-letter-decision={d} role="status" style={{ margin: 0, fontSize: 12 }}>You said: {d === 'intended' ? 'it’s intended.' : 'later.'} <button type="button" onClick={() => decide(it.id, null)} style={quiet}>Change</button></p> : null}
+        {d ? <p data-letter-decision={d} role="status" style={{ margin: 0, fontSize: 12 }}>You said: {d === 'intended' ? 'it’s intended.' : 'later.'} <button type="button" onClick={() => void decide(it.id, null)} style={quiet}>Change</button></p> : null}
         <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {sec ? <button type="button" data-letter-act="where" onClick={() => props.onShowSection(sec.draftSectionId)} style={btn}>Show me where</button> : null}
           <button type="button" data-letter-act="options" disabled={resolving} onClick={() => void options(it)} style={btn}>{resolving ? 'Finding the words…' : 'Show me options'}</button>
           <button type="button" data-letter-act="talk" onClick={() => props.onTalk(`About “${it.label}” in ${labelOf(sec)}: you noticed that ${it.notice} `)} style={btn}>Talk about it</button>
-          <button type="button" data-letter-act="intended" onClick={() => decide(it.id, 'intended')} style={btn}>It’s intended</button>
-          <button type="button" data-letter-act="later" onClick={() => decide(it.id, 'later')} style={btn}>Later</button>
+          <button type="button" data-letter-act="intended" onClick={() => void decide(it.id, 'intended')} style={btn}>It’s intended</button>
+          <button type="button" data-letter-act="later" onClick={() => void decide(it.id, 'later')} style={btn}>Later</button>
         </div>
         {note ? <p role="note" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -196,6 +219,7 @@ export function EditorialLetterPanel(props: {
         </p>
       ) : null}
       {error ? <p role="alert" style={{ margin: 0, fontSize: 12 }}>{error}</p> : null}
+      {note ? <p role="note" data-letter-note="true" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
       ) : (
