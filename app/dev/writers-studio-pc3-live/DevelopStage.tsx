@@ -243,8 +243,8 @@ export function DevelopStage(props: {
         || props.editorialPass?.status === 'running' || props.editorialPass?.status === 'error') ? (
         <div role="status" aria-live="polite" data-develop-reading-line={props.reading?.status ?? 'none'}
           style={{ flex: '0 0 auto', fontSize: 12, opacity: .85, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {props.reading?.status === 'reading' ? <span>MAIA is reading {props.reading.chapterLabel}{props.reading.chapterWords ? ` · ${props.reading.chapterWords.toLocaleString()} words, all of it` : ''}. Keep writing or talking; she won’t interrupt.{props.reading.progress ? ` ${props.reading.progress}` : ''}</span> : null}
-          {props.reading?.status === 'ready' ? <span>MAIA read {props.reading.chapterLabel}{props.reading.chapterWords ? ` · all ${props.reading.chapterWords.toLocaleString()} words` : ''} · {props.reading.items.length} thing{props.reading.items.length === 1 ? '' : 's'} noticed{spans.length > 0 ? '; the words she quotes are marked in your text' : ''}.</span> : null}
+          {props.reading?.status === 'reading' ? <span>MAIA is reading {props.reading.chapterLabel}. Keep writing or talking; she won’t interrupt.{props.reading.progress ? ` ${props.reading.progress}` : ''}</span> : null}
+          {props.reading?.status === 'ready' ? <span>MAIA has a reading of {props.reading.chapterLabel} · {props.reading.items.length} thing{props.reading.items.length === 1 ? '' : 's'} noticed{spans.length > 0 ? '; the words she quotes are marked in your text' : ''}.</span> : null}
           {props.reading?.status === 'error' ? <span>{props.reading.error ?? 'MAIA could not finish reading this chapter. Nothing in your writing changed.'}</span> : null}
           {props.editorialPass?.status === 'running' ? <span data-develop-pass-progress="true">Editorial pass of the whole book: {props.editorialPass.progress ?? 'MAIA is reading…'} Keep this page open until she finishes.</span> : null}
           {props.editorialPass?.status === 'error' ? <span>{props.editorialPass.error}</span> : null}
@@ -521,7 +521,7 @@ export function StageReadingCard(props: {
   return (
     <section aria-label={`MAIA's reading of ${r.chapterLabel}`} data-develop-reading-card="open"
       style={{ flex: '0 1 auto', maxHeight: '55%', overflowY: 'auto', border: hair, borderRadius: 12, padding: '10px 12px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6, ...ink }}>
-      <div style={{ fontSize: 11, opacity: .75 }}>MAIA · read all of {r.chapterLabel}{r.chapterWords ? ` (${r.chapterWords.toLocaleString()} words)` : ''}</div>
+      <div style={{ fontSize: 11, opacity: .75 }}>MAIA · her reading of {r.chapterLabel}</div>
       <p style={{ margin: 0, lineHeight: 1.55 }}><strong style={{ fontWeight: 500 }}>{lead.label}.</strong> {lead.notice}</p>
       {list ? (
         <ol data-develop-reading-items="true" style={{ margin: '4px 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>

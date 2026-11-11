@@ -2266,6 +2266,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const autoReadKey = props.chapterScope ? `${props.manuscriptId}:${props.chapterScope.fromSectionId}` : null;
   const { onReadChapter } = props;
   useEffect(() => {
+    /* Off unless NEXT_PUBLIC_WS_AUTO_READ=1: an automatic reading is a paid model job, so it waits for a cost ceiling and owner
+       review (review of #2215, 2026-11-11). Until then she reads when the writer asks. */
+    if (process.env.NEXT_PUBLIC_WS_AUTO_READ !== '1') return;
     if (!stageOn || !autoReadKey || autoReadAsked.current.has(autoReadKey)) return;
     if (props.chapterReview || props.chapterReviewBusy || props.chapterReviewError) return;
     let cancelled = false;

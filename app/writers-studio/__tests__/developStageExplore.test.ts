@@ -73,14 +73,15 @@ describe('the stage: ways in view, reading never moves the chapter', () => {
   it('⭐ while MAIA reads, the chapter is still there and says what she is reading', () => {
     stage({ reading: { status: 'reading', progress: null, error: null, chapterLabel: 'Harbour', chapterWords: 21, items: [] }, onReadChapter: jest.fn() });
     expect(q('[data-develop-chapter="s1"]')?.textContent).toContain('Marta held the key');
-    expect(q('[data-develop-reading-line="reading"]')?.textContent).toContain('MAIA is reading Harbour · 21 words, all of it');
+    expect(q('[data-develop-reading-line="reading"]')?.textContent).toContain('MAIA is reading Harbour.');
     expect(q('[data-develop-read-chapter]')).toBeNull();
   });
   it('⭐ when she has read it, her quoted words are marked in the text and the section says which observations come from it', () => {
     stage({ reading: ready([item('a', { notice: 'You write “The lantern stayed dark all winter” and it holds.' }), item('b', { sectionIds: ['s2'] })]), onReadChapter: jest.fn() });
     expect(q('[data-develop-evidence="1"]')?.textContent).toContain('The lantern stayed dark all winter');
     expect(q('[data-develop-cited-here]')?.textContent).toContain('observation 1 comes from this section');
-    expect(q('[data-develop-reading-line="ready"]')?.textContent).toContain('all 21 words');
+    expect(q('[data-develop-reading-line="ready"]')?.textContent).toContain('MAIA has a reading of Harbour');
+    expect(host.textContent).not.toMatch(/all \d+ words|all of it/);
   });
   it('before any reading, the writer can ask for one', () => {
     const onReadChapter = jest.fn();
@@ -123,6 +124,7 @@ describe('wiring (source): automatic reading is gated; the conversation is never
   const VIEW = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx'), 'utf8');
   const effect = VIEW.slice(VIEW.indexOf('const autoReadAsked'), VIEW.indexOf('const chooseDevelopView'));
   it('⭐ she reads by herself only with the writer\'s standing permission, never in Sanctuary, once per chapter per visit', () => {
+    expect(effect).toMatch(/if \(process\.env\.NEXT_PUBLIC_WS_AUTO_READ !== '1'\) return;/);
     expect(effect).toMatch(/getReadScope\(props\.manuscriptId\)/);
     expect(effect).toMatch(/if \(cancelled \|\| !scope\) return;/);
     expect(effect).toMatch(/if \(!posture\.resolved \|\| posture\.sanctuary\) return;/);

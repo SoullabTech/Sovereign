@@ -5,6 +5,7 @@ import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { WriteManuscriptRail, WriteRoom, isWriteRoomReadbackCurrent, type WriteBlock, type WriteRoomReadback } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
+import { EditorialLetterPanel, type PassIssueTarget } from './EditorialLetterPanel';
 
 export const UNDO_RESTORED_MESSAGES = {
   complete: 'Undone. Your own wording is back.',
@@ -84,8 +85,12 @@ export type P4R1Pc3WriteEditViewProps = {
     manuscriptId: string;
     title: string | null;
     version: number;
+    /** the current draft's revision number (the one MAIA's readings are frozen against); null/absent = not established */
+    draftRevision?: number | null;
     sections: RebuildSection[];
   };
+  /** the writer chose "Show me options" on a place in MAIA's letter: open the passage desk on those exact, verified words */
+  onOpenPassIssue?: (target: PassIssueTarget) => void;
   writing: SectionWriting;
   work: LivingWork | null;
   appearance: Appearance;
@@ -1237,6 +1242,18 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {/* MAIA's letter and the walk: beside the manuscript, never instead of it. It stays mounted while the writer talks with
+            MAIA, so the place they were on in the walk is still theirs when they come back. */}
+        <div hidden={workConversationOpen} data-write-letter="true" style={{ marginBottom: 12 }}>
+          <EditorialLetterPanel
+            manuscriptId={props.context.manuscriptId}
+            sections={props.context.sections}
+            draftRevision={props.context.draftRevision ?? null}
+            onShowSection={go}
+            onEditOptions={(target) => props.onOpenPassIssue?.(target)}
+            onTalk={(words) => openWorkConversation(words)}
+          />
+        </div>
         {workConversationOpen ? (
           workConversation
         ) : railSelectionId && railSection ? (
@@ -1275,8 +1292,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
                 Or select exact words in the manuscript for passage-level work.
               </p>
             </div>
-            <button type="button" className="p4r1-talk" onClick={() => openWorkConversation('')}>
-              Talk with MAIA
+            {/* Named for what it opens (the conversation about the whole Work), so it is never confused with the passage door's
+                "Talk with MAIA" now that this column is always beside the manuscript. */}
+            <button type="button" className="p4r1-talk" data-write-talk-book="true" onClick={() => openWorkConversation('')}>
+              Talk about the whole book
             </button>
           </>
         )}
@@ -1735,7 +1754,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <Shell
           mode="write"
           appearance={props.appearance}
-          geometry={craftVisible || railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
+          geometry={craftVisible || railSelectionId || workConversationOpen || props.work ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
           memberInitial=""
           onSelectMode={mode => { requestCraftDeparture('Switch Studio room', () => props.onMode(mode)); }}
@@ -1747,7 +1766,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               Select a passage in your current authorized Work to begin again.
             </div>
           ) : craftVisible ? craftWork : workSurface}
-          maia={craftScopeChanged ? undefined : craftVisible ? craftMaia : (railSelectionId || workConversationOpen ? writeMaia : undefined)}
+          maia={craftScopeChanged ? undefined : craftVisible ? craftMaia : writeMaia}
         />
 
       {isolatedRoom}
