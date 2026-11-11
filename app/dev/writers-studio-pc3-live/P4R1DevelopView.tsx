@@ -42,6 +42,7 @@ import { DevelopAddToWork } from './DevelopAddToWork';
 import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
+import { CoverageLine } from './CoverageLine';
 import { DevelopStage, DevelopHoldings, DevelopCompanion, StageReadingCard, chapterWordCount, type StageReading, type StageEditorialPass } from './DevelopStage';
 import type { StudioAct } from '@/app/writers-studio/canvas/WorkConversation';
 import { setReadScope, getReadScope } from '@/lib/writersStudio/readScopeClient';
@@ -3447,6 +3448,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       <div className="fr-mbody" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <DevelopCompanion
           lastRead={lastRead}
+          coverage={<CoverageLine manuscriptId={props.manuscriptId}
+            refreshKey={`${props.chapterReview?.commissionedAt ?? ''}:${props.attentionMap?.commissionedAt ?? ''}`}
+            labelOf={(id) => { const sec = props.sections.find((x) => x.draftSectionId === id); return sec ? (sec.heading?.trim() || `Section ${sec.position + 1}`) : 'a section'; }} />}
           reading={<StageReadingCard key={stageReading.chapterLabel} reading={stageReading}
             onWorkTowardRevision={() => makePlan(`Help me work toward a revision of ${stageChapterLabel}, starting from what you noticed when you read it.`)} />}
           conversation={(

@@ -43,6 +43,8 @@ export function EditorialLetterPanel(props: {
   onShowSection: (sectionId: string) => void;
   onEditOptions: (target: PassIssueTarget) => void;
   onTalk: (words: string) => void;
+  /** she finished reading (so what she has read can be re-checked) */
+  onRead?: () => void;
 }) {
   const { manuscriptId, sections, draftRevision } = props;
   const [pass, setPass] = useState<SavedPass | null>(null);
@@ -73,8 +75,9 @@ export function EditorialLetterPanel(props: {
       savePass(manuscriptId, saved);
       setPass(saved);
       setCursor(null);
+      props.onRead?.();
     } finally { setBusy(false); setProgress(null); }
-  }, [busy, draftRevision, manuscriptId, sections]);
+  }, [busy, draftRevision, manuscriptId, sections, props.onRead]);
 
   /* She has read the book already when the writer has let her read the whole Work: no letter yet → she reads, once. */
   useEffect(() => {

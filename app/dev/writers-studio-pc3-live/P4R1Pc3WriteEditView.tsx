@@ -6,6 +6,7 @@ import { WriteManuscriptRail, WriteRoom, isWriteRoomReadbackCurrent, type WriteB
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 import { EditorialLetterPanel, type PassIssueTarget } from './EditorialLetterPanel';
+import { CoverageLine } from './CoverageLine';
 
 export const UNDO_RESTORED_MESSAGES = {
   complete: 'Undone. Your own wording is back.',
@@ -1231,6 +1232,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     ? railSection.heading?.trim() || `Section ${railSection.position + 1}`
     : 'this section';
 
+  const [coverageEpoch, setCoverageEpoch] = useState(0);
   const writeMaia = props.work ? (
     <div className="fr-maia-inner p4r1-write-maia">
       <div className="fr-maia-head">
@@ -1242,6 +1244,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {/* What she has read of this draft, always first, never a guess (WS-RELATIONAL-ARCHITECTURE step 1). */}
+        <div data-write-coverage="true" style={{ marginBottom: 10 }}>
+          <CoverageLine
+            manuscriptId={props.context.manuscriptId}
+            refreshKey={`${props.context.draftRevision ?? 'x'}:${coverageEpoch}`}
+            labelOf={(id) => { const sec = props.context.sections.find((x) => x.draftSectionId === id); return sec ? (sec.heading?.trim() || `Section ${sec.position + 1}`) : 'a section'; }}
+          />
+        </div>
         {/* MAIA's letter and the walk: beside the manuscript, never instead of it. It stays mounted while the writer talks with
             MAIA, so the place they were on in the walk is still theirs when they come back. */}
         <div hidden={workConversationOpen} data-write-letter="true" style={{ marginBottom: 12 }}>
@@ -1252,6 +1262,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             onShowSection={go}
             onEditOptions={(target) => props.onOpenPassIssue?.(target)}
             onTalk={(words) => openWorkConversation(words)}
+            onRead={() => setCoverageEpoch((n) => n + 1)}
           />
         </div>
         {workConversationOpen ? (

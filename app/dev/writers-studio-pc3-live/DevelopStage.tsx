@@ -417,10 +417,11 @@ export function DevelopStage(props: {
 }
 
 /** MAIA beside the work: one conversation, and — always visible, never behind a menu (L8) — which chapters she was handed for her last answer. */
-export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode }) {
+export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode; coverage?: ReactNode }) {
   /* At the top, not the bottom: the floating "Report a bug" control covered it there (founder screenshot 2026-11-09). */
   return (
     <div data-develop-companion="true" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 8, ...ink }}>
+      {props.coverage ?? null}
       <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderBottom: hair, paddingBottom: 6 }}>
         {props.lastRead === null
           /* Before an answer in this visit we do not know what she was handed earlier, so we do not claim "nothing". */
