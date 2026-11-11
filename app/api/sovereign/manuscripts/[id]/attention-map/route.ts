@@ -17,6 +17,8 @@ import {
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
+import { hasEntitlement, resolveEntitlements } from '@/lib/auth/entitlements';
+import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,6 +122,16 @@ export async function POST(
     && deepLenses.every((lens) => lenses.has(lens));
   if (!overviewMode && !deepMode) {
     return NextResponse.json({ error: 'overview_or_complete_eight_lens_set_required' }, { status: 409 });
+  }
+  /* Free / Pro line (founder ruling 2026-11-11): the eight-lens synthesis is always whole-book (scope enforced below), so it is
+     the whole-book editorial pass and needs `writing.wholeWork`. Overview mode serves chapter work (chapter reading, scorecard,
+     minimal path) and stays open. Refused before any model call. A failed lookup is 503, never read as "not Pro". */
+  if (deepMode) {
+    const entitlements = await resolveEntitlements(memberId).catch(() => null);
+    if (!entitlements) return NextResponse.json({ error: 'entitlement_unavailable' }, { status: 503 });
+    if (!hasEntitlement(entitlements, 'writing.wholeWork')) {
+      return NextResponse.json({ error: WHOLE_WORK_REFUSAL }, { status: 403 });
+    }
   }
   if (readings.some((r) => r.readState.revisionNumber !== revisionNumber)) {
     return NextResponse.json({ error: 'current_revision_moved' }, { status: 409 });
