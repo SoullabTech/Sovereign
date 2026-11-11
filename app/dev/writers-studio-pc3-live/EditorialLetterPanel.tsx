@@ -22,6 +22,8 @@ import { getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClient';
+import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studio/passRunClient';
+import type { RunView } from '@/lib/writersStudio/studio/passRun';
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
@@ -79,8 +81,54 @@ export function EditorialLetterPanel(props: {
     return () => { cancelled = true; };
   }, [manuscriptId]);
 
+  /* Step 4 (founder ruling 2026-11-11, "Let it run on its own"): with whole-Work permission the pass runs ON THE SERVER, so closing the
+     page does not stop it; this panel only shows its true state and checks back. Without that permission the writer's click still reads
+     the book from this page, as before. */
+  const [run, setRun] = useState<RunView | null>(null);
+  const watch = useRef<number | null>(null);
+  const stopWatching = () => { if (watch.current !== null) { window.clearInterval(watch.current); watch.current = null; } };
+  const followRun = useCallback(() => {
+    stopWatching();
+    const tick = async () => {
+      const r = await fetchRun(manuscriptId);
+      if (r === undefined) return;
+      setRun(r);
+      if (!r || ['done', 'failed', 'stopped', 'cancelled'].includes(r.state)) {
+        stopWatching();
+        if (r?.state === 'done') {
+          const out = await fetchLetter(manuscriptId);
+          if (out?.letter) { setPass({ draftRevision: out.letter.draftRevision, map: out.letter.map, letterId: out.letter.id }); setDecisions(out.decisions); setCursor(null); props.onRead?.(); }
+        }
+      }
+    };
+    void tick();
+    watch.current = window.setInterval(() => { void tick(); }, 5000);
+  }, [manuscriptId, props.onRead]);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchRun(manuscriptId).then((r) => {
+      if (cancelled || !r) return;
+      setRun(r);
+      if (!['done', 'failed', 'stopped', 'cancelled'].includes(r.state)) followRun();
+    });
+    return () => { cancelled = true; stopWatching(); };
+  }, [manuscriptId, followRun]);
+  const runActive = run !== null && !['done', 'failed', 'stopped', 'cancelled'].includes(run.state);
+
+  const readOnServer = useCallback(async (): Promise<boolean> => {
+    const out = await startPassRun(manuscriptId);
+    if (!out.ok) {
+      if (out.refusal === 'daily_limit') { setError('I’ve already read this book as many times today as your setting allows. Try again tomorrow.'); return true; }
+      if (out.refusal === 'sanctuary_not_kept' || out.refusal === 'posture_undeclared') { setError(keepRefusalCopy(out.refusal)); return true; }
+      return false;   // no whole-Work permission (or not established): read from this page instead
+    }
+    setRun(out.run); setError(null); followRun();
+    return true;
+  }, [manuscriptId, followRun]);
+
   const read = useCallback(async () => {
-    if (busy || draftRevision === null) return;
+    if (busy || runActive || draftRevision === null) return;
+    if (await readOnServer()) return;
     setBusy(true); setError(null); setNote(null);
     setProgress('MAIA is reading your book…');
     try {
@@ -94,7 +142,7 @@ export function EditorialLetterPanel(props: {
       setCursor(null);
       props.onRead?.();
     } finally { setBusy(false); setProgress(null); }
-  }, [busy, draftRevision, manuscriptId, sections, props.onRead]);
+  }, [busy, runActive, readOnServer, draftRevision, manuscriptId, sections, props.onRead]);
 
   /* She has read the book already when the writer has let her read the whole Work: no letter yet → she reads, once. */
   useEffect(() => {
@@ -151,6 +199,16 @@ export function EditorialLetterPanel(props: {
   };
 
   /* ── reading, or nothing yet ── */
+  if (runActive && run) {
+    return (
+      <section data-editorial-letter="running" role="status" aria-live="polite" className="fr-say">
+        <p style={{ margin: 0 }}>I’m reading your book{run.done > 0 ? `: ${run.done} of ${run.total} readings done` : ''}{run.state === 'synthesizing' ? ', and gathering what I found' : ''}.</p>
+        <p style={{ margin: '6px 0 0', fontSize: 12, opacity: .8 }}>Keep writing, or close this page; I’ll carry on and the letter will be here when you come back.</p>
+        <button type="button" data-letter-cancel="true" onClick={() => { void cancelPassRun(manuscriptId).then(() => fetchRun(manuscriptId)).then((r) => { if (r !== undefined) setRun(r); stopWatching(); }); }}
+          style={{ ...quiet, marginTop: 6 }}>Stop reading</button>
+      </section>
+    );
+  }
   if (busy) {
     return (
       <section data-editorial-letter="reading" role="status" aria-live="polite" className="fr-say">
@@ -159,6 +217,15 @@ export function EditorialLetterPanel(props: {
       </section>
     );
   }
+  const runEnded = run && (run.state === 'failed' || run.state === 'stopped') ? (
+    <p role="note" data-letter-run-ended={run.state} style={{ margin: '6px 0 0', fontSize: 12 }}>
+      {run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
+        : run.state === 'stopped' && run.refusal === 'permission_withdrawn' ? 'I stopped reading because you withdrew my permission to read the whole book.'
+        : run.state === 'stopped' && run.refusal === 'draft_changed' ? 'I stopped because the book changed while I was reading.'
+        : `I couldn’t finish the ${run.lens ?? ''} reading (${run.done} of ${run.total} were done; they are kept).`}
+      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>Continue</button>
+    </p>
+  ) : null;
   if (!pass) {
     return (
       <section data-editorial-letter="none" className="fr-say">
@@ -168,6 +235,7 @@ export function EditorialLetterPanel(props: {
             : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
         </p>
         {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}>{error}</p> : null}
+        {runEnded}
         {draftRevision !== null ? <button type="button" data-letter-read="true" className="p4r1-talk" onClick={() => void read()} style={{ marginTop: 8 }}>Read my book</button> : null}
       </section>
     );
