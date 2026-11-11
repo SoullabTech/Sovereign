@@ -40,6 +40,7 @@ const config: CapacitorConfig = {
     'BluetoothLe',
     'SpeechRecognition',
     'AudioSessionManager',
+    'SoundFieldAudio',
     'VoiceController',
     'SignInWithApple',
     'GoogleAuth',

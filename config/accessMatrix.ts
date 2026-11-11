@@ -115,6 +115,21 @@ export const ACCESS_RULES: AccessRule[] = [
   // the precise failure the explicit-mapping doctrine above exists to prevent.
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
   { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
+
+  // LISTEN-01 dark launch (2026-11-09) — Sound Studio review audio. Served by a route that
+  // repeats the /listen conditions (flag + verified member session); never a public asset.
+  { prefix: '/media/sound-studio/', minTier: 'free', notes: 'Sound Studio review audio — authenticated members only; route also requires SOULLAB_LISTEN_REVIEW_ENABLED=1 and 404s otherwise; exact allowlisted files only' },
+
+  // LISTEN-45 — exact authenticated Sound Field door and exact current-session
+  // receipt. The page remains disabled-by-default behind
+  // SOULLAB_LISTEN_REVIEW_ENABLED and carries its own server session check.
+  // Exact-only is deliberate: no nested/private listening or member APIs
+  // inherit admission by accident.
+  { exact: '/listen', minTier: 'free', notes: 'Sound Field review room — authenticated browser members only; feature-disabled by default; no /listen/* wildcard' },
+  { exact: '/api/members/session', minTier: 'free', notes: 'Current verified member/session receipt used by the Sound Field root boundary and existing session consumers; exact route only' },
+  { exact: '/api/members/me', minTier: 'free', notes: 'Canonical server-truth member receipt used to repair stale browser identity caches from a verified cookie or x-session-token credential; exact route only' },
+  { exact: '/api/members/signout', minTier: 'free', notes: 'Authenticated session revocation and cookie clearing; exact route only so sign-out cannot silently degrade under strict access mode' },
+
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)
@@ -330,6 +345,8 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Elemental Alchemy — depth
   { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },
+  { exact: '/api/reader/moments', minTier: 'free', notes: 'Elemental Alchemy Reader moments — authenticated outer gate; handler independently derives member ownership from the verified session' },
+  { exact: '/api/reader/ask', minTier: 'free', notes: 'Elemental Alchemy Reader MAIA reflection — authenticated outer gate; handler independently derives member ownership from the verified session' },
 
   // Oracle tools — depth, capacity-governed by LimitsEnforcer
   { exact: '/oracle/iching', minTier: 'free', notes: 'I-Ching readings — depth, rate-limited' },

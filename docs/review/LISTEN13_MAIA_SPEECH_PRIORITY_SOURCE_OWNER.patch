@@ -1,0 +1,98 @@
+--- protected_source/lib/voice/StreamingAudioQueue.ts
++++ review_candidate/lib/voice/StreamingAudioQueue.ts
+@@ -13,6 +13,8 @@
+ import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
+ import { pushVoiceDebug } from './voiceDebugBus';
+ import { logVoiceEvent } from './voiceDiagnostics';
++import { requestAudioFocus } from '@/lib/listening/audioFocus';
++import { beginMaiaSpeechLease, endMaiaSpeechLease } from '@/lib/listening/maiaSpeechFocus';
+ 
+ export interface AudioQueueItem {
+   audio: HTMLAudioElement;
+@@ -31,6 +33,9 @@
+   private feedbackPrevention: VoiceFeedbackPrevention;
+   private audioContext: AudioContext | null = null;
+   private audioUnlocked: boolean = false;
++  // A speech session claims audio focus at most once, and only after playback starts.
++  private hasClaimedSpeechFocus = false;
++  private readonly speechFocusLease = Symbol('maia-queue-voice');
+   // Track whether all sentences have been enqueued (streaming complete)
+   private streamingComplete: boolean = false;
+   // 🔥 FIX: Track audio chunks through pipeline
+@@ -40,6 +45,13 @@
+   // Cleared on natural end/error, stop(), and reset() so it can never advance
+   // a stopped queue.
+   private playbackWatchdog: ReturnType<typeof setTimeout> | null = null;
++
++  private releaseSpeechFocus(): void {
++    if (this.hasClaimedSpeechFocus) {
++      endMaiaSpeechLease(this.speechFocusLease);
++      this.hasClaimedSpeechFocus = false;
++    }
++  }
+ 
+   constructor(callbacks?: {
+     onPlayingChange?: (isPlaying: boolean) => void;
+@@ -227,6 +239,7 @@
+         this.onPlayingChange?.(false);
+         // PR 15 diagnostic: prove queue.onComplete actually fires.
+         pushVoiceDebug(`🎬 onComplete firing (queue path, ${this.chunksPlayed}/${this.chunksEnqueued})`);
++        this.releaseSpeechFocus();
+         this.onComplete?.();
+       } else if (this.streamingComplete) {
+         console.log(`⏳ [StreamingQueue] Queue empty, streaming complete, but only played ${this.chunksPlayed}/${this.chunksEnqueued} chunks - waiting...`);
+@@ -258,6 +271,12 @@
+       let playbackStarted = false;
+       let expectedDuration = 0;
+       let settled = false;
++      const claimSpeechFocus = () => {
++        if (settled || this.hasClaimedSpeechFocus || this.currentAudio !== item.audio) return;
++        this.hasClaimedSpeechFocus = true;
++        beginMaiaSpeechLease(this.speechFocusLease);
++        requestAudioFocus('maia-voice');
++      };
+ 
+       // 🛡️ Single, idempotent completion path for this chunk. Whichever signal
+       // fires first — natural end, error, failed start, or the iOS hang
+@@ -302,6 +321,7 @@
+ 
+       item.audio.onplay = () => {
+         playbackStarted = true;
++        claimSpeechFocus();
+         console.log(`▶️ [StreamingQueue] Chunk playback started`);
+         armWatchdog();
+       };
+@@ -347,6 +367,9 @@
+ 
+       // Start playback with retry logic for iOS audio unlock issues
+       const playSucceeded = await this.attemptPlay(item.audio);
++      // iOS/WebKit can resolve play() without delivering onplay. That success
++      // is a fallback witness; a failed/never-started request never takes focus.
++      if (playSucceeded) claimSpeechFocus();
+ 
+       if (!playSucceeded) {
+         // All retries failed - count as failed and move on
+@@ -384,6 +407,7 @@
+     this.queue = [];
+     this.isPlaying = false;
+     this.streamingComplete = false; // Reset for next use
++    this.releaseSpeechFocus();
+     this.chunksEnqueued = 0;
+     this.chunksPlayed = 0;
+     this.onPlayingChange?.(false);
+@@ -410,6 +434,7 @@
+       this.onPlayingChange?.(false);
+       // PR 15 diagnostic: prove this onComplete-entry path fires.
+       pushVoiceDebug(`🎬 onComplete firing (mark path, ${this.chunksPlayed}/${this.chunksEnqueued})`);
++      this.releaseSpeechFocus();
+       this.onComplete?.();
+     } else if (this.queue.length === 0 && !this.isPlaying) {
+       console.log(`⏳ [StreamingQueue] Queue empty but only ${this.chunksPlayed}/${this.chunksEnqueued} chunks played - waiting`);
+@@ -424,6 +449,7 @@
+     console.log('🔄 [StreamingQueue] Resetting for new session');
+     this.clearPlaybackWatchdog();
+     this.streamingComplete = false;
++    this.releaseSpeechFocus();
+     this.queue = [];
+     this.isPlaying = false;
+     this.currentAudio = null;

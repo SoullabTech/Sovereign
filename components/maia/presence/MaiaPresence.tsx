@@ -128,6 +128,30 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   const [injectedMessage, setInjectedMessage] = useState<{ text: string; nonce: number } | null>(null);
   const injectionNonceRef = useRef(0);
 
+  // LISTEN-57 · Private review: MAIA must remain clickable while the
+  // existing persistent Listening dock is visible. Read the actual rendered
+  // dock height; never guess a fixed 76px when controls wrap on small screens.
+  const [listeningDockHeight, setListeningDockHeight] = useState(0);
+  useEffect(() => {
+    const dock = document.querySelector<HTMLElement>('[data-listen10-persistent-dock="true"]');
+    if (!dock) { setListeningDockHeight(0); return; }
+
+    const measure = () => {
+      const visible = window.getComputedStyle(dock).display !== 'none';
+      const next = visible ? Math.ceil(dock.getBoundingClientRect().height) : 0;
+      setListeningDockHeight(previous => previous === next ? previous : next);
+    };
+    const resize = typeof ResizeObserver === 'function'
+      ? new ResizeObserver(measure) : null;
+    const mutation = typeof MutationObserver === 'function'
+      ? new MutationObserver(measure) : null;
+    resize?.observe(dock);
+    mutation?.observe(dock, { attributes: true, attributeFilter: ['style', 'class'] });
+    measure();
+    return () => { resize?.disconnect(); mutation?.disconnect(); };
+  }, [pathname]);
+
+
   // Signed-in gate — client-only, checked on mount and on route change
   // (sign-in/out happens via navigation in this app).
   useEffect(() => {
@@ -220,6 +244,7 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={openMaia}
               aria-label="Open your conversation with MAIA"
+              style={listeningDockHeight > 0 ? { bottom: "calc(" + listeningDockHeight + "px + 1.25rem)" } : undefined}
               className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full
                          border border-amber-500/30 bg-[#1A1513]/90 px-3.5 py-2 shadow-lg
                          backdrop-blur-sm transition-colors hover:border-amber-400/50
@@ -240,8 +265,8 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
               aria-hidden={!isOpen}
               className={
                 isOpen
-                  ? 'fixed inset-0 z-[80] flex items-end justify-end sm:p-4'
-                  : 'pointer-events-none fixed inset-0 z-[80] hidden'
+                  ? 'fixed inset-0 z-[110] flex items-end justify-end sm:p-4'
+                  : 'pointer-events-none fixed inset-0 z-[110] hidden'
               }
             >
               {/* Scrim — the room stays visible beneath; click closes */}
