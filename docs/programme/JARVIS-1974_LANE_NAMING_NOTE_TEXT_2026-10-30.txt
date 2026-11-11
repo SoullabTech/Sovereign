@@ -1,0 +1,25 @@
+## Founder named this lane for read-only orientation work — and findings from that work (30 Oct 2026) — record only: NO grant, NO release, NO hold lifted
+
+**Source of this record:** the founder's own step-by-step instructions in an interactive Claude Code session on 30 Oct 2026, posted at the founder's direction. It records what was done and found. It issues no grant and lifts no hold.
+
+### What the founder directed on this lane today
+1. Treat JARVIS as the first project under a new project protocol; `jarvis-desktop` owns the first slice (state recovery), with the continuity registry as the single state record.
+2. Read-only censuses: compare the installed app's source files, by hash, against git trees; trace commit lineage; search git history for `REPO_ROOT`; read the app's stored repo-root setting (the path only).
+3. A dev-mode launch of canonical's `jarvis-desktop` and `maia-desktop` from a separate, isolated git worktree at canonical's tip, with a stated dependency download. The founder ran MAIA Desktop personally.
+4. One marker comment on this issue, posted at the founder's instruction, as a freshness test of the continuity record. It is to be edited to "withdrawn: test only".
+5. A ruling that **canonical is the source line of record for JARVIS Desktop**. The desktop investigation was then **parked, not closed**.
+
+### Not done and not authorized
+No source edits. No build, packaging, signing or install. No change to the installed app or its settings. No grant, lease or release. No hold lifted. Nothing else posted anywhere.
+
+### Findings, with evidence class — none independently reviewed
+- **The installed app is commit `65fbf9c72f4`.** Its 28 source files are byte-identical to that commit's `jarvis-desktop/src`. That commit is **not** an ancestor of `clean-main-no-secrets`; it is on three feature branches. Its base `c6102a347` is on canonical. *(hash comparison)*
+- **`REPO_ROOT` is used but never declared** in `jarvis-desktop/src/main.js` at `65fbf9c72f4`, lines 1220, 1221 and 1232 (the C1 execution lane). This matches the recorded `REPO_ROOT is not defined` failure. Canonical's `main.js` has no use of `REPO_ROOT` and reads `currentRoot()` with a fail-closed guard. *(code-read; not reproduced)*
+- **Standalone launch of canonical's `jarvis-desktop` is inert under Electron 28.3.3.** `require.main === module` is false there, so the `STANDALONE` gate skips window creation, lock and ready handling. *(witnessed with a control app)*
+- **The unified host `maia-desktop` (Electron 44.4.1) starts.** The founder reports `Go → JARVIS · Work` is listed but opening it showed no window; the cause is **not established**. *(founder-reported)*
+- **A platform splash link is blocked by the desktop shell.** "Go to Soullab" points to `/home`, which the desktop House allowlist rejects. *(policy function evaluated)*
+
+### Open items for the owner
+- Does this note suffice as the founder naming the lane, or is a handback ACK still required?
+- The independent macOS/Electron reviewer (#1983) is unassigned. All findings above are by Claude Code alone and are therefore **unreviewed**.
+- Whether the dev-mode launch above should have been preceded by a JARVIS Desktop grant is for the founder and owner to judge; none was requested or issued.

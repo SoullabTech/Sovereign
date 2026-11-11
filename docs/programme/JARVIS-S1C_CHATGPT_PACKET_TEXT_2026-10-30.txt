@@ -1,0 +1,25 @@
+I'm asking for one round of design options on a small internal tool. Please treat everything below as the complete context. You won't be shown any code or documents, so please don't ask for them.
+
+**The situation.** I run a small software team and use several AI tools. They don't coordinate: I carry context between them by hand, designs sometimes keep growing without reaching a shipped result, and the assistant I call JARVIS can answer questions but has never worked as a connected whole. One part already works: when I open a fresh coding-assistant session and say "continue", it recovers the project's state from a written record, tells me the next step without my re-explaining, and then stops and asks me for any decision that is mine.
+
+**The outcome I want.** I say "continue <project>" in one place. The assistant recovers where the project stands, prepares the right hand-off for the right tool (an outside design or research model such as you, or a coding session), records what comes back, and reports to me in about three lines: what happened, what is proved, and the one decision that is mine.
+
+**The smallest slice to consider.** The hand-off to an outside model like you, done by hand. The assistant prepares a short packet; I paste it to you; I paste your reply back; the assistant files your reply as an unverified suggestion and checks it against what already exists before anything is built.
+
+**Out of scope.** Any tool acting without me. Automatic sending to outside services. Anything involving private user data or source code. More than one project at a time. Deploying anything.
+
+**How I'll judge success.**
+1. A fresh session restates the project's real state correctly, including after I edit the written record by hand.
+2. The packet sent to an outside model contains nothing beyond this description.
+3. The assistant never marks work done on a worker's own say-so.
+4. It surfaces my decisions rather than making them.
+5. It works the next day from a cold start with nobody re-explaining.
+
+**What I'd like from you — one round, no code.**
+1. Give 3 or 4 distinct ways to build the smallest slice, from simplest to most ambitious.
+2. For each: what the packet and reply format would look like, how it fails or wastes effort, what it needs from me each time, and what it must refuse to do.
+3. Name the two or three assumptions you made that I should check.
+4. Name what you'd need to know that I haven't said.
+5. End with one recommendation and why, in a few sentences.
+
+Please keep it under about 600 words, and please don't propose anything that has the assistant act on its own.
