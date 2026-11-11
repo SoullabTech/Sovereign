@@ -11,6 +11,12 @@ const insight = jest.fn();
 const runPass = jest.fn();
 const fetchLetter = jest.fn();
 const postDecision = jest.fn();
+const fetchRun = jest.fn();
+const startPassRun = jest.fn();
+const cancelPassRun = jest.fn();
+jest.mock('@/lib/writersStudio/studio/passRunClient', () => ({
+  fetchRun: (...a: unknown[]) => fetchRun(...a), startPassRun: (...a: unknown[]) => startPassRun(...a), cancelPassRun: (...a: unknown[]) => cancelPassRun(...a),
+}));
 jest.mock('@/lib/writersStudio/letter/letterClient', () => ({ fetchLetter: (...a: unknown[]) => fetchLetter(...a), postDecision: (...a: unknown[]) => postDecision(...a) }));
 jest.mock('@/lib/writersStudio/readScopeClient', () => ({ getReadScope: (...a: unknown[]) => scope(...a) }));
 jest.mock('@/lib/sanctuary/currentClientPosture', () => ({ readCurrentSanctuaryPosture: () => posture() }));
@@ -43,6 +49,8 @@ beforeEach(() => {
   scope.mockResolvedValue(null); posture.mockReturnValue({ resolved: true, sanctuary: false });
   fetchLetter.mockReset(); postDecision.mockReset();
   fetchLetter.mockResolvedValue({ letter: null, decisions: {} }); postDecision.mockResolvedValue(null);
+  fetchRun.mockReset(); startPassRun.mockReset(); cancelPassRun.mockReset();
+  fetchRun.mockResolvedValue(null); startPassRun.mockResolvedValue({ ok: false, refusal: 'not_permitted' }); cancelPassRun.mockResolvedValue(true);
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); });
@@ -197,5 +205,46 @@ describe('step 2: the letter and decisions are kept on the server', () => {
     await mount();
     await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
     expect(runPass.mock.calls[0][0]).toMatchObject({ keepAsLetter: true });
+  });
+});
+
+
+describe('step 4: the pass runs on the server and survives closing the page', () => {
+  const running = { id: 'run1', draftRevision: 5, state: 'lens_done', done: 5, total: 9, lens: 'arc', refusal: null, letterId: null, createdAt: 'now' };
+  it('⭐ an unfinished run is shown truthfully when the page opens ("5 of 9 readings done"), and can be stopped', async () => {
+    fetchRun.mockResolvedValue(running);
+    await mount();
+    expect(q('[data-editorial-letter="running"]')?.textContent).toContain('5 of 9 readings done');
+    expect(host.textContent).toContain('close this page; I’ll carry on');
+    await act(async () => { q('[data-letter-cancel]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(cancelPassRun).toHaveBeenCalledWith('m');
+  });
+  it('⭐ with whole-Work permission, "Read my book" starts the server run, not the page loop', async () => {
+    startPassRun.mockResolvedValue({ ok: true, run: { ...running, state: 'queued', done: 0 } });
+    await mount();
+    fetchRun.mockResolvedValue({ ...running, state: 'reading', done: 1 });   // the server now reports the run it started
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(startPassRun).toHaveBeenCalledWith('m');
+    expect(runPass).not.toHaveBeenCalled();
+    expect(q('[data-editorial-letter="running"]')).not.toBeNull();
+  });
+  it('without whole-Work permission, the writer\'s click still reads from this page', async () => {
+    runPass.mockResolvedValue({ ok: true, map: MAP, letterId: null, letterKept: 'not_asked' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+    expect(runPass).toHaveBeenCalledTimes(1);
+  });
+  it('⭐ a stopped run says why, keeps what was done, and offers Continue', async () => {
+    fetchRun.mockResolvedValue({ ...running, state: 'stopped', refusal: 'permission_withdrawn' });
+    await mount();
+    expect(q('[data-letter-run-ended="stopped"]')?.textContent).toContain('you withdrew my permission');
+    expect(q('[data-letter-continue]')).not.toBeNull();
+  });
+  it('the daily limit is said in words', async () => {
+    startPassRun.mockResolvedValue({ ok: false, refusal: 'daily_limit' });
+    await mount();
+    await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(host.textContent).toContain('as many times today as your setting allows');
+    expect(runPass).not.toHaveBeenCalled();
   });
 });

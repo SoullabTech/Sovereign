@@ -13,7 +13,8 @@ import { runWholeManuscriptReview, wholeReviewComplete } from '@/lib/writersStud
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 
-export const EDITORIAL_PASS_REQUEST = 'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.';
+import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPassRequest';
+export { EDITORIAL_PASS_REQUEST };
 
 export type EditorialPassOutcome =
   | { ok: true; map: WholeManuscriptAttentionMap; letterId: string | null; letterKept: string | undefined }

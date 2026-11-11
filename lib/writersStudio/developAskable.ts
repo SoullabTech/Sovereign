@@ -36,7 +36,7 @@ export const DEVELOP_CAPABILITIES: readonly DevelopCapability[] = [
     reach: { kind: 'offer', action: 'read-chapter' } },
   { key: 'reading-choices', what: 'after her reading: go through what she noticed, talk about a passage, work toward a revision, leave it', controls: ['data-develop-choice'], reach: { kind: 'conversation' } },
   { key: 'editorial-pass', what: 'the whole-book editorial pass, started and followed from the stage', controls: ['data-develop-pass', 'data-develop-pass-progress'], reach: { kind: 'offer', action: 'editorial-pass' } },
-  { key: 'lenses', what: 'open a lens (arc, structure, voice …) from the ways row', controls: ['data-develop-ways', 'data-develop-way'],
+  { key: 'lenses', what: 'open a lens (arc, structure, voice …) from the ways row; it opens beside the chapter, with Back to the reading', controls: ['data-develop-ways', 'data-develop-way', 'data-lens-chapter', 'data-lens-back'],
     reach: { kind: 'defect', note: 'MAIA cannot yet offer a specific lens page as a clickable action; the ways row is the only route (2026-11-11).' } },
   { key: 'whole-book-scope', what: 'ask about where I am, or about the whole book', controls: ['data-carry-scope', 'data-whole-book-offer', 'data-whole-book-on'], reach: { kind: 'conversation' } },
   { key: 'grant-reading', what: 'let MAIA read saved chapter / work', controls: ['data-develop-holdings'], reach: { kind: 'offer', action: 'grant-reading' } },

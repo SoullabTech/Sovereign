@@ -88,7 +88,7 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('writers-studio:editorial-pass:v1');
     expect(controller).toContain('MAIA is reading through the manuscript for edit opportunities');
     /* The commission text moved, unchanged, into the one runner every room uses (2026-11-11); the law it guards is the same. */
-    const runner = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'lib/writersStudio/studio/editorialPassRunner.ts'), 'utf8');
+    const runner = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'lib/writersStudio/studio/editorialPassRequest.ts'), 'utf8');
     expect(controller).toContain('runEditorialPass(');
     expect(runner).toContain('Make an editorial pass through this whole manuscript from macro to micro.');
     expect(runner).toContain('clarification, compression, expansion, transition, reordering, repetition, voice, pacing');
