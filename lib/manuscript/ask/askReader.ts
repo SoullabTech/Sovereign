@@ -676,7 +676,8 @@ export async function askMaia(
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
         stopReason: outcome.result.stopReason,
-        outputTokens: outcome.result.usage.outputTokens,
+        /* Optional-chained: a provider seam that reports no usage records none, rather than failing a finished answer. */
+        outputTokens: outcome.result.usage?.outputTokens,
       },
     };
   } catch {
