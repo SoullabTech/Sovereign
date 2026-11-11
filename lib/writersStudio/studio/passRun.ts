@@ -23,6 +23,8 @@ import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPass
 import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
 import { composeOpening } from '@/lib/writersStudio/studio/letterOpening';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
+import { holdsWholeWork } from '@/lib/auth/entitlements';
+import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 export type RunState = 'queued' | 'reading' | 'lens_done' | 'lens_refused' | 'synthesizing' | 'done' | 'failed' | 'stopped' | 'cancelled';
 const FINAL: ReadonlySet<RunState> = new Set(['done', 'failed', 'stopped', 'cancelled']);
@@ -50,6 +52,8 @@ export interface RunDeps {
   synthesize: typeof synthesizeAttentionMap;
   keepLetter: typeof saveLetter;
   opening: typeof composeOpening;
+  /** `writing.wholeWork` (the Free / Pro line). Optional so existing callers keep the default; a test injects its own. */
+  wholeWork?: (memberId: string) => Promise<boolean>;
 }
 export const defaultDeps: RunDeps = {
   q: query,
@@ -95,10 +99,13 @@ const record = (deps: RunDeps, runId: string, state: RunState, extra: { lens?: s
 /* ── starting ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 export type StartOutcome =
   | { ok: true; runId: string; resumed: boolean }
-  | { ok: false; refusal: 'not_permitted' | 'sanctuary' | 'draft_not_established' | 'daily_limit' };
+  | { ok: false; refusal: 'not_permitted' | 'sanctuary' | 'draft_not_established' | 'daily_limit' | typeof WHOLE_WORK_REFUSAL };
 
 /** Create a run, or resume the newest unfinished one for the same draft. Never two active runs on one manuscript. */
 export async function startRun(memberId: string, manuscriptId: string, deps: RunDeps = defaultDeps): Promise<StartOutcome> {
+  /* Free / Pro line first: nothing is started, and no reading is paid for, when the membership does not include the pass. A failed
+     lookup throws (the route answers 500), never reads as "not Pro". The synthesis re-checks before its model call. */
+  if (!(await (deps.wholeWork ?? holdsWholeWork)(memberId))) return { ok: false, refusal: WHOLE_WORK_REFUSAL };
   if ((await deps.grant(memberId, manuscriptId)) !== 'work') return { ok: false, refusal: 'not_permitted' };
   if ((await deps.sanctuaryDefault(memberId)) !== false) return { ok: false, refusal: 'sanctuary' };
   const draft = (await deps.q<{ id: string; rev: number | null; sections: string[] | null }>(

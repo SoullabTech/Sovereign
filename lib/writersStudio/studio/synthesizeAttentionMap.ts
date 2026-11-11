@@ -20,6 +20,8 @@ import {
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap, type WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
+import { holdsWholeWork } from '@/lib/auth/entitlements';
+import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 const TOOL = 'return_attention_map';
 const MODEL = process.env.MAIA_ATTENTION_MAP_MODEL
@@ -111,6 +113,14 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
     && deepLenses.every((lens) => lenses.has(lens));
   if (!overviewMode && !deepMode) {
     return { ok: false, status: 409, error: 'overview_or_complete_eight_lens_set_required' };
+  }
+  /* Free / Pro line (founder ruling 2026-11-11): the eight-lens synthesis is always whole-book (scope enforced below), so it is the
+     whole-book editorial pass and needs `writing.wholeWork`. Here, so the route and the server run are gated by the same check.
+     Overview mode serves chapter work and stays open. Refused before any model call; a failed lookup is 503, never "not Pro". */
+  if (deepMode) {
+    const entitled = await holdsWholeWork(memberId).catch(() => null);
+    if (entitled === null) return { ok: false, status: 503, error: 'entitlement_unavailable' };
+    if (!entitled) return { ok: false, status: 403, error: WHOLE_WORK_REFUSAL };
   }
   if (readings.some((r) => r.readState.revisionNumber !== revisionNumber)) {
     return { ok: false, status: 409, error: 'current_revision_moved' };

@@ -25,6 +25,7 @@ import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClie
 import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studio/passRunClient';
 import type { RunView } from '@/lib/writersStudio/studio/passRun';
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
+import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
   inBookOrder, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
@@ -121,6 +122,8 @@ export function EditorialLetterPanel(props: {
     if (!out.ok) {
       if (out.refusal === 'daily_limit') { setError('I’ve already read this book as many times today as your setting allows. Try again tomorrow.'); return true; }
       if (out.refusal === 'sanctuary_not_kept' || out.refusal === 'posture_undeclared') { setError(keepRefusalCopy(out.refusal)); return true; }
+      /* Free / Pro line: never fall back to reading from this page, which would start the paid readings the server just declined. */
+      if (out.refusal === WHOLE_WORK_REFUSAL) { setError(WHOLE_WORK_MESSAGE); return true; }
       return false;   // no whole-Work permission (or not established): read from this page instead
     }
     setRun(out.run); setError(null); followRun();

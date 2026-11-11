@@ -56,6 +56,27 @@ function world(opts: { grant?: 'work' | 'chapter' | null; sanctuary?: boolean | 
   return { deps, commission, events, runs, setGrant: (g: typeof grant) => { grant = g; }, setSanctuary: (s: boolean) => { sanctuary = s; } };
 }
 
+describe('the server run and the Free / Pro line (writing.wholeWork)', () => {
+  it('⭐ not entitled: nothing is started, no run row, no reading commissioned', async () => {
+    const w = world();
+    w.deps.wholeWork = async () => false;
+    expect(await startRun('me', 'm', w.deps)).toEqual({ ok: false, refusal: 'whole_work_entitlement_required' });
+    expect(w.runs).toHaveLength(0);
+    expect(w.commission).not.toHaveBeenCalled();
+  });
+  it('entitled: starts as before', async () => {
+    const w = world();
+    w.deps.wholeWork = async () => true;
+    expect(await startRun('me', 'm', w.deps)).toMatchObject({ ok: true, resumed: false });
+  });
+  it('a failed lookup throws rather than starting or reading as "not Pro"', async () => {
+    const w = world();
+    w.deps.wholeWork = async () => { throw new Error('db down'); };
+    await expect(startRun('me', 'm', w.deps)).rejects.toThrow('db down');
+    expect(w.runs).toHaveLength(0);
+  });
+});
+
 describe('the editorial pass runs on the server', () => {
   it('⭐ a full run reads every lens, synthesizes once with the deep lenses, and keeps the letter', async () => {
     const w = world();

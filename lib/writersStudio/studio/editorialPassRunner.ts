@@ -12,13 +12,14 @@
 import { runWholeManuscriptReview, wholeReviewComplete } from '@/lib/writersStudio/studio/wholeManuscriptReview';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
+import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL, wholeWorkAllowed } from '@/lib/writersStudio/wholeWorkAccess';
 
 import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPassRequest';
 export { EDITORIAL_PASS_REQUEST };
 
 export type EditorialPassOutcome =
   | { ok: true; map: WholeManuscriptAttentionMap; letterId: string | null; letterKept: string | undefined }
-  | { ok: false; stage: 'readings' | 'synthesis'; message: string };
+  | { ok: false; stage: 'entitlement' | 'readings' | 'synthesis'; message: string };
 
 export async function runEditorialPass(input: {
   manuscriptId: string;
@@ -27,7 +28,14 @@ export async function runEditorialPass(input: {
   onProgress?: (text: string) => void;
   /** keep the result as MAIA's letter for this Work, on the server (the keep gate refuses it in Sanctuary) */
   keepAsLetter?: boolean;
+  /** Injected in tests; defaults to asking the entitlement layer. */
+  checkAccess?: () => Promise<boolean | null>;
 }): Promise<EditorialPassOutcome> {
+  /* Free / Pro line: not begun when the writer's membership does not include it. Only an explicit "no" stops here; an unknown
+     answer proceeds and the server decides (lib/writersStudio/wholeWorkAccess.ts). */
+  if ((await (input.checkAccess ?? wholeWorkAllowed)()) === false) {
+    return { ok: false, stage: 'entitlement', message: WHOLE_WORK_MESSAGE };
+  }
   const runReview = () => runWholeManuscriptReview(
     input.manuscriptId,
     (done, total, lens) => input.onProgress?.(
@@ -47,6 +55,9 @@ export async function runEditorialPass(input: {
     .map((payload) => payload.reading.id);
   input.onProgress?.('Preparing the editorial pass…');
   const synthesized = await requestAttentionMap(input.manuscriptId, deepReadingIds, EDITORIAL_PASS_REQUEST, { keepAsLetter: input.keepAsLetter });
+  if (!synthesized.ok && synthesized.refusal === WHOLE_WORK_REFUSAL) {
+    return { ok: false, stage: 'entitlement', message: WHOLE_WORK_MESSAGE };
+  }
   if (!synthesized.ok) {
     return { ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now. The readings remain available and nothing in the manuscript changed.' };
   }

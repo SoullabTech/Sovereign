@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { keepGate } from '@/lib/sanctuary/keepGate';
 import { advanceRun, cancelRun, startRun, viewRun } from '@/lib/writersStudio/studio/passRun';
+import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 export const dynamic = 'force-dynamic';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -38,7 +39,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const gate = await keepGate(memberId, body);
   if (gate) return gate;
   const out = await startRun(memberId, id);
-  if (!out.ok) return NextResponse.json({ refusal: out.refusal }, { status: out.refusal === 'daily_limit' ? 429 : 409 });
+  if (!out.ok) {
+    const status = out.refusal === 'daily_limit' ? 429 : out.refusal === WHOLE_WORK_REFUSAL ? 403 : 409;
+    return NextResponse.json({ refusal: out.refusal }, { status });
+  }
   void advanceRun(memberId, id).catch(() => undefined);
   return NextResponse.json({ runId: out.runId, resumed: out.resumed, run: await viewRun(memberId, id) }, { status: 202 });
 }
