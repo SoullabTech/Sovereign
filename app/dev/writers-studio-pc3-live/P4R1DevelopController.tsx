@@ -13,6 +13,7 @@ import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
+import { readDevelopPlace, resolveDevelopSection, writeDevelopPlace } from '@/lib/writersStudio/developPlace';
 import {
   fetchReading,
   fetchReadingSummaries,
@@ -300,13 +301,21 @@ export default function P4R1DevelopController() {
     return () => { cancelled = true; };
   }, [manuscriptId, selectedReadingId]);
 
-  const currentSectionId = useMemo(() => {
-    if (!context?.sections.length) return null;
-    if (requestedSectionId && context.sections.some((section) => section.draftSectionId === requestedSectionId)) {
-      return requestedSectionId;
+  // Founder P0 item 4 (2026-11-11): reopening Develop returns the writer to the chapter they last
+  // chose, per writer and per manuscript, in this browser only. The address still wins.
+  const [rememberedSectionId, setRememberedSectionId] = useState<string | null>(null);
+  useEffect(() => { setRememberedSectionId(readDevelopPlace(manuscriptId)); }, [manuscriptId]);
+  const currentSectionId = useMemo(
+    () => resolveDevelopSection(context?.sections ?? [], requestedSectionId, rememberedSectionId),
+    [context, requestedSectionId, rememberedSectionId],
+  );
+  // Remember only a chapter the writer actually chose (it is in the address), so the first-chapter
+  // fallback can never overwrite the remembered place before it is read.
+  useEffect(() => {
+    if (requestedSectionId && context?.sections.some((s) => s.draftSectionId === requestedSectionId)) {
+      writeDevelopPlace(manuscriptId, requestedSectionId);
     }
-    return context.sections[0]?.draftSectionId ?? null;
-  }, [context, requestedSectionId]);
+  }, [manuscriptId, requestedSectionId, context]);
 
   const currentSection = useMemo(
     () => context?.sections.find((section) => section.draftSectionId === currentSectionId) ?? null,
