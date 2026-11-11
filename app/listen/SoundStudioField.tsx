@@ -15,6 +15,8 @@ import {
   soundProgress,
 } from '@/lib/listening/soundStudioExperience';
 import type { SoundStudioDoorID, SoundStudioWork } from '@/lib/listening/soundStudioExperience';
+import { isReviewableWork } from '@/lib/listening/soundStudioReview';
+import { SoundStudioReview } from './SoundStudioReview';
 import styles from './listen.module.css';
 
 // SOUND-STUDIO-UIUX-02: presentation only. The single persistent player, the
@@ -51,6 +53,8 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
   const [selectedID, setSelectedID] = useState((initialWork ?? OPEN_GROUND).id);
   const [immersive, setImmersive] = useState(Boolean(initialWork?.manifest));
   const [quiet, setQuiet] = useState(false);
+  // LISTEN-01 phase 1: the review conversation opens only on the reviewer's request, never during playback.
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [message, setMessage] = useState(
     initialWork?.manifest
       ? `${initialWork.title} is ready. Sound waits for your explicit Play.`
@@ -351,7 +355,22 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                   onClick={() => setMessage('Reflection remains optional. Continue listening, write privately, invite MAIA later, or simply return to life.')}>
                   After listening
                 </button>
+                {isReviewableWork(selected.id) && !reviewOpen && (
+                  <button type="button" className={styles.ghost} onClick={() => setReviewOpen(true)}>
+                    Review this work
+                  </button>
+                )}
               </div>
+            )}
+
+            {reviewOpen && isReviewableWork(selected.id) && !isPlaying && (
+              <SoundStudioReview
+                key={selected.id}
+                workId={selected.id}
+                passageLabel={isCurrent && passage ? passage.label : null}
+                elapsedMs={isCurrent ? elapsedMs : null}
+                onClose={() => setReviewOpen(false)}
+              />
             )}
 
             {/* Before sound, the status line guides. Once the field holds the player, the human line above
@@ -372,6 +391,11 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                   ))}
                 </ol>
                 {selected.memberNote && <p className={styles.quality}>{selected.memberNote}</p>}
+                {isReviewableWork(selected.id) && !reviewOpen && !isPlaying && (
+                  <button type="button" className={styles.ghost} onClick={() => setReviewOpen(true)}>
+                    Review this work
+                  </button>
+                )}
               </div>
             </details>
           </div>

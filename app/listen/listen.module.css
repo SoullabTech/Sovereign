@@ -166,3 +166,18 @@
 /* The global MAIA and bug-report controls, the shared player and the quiet-screen rule have no local class, so
    CSS Modules (pure mode) rejects them here; they live in listenGlobal.css. */
 .studioWorkNote{margin:12px 0 0;padding:10px 12px;border-left:2px solid #e1c28c;background:rgba(225,194,140,.08);color:#e6d8bf;font-size:13px;line-height:1.5}
+/* LISTEN-01 review conversation (phase 1) */
+.reviewPanel{margin-top:22px;max-width:760px}
+.reviewPanel h2:focus{outline:none}
+.reviewPanel textarea{box-sizing:border-box;max-width:100%;font:inherit}
+.reviewTerms{margin:14px 0 18px;padding-left:18px;display:grid;gap:8px;font-size:13px;color:#c9d3d4;line-height:1.6}
+.reviewTranscript{list-style:none;margin:16px 0;padding:0;display:grid;gap:12px}
+.reviewTranscript li{padding:12px 14px;border-radius:12px;border:1px solid rgba(235,220,194,.14);background:#0d191e}
+.reviewTranscript li[data-role="reviewer"]{background:#16262b;margin-left:24px}
+.reviewTranscript li p{margin:6px 0 0;font-size:14px;line-height:1.7;color:#e6e1d6}
+.reviewLines{margin:14px 0;padding-left:18px;display:grid;gap:14px}
+.reviewLines select{background:#0a151a;color:#f1efe7;border:1px solid #425052;border-radius:8px;padding:6px 8px;margin-left:8px}
+.reviewKeep{display:flex;gap:10px;align-items:center;margin:16px 0;font-size:13px;color:#ddd0bb}
+.reviewMine{list-style:none;padding:0;display:grid;gap:14px;font-size:13px}
+.reviewMine ul{margin:6px 0;padding-left:18px;color:#c9d3d4}
+@media (max-width:600px){.reviewTranscript li[data-role="reviewer"]{margin-left:10px}.reviewPanel{padding:20px}}

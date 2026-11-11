@@ -118,6 +118,8 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // LISTEN-01 dark launch (2026-11-09) — Sound Studio review audio. Served by a route that
   // repeats the /listen conditions (flag + verified member session); never a public asset.
+  { exact: '/api/listen/review', minTier: 'free', notes: 'Sound Studio review conversation (LISTEN-01 phase 1) — own reviews list and save; route also requires the review flag and named-beta membership' },
+  { prefix: '/api/listen/review/', minTier: 'free', notes: 'Sound Studio review guide turn, summary and own-review delete; same flag + named-beta conditions as /listen' },
   { prefix: '/media/sound-studio/', minTier: 'free', notes: 'Sound Studio review audio — authenticated members only; route also requires SOULLAB_LISTEN_REVIEW_ENABLED=1 and 404s otherwise; exact allowlisted files only' },
 
   // LISTEN-45 — exact authenticated Sound Field door and exact current-session
