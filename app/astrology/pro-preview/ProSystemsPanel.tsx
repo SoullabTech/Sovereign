@@ -9,12 +9,18 @@
  * convention travel;
  * birth details stay on the server.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { ProOtherSystems } from '@/lib/astrology/proOtherSystems';
 import type { DayStart } from '@/lib/astrology/proFourPillars';
 import ProFourPillars, { type LuckDirectionChoice } from './ProFourPillars';
-import NakshatraCard from '@/components/astrology/NakshatraCard';
+import ChineseReadingView from '@/components/astrology/ChineseReadingView';
+import { VedicProfilePanel, VedicPlanetsPanel } from '@/components/astrology/VedicRoomViews';
+import { MayanSignCard, MayanPathOfLife } from '@/components/astrology/MayanRoomViews';
+import { getTodaysMayanSign } from '@/lib/astrology/mayanAstrology';
+import { DaYunTimelineView } from '@/components/astrology/DaYunTimeline';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
+import { rehydrateDaYunProfile } from '@/lib/astrology/daYunProfileView';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import styles from './pro-systems-panel.module.css';
 
@@ -149,108 +155,248 @@ export default function ProSystemsPanel({ subjectId, chartLabel, work, onWork }:
         {w.data && status === 'loading' && <span role="status">Recalculating…</span>}
       </div>
       {error && <p role="alert" className={styles.alert}>{error}</p>}
-      {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} />}
+      {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />}
       {w.data && w.tab === 'chinese' && (
         <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })}
           ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />
       )}
-      {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} />}
+      {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />}
     </div>
   );
 }
 
-function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
+type VedicRoom = 'profile' | 'dasha' | 'planets';
+const VEDIC_ROOMS: Array<[VedicRoom, string]> = [['profile', 'Profile'], ['dasha', 'Dasha'], ['planets', 'Planets']];
+
+/**
+ * The Vedic room: the profile (Moon, Sun and ascendant signs, birth nakshatra,
+ * current dasha, Spiralogic integration), the full Vimshottari dasha timeline,
+ * and the planets, each the same experience the Free Vedic page offers,
+ * computed on the server so no birth detail reaches the browser. The precise
+ * table of graha positions stays under Planets.
+ */
+function VedicView({ v, ask }: { v: ProOtherSystems['vedic']; ask: { subject: string; readsWhose: string } }) {
+  const [room, setRoom] = useState<VedicRoom>('profile');
+  const profile = { ...v.profile, dasha: v.dasha, birthNakshatra: v.birthNakshatra };
   return (
     <div role="tabpanel" aria-label="Vedic">
       <p className={styles.summary}>
         Lagna <strong>{v.lagna.rashi} {fmtDeg(v.lagna.degree)}</strong> ({v.lagna.nakshatra}) ·
         Ayanamsa {v.ayanamsaLabel} {v.ayanamsaValue.toFixed(2)}°
       </p>
-      <table className={styles.table}>
-        <thead>
-          <tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Dignity</th></tr>
-        </thead>
-        <tbody>
-          {v.grahas.map((g) => (
-            <tr key={g.graha}>
-              <td>{g.graha}{g.retrograde ? ' ℞' : ''}</td>
-              <td>{g.rashi}</td>
-              <td className={styles.num}>{fmtDeg(g.degree)}</td>
-              <td>{g.nakshatra}</td>
-              <td className={styles.num}>{g.pada}</td>
-              <td className={styles.num}>{g.house}</td>
-              <td className={styles.cap}>{g.dignity}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className={styles.cards}>
-        <NakshatraCard nakshatra={v.birthNakshatra} pada={v.moonPada} showSpiralogic={false} />
-        <DashaTimeline profile={v.dasha} />
+      <ProAskMaiaPanel subjectLabel="the Vedic chart" readsWhose={ask.readsWhose}
+        request={{ section: 'vedic', subject: ask.subject, ayanamsa: v.ayanamsa }} />
+      <div role="tablist" aria-label="Vedic astrology rooms" className={styles.rooms}>
+        {VEDIC_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
       </div>
+
+      {room === 'profile' && (
+        <div role="tabpanel" aria-label="Vedic profile">
+          <VedicProfilePanel profile={profile} onViewDasha={() => setRoom('dasha')} />
+        </div>
+      )}
+
+      {room === 'dasha' && (
+        <div role="tabpanel" aria-label="Vimshottari dasha">
+          <DashaTimeline profile={v.dasha} />
+        </div>
+      )}
+
+      {room === 'planets' && (
+        <div role="tabpanel" aria-label="Planets">
+          <VedicPlanetsPanel chart={v.profile.chart} />
+          <h4 className={styles.subhead}>Positions to the arcminute</h4>
+          <table className={styles.table}>
+            <thead>
+              <tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Dignity</th></tr>
+            </thead>
+            <tbody>
+              {v.grahas.map((g) => (
+                <tr key={g.graha}>
+                  <td>{g.graha}{g.retrograde ? ' ℞' : ''}</td>
+                  <td>{g.rashi}</td>
+                  <td className={styles.num}>{fmtDeg(g.degree)}</td>
+                  <td>{g.nakshatra}</td>
+                  <td className={styles.num}>{g.pada}</td>
+                  <td className={styles.num}>{g.house}</td>
+                  <td className={styles.cap}>{g.dignity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <p className={styles.note}>Method: {v.method}</p>
     </div>
   );
 }
 
+type ChineseRoom = 'pillars' | 'reading' | 'daYun';
+const CHINESE_ROOMS: Array<[ChineseRoom, string]> = [
+  ['pillars', 'Pillars & year sign'], ['reading', 'Zodiac reading'], ['daYun', 'Ten-year cycles'],
+];
+
+/**
+ * The Chinese room: the Four Pillars and year sign, the full zodiac reading
+ * and the ten-year luck cycles (with their organ, spirit and health teaching),
+ * each the same experience the Free Chinese page offers, computed on the
+ * server so no birth detail reaches the browser.
+ */
 function ChineseView({ c, direction, onDirection, ask }: {
   ask: { subject: string; readsWhose: string };
   c: ProOtherSystems['chinese']; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
 }) {
+  const [room, setRoom] = useState<ChineseRoom>('pillars');
+  const chosen = direction ? c.daYun?.[direction] : undefined;
+  const daYun = chosen ? rehydrateDaYunProfile(chosen) : null;
   return (
     <div role="tabpanel" aria-label="Chinese">
-      <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
-      <h4 className={styles.subhead}>Year sign</h4>
-      <p className={styles.headline}>
-        <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}
-        <span className={styles.cap}>{c.element}</span> {c.animal}{' '}
-        <span className={styles.muted}>({c.elementChineseName} {c.chineseName})</span>
-      </p>
-      <dl className={styles.facts}>
-        <dt>Archetype</dt><dd>{c.archetype}</dd>
-        <dt>60-year cycle</dt><dd>Year {c.cyclePosition} of 60</dd>
-        <dt>Characteristics</dt><dd>{c.characteristics.join(', ')}</dd>
-        <dt>Harmonious with</dt><dd>{c.compatibility.join(', ')}</dd>
-        <dt>Challenging with</dt><dd>{c.incompatible.join(', ')}</dd>
-      </dl>
-      <p className={styles.note}>Method: {c.method}</p>
+      <div role="tablist" aria-label="Chinese astrology rooms" className={styles.rooms}>
+        {CHINESE_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
+      </div>
+
+      {room === 'pillars' && (
+        <div role="tabpanel" aria-label="Pillars and year sign">
+          <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
+          <h4 className={styles.subhead}>Year sign</h4>
+          <p className={styles.headline}>
+            <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}
+            <span className={styles.cap}>{c.element}</span> {c.animal}{' '}
+            <span className={styles.muted}>({c.elementChineseName} {c.chineseName})</span>
+          </p>
+          <dl className={styles.facts}>
+            <dt>Archetype</dt><dd>{c.archetype}</dd>
+            <dt>60-year cycle</dt><dd>Year {c.cyclePosition} of 60</dd>
+            <dt>Characteristics</dt><dd>{c.characteristics.join(', ')}</dd>
+            <dt>Harmonious with</dt><dd>{c.compatibility.join(', ')}</dd>
+            <dt>Challenging with</dt><dd>{c.incompatible.join(', ')}</dd>
+          </dl>
+          <p className={styles.note}>Method: {c.method}</p>
+        </div>
+      )}
+
+      {room === 'reading' && (
+        <div role="tabpanel" aria-label="Zodiac reading">
+          <ChineseReadingView reading={c.reading} />
+          <p className={styles.note}>The reading follows from the Chinese year alone: {c.method}</p>
+        </div>
+      )}
+
+      {room === 'daYun' && (
+        <div role="tabpanel" aria-label="Ten-year cycles (Da Yun)">
+          <p className={styles.note}>
+            Tradition counts forward for a man born in a yang year or a woman born in a yin year, and backward
+            otherwise. A saved chart does not record sex, so the cycles appear once you choose the direction:
+          </p>
+          <div role="radiogroup" aria-label="Direction of the ten-year cycles" className={styles.rooms}>
+            {(['forward', 'backward'] as const).map((d) => (
+              <button key={d} role="radio" aria-checked={direction === d}
+                className={direction === d ? styles.tabOn : undefined} onClick={() => onDirection(d)}>
+                {d === 'forward' ? 'Forward' : 'Backward'}
+              </button>
+            ))}
+          </div>
+          {daYun
+            ? <div className={styles.daYun}><DaYunTimelineView profile={daYun} /></div>
+            : <p className={styles.note}>Choose a direction to see the ten-year cycles.</p>}
+        </div>
+      )}
     </div>
   );
 }
 
-function MayanView({ m }: { m: ProOtherSystems['mayan'] }) {
+type MayanRoom = 'count' | 'path' | 'signature' | 'today';
+const MAYAN_ROOMS: Array<[MayanRoom, string]> = [
+  ['count', 'Traditional count'], ['path', 'Path of life'], ['signature', 'Galactic signature'], ['today', 'Today’s energy'],
+];
+
+/**
+ * The Mayan room: the traditional count first (what daykeepers keep), then the
+ * modern Dreamspell views the Free Mayan page offers (path of life, galactic
+ * signature, today's energy), computed on the server so no birth date reaches
+ * the browser. Today's energy needs no birth data at all.
+ */
+function MayanView({ m, ask }: { m: ProOtherSystems['mayan']; ask: { subject: string; readsWhose: string } }) {
   const t = m.traditional;
+  const [room, setRoom] = useState<MayanRoom>('count');
+  const today = useMemo(() => getTodaysMayanSign(), []);
   return (
     <div role="tabpanel" aria-label="Mayan">
-      <h4 className={styles.subhead}>Traditional count</h4>
-      <p className={styles.headline}>
-        {t.number} {t.kiche} <span className={styles.muted}>(Yucatec {t.number} {t.yucatec})</span>
-      </p>
-      <dl className={styles.facts}>
-        <dt>Haab</dt><dd>{t.haab.day} {t.haab.month}</dd>
-        <dt>Long Count</dt><dd>{t.longCount}</dd>
-        <dt>Correlation</dt><dd>GMT {t.correlation}</dd>
-      </dl>
-      <p className={styles.note}>Method: {t.method}</p>
+      <ProAskMaiaPanel subjectLabel="the Mayan count and path of life" readsWhose={ask.readsWhose}
+        request={{ section: 'mayan', subject: ask.subject }} />
+      <div role="tablist" aria-label="Mayan astrology rooms" className={styles.rooms}>
+        {MAYAN_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
+      </div>
 
-      <h4 className={styles.subhead}>Dreamspell count (modern)</h4>
-      <p className={styles.note}>
-        Dreamspell (José Argüelles, 1987) is a modern system with its own count; it does not follow the traditional
-        day count above and is not used by Maya daykeepers.
-      </p>
-      <p className={styles.headline}>
-        <span aria-hidden="true">{m.daySign.glyph}</span> {m.galacticSignature}
-      </p>
-      <dl className={styles.facts}>
-        <dt>Day sign</dt><dd>{m.daySign.name} — {m.daySign.archetype}; {m.daySign.meaning}</dd>
-        <dt>Tone</dt><dd>{m.tone.number} {m.tone.name} — {m.tone.meaning}</dd>
-        <dt>Kin</dt><dd>{m.tzolkinNumber} of 260 · {m.wavespell}</dd>
-        <dt>Haab</dt><dd>{m.haab}</dd>
-        <dt>Direction</dt><dd className={styles.cap}>{m.direction}</dd>
-        <dt>Path of life</dt>
-        <dd>{m.pathOfLife.map((p) => `${p.stage}: ${p.signature}`).join(' · ')}</dd>
-      </dl>
-      <p className={styles.note}>Method: {m.method}</p>
+      {room === 'count' && (
+        <div role="tabpanel" aria-label="Traditional count and Dreamspell kin">
+          <h4 className={styles.subhead}>Traditional count</h4>
+          <p className={styles.headline}>
+            {t.number} {t.kiche} <span className={styles.muted}>(Yucatec {t.number} {t.yucatec})</span>
+          </p>
+          <dl className={styles.facts}>
+            <dt>Haab</dt><dd>{t.haab.day} {t.haab.month}</dd>
+            <dt>Long Count</dt><dd>{t.longCount}</dd>
+            <dt>Correlation</dt><dd>GMT {t.correlation}</dd>
+          </dl>
+          <p className={styles.note}>Method: {t.method}</p>
+
+          <h4 className={styles.subhead}>Dreamspell count (modern)</h4>
+          <p className={styles.note}>
+            Dreamspell (José Argüelles, 1987) is a modern system with its own count; it does not follow the traditional
+            day count above and is not used by Maya daykeepers.
+          </p>
+          <p className={styles.headline}>
+            <span aria-hidden="true">{m.daySign.glyph}</span> {m.galacticSignature}
+          </p>
+          <dl className={styles.facts}>
+            <dt>Day sign</dt><dd>{m.daySign.name} — {m.daySign.archetype}; {m.daySign.meaning}</dd>
+            <dt>Tone</dt><dd>{m.tone.number} {m.tone.name} — {m.tone.meaning}</dd>
+            <dt>Kin</dt><dd>{m.tzolkinNumber} of 260 · {m.wavespell}</dd>
+            <dt>Haab</dt><dd>{m.haab}</dd>
+            <dt>Direction</dt><dd className={styles.cap}>{m.direction}</dd>
+            <dt>Path of life</dt>
+            <dd>{m.pathOfLife.map((p) => `${p.stage}: ${p.signature}`).join(' · ')}</dd>
+          </dl>
+          <p className={styles.note}>Method: {m.method}</p>
+        </div>
+      )}
+
+      {room === 'path' && (
+        <div role="tabpanel" aria-label="Path of life">
+          <p className={styles.note}>The modern Dreamspell count, not the traditional day count.</p>
+          <MayanPathOfLife profile={m.profile} />
+        </div>
+      )}
+
+      {room === 'signature' && (
+        <div role="tabpanel" aria-label="Galactic signature">
+          <p className={styles.note}>The modern Dreamspell count, not the traditional day count.</p>
+          <MayanSignCard sign={m.profile.tzolkin} title="Your Galactic Signature" />
+        </div>
+      )}
+
+      {room === 'today' && (
+        <div role="tabpanel" aria-label="Today’s energy">
+          <p className={styles.note}>The modern Dreamspell count for today. It uses no birth detail.</p>
+          <MayanSignCard sign={today} title="Today's Galactic Energy" isToday />
+        </div>
+      )}
     </div>
   );
 }

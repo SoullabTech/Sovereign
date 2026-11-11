@@ -95,7 +95,7 @@ export default function ProStudyWorkbench({ chart }: { chart: BirthChart | null 
         <p className={styles.boundary}><strong>Method boundary:</strong> {lesson.boundary}</p>
       </article>
       </>)}
-      <p className={styles.privateNote}>This Study room neither stores responses nor communicates chart facts to MAIA.
+      <p className={styles.privateNote}>The lessons store no responses and send nothing to MAIA. Chart facts reach MAIA only when you ask a question in the MAIA dock.
         Closing or blurring your private chart removes chart-specific observations.</p>
     </section>
   );

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DaYunPeriodCard from './DaYunPeriodCard';
-import type { DaYunProfile, DaYunPeriod, Element, Gender } from '@/lib/astrology/types/daYun';
+import type { DaYunProfile, DaYunProfileView, DaYunPeriod, Element, Gender } from '@/lib/astrology/types/daYun';
 
 interface Props {
   birthDate?: string;
@@ -26,7 +26,6 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
   const [profile, setProfile] = useState<DaYunProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedPeriod, setExpandedPeriod] = useState<number | null>(null);
 
   useEffect(() => {
     if (!birthDate || !gender) {
@@ -70,10 +69,6 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
         setError(null);
         onProfileLoaded?.(data);
 
-        // Auto-expand current period
-        if (currentIndex !== -1) {
-          setExpandedPeriod(currentIndex);
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -118,6 +113,20 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
   }
 
   if (!profile) return null;
+
+  return <DaYunTimelineView profile={profile} compact={compact} />;
+}
+
+/**
+ * The Da Yun timeline for a computed profile. Pure view: it takes the profile
+ * and nothing about the person, so the Free page (browser fetch) and the Pro
+ * room (server-computed, no birth data in the payload) show the same thing.
+ */
+export function DaYunTimelineView({ profile, compact = false }: { profile: DaYunProfileView; compact?: boolean }) {
+  const [expandedPeriod, setExpandedPeriod] = useState<number | null>(() => {
+    const active = profile.periods.findIndex((p) => p.isActive);
+    return active === -1 ? null : active;
+  });
 
   // Compact view
   if (compact) {

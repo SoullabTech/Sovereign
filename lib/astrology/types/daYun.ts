@@ -113,6 +113,8 @@ export interface DaYunProfile {
 
   /** Age when first Da Yun begins (typically 1-10) */
   daYunStartAge: number;
+  /** Unrounded start age in years (three days of birth-to-term distance per year). */
+  daYunStartAgeExact: number;
 
   /** All calculated luck periods (typically 8-12 decades) */
   periods: DaYunPeriod[];
@@ -181,3 +183,9 @@ export interface BranchInfo {
   zodiacAnimal: string;
   zodiacEmoji: string;
 }
+
+/**
+ * A Da Yun profile without the person's birth details (date, time, gender): all
+ * the timeline needs, and safe to send to a client that must never hold them.
+ */
+export type DaYunProfileView = Omit<DaYunProfile, 'birthDate' | 'birthTime' | 'gender'>;
