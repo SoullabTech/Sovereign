@@ -43,7 +43,7 @@ import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import { CoverageLine } from './CoverageLine';
-import { DevelopStage, DevelopHoldings, DevelopCompanion, StageReadingCard, chapterWordCount, type StageReading, type StageEditorialPass } from './DevelopStage';
+import { DevelopStage, DevelopHoldings, DevelopCompanion, ChapterReadingPane, StageReadingCard, chapterWordCount, type StageReading, type StageEditorialPass } from './DevelopStage';
 import type { StudioAct } from '@/app/writers-studio/canvas/WorkConversation';
 import { setReadScope, getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
@@ -2258,6 +2258,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
      consulted — so the writer stayed on the stage and the Develop map (lens tabs, editorial pass) was unreachable. Leaving the stage is its
      own explicit choice: it is NOT inferred from the depth preference, so a writer whose preference is already "Full" still opens on the work. */
   const [leftStage, setLeftStage] = useState(false);
+  const [stagePlaced, setStagePlaced] = useState<{ text: string; n: number }>({ text: '', n: 0 });
   /* MAIA reads the opened chapter by herself — under the writer's standing read permission only (see stageReading below). */
   const autoReadAsked = useRef<Set<string>>(new Set());
   const latestReview = useRef({ review: props.chapterReview, busy: props.chapterReviewBusy, error: props.chapterReviewError });
@@ -3391,6 +3392,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
      already." She reads the chapter the writer is on by herself ONLY under the writer's own standing permission (the read scope the writer
      granted: "MAIA may read your saved work"), never in Sanctuary or when that setting cannot be read, once per chapter per visit, and a
      saved reading of the same draft is reused rather than read again. The writer's place, focus, selection and conversation are untouched. */
+  /* One conversation on the stage, never re-created: starters and selected words are placed into its composer (P0 direction 2026-11-11). */
+  const placeInStageConversation = (words: string) => setStagePlaced((p) => ({ text: words, n: p.n + 1 }));
   const stageChapterLabel = props.chapterScope?.label ?? stageLabel;
   const stageChapterWords = chapterWordCount(props.sections, props.chapterScope?.fromSectionId ?? null, props.chapterScope?.toSectionId ?? null);
   const stageReading: StageReading = {
@@ -3415,7 +3418,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       currentId={stageSection?.draftSectionId ?? null}
       onSelect={selectManuscriptLocus}
       starters={stageStarters}
-      onStarter={(words) => setAttentionConversationDraft(words)}
+      onStarter={placeInStageConversation}
       onOpenWrite={() => navigateMode('write')}
       onMoreWays={() => { setLeftStage(true); chooseDevelopView('full'); }}
       lastRead={lastRead}
@@ -3426,7 +3429,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onEditPlan={editPlan}
       onWorkOnStep={workOnStep}
       onDeletePlan={deletePlan}
-      onAskAbout={(words) => setAttentionConversationDraft(`About “${words}”: `)}
+      onAskAbout={(words) => placeInStageConversation(`About “${words}”: `)}
       openAt={stageOpenAt}
       ways={DEVELOP_FIELDS.filter((f) => f !== 'overview').map((f) => ({ key: f, label: NAV_LABEL[f] }))}
       onWay={(key) => props.onField(key as DevelopField)}
@@ -3437,6 +3440,24 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onReadChapter={props.chapterNeedsCheckpoint ? props.onCheckpointAndReadChapter : props.onReadChapter}
       holdings={<DevelopHoldings manuscriptId={props.manuscriptId} workId={props.work.id} kind={workKind} onKind={setWorkKind} />}
     />
+  ) : null;
+  /* ONE SURFACE (relational architecture step 3; founder P0 direction 2026-11-11: "a lens page that removes the manuscript does not
+     satisfy the manuscript-centred requirement"). With the stage on, a lens (arc, voice, structure …) opens BESIDE the chapter: the
+     chapter stays in the centre, and the lens's reading sits in MAIA's column above her conversation. Themes keeps its own room. */
+  const lensBeside = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && props.field !== 'overview' && props.field !== 'themes'
+    && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
+  const lensChapter = lensBeside && stageSection ? (
+    <ChapterReadingPane
+      section={stageSection}
+      lensLabel={NAV_LABEL[props.field]}
+      onBackToReading={() => props.onField('overview')}
+    />
+  ) : null;
+  const lensColumn = lensBeside ? (
+    <div data-lens-beside={props.field} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <div data-lens-reading="true" style={{ flex: '1 1 55%', minHeight: 0, overflowY: 'auto' }}>{center}</div>
+      <div style={{ flex: '1 1 45%', minHeight: 0, display: 'flex', flexDirection: 'column', borderTop: '1px solid color-mix(in srgb, currentColor 14%, transparent)' }}>{maia}</div>
+    </div>
   ) : null;
   /* MAIA beside the work, not beneath it: the writer never scrolls away from the words to speak with her. */
   const stageCompanion = useStage && props.work ? (
@@ -3455,7 +3476,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onWorkTowardRevision={() => makePlan(`Help me work toward a revision of ${stageChapterLabel}, starting from what you noticed when you read it.`)} />}
           conversation={(
             <WorkConversation
-              key={attentionConversationDraft || 'develop-stage-conversation'}
+              key="develop-stage-conversation"
+              placeDraft={stagePlaced}
               work={props.work}
               manuscriptId={props.manuscriptId}
               sectionId={props.currentSectionId}
@@ -3481,13 +3503,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       appearance={props.appearance}
       geometry={useStage
         ? { ...STATE_GEOMETRY['develop-manuscript'], maiaWidth: 440, maiaFloor: 320, bottom: 52 }   /* founder 2026-11-09: chapters on the left again, in the collapsible rail */   /* a strip below the panels for Report a bug / Beta journey, so they cover nothing (founder 2026-11-09) */
+        : lensBeside ? { ...STATE_GEOMETRY['develop-manuscript'], maiaWidth: 520, maiaFloor: 360, bottom: 52 }
         : props.field === 'themes' ? STATE_GEOMETRY['develop-themes'] : STATE_GEOMETRY['develop-manuscript']}
       workTitle={props.workTitle || undefined}
       memberInitial=""
       onSelectMode={props.onMode}
       manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
-      work={stageCenter ?? center}
-      maia={stageCompanion ?? maia}
+      work={stageCenter ?? lensChapter ?? center}
+      maia={stageCompanion ?? lensColumn ?? maia}
     />
   );
 }
