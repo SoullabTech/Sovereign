@@ -34,7 +34,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
-import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
+import { runEditorialPass, savePass } from '@/lib/writersStudio/studio/editorialPassRunner';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import {
@@ -1466,32 +1466,21 @@ export default function P4R1DevelopController() {
     setAttentionError(null);
     setAttentionProgress('MAIA is reading through the manuscript for edit opportunities…');
     try {
-      const bundle = await runWholeManuscriptReview(
-        context.manuscriptId,
-        (done, total, lens) => setAttentionProgress(
-          done >= total ? `${total} readings complete. Preparing edit suggestions…`
-            : `Reading ${done + 1} of ${total}: ${lens}…`,
-        ),
-        {
-          revisionNumber: context.draftRevision,
-          sectionIds: context.sections.map((section) => section.draftSectionId),
-        },
-      );
+      /* One runner for every room (lib/writersStudio/studio/editorialPassRunner.ts): completeness is the review's own rule, the
+         overview reading stays out of the synthesis set, and one refused lens is tried once more. */
+      const outcome = await runEditorialPass({
+        manuscriptId: context.manuscriptId,
+        revisionNumber: context.draftRevision,
+        sectionIds: context.sections.map((section) => section.draftSectionId),
+        onProgress: setAttentionProgress,
+      });
       await loadSummaries();
-      if (bundle.failures.length > 0 || bundle.remaining.length > 0 || bundle.readingIds.length !== 8) {
-        setAttentionError('MAIA did not finish reading the whole manuscript, so the editorial pass is incomplete. The readings she completed are still available.');
+      if (!outcome.ok) {
+        setAttentionError(outcome.message);
         return;
       }
-      setAttentionProgress('Preparing the editorial pass…');
-      const synthesized = await requestAttentionMap(
-        context.manuscriptId,
-        bundle.readingIds,
-        'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.',
-      );
-      if (!synthesized.ok) {
-        setAttentionError('MAIA finished the readings, but could not prepare the editorial pass just now. The readings remain available and nothing in the manuscript changed.');
-        return;
-      }
+      const synthesized = outcome;
+      savePass(context.manuscriptId, { draftRevision: context.draftRevision, map: outcome.map });
       setAttentionMap(synthesized.map);
       if (typeof window !== 'undefined') {
         const key = `writers-studio:editorial-pass:v1:${context.manuscriptId}`;
