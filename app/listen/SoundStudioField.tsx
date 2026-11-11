@@ -131,6 +131,13 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
     return () => document.body.removeAttribute('data-sound-immersive-active');
   }, [immersive, isCurrent, isNight]);
 
+  // Native shell: fetch this work's media tickets as soon as it is opened, so the play tap can start
+  // sound synchronously. iOS allows play() only inside the tap. A no-op on the web.
+  const prepareMedia = transport?.prepareExperienceMedia;
+  useEffect(() => {
+    if (selected.manifest) prepareMedia?.(selected.manifest);
+  }, [selected.manifest, prepareMedia]);
+
   const begin = async () => {
     if (!transport) {
       setMessage(boundaryStatus === 'checking'
@@ -141,6 +148,11 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
     if (isPlaying) {
       transport.pause();
       setMessage('Paused by you. The experience remains available to resume.');
+      return;
+    }
+    if (selected.manifest && !transport.experienceMediaReady(selected.manifest)) {
+      transport.prepareExperienceMedia(selected.manifest);
+      setMessage('Preparing sound… tap play again in a moment.');
       return;
     }
     const started = selected.manifest
