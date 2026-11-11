@@ -3,8 +3,9 @@
 /**
  * ASTRO-PRO-ASTROMAP-01 — astro map and relocated chart for the open chart.
  *
- * The map is an equirectangular latitude/longitude grid with reference
- * cities (no coastline file is bundled). Click anywhere, or search a place,
+ * The map is an equirectangular latitude/longitude grid with bundled
+ * public-domain Natural Earth land outlines and secondary reference cities.
+ * Click anywhere, or search a place,
  * to relocate the chart there. Only the subject and the chosen coordinates
  * are sent.
  */
@@ -14,8 +15,10 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { hasValidChartGeometry } from '@/lib/astrology/proChartGeometry';
 import { MAP_BODIES, astroMapLines, type AstroMapInput, type MapBody } from '@/lib/astrology/proAstroMap';
+import { WORLD_LAND_110M_SEGMENTS, worldLandPath } from '@/lib/astrology/worldLand110m';
 import { CelestialChartWheel } from './CelestialChartWheel';
 import styles from './pro-transit-panel.module.css';
+import mapStyles from './pro-astromap.module.css';
 
 const W = 1000;
 const H = 500;
@@ -42,6 +45,7 @@ const CITIES: Array<[string, number, number]> = [
 
 const x = (lng: number) => ((lng + 180) / 360) * W;
 const y = (lat: number) => ((90 - lat) / 180) * H;
+const LAND_PATHS = WORLD_LAND_110M_SEGMENTS.map((segment) => worldLandPath(segment, W, H));
 
 export default function ProAstroMapPanel({ subjectId, chartLabel, houseSystem }: {
   subjectId: string; chartLabel: string; houseSystem: string;
@@ -123,10 +127,13 @@ export default function ProAstroMapPanel({ subjectId, chartLabel, houseSystem }:
                 onClick={() => setHidden((h) => { const n = new Set(h); if (n.has(b)) n.delete(b); else n.add(b); return n; })}>{b}</button>
             ))}
           </div>
-          <div style={{ overflowX: 'auto', marginTop: 10 }}>
-            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', minWidth: 640, cursor: 'crosshair' }}
+          <div className={mapStyles.viewport}>
+            <svg viewBox={`0 0 ${W} ${H}`} className={mapStyles.map}
               role="img" aria-label={`Astro map for ${chartLabel}`} onClick={onMapClick}>
               <rect width={W} height={H} fill="#06141f" />
+              <g className={mapStyles.land} aria-hidden="true">
+                {LAND_PATHS.map((d, index) => <path key={`land-${index}`} d={d} />)}
+              </g>
               {Array.from({ length: 13 }, (_, i) => -180 + i * 30).map((lng) => (
                 <line key={'v' + lng} x1={x(lng)} x2={x(lng)} y1={0} y2={H} stroke="rgba(160,175,186,.12)" />
               ))}
@@ -151,8 +158,8 @@ export default function ProAstroMapPanel({ subjectId, chartLabel, houseSystem }:
               })}
               {CITIES.map(([name, lat, lng]) => (
                 <g key={name} pointerEvents="none">
-                  <circle cx={x(lng)} cy={y(lat)} r="2.2" fill="#cfd8db" />
-                  <text x={x(lng) + 4} y={y(lat) - 3} fontSize="9" fill="#9fb2b9">{name}</text>
+                  <circle cx={x(lng)} cy={y(lat)} r="2.2" className={mapStyles.cityDot} />
+                  <text x={x(lng) + 4} y={y(lat) - 3} className={mapStyles.cityLabel}>{name}</text>
                 </g>
               ))}
               {relocated && <circle cx={x(relocated.lng)} cy={y(relocated.lat)} r="6" fill="none" stroke="#f6e3b5" strokeWidth="2" pointerEvents="none" />}

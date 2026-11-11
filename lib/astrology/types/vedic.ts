@@ -25,21 +25,21 @@ export const AYANAMSA_CONFIGS: Record<AyanamsaType, AyanamsaConfig> = {
     type: 'lahiri',
     label: 'Lahiri (Chitrapaksha)',
     description: 'Official Indian government standard, most widely used',
-    epochOffset: 23.85,
+    epochOffset: 23.8532, // true value at J2000; calculateAyanamsa uses the full formula
     annualRate: 0.01397,
   },
   true_chitra: {
     type: 'true_chitra',
     label: 'True Chitra',
     description: 'Based on fixed star Spica at exactly 0° Libra',
-    epochOffset: 23.97,
+    epochOffset: 23.8375, // true value at J2000; calculateAyanamsa uses the full formula
     annualRate: 0.01397,
   },
   krishnamurti: {
     type: 'krishnamurti',
     label: 'Krishnamurti (KP)',
     description: 'Used in Krishnamurti Paddhati predictive system',
-    epochOffset: 23.75,
+    epochOffset: 23.7572, // true value at J2000; calculateAyanamsa uses the full formula
     annualRate: 0.01397,
   },
 };
