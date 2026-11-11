@@ -12,8 +12,13 @@ surfaces:
   - app/astrology/synastry/page.tsx
   - app/astrology/synastry/saved/page.tsx
   - app/astrology/vedic/page.tsx
+  - app/astrology/pro-preview/ProHouseWheel.tsx
   - components/astrology/BirthDataForm.tsx
+  - components/astrology/ChineseReadingView.tsx
   - components/astrology/DashaTimeline.tsx
+  - components/astrology/DaYunTimeline.tsx
+  - components/astrology/MayanRoomViews.tsx
+  - components/astrology/VedicRoomViews.tsx
   - components/astrology/SacredHouseWheel.tsx
   - components/astrology/ZodiacToggle.tsx
 change_class: experiential
@@ -96,3 +101,21 @@ Astrology room and Journal, with held states named rather than hidden.
 
 **Distinct room?** Yes: each lens names its tradition and its limits, which no other
 room does.
+
+## Shared with Astrology Pro (added 2026-11-08)
+
+`ChineseReadingView` (the zodiac reading) and `DaYunTimeline` / `DaYunTimelineView` (the ten-year
+luck cycles) are the Chinese lens room's own surfaces. The Pro preview's Chinese room
+(`astrology-pro-preview`) embeds the same components, fed by a server-computed reading and Da Yun
+profile that carry no birth date, time or gender. The Free page keeps its own path: it computes the
+reading in the browser and `DaYunTimeline` fetches its profile. One experience, two sources of data;
+neither room has a lesser copy.
+
+The Vedic lens works the same way: `VedicRoomViews` (the profile and planets panels, with `RashiCard`
+and `GrahaCard`) is extracted from the Free Vedic page and embedded by Pro's Vedic room, fed by a
+server-computed chart and profile with no birth time, place or zone in them.
+
+The Mayan lens too: `MayanRoomViews` (the galactic signature card and the Path of Life) is extracted
+from the Free Mayan page and embedded by Pro's Mayan room, fed by a server-computed profile with no
+birth date in it. Pro leads with the traditional count and keeps the modern Dreamspell views clearly
+labelled as a different system.

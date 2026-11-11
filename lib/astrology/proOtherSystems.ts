@@ -12,14 +12,18 @@
 import { calculateBirthChart, type BirthData } from './ephemerisCalculator';
 import { convertToVedicChart } from './vedicChartFromTropical';
 import { calculateVimshottariDasha } from './vimshottariDasha';
+import { generateSpiralogicIntegration } from './vedicAstrology';
 import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
-import { calculateCompleteMayanProfile } from './mayanAstrology';
+import { calculateCompleteMayanProfile, type CompleteMayanProfile } from './mayanAstrology';
+import { chineseYearForIsoDate } from './chineseNewYear';
 import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
+import { buildChineseReading, type ChineseReadingData } from './chineseReading';
+import { daYunByDirection, type DaYunByDirection } from './proDaYun';
 import type {
-  AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
+  AyanamsaType, CompleteVedicProfile, GrahaName, NakshatraInfo, VimshottariDashaProfile,
 } from './types/vedic';
 import type { SavedChartBirth } from './proSavedCharts';
 
@@ -46,6 +50,12 @@ export interface ProOtherSystems {
     birthNakshatra: NakshatraInfo;
     moonPada: 1 | 2 | 3 | 4;
     dasha: VimshottariDashaProfile;
+    /**
+     * What the Free Vedic page's profile and planets views need beyond the above:
+     * the full sidereal chart and the three signs. The room joins it with `dasha`
+     * and `birthNakshatra` (kept once, not repeated here). No birth detail in it.
+     */
+    profile: Omit<CompleteVedicProfile, 'dasha' | 'birthNakshatra'>;
     method: string;
   };
   chinese: {
@@ -61,11 +71,21 @@ export interface ProOtherSystems {
     compatibility: string[];
     incompatible: string[];
     fourPillars: FourPillars;
+    /** The full zodiac reading (animal, element, strengths, compatibility, holistic profile). A function of the Chinese year only. */
+    reading: ChineseReadingData;
+    /** Ten-year luck cycles for both directions, with no birth details in them. */
+    daYun: DaYunByDirection;
     method: string;
   };
   mayan: {
     /** The traditional day count (K'iche' / Yucatec), Haab and Long Count. */
     traditional: TraditionalMaya;
+    /**
+     * The full Dreamspell profile the Free Mayan page shows: signature, path of
+     * life (youth, adulthood, future), Haab, direction and the life-cycle reading.
+     * No birth date in it (the reading names an age, not a date).
+     */
+    profile: CompleteMayanProfile;
     /** The rest is the Dreamspell count, a modern system, labelled as such. */
     galacticSignature: string;
     daySign: { name: string; glyph: string; archetype: string; meaning: string };
@@ -125,7 +145,8 @@ export async function calculateProOtherSystems(
   const dasha = calculateVimshottariDasha(instant, moon.longitude);
 
   // Chinese and Mayan count the local civil birth date, as the Free pages do.
-  const year = Number(birth.date.slice(0, 4));
+  // The Chinese year turns at Chinese New Year, not 1 January.
+  const year = chineseYearForIsoDate(birth.date).chineseYear;
   const animal = getChineseZodiacAnimal(year);
   const element = getChineseElement(year);
   const mayan = calculateCompleteMayanProfile(new Date(birth.date + 'T12:00:00.000Z'));
@@ -156,6 +177,13 @@ export async function calculateProOtherSystems(
       birthNakshatra: moon.nakshatra,
       moonPada: moon.nakshatraPada,
       dasha: dashaProfileToDay(dasha),
+      profile: {
+        chart,
+        moonSign: chart.grahas.Chandra.rashi,
+        sunSign: chart.grahas.Surya.rashi,
+        ascendantSign: chart.ascendant.rashi,
+        spiralogicIntegration: generateSpiralogicIntegration(chart.grahas.Chandra.rashi, moon.nakshatra),
+      },
       method: 'Sidereal positions from the Free Vedic calculator: Soullab provisional ayanamsa approximation, whole-sign houses from the Lagna, Vimshottari dasha from the Moon, dates to the day. Not yet checked against a reference ephemeris.',
     },
     chinese: {
@@ -171,10 +199,13 @@ export async function calculateProOtherSystems(
       compatibility: animal.compatibility,
       incompatible: animal.incompatible,
       fourPillars: calculateFourPillars(instant, birth.date, birth.time.slice(0, 5), dayStart),
-      method: 'Year sign from the Free Chinese calculator, counted by Gregorian birth year. Births before Chinese New Year (late January to mid February) may belong to the previous year’s sign.',
+      reading: buildChineseReading(year),
+      daYun: daYunByDirection(instant, civilOffsetMinutes(instant, birth.date, birth.time), birth.time.slice(0, 5)),
+      method: 'Year sign from the Free Chinese calculator. The year turns at Chinese New Year (China Standard Time, 1900–2100 table from astronomical new moons and the December solstice), so a January or early-February birth can belong to the previous year’s sign. The calendar date is used, not the birth hour.',
     },
     mayan: {
       traditional: traditionalMaya(birth.date),
+      profile: mayan,
       galacticSignature: mayan.tzolkin.galacticSignature,
       daySign: {
         name: mayan.tzolkin.daySign.name,
@@ -194,7 +225,14 @@ export async function calculateProOtherSystems(
       pathOfLife: (['youth', 'adulthood', 'future'] as const).map((stage) => ({
         stage, signature: mayan.pathOfLife[stage].galacticSignature,
       })),
-      method: 'Tzolk’in and Haab from the Free Mayan calculator, Dreamspell count (26 July 1987 epoch). This is not the traditional K’iche’ day count.',
+      method: 'Galactic signature, Kin and wavespell use the modern Dreamspell count (26 July 1987 = Kin 34, 29 February skipped). Haab and the traditional date use the Goodman–Martínez–Thompson correlation (584283). The Dreamspell is not the traditional Maya or K’iche’ day count.',
     },
   };
+}
+
+/** Local offset from UTC at birth, in minutes, from the instant and the local civil date and time. */
+function civilOffsetMinutes(instant: Date, localDate: string, localTime: string): number {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const [hh, mm] = localTime.split(':').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d, hh, mm) - instant.getTime()) / 60_000);
 }

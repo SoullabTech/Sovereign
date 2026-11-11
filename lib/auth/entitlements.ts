@@ -26,9 +26,10 @@
 
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { isMemberTester } from '@/lib/auth/tester';
+import { resolveWholeWork } from '@/lib/auth/wholeWorkEntitlement';
 
 /** Known entitlement keys. Grows as surfaces adopt the entitlement layer. */
-export type EntitlementKey = 'labs.preview';
+export type EntitlementKey = 'labs.preview' | 'writing.wholeWork';
 
 export type EntitlementSet = ReadonlySet<EntitlementKey>;
 
@@ -38,11 +39,26 @@ export type EntitlementSet = ReadonlySet<EntitlementKey>;
  * `labs.preview` is the generalization of the tester proto-entitlement — it is
  * present iff the member is a tester. (When new entitlements are added, resolve
  * each from its own source; do NOT collapse them onto tier.)
+ *
+ * `writing.wholeWork` is the Writer's Studio Free / Pro line. Its source is
+ * lib/auth/wholeWorkEntitlement.ts: everyone while WS_PRO_GATE_ENABLED is off,
+ * the Writer's Studio pilot always, otherwise `members.tier = 'pro'`. Tier is one
+ * input to it, never a stand-in for it: callers check the entitlement.
  */
 export async function resolveEntitlements(memberId: string): Promise<EntitlementSet> {
   const set = new Set<EntitlementKey>();
   if (await isMemberTester(memberId)) set.add('labs.preview');
+  if ((await resolveWholeWork(memberId)).entitled) set.add('writing.wholeWork');
   return set;
+}
+
+/**
+ * `writing.wholeWork` alone, for the executors that need only this key (the whole-book synthesis and the server editorial-pass
+ * run). Same source as the full set, without resolving unrelated keys. Throws when the lookup fails; callers refuse, never
+ * default.
+ */
+export async function holdsWholeWork(memberId: string): Promise<boolean> {
+  return (await resolveWholeWork(memberId)).entitled;
 }
 
 export function hasEntitlement(set: EntitlementSet, key: EntitlementKey): boolean {

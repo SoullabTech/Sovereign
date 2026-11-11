@@ -14,6 +14,8 @@ let CURRENT_MEMBER = '';
 type Script = (system: string, messages: { role: string; content: string }[], n: number) => string;
 let script: Script = () => 'ok';
 let modelCalls = 0;
+/* How the scripted provider says it stopped (WS-ASK-ANSWER-TRUNCATION). Default: finished. */
+let stopReason: string | null = 'end_turn';
 const systems: string[] = [];
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: async () => CURRENT_MEMBER }));
@@ -21,7 +23,7 @@ jest.mock('@/lib/ai/structured/router', () => ({
   runStructured: async (req: { system: string; messages: { role: string; content: string }[] }) => {
     systems.push(req.system);
     const text = script(req.system, req.messages, modelCalls++);
-    return { ok: true, result: { content: [{ type: 'text', text }] } };
+    return { ok: true, result: { content: [{ type: 'text', text }], stopReason, usage: { inputTokens: 1, outputTokens: 1 } } };
   },
 }));
 
@@ -189,5 +191,24 @@ d('Work conversation · route walk (fictional manuscript)', () => {
     r = await post(A, { threadId: thread, question: 'Again, the tide line?', sectionId: sec[0] });
     expect(r.json.thread.turns.at(-1).body).toContain('so I won’t');
     expect(r.json.thread.turns.at(-1).body).not.toContain('held breath');
+  });
+
+  it('W9 a cut answer (max_tokens) is neither stored nor shown; the writer\'s question is kept', async () => {
+    const before = (await query<{ n: string }>(`SELECT COUNT(*)::text n FROM ask_turns WHERE thread_id=$1`, [thread])).rows[0].n;
+    script = () => 'Across the book the harbour keeps shrinking, until in Return it becomes';
+    stopReason = 'max_tokens';
+    try {
+      const r = await post(A, { threadId: thread, question: 'Where does the harbour end up?', sectionId: sec[0] });
+      expect(r.status).toBe(502);
+      expect(r.json.refusal).toBe('answer_incomplete');
+      expect(JSON.stringify(r.json)).not.toContain('until in Return it becomes');
+      const turns = (await query<{ speaker: string; body: string }>(
+        `SELECT speaker, body FROM ask_turns WHERE thread_id=$1 ORDER BY turn_index`, [thread])).rows;
+      expect(turns.length).toBe(Number(before) + 1);                       // only the question was added
+      expect(turns.at(-1)).toEqual({ speaker: 'author', body: 'Where does the harbour end up?' });
+      expect(turns.some((t) => t.body.includes('until in Return it becomes'))).toBe(false);
+    } finally {
+      stopReason = 'end_turn';
+    }
   });
 });

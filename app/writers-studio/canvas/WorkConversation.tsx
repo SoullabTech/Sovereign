@@ -129,6 +129,9 @@ import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrection
 
 export const WORK_CONVERSATION_PLACEHOLDER = 'Ask MAIA about this work…';
 
+/** Offer-only: phrasings that suggest the writer may mean the whole book. It NEVER sets the scope (D1); it only shows the offer. */
+export const WHOLE_BOOK_OFFER = /\b(whole|entire|this)\s+(book|manuscript)\b|\bthroughout\b|\boverall\b|\bfundamentally\b|\bfrom (the )?(start|beginning) to (the )?end\b/i;
+
 const WORK_ANCHOR = { on: 'work' } as const;
 
 const REORIENTATION_PROMPT = [
@@ -143,6 +146,8 @@ const TEACH_NOT_ANSWERED = 'MAIA couldn’t answer the Teach me this time. Nothi
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
+  /* WS-ASK-ANSWER-TRUNCATION: she ran out of room before finishing, so the cut answer was not kept or shown. */
+  answer_incomplete: 'MAIA ran out of room before she finished, so that answer wasn’t kept. Nothing you wrote was lost — ask again, or ask about a narrower part of the book.',
   question_too_long: 'That is longer than a question this room can carry.',
   unauthenticated: 'You are signed out. Sign in and your question will go through.',
   not_found: 'This Work could not be opened for conversation.',
@@ -166,6 +171,11 @@ export interface WorkConversationProps {
   sectionId: string | null;
   /** Optional member-facing starter held in the composer. Never auto-sent. */
   initialDraft?: string;
+  /** Place words into the EXISTING composer (a starter, or the writer's selected words) without re-creating the conversation.
+   *  A new `n` places `text` once: into an empty composer it replaces; after the writer's own unsent text it is added below, never
+   *  replacing it. Never sent. (Founder P0 direction 2026-11-11: a late or placed text must not reset the conversation or clear
+   *  the writer's unsent prompt.) */
+  placeDraft?: { text: string; n: number };
   /** Design 1B: open a Develop place MAIA offered (navigation only). Absent → no such button. */
   onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
   /** The Develop stage keeps MAIA's holdings (reading permission, what you have settled) in its own column, so the conversation stays a conversation. */
@@ -214,7 +224,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
+  work, manuscriptId, sectionId, initialDraft = '', placeDraft, onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -274,8 +284,26 @@ function ScopedWorkConversation({
   }, [onStudioAct]);
 
   const [draft, setDraft] = useState(initialDraft);
+  /* WS-WHOLE-BOOK-CONVERSATION (founder approval 2026-11-10, D1): the writer DECLARES what a question is about. "where I am" is the
+     default; "the whole book" carries her complete account. ⛔ A phrase in the draft may only OFFER the whole book, never switch to it. */
+  /* Held in component state only: this surface reads and writes no browser storage (identity-is-server-truth law). It lasts while the
+     conversation is open and resets to "where I am" when it is reopened. */
+  const [carryScope, setCarryScope] = useState<'here' | 'whole_book'>('here');
+  const offerWholeBook = carryScope === 'here' && WHOLE_BOOK_OFFER.test(draft);
   // The Studio's starter, as placed; never sent on its own.
-  const [starter] = useState(initialDraft);
+  const [starter, setStarter] = useState(initialDraft);
+  const placedRef = useRef(placeDraft?.n ?? 0);
+  const draftNowRef = useRef(draft);
+  draftNowRef.current = draft;
+  useEffect(() => {
+    if (!placeDraft || placeDraft.n === placedRef.current) return;
+    placedRef.current = placeDraft.n;
+    const text = placeDraft.text;
+    if (!text) return;
+    const current = draftNowRef.current;
+    if (current.length === 0 || current === starter) { setDraft(text); setStarter(text); }
+    else setDraft(`${current}\n\n${text}`);
+  }, [placeDraft, starter]);
   const [reorientationOffered, setReorientationOffered] = useState(false);
   const [presentationConfirmation, setPresentationConfirmation] = useState<SafePresentationProposal | null>(null);
   const [presentationNotice, setPresentationNotice] = useState<string | null>(null);
@@ -466,6 +494,8 @@ function ScopedWorkConversation({
             /* G-3: the writer's own working-style preference, as the observation dialogue sends it; and a pressed Teach me. */
             responseStyle: readWorkingStyle().explanation,
             ...(teach ? { teachingAnchor: teach } : {}),
+            /* WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope, exactly as the "About" control shows it. */
+            ...(carryScope === 'whole_book' ? { carryScope } : {}),
             /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
             ...declaredSanctuaryPosture(),
           })
@@ -967,6 +997,32 @@ function ScopedWorkConversation({
           <StudioText role="panelLabel" as="span">Ask MAIA</StudioText>
           <StudioText role="metadata" tone="quiet" as="span">Write naturally · Enter sends · Shift+Enter adds a line</StudioText>
         </div>
+        {manuscriptId ? (
+          <div role="group" aria-label="What this question is about" data-carry-scope={carryScope}
+            style={{ display: 'flex', alignItems: 'center', gap: SPACE.tight, flexWrap: 'wrap', marginBottom: SPACE.tight }}>
+            <StudioText role="metadata" tone="quiet" as="span">About:</StudioText>
+            {(['here', 'whole_book'] as const).map((s) => (
+              <button key={s} type="button" aria-pressed={carryScope === s} onClick={() => setCarryScope(s)}
+                style={{ fontSize: 12, padding: '2px 8px', borderRadius: RADIUS.sm, cursor: 'pointer',
+                  border: `1px solid ${carryScope === s ? INK.primary : RULE.soft}`,
+                  background: carryScope === s ? GROUND.base : 'transparent', color: INK.primary,
+                  fontWeight: carryScope === s ? 600 : 400 }}>
+                {s === 'here' ? 'where I am' : 'the whole book'}
+              </button>
+            ))}
+            {carryScope === 'whole_book' ? (
+              <StudioText role="metadata" tone="quiet" as="span" data-whole-book-on="true">
+                Every question here is about the whole book until you choose “where I am”.
+              </StudioText>
+            ) : null}
+            {offerWholeBook ? (
+              <button type="button" data-whole-book-offer="true" onClick={() => setCarryScope('whole_book')}
+                style={{ fontSize: 12, padding: '2px 8px', border: 'none', background: 'transparent', color: INK.secondary, textDecoration: 'underline', cursor: 'pointer' }}>
+                Ask about the whole book?
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <textarea
           value={draft}
           onChange={(e) => { draftRevisionRef.current += 1; setDraft(e.target.value); setPresentationConfirmation(null); setPresentationNotice(null); }}
