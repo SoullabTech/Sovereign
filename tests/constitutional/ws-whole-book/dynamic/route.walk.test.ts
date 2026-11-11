@@ -94,6 +94,31 @@ d('Whole-book conversation · route walk (fictional manuscript)', () => {
     expect(last()).not.toContain('THE WHOLE BOOK');
   });
 
+  it('WBW5 an older complete reading is not lost behind 30+ newer readings (review finding 1)', async () => {
+    const digests = (await query<{ id: string; dg: string }>(`SELECT id, encode(sha256(convert_to(text,'UTF8')),'hex') dg FROM manuscript_draft_sections WHERE draft_id=$1`, [draftId])).rows;
+    const readState = JSON.stringify({ sections: Object.fromEntries(digests.map((x) => [x.id, { digest: x.dg }])) });
+    const coverage = JSON.stringify({ sections: Object.fromEntries(sec.map((id) => [id, 'body'])) });
+    for (let i = 0; i < 31; i++) {
+      await query(`INSERT INTO developmental_readings(manuscript_id,member_id,draft_id,revision_number,commissioned_lens,scope,read_state,coverage,input_fingerprint,outcome,observations,reader_provenance,classifier_provenance,frozen_at)
+        VALUES ($1,$2,$3,1,'voice','{"kind":"whole"}',$4,$5,'fp','reading',$6,'{}','{}', NOW() - ($7 || ' minutes')::interval)`,
+        [ms, A, draftId, readState, coverage,
+         JSON.stringify([{ key: 'o1', lens: 'voice', phenomenon: 'recurrence', observation: `voice newer ${i}`, doesNotEstablish: ['author-intent'], evidenceRefs: [{ kind: 'section', sectionId: sec[0] }], structureDependency: 'none' }]),
+         String(i + 1)]);
+    }
+    await post({ anchor: { on: 'work' }, question: 'What is it about?', sectionId: sec[0], carryScope: 'whole_book' });
+    expect(last()).toContain(tail(1));                     // the arc reading (9 days old) is still carried
+    expect(last()).toContain('voice newer 0');            // and the newest voice reading is the one carried for that lens
+  });
+
+  it('WBW6 a reading of an older revision of the same draft says so (review finding 3)', async () => {
+    const content = (await query<{ c: string }>(`SELECT content c FROM manuscript_working_drafts WHERE id=$1`, [draftId])).rows[0]!.c;
+    for (const n of [1, 2]) {
+      await query(`INSERT INTO working_draft_revisions(draft_id,revision_number,content,saved_by) VALUES ($1,$2,$3,$4)`, [draftId, n, content, A]);
+    }
+    await post({ anchor: { on: 'work' }, question: 'What is it about?', sectionId: sec[0], carryScope: 'whole_book' });
+    expect(last()).toContain('the current draft is revision 2');
+  });
+
   it('WBW4 Sanctuary carries nothing, even with the whole book declared', async () => {
     await post({ anchor: { on: 'work' }, question: 'What is it about?', sectionId: sec[0], carryScope: 'whole_book', sanctuary: true });
     expect(last()).not.toContain('THE WHOLE BOOK');

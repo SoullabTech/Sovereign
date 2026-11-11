@@ -234,6 +234,29 @@ identically on unmodified canonical. `npm run typecheck` shows **no TypeScript r
 **Not established:** model behaviour, cost and latency on real readings, and the founder's
 experience. Those come from the walk after a deploy, under HOLD #1938.
 
+## 6b. Independent review (2026-11-10) and its disposition
+
+A fresh reviewer was given only the diffs and the rules, not this author's reasoning. It found **nothing material in #2211** and
+eight findings in #2212. Every one is fixed, and each fix has a test that fails without it:
+
+| # | Finding | Fix | Witness |
+|---|---|---|---|
+| 1 (medium) | Whole-book searched only the 30 newest readings, so an older complete reading could be silently lost | Whole-book scope searches every reading (bound 1,000), and hitting the bound is disclosed | walk WBW5 (fails with the old window) · unit WB11 |
+| 2 (medium-low) | With whole-book chosen and no reading, she was never told the scope | The block is said whenever the scope is whole-book | WB12 |
+| 3 (low-medium) | The "older revision" note never reached production | The loader reads the draft's current revision (latest `working_draft_revisions`, the same way a reading records its own) and compares only readings **of the same draft** | walk WBW6 · WB10 · WB10b (no false claim across drafts) |
+| 4 (low) | The dismissed-observation assertion could never fail | It now names the dismissed observation and the kept ones | DC-F4 killed |
+| 5 (low) | The ceiling ignored headings and header lines | The ceiling counts the rendered size (headings, limits, frame and a header allowance) | — |
+| 6 (low) | What was left out wasn't saved with the answer | Provenance records `observationsGiven` / `observationsTotal` per reading, and `carryDropped` | WB13 |
+| 7 (low, existing) | A null observation entry crashed the loader | Non-object entries are skipped | unit test |
+| 8 (low, UI) | The scope was easy to forget once on | While "the whole book" is on, a line says so: *"Every question here is about the whole book until you choose 'where I am'."* | — |
+
+**After the fixes:**
+- `wholeBookCarry` **20/20.**
+- **17/17 defeat candidates killed:** the original 11 (DC-WB10 re-targeted at the new wording) plus DC-F1t, F2, F3, F4, F6 and F7.
+- Route walk **6/6** on a fresh disposable migrated database, dropped afterwards.
+- Ask and Writer's Studio suites **1,767/1,768.** The one failure, `askSourceCloseout`, fails identically on canonical.
+- Typecheck shows **no regressions.**
+
 ## 7. Not authorized by this document
 
 Any code, migration, deploy, merge, or change to G6 / T11 / quote fidelity; prompt caching;

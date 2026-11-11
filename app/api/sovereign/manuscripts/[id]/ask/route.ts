@@ -804,7 +804,11 @@ async function workTurn(input: {
        no separate best-effort write that can fail silently after the answer exists. */
     staleness, answerProvenance: {
       ...outcome.provenance,
-      ...(carriedReadings.readings.length > 0 ? { carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) } : {}),
+      ...(carriedReadings.readings.length > 0 ? { carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber,
+        ...(carryScope === 'whole_book' ? { observationsGiven: r.observations.length, observationsTotal: r.observationsTotal } : {}) })) } : {}),
+      /* Finding 6: what her whole-book account LEFT OUT for size is part of what this answer was made from. */
+      ...(carryScope === 'whole_book' && 'dropped' in carriedReadings && carriedReadings.dropped && carriedReadings.dropped.length > 0
+        ? { carryDropped: carriedReadings.dropped } : {}),
       /* WB7 · the writer's declared scope is part of what this answer was made from. */
       ...(carryScope === 'whole_book' ? { carryScope } : {}),
       ...(supplied.length > 0 ? { suppliedSections: supplied.map((x) => ({ sectionId: x.id, digest: x.digest })) } : {}),

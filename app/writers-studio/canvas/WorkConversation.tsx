@@ -993,6 +993,11 @@ function ScopedWorkConversation({
                 {s === 'here' ? 'where I am' : 'the whole book'}
               </button>
             ))}
+            {carryScope === 'whole_book' ? (
+              <StudioText role="metadata" tone="quiet" as="span" data-whole-book-on="true">
+                Every question here is about the whole book until you choose “where I am”.
+              </StudioText>
+            ) : null}
             {offerWholeBook ? (
               <button type="button" data-whole-book-offer="true" onClick={() => setCarryScope('whole_book')}
                 style={{ fontSize: 12, padding: '2px 8px', border: 'none', background: 'transparent', color: INK.secondary, textDecoration: 'underline', cursor: 'pointer' }}>

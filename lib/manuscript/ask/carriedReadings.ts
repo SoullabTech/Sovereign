@@ -51,6 +51,8 @@ export interface CarriedReading {
   readonly cut: boolean;
   /** Whole-book scope: how many of the Work's current sections this reading read in full. */
   readonly coverage?: { read: number; of: number };
+  /** The current revision of the SAME draft this reading read, when it is newer than the reading's (else absent). */
+  readonly newerRevision?: number;
 }
 
 /** What she was given, and what exists but was left out, so her memory is never silently partial. */
@@ -68,7 +70,7 @@ export interface CarriedSet {
   readonly currentRevision?: number;
 }
 
-export type ReadingRow = { id: string; commissioned_lens: string; revision_number: number; read_state: { sections?: Record<string, { digest?: string }> }; coverage: { sections?: Record<string, string> }; observations: unknown; frozen_at: Date | string };
+export type ReadingRow = { id: string; draft_id?: string; commissioned_lens: string; revision_number: number; read_state: { sections?: Record<string, { digest?: string }> }; coverage: { sections?: Record<string, string> }; observations: unknown; frozen_at: Date | string };
 type Row = ReadingRow;
 type Shaped = { row: ReadingRow; lens: string; frozenAt: string; bodySectionIds: readonly string[] };
 
@@ -105,12 +107,19 @@ const sectionIdsOfRefs = (refs: unknown): string[] => {
   return [...new Set(ids)];
 };
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
-const accountChars = (r: CarriedReading) => r.observations.reduce((n, o) => n + o.text.length + o.doesNotEstablish.join(', ').length, 0);
+/* What one observation costs once rendered: text, its limits, its headings, and the fixed wording around them. */
+const READING_HEADER_CHARS = 400;
+const OBSERVATION_FRAME_CHARS = 60;
+const obsChars = (o: CarriedObservation) => o.text.length + o.doesNotEstablish.join(', ').length + (o.where ?? []).join('; ').length + OBSERVATION_FRAME_CHARS;
+const accountChars = (r: CarriedReading) => READING_HEADER_CHARS + r.chapters.reduce((n, c) => n + (c.label?.length ?? 0) + 2, 0)
+  + r.observations.reduce((n, o) => n + obsChars(o), 0);
 
 /** PURE: shape the picked readings into what she is given, applying the scope's limits. */
 export function buildCarriedSet(picked: readonly Shaped[], o: {
   scope: CarryScope; sections: readonly SectionHeadLite[]; currentSectionIds: readonly string[];
   dismissed: ReadonlySet<string>; nowDigests: ReadonlyMap<string, string>; relevant: number; searchFull: boolean; currentRevision?: number;
+  /** The draft `currentRevision` belongs to. A reading of another draft is never compared against it. */
+  currentDraftId?: string;
 }): CarriedSet {
   const label = (id: string) => o.sections.find((s) => s.id === id)?.heading ?? null;
   const whole = o.scope === 'whole_book';
@@ -119,7 +128,7 @@ export function buildCarriedSet(picked: readonly Shaped[], o: {
     /* The contract's field is `observation` (DevelopmentalObservation, "the reader's claim text, VERBATIM"). A real walk found the
        loader reading `text`, which no real reading has: she would have been told she read a chapter, with none of what she noticed. */
     const obs = Array.isArray(p.row.observations) ? (p.row.observations as RawObs[]) : [];
-    const real = obs.filter((x) => typeof x.observation === 'string' && (x.observation as string).trim()
+    const real = obs.filter((x) => x !== null && typeof x === 'object' && typeof x.observation === 'string' && (x.observation as string).trim()
       && !(typeof x.key === 'string' && o.dismissed.has(`${p.row.id}:${x.key}`)));
     const dne = (x: RawObs) => (Array.isArray(x.doesNotEstablish) ? (x.doesNotEstablish as unknown[]).filter((y): y is string => typeof y === 'string') : []);
     const chapters = p.bodySectionIds.map((id) => {
@@ -128,7 +137,10 @@ export function buildCarriedSet(picked: readonly Shaped[], o: {
       /* removed since = changed; no stored digest = cannot tell */
       return { id, label: label(id), changedSince: !was ? null : is === undefined ? true : is !== was };
     });
-    const base = { id: p.row.id, lens: p.lens, revisionNumber: p.row.revision_number, frozenAt: p.frozenAt, chapters, observationsTotal: real.length };
+    const sameDraft = o.currentDraftId !== undefined && p.row.draft_id === o.currentDraftId;
+    const newer = sameDraft && o.currentRevision !== undefined && p.row.revision_number < o.currentRevision ? o.currentRevision : undefined;
+    const base = { id: p.row.id, lens: p.lens, revisionNumber: p.row.revision_number, frozenAt: p.frozenAt, chapters, observationsTotal: real.length,
+      ...(newer !== undefined ? { newerRevision: newer } : {}) };
     if (!whole) {
       return { ...base,
         observations: real.slice(0, MAX_OBSERVATIONS_PER_READING)
@@ -162,8 +174,8 @@ export function buildCarriedSet(picked: readonly Shaped[], o: {
     if (readings.length === 1 && accountChars(readings[0]!) > WHOLE_BOOK_CARRY_CHARS) {
       const r = readings[0]!;
       const kept: CarriedObservation[] = [];
-      let n = 0;
-      for (const ob of r.observations) { const c = ob.text.length + ob.doesNotEstablish.join(', ').length; if (n + c > WHOLE_BOOK_CARRY_CHARS) break; kept.push(ob); n += c; }
+      let n = accountChars({ ...r, observations: [] });
+      for (const ob of r.observations) { const c = obsChars(ob); if (n + c > WHOLE_BOOK_CARRY_CHARS) break; kept.push(ob); n += c; }
       readings = [{ ...r, observations: kept }];
     }
   }
@@ -189,21 +201,26 @@ export function chaptersInPlay(question: string, locusId: string | null, section
 }
 
 export const READINGS_SEARCHED = 30;
+/** Whole-book scope searches every reading of the Work (metadata only) up to this bound; hitting it is disclosed, never silent. */
+export const WHOLE_BOOK_READINGS_SEARCHED = 1000;
 
 /** Which observations (`readingId:key`) the writer dismissed, for the given readings. Supplied by the caller; this module reads no standing. */
 export type SetAsideLookup = (readingIds: readonly string[]) => Promise<ReadonlySet<string>>;
 
 export async function loadCarriedReadings(manuscriptId: string, memberId: string, inPlay: readonly string[], sections: readonly SectionHeadLite[], setAside?: SetAsideLookup,
-  opts: { scope?: CarryScope; currentRevision?: number } = {}): Promise<CarriedSet> {
+  opts: { scope?: CarryScope } = {}): Promise<CarriedSet> {
   const scope: CarryScope = opts.scope ?? 'here';
+  /* Whole-book: every reading (bounded) is a candidate, so an older COMPLETE reading under a lens is never lost behind newer ones of other
+     lenses (independent review 2026-11-10, finding 1). Chapter scope keeps the original 30-newest window. */
+  const limit = scope === 'whole_book' ? WHOLE_BOOK_READINGS_SEARCHED : READINGS_SEARCHED;
   let rows: Row[];
   try {
     rows = (await query<Row>(
-      `SELECT id, commissioned_lens, revision_number, read_state, coverage, observations, frozen_at
+      `SELECT id, draft_id, commissioned_lens, revision_number, read_state, coverage, observations, frozen_at
          FROM developmental_readings
         WHERE manuscript_id = $1 AND member_id = $2 AND outcome = 'reading'
-        ORDER BY frozen_at DESC, id DESC LIMIT ${READINGS_SEARCHED}`, [manuscriptId, memberId])).rows;
-  } catch (e) { if ((e as { code?: string })?.code === '42P01') return { readings: [], relevant: 0, searchFull: false }; throw e; }
+        ORDER BY frozen_at DESC, id DESC LIMIT ${limit}`, [manuscriptId, memberId])).rows;
+  } catch (e) { if ((e as { code?: string })?.code === '42P01') return { readings: [], relevant: 0, searchFull: false, ...(scope === 'whole_book' ? { scope, dropped: [] } : {}) }; throw e; }
   const shaped = rows.map((r) => ({
     row: r, lens: r.commissioned_lens, frozenAt: new Date(r.frozen_at).toISOString(),
     bodySectionIds: Object.entries(r.coverage?.sections ?? {}).filter(([, d]) => d === 'body').map(([id]) => id),
@@ -211,10 +228,16 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
   const want = new Set(inPlay);
   const withText = shaped.filter((r) => r.bodySectionIds.length > 0);
   const relevant = scope === 'whole_book' || want.size === 0 ? withText.length : withText.filter((r) => r.bodySectionIds.some((id) => want.has(id))).length;
-  const searchFull = rows.length >= READINGS_SEARCHED;
+  const searchFull = rows.length >= limit;
   const currentSectionIds = sections.map((s) => s.id);
   const picked = selectCarried(shaped, scope, inPlay, currentSectionIds);
   if (picked.length === 0) return { readings: [], relevant, searchFull, ...(scope === 'whole_book' ? { scope, dropped: [] } : {}) };
+  /* Finding 3: the current revision of the Work's draft, read the same way a reading records its own (latest working_draft_revisions row). */
+  const cur = (await query<{ draft_id: string; rev: number | null }>(
+    `SELECT d.id AS draft_id, MAX(v.revision_number) AS rev
+       FROM manuscript_working_drafts d LEFT JOIN working_draft_revisions v ON v.draft_id = d.id
+      WHERE d.manuscript_id = $1 AND d.member_id = $2
+      GROUP BY d.id ORDER BY MAX(v.revision_number) DESC NULLS LAST LIMIT 1`, [manuscriptId, memberId])).rows[0];
 
   /* G6 × D5: an observation the writer dismissed is left out of her reading here; it reaches her only as set aside (D5 exception). */
   const dismissed = setAside ? await setAside(picked.map((p) => p.row.id)) : new Set<string>();
@@ -224,5 +247,5 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
        FROM manuscript_draft_sections s JOIN manuscript_working_drafts d ON d.id = s.draft_id
       WHERE d.manuscript_id = $1 AND d.member_id = $2 AND s.id = ANY($3::uuid[])`, [manuscriptId, memberId, ids])).rows.map((x) => [x.id, x.digest]));
   return buildCarriedSet(picked, { scope, sections, currentSectionIds, dismissed, nowDigests: now, relevant, searchFull,
-    ...(opts.currentRevision !== undefined ? { currentRevision: opts.currentRevision } : {}) });
+    ...(cur?.rev != null ? { currentRevision: Number(cur.rev), currentDraftId: cur.draft_id } : {}) });
 }

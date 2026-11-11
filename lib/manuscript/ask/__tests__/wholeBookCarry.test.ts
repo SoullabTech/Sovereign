@@ -26,7 +26,7 @@ function row(lens: string, day: number, bodyIds: string[], nObs: number, opts: {
   for (const id of ALL) cov[id] = bodyIds.includes(id) ? 'body' : 'position';
   const id = `r${++seq}`;
   return {
-    id, commissioned_lens: lens, revision_number: 1, frozen_at: new Date(Date.UTC(2026, 9, day)),
+    id, draft_id: 'draft-1', commissioned_lens: lens, revision_number: 1, frozen_at: new Date(Date.UTC(2026, 9, day)),
     read_state: { sections: Object.fromEntries(bodyIds.map((b) => [b, { digest: `d-${b}` }])) },
     coverage: { sections: cov },
     observations: Array.from({ length: nObs }, (_, i) => ({
@@ -110,9 +110,30 @@ describe('whole-book scope carries her complete account', () => {
     const stale = row('arc', 10, ALL, 1);
     const set = buildCarriedSet(selectCarried(shapedOf([stale]), 'whole_book', [], ALL), {
       scope: 'whole_book', sections: SECTIONS, currentSectionIds: ALL, dismissed: new Set(),
-      nowDigests: new Map([...NOW, ['s2', 'changed']]), relevant: 1, searchFull: false, currentRevision: 3 });
+      nowDigests: new Map([...NOW, ['s2', 'changed']]), relevant: 1, searchFull: false, currentRevision: 3, currentDraftId: 'draft-1' });
     expect(set.readings[0]!.chapters.find((c) => c.id === 's2')!.changedSince).toBe(true);
-    expect(carriedReadingsSays(set)).toMatch(/revision 1.*current draft is revision 3|older revision/i);
+    expect(carriedReadingsSays(set)).toMatch(/made from revision 1; the current draft is revision 3/);
+  });
+
+  it('WB10b a reading of ANOTHER draft is never told it is "older" (no false claim)', () => {
+    const other = { ...row('arc', 10, ALL, 1), draft_id: 'draft-0' };
+    const set = buildCarriedSet(selectCarried(shapedOf([other]), 'whole_book', [], ALL), {
+      scope: 'whole_book', sections: SECTIONS, currentSectionIds: ALL, dismissed: new Set(),
+      nowDigests: NOW, relevant: 1, searchFull: false, currentRevision: 3, currentDraftId: 'draft-1' });
+    expect(set.readings[0]!.newerRevision).toBeUndefined();
+    expect(carriedReadingsSays(set)).not.toMatch(/older revision/);
+  });
+
+  it('WB11 when the search bound was hit, she is told an older reading may exist', () => {
+    const set = build([row('arc', 10, ALL, 1)], 'whole_book', { searchFull: true });
+    expect(carriedReadingsSays(set)).toMatch(/more than could be searched/);
+  });
+
+  it('a null or non-object observation entry is skipped, not a crash', () => {
+    const r = row('arc', 10, ALL, 2);
+    (r.observations as unknown[]).push(null, 7);
+    expect(() => build([r], 'whole_book')).not.toThrow();
+    expect(build([r], 'whole_book').readings[0]!.observations).toHaveLength(2);
   });
 
   it('observations are ordered by place in the book, never by importance', () => {
@@ -130,6 +151,29 @@ describe('whole-book scope carries her complete account', () => {
   });
 });
 
+describe('whole-book scope with no reading still reaches her (finding 2)', () => {
+  it('WB12 she is told the writer asked about the whole book and that she has no account of it', async () => {
+    jest.resetModules();
+    const systems: string[] = [];
+    jest.doMock('../../../ai/structured/router', () => ({ runStructured: async (req: { system: string }) => {
+      systems.push(req.system);
+      return { ok: true, result: { content: [{ type: 'text', text: 'A reply.' }], stopReason: 'end_turn', usage: { inputTokens: 1, outputTokens: 1 },
+        provenance: { provider: 'anthropic', model: 'm', latencyMs: 1 } } };
+    } }));
+    jest.doMock('@/lib/writersStudio/workSituation', () => ({ formatWorkSituationForPrompt: () => 'THE WORK (fixture)' }));
+    const { askMaia } = await import('../askReader');
+    const { UNMEASURED } = await import('../staleness');
+    const ctx = { kind: 'work', anchor: { on: 'work' }, staleness: UNMEASURED,
+      carriedReadings: { readings: [], relevant: 0, searchFull: false, scope: 'whole_book', dropped: [] },
+      facts: { work: {}, manuscript: { id: 'ms-1', draftId: 'd-1', version: 1 }, sections: SECTIONS, locus: null,
+        writerUnderstanding: '', writerCorrections: '', continuity: { structure: 'unmeasured', prose: 'unmeasured' } } } as never;
+    const out = await askMaia(ctx, [], 'What is it about?');
+    expect(out.ok).toBe(true);
+    expect(systems[0]).toContain('THE WHOLE BOOK');
+    expect(systems[0]).toContain('You have no completed reading of this Work that read its text');
+  });
+});
+
 describe('the boundaries that do not move', () => {
   it('WB8 the whole-book account never grounds a quotation (it is stripped like any carried block)', () => {
     const set = build([row('arc', 10, ALL, 2)], 'whole_book');
@@ -142,8 +186,10 @@ describe('the boundaries that do not move', () => {
   it('WB9 dismissed observations stay out in whole-book scope', () => {
     const r = row('arc', 10, ALL, 3);
     const set = build([r], 'whole_book', { dismissed: new Set([`${r.id}:o2`]) });
-    expect(set.readings[0]!.observations.map((o) => o.text)).not.toContain(expect.stringContaining('observation 2 '));
-    expect(set.readings[0]!.observations).toHaveLength(2);
+    const texts = set.readings[0]!.observations.map((o) => o.text);
+    expect(texts.some((t) => t.startsWith('arc observation 2 '))).toBe(false);     // the dismissed one, by name
+    expect(texts.some((t) => t.startsWith('arc observation 1 '))).toBe(true);
+    expect(texts.some((t) => t.startsWith('arc observation 3 '))).toBe(true);
   });
 
   it('a reading that read no chapter text is never carried, in either scope', () => {
@@ -176,6 +222,13 @@ describe('scope is the writer\'s, and it is recorded (route + client source)', (
     const response = ROUTE.slice(end, end + 600);
     expect(response).toMatch(/read, \.\.\.\(carryScope === 'whole_book' \? \{ carryScope \} : \{\}\) \}\)/);
     expect(CLIENT).toMatch(/carryScope === 'whole_book' \? \{ carryScope: 'whole_book' \}/);
+  });
+
+  it('WB13 what she was given and what was left out for size are saved with the answer (finding 6)', () => {
+    const start = ROUTE.indexOf('answerProvenance: {');
+    const prov = ROUTE.slice(start, ROUTE.indexOf('const thread = await loadThread(liveThreadId, memberId);', start));
+    expect(prov).toMatch(/observationsGiven: r\.observations\.length, observationsTotal: r\.observationsTotal/);
+    expect(prov).toMatch(/carryDropped: carriedReadings\.dropped/);
   });
 
   it('WB9b Sanctuary or an unstated posture carries nothing, whatever the scope', () => {

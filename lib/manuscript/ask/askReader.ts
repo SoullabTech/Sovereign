@@ -184,7 +184,9 @@ export interface AskAnswerProvenance {
   askerVersion: string;
   answeredAt: string;
   /** G6 · which of her completed readings she was given for this answer (ids and revisions; never text). Saved with the answer, atomically. */
-  carriedReadings?: readonly { readingId: string; revisionNumber: number }[];
+  carriedReadings?: readonly { readingId: string; revisionNumber: number; observationsGiven?: number; observationsTotal?: number }[];
+  /** WS-WHOLE-BOOK-CONVERSATION · readings left out of her whole-book account for size (lens + date), so the record shows what she lacked. */
+  carryDropped?: readonly { lens: string; frozenAt: string }[];
   /** Which saved sections' text she was supplied for this answer, with a digest of the exact bytes (never the text). Saved with the answer. */
   suppliedSections?: readonly { sectionId: string; digest: string }[];
   /** The passage the writer was at this turn (digest only), to notice when it changes between turns. */
@@ -343,8 +345,8 @@ function wholeBookReadingsSays(set: CarriedSet): string {
   for (const r of set.readings) {
     const cov = r.coverage ? (r.coverage.read === r.coverage.of ? `all ${r.coverage.of} sections read in full` : `only ${r.coverage.read} of ${r.coverage.of} sections read in full`) : '';
     const changed = r.chapters.filter((c) => c.changedSince === true).map((c) => c.label ?? '(no heading)');
-    const older = set.currentRevision !== undefined && r.revisionNumber < set.currentRevision
-      ? ` This reading was made from revision ${r.revisionNumber}; the current draft is revision ${set.currentRevision} (an older revision).` : '';
+    const older = r.newerRevision !== undefined
+      ? ` This reading was made from revision ${r.revisionNumber}; the current draft is revision ${r.newerRevision} (an older revision).` : '';
     lines.push('', `- Through the ${r.lens} lens, read ${r.frozenAt.slice(0, 10)}, from revision ${r.revisionNumber}; ${cov}.${older}`
       + (changed.length ? ` CHANGED since you read them: ${changed.join(', ')}.` : ''));
     if (r.observationsTotal > r.observations.length) {
@@ -356,6 +358,9 @@ function wholeBookReadingsSays(set: CarriedSet): string {
   }
   if (set.dropped && set.dropped.length > 0) {
     lines.push('', `Left out because your whole account would not fit: ${set.dropped.map((d) => `the ${d.lens} reading of ${d.frozenAt.slice(0, 10)}`).join('; ')}. Do not speak as if you remember them.`);
+  }
+  if (set.searchFull) {
+    lines.push('', 'Your readings of this Work are more than could be searched, so an older reading under some lens may exist that you were not given. Do not speak as if you remember one you were not given.');
   }
   if (set.readings.length === 0) lines.push('', 'You have no completed reading of this Work that read its text. Say so plainly; do not answer about the whole book as if you had read it.');
   lines.push('',
@@ -448,7 +453,9 @@ function workSays(ctx: WorkContext): string {
   }
   if (ctx.sanctuary) parts.push(SANCTUARY_SAYS);
   if (ctx.practiceOffer && !ctx.sanctuary) parts.push(ctx.practiceOffer);
-  if (ctx.carriedReadings && ctx.carriedReadings.readings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
+  /* Whole-book scope is said even when no reading exists, so she knows the writer asked about the whole book and that she has no account of it
+     (independent review 2026-11-10, finding 2). Chapter scope is unchanged: nothing to say, nothing said. */
+  if (ctx.carriedReadings && (ctx.carriedReadings.readings.length > 0 || ctx.carriedReadings.scope === 'whole_book')) parts.push(carriedReadingsSays(ctx.carriedReadings));
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
   } else if (!locus) {
