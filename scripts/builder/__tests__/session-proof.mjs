@@ -249,6 +249,63 @@ try {
   assert('the implementation never sends a killing signal',
     !/process\.kill\([^)]*,\s*['"]?SIG/.test(readFileSync(SESSION, 'utf8')),
     'process.kill(pid, 0) liveness probes are permitted; signals are not');
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 2026-11-09, session s-4a946557: a write claim for one branch recorded a baseline
+  // measured in ANOTHER lane's worktree (the caller's), so its head_sha described work
+  // the unit never owned. Reproduce the cross-binding: the caller stands in worktree A
+  // (another lane, another branch) while the unit belongs to worktree B.
+  console.log('\n=== PROOF 13: a write baseline is measured only in the unit\'s own branch ===');
+  const HOME13 = path.join(SANDBOX, 'ain-delegation-13');
+  const env13 = { AIN_DELEGATION_HOME: HOME13, BUILDER_MAX_CLAUDE_SESSIONS: '10' };
+  const OTHER_LANE = mkrepo(path.join(SANDBOX, 'other-lane'), 'fix/other-lane');
+  const UNIT_WT = mkrepo(path.join(SANDBOX, 'unit-wt'), 'feature/unit-x');
+  // Identical seeds could give both repos the same SHA; one more commit keeps them apart.
+  writeFileSync(path.join(UNIT_WT, 'unit.txt'), 'unit work\n');
+  execFileSync('git', ['commit', '-qam', 'unit', '--allow-empty'], { cwd: UNIT_WT, stdio: 'pipe' });
+  execFileSync('git', ['add', 'unit.txt'], { cwd: UNIT_WT, stdio: 'pipe' });
+  execFileSync('git', ['commit', '-qm', 'unit file'], { cwd: UNIT_WT, stdio: 'pipe' });
+  const head = (dir) => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  const recCount = () => (existsSync(path.join(HOME13, 'sessions'))
+    ? execFileSync('ls', [path.join(HOME13, 'sessions')], { encoding: 'utf8' }).split('\n').filter((f) => f.endsWith('.json')).length
+    : 0);
+  /** Run session.mjs from a chosen cwd (the caller's position), with the PROOF 13 home. */
+  const sAt = (cwd, argv) => {
+    const r = spawnSync('node', [SESSION, ...argv], { cwd, encoding: 'utf8', env: { ...process.env, ...env13 } });
+    return { code: r.status, out: (r.stdout || '').trim(), err: (r.stderr || '').trim() };
+  };
+
+  const implicit = sAt(OTHER_LANE, ['open', '--unit', 'unit-x', '--branch', 'feature/unit-x']);
+  assert('omitted --worktree in another lane\'s worktree is REFUSED', implicit.code === 1,
+    `exit=${implicit.code}`);
+  assert('the refusal names the defaulted worktree and the branch it is on',
+    /defaulted from the current directory/.test(implicit.err) && /fix\/other-lane/.test(implicit.err), implicit.err);
+
+  const explicitWrong = sAt(UNIT_WT, ['open', '--unit', 'unit-x', '--branch', 'feature/unit-x', '--worktree', OTHER_LANE]);
+  assert('--worktree naming a worktree on another branch is REFUSED', explicitWrong.code === 1,
+    `exit=${explicitWrong.code}`);
+  assert('a refused claim writes no session record', recCount() === 0, `records=${recCount()}`);
+  const refusals13 = (existsSync(path.join(HOME13, 'sessions.jsonl'))
+    ? readFileSync(path.join(HOME13, 'sessions.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [])
+    .filter((e) => e.event === 'refused' && e.reason === 'baseline-branch-mismatch');
+  assert('both refusals are in the ledger with the measured branch',
+    refusals13.length === 2 && refusals13.every((e) => e.measured_branch === 'fix/other-lane'),
+    JSON.stringify(refusals13.map((e) => e.measured_branch)));
+
+  const ro13 = sAt(OTHER_LANE, ['open', '--unit', 'inspect-x', '--branch', 'feature/unit-x', '--read-only']);
+  assert('read-only inspection is not blocked by the branch check (it records no baseline)', ro13.code === 0,
+    `exit=${ro13.code} ${ro13.err.split('\n').slice(-3).join(' | ')}`);
+
+  // The s-4a946557 shape, done right: caller in the other lane, unit's worktree named.
+  const right = sAt(OTHER_LANE, ['open', '--unit', 'unit-x', '--branch', 'feature/unit-x', '--worktree', UNIT_WT]);
+  assert('the unit\'s own worktree is admitted even when the caller stands elsewhere', right.code === 0,
+    `exit=${right.code} ${right.err.split('\n').slice(-3).join(' | ')}`);
+  const recX = JSON.parse(readFileSync(path.join(HOME13, 'sessions', `${right.out}.json`), 'utf8'));
+  assert('its baseline branch is the declared branch', recX.baseline.branch === 'feature/unit-x',
+    `baseline.branch=${recX.baseline.branch}`);
+  assert('its baseline head is the unit worktree\'s HEAD, not the caller\'s',
+    head(UNIT_WT) !== head(OTHER_LANE) && recX.baseline.head_sha === head(UNIT_WT),
+    `baseline=${recX.baseline.head_sha} unit=${head(UNIT_WT)} caller=${head(OTHER_LANE)}`);
 } finally {
   rmSync(SANDBOX, { recursive: true, force: true });
 }

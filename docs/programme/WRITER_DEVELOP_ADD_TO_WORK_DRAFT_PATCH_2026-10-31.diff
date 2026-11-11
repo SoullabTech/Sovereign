@@ -1,0 +1,301 @@
+diff --git a/app/dev/writers-studio-p4r1/p4r1-live.css b/app/dev/writers-studio-p4r1/p4r1-live.css
+index 3d558ce29..9290cbacc 100644
+--- a/app/dev/writers-studio-p4r1/p4r1-live.css
++++ b/app/dev/writers-studio-p4r1/p4r1-live.css
+@@ -4243,3 +4243,17 @@
+   border:1px solid var(--fr-line,#8887);border-radius:7px;
+   padding:8px 10px;min-height:36px;font-size:12px;cursor:pointer;
+ }
++
++/* Develop: the way out of "this writing is not part of a Work yet" (DevelopAddToWork). */
++.p4r1-root .p4r1-develop-attach {margin:14px 0 4px;padding:16px 18px;border:1px solid var(--fr-line,#8885);border-radius:12px;max-width:60ch;}
++.p4r1-root .p4r1-develop-attach h3 {font-size:16px;font-weight:600;margin:0 0 6px;}
++.p4r1-root .p4r1-develop-attach p {margin:0 0 12px;line-height:1.6;font-size:14px;opacity:.85;}
++.p4r1-root .p4r1-develop-attach-actions {display:flex;flex-wrap:wrap;gap:10px;}
++.p4r1-root .p4r1-develop-attach button {font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}
++.p4r1-root .p4r1-develop-attach button:disabled {opacity:.5;cursor:not-allowed;}
++.p4r1-root .p4r1-develop-attach-make {display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-top:12px;}
++.p4r1-root .p4r1-develop-attach-make label {display:flex;flex-direction:column;gap:4px;font-size:13px;flex:1 1 220px;}
++.p4r1-root .p4r1-develop-attach-make input {font:inherit;font-size:15px;min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;}
++.p4r1-root .p4r1-develop-attach-list {list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;}
++.p4r1-root .p4r1-develop-attach-list button {width:100%;text-align:left;}
++.p4r1-root .p4r1-develop-attach-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
+diff --git a/app/dev/writers-studio-pc3-live/DevelopAddToWork.tsx b/app/dev/writers-studio-pc3-live/DevelopAddToWork.tsx
+new file mode 100644
+index 000000000..4e0dbb87d
+--- /dev/null
++++ b/app/dev/writers-studio-pc3-live/DevelopAddToWork.tsx
+@@ -0,0 +1,73 @@
++'use client';
++
++import { useState } from 'react';
++import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
++
++/**
++ * Develop's way out of "this writing is not part of a Work".
++ *
++ * MAIA talks with the author inside a Work, and the Studio never guesses which Work a manuscript belongs to
++ * (app/writers-studio/workContext.ts). So when no Work declares this writing the author is asked, plainly, where it
++ * belongs. Both gestures are the author's own declaration and use the routes the Studio Home already uses:
++ *   - "Add to a Work": POST /api/sovereign/living-works/:id/expressions
++ *   - "Make this a Work": the author NAMES the Work (the create route never invents a title), then the same declaration.
++ * Nothing is read or changed in the writing itself.
++ */
++export interface DevelopAddToWorkProps {
++  works: readonly LivingWork[];
++  busy: boolean;
++  error: string | null;
++  onAddToWork: (workId: string) => void;
++  onMakeWork: (title: string) => void;
++}
++
++export function DevelopAddToWork({ works, busy, error, onAddToWork, onMakeWork }: DevelopAddToWorkProps) {
++  const [mode, setMode] = useState<'choose' | 'add' | 'make'>('choose');
++  const [title, setTitle] = useState('');
++  const named = title.trim().length > 0;
++
++  return (
++    <section className="p4r1-develop-attach" aria-label="Add this writing to a Work">
++      <h3>This writing isn’t part of a Work yet.</h3>
++      <p>
++        MAIA talks with you inside a Work, so she knows which one she is in. Tell us where this writing belongs.
++        Nothing is read or changed.
++      </p>
++      <div className="p4r1-develop-attach-actions">
++        <button type="button" disabled={busy} aria-expanded={mode === 'make'} onClick={() => setMode(mode === 'make' ? 'choose' : 'make')}>
++          Make this a Work
++        </button>
++        {works.length > 0 ? (
++          <button type="button" disabled={busy} aria-expanded={mode === 'add'} onClick={() => setMode(mode === 'add' ? 'choose' : 'add')}>
++            Add to a Work
++          </button>
++        ) : null}
++      </div>
++      {mode === 'make' ? (
++        <form
++          className="p4r1-develop-attach-make"
++          onSubmit={(event) => {
++            event.preventDefault();
++            if (named && !busy) onMakeWork(title.trim());
++          }}
++        >
++          <label>
++            Name this Work
++            <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} disabled={busy} />
++          </label>
++          <button type="submit" disabled={!named || busy}>{busy ? 'Adding…' : 'Create this Work'}</button>
++        </form>
++      ) : null}
++      {mode === 'add' ? (
++        <ul className="p4r1-develop-attach-list">
++          {works.map((work) => (
++            <li key={work.id}>
++              <button type="button" disabled={busy} onClick={() => onAddToWork(work.id)}>{work.title || 'Untitled Work'}</button>
++            </li>
++          ))}
++        </ul>
++      ) : null}
++      {error ? <p role="alert" className="p4r1-develop-attach-error">{error}</p> : null}
++    </section>
++  );
++}
+diff --git a/app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx b/app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx
+index 32f5483c0..323c1d093 100644
+--- a/app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx
++++ b/app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx
+@@ -119,7 +119,9 @@ export default function P4R1DevelopController() {
+   const [phase, setPhase] = useState<Phase>('loading');
+   const [context, setContext] = useState<ContextReady | null>(null);
+   const [message, setMessage] = useState<string | null>(null);
+-  const { phase: worksPhase, works } = useLivingWorks();
++  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
++  const [declaring, setDeclaring] = useState(false);
++  const [declareError, setDeclareError] = useState<string | null>(null);
+ 
+   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
+   const [summariesLoading, setSummariesLoading] = useState(true);
+@@ -326,6 +328,53 @@ export default function P4R1DevelopController() {
+     worksPhase, works, context?.manuscriptId ?? manuscriptId, carriedWorkId,
+   );
+   const work = currentWork(workContext);
++
++  // The author's own declaration that this writing belongs to a Work (the same routes the Studio Home uses). The Studio
++  // never infers it; after it lands the Works are re-read, the context resolves to that Work, and Talk becomes available.
++  const declareManuscript = useCallback(async (workId: string) => {
++    const manuscriptId = context?.manuscriptId ?? manuscriptId;
++    const response = await apiFetch('/api/sovereign/living-works/' + workId + '/expressions', {
++      method: 'POST',
++      headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({ expressionType: 'manuscript', expressionId: manuscriptId }),
++    });
++    if (!response.ok) throw new Error('declare:' + response.status);
++  }, [context?.manuscriptId, manuscriptId]);
++
++  const addToWork = useCallback(async (workId: string) => {
++    setDeclareError(null);
++    setDeclaring(true);
++    try {
++      await declareManuscript(workId);
++      await reloadWorks();
++    } catch {
++      setDeclareError('We couldn’t add this writing to that Work. Nothing was changed. Please try again.');
++    } finally {
++      setDeclaring(false);
++    }
++  }, [declareManuscript, reloadWorks]);
++
++  const makeWork = useCallback(async (title: string) => {
++    setDeclareError(null);
++    setDeclaring(true);
++    try {
++      const created = await apiFetch('/api/sovereign/living-works', {
++        method: 'POST',
++        headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ title }),
++      });
++      if (!created.ok) throw new Error('create:' + created.status);
++      const body = await created.json().catch(() => ({})) as { id?: string; work?: { id?: string }; livingWork?: { id?: string } };
++      const workId = body.id ?? body.work?.id ?? body.livingWork?.id;
++      if (!workId) throw new Error('create:id');
++      await declareManuscript(workId);
++      await reloadWorks();
++    } catch {
++      setDeclareError('We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.');
++    } finally {
++      setDeclaring(false);
++    }
++  }, [declareManuscript, reloadWorks]);
+   const workTitle = work?.title ?? context?.title ?? 'This Work';
+ 
+   useEffect(() => {
+@@ -1021,6 +1070,12 @@ export default function P4R1DevelopController() {
+     <P4R1DevelopView
+       manuscriptId={context.manuscriptId}
+       work={work}
++      workContextKind={workContext.kind}
++      allWorks={works}
++      declaring={declaring}
++      declareError={declareError}
++      onAddToWork={(id) => void addToWork(id)}
++      onMakeWork={(title) => void makeWork(title)}
+       workTitle={workTitle}
+       appearance={appearance}
+       field={field}
+diff --git a/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx b/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
+index 473b1841b..896abfac3 100644
+--- a/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
++++ b/app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx
+@@ -33,6 +33,7 @@ import {
+   verificationStanding,
+ } from '@/lib/writersStudio/sourceVerification';
+ import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
++import { DevelopAddToWork } from './DevelopAddToWork';
+ import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+ import {
+   DEFAULT_WORKING_STYLE,
+@@ -151,6 +152,12 @@ export type DevelopScopeChoice =
+ export interface P4R1DevelopViewProps {
+   manuscriptId: string;
+   work: LivingWork | null;
++  workContextKind: 'unknown' | 'none' | 'work' | 'ambiguous';
++  allWorks: readonly LivingWork[];
++  declaring: boolean;
++  declareError: string | null;
++  onAddToWork: (workId: string) => void;
++  onMakeWork: (title: string) => void;
+   workTitle: string;
+   appearance: Appearance;
+   field: DevelopField;
+@@ -1971,7 +1978,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
+               >
+                 Talk with MAIA about this
+               </button>
+-              {!props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
++              {!props.work && props.workContextKind === 'none' ? (
++                <DevelopAddToWork
++                  works={props.allWorks}
++                  busy={props.declaring}
++                  error={props.declareError}
++                  onAddToWork={props.onAddToWork}
++                  onMakeWork={props.onMakeWork}
++                />
++              ) : !props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
+             </div>
+             <div className="p4r1-develop-three-questions" aria-label="Three ways to begin">
+               {focusedQuestions.map((key) => {
+diff --git a/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx b/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx
+new file mode 100644
+index 000000000..750a94b63
+--- /dev/null
++++ b/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx
+@@ -0,0 +1,70 @@
++/** @jest-environment jsdom */
++import React, { act } from 'react';
++import { createRoot, type Root } from 'react-dom/client';
++import { readFileSync } from 'fs';
++import { join } from 'path';
++import { DevelopAddToWork } from '../DevelopAddToWork';
++
++(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
++const works = [{ id: 'w1', title: 'Elemental Alchemy' }, { id: 'w2', title: null }] as any;
++let root: Root, container: HTMLDivElement;
++const props = { works, busy: false, error: null as string | null, onAddToWork: jest.fn(), onMakeWork: jest.fn() };
++const render = (p = props) => act(() => root.render(React.createElement(DevelopAddToWork, p)));
++const btn = (name: string) => Array.from(container.querySelectorAll('button')).find(b => b.textContent === name) as HTMLButtonElement;
++const type = (value: string) => act(() => {
++  const input = container.querySelector('input') as HTMLInputElement;
++  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value);
++  input.dispatchEvent(new Event('input', { bubbles: true }));
++});
++beforeEach(() => { props.onAddToWork.mockReset(); props.onMakeWork.mockReset(); container = document.createElement('div'); document.body.append(container); root = createRoot(container); });
++afterEach(() => { act(() => root.unmount()); container.remove(); });
++
++describe('Develop: add this writing to a Work', () => {
++  it('says plainly what is missing and what will not happen', () => {
++    render();
++    expect(container.textContent).toContain('This writing isn’t part of a Work yet.');
++    expect(container.textContent).toContain('Nothing is read or changed.');
++  });
++  it('offers Make this a Work, and Add to a Work only when the author has Works', () => {
++    render(); expect(btn('Make this a Work')).toBeTruthy(); expect(btn('Add to a Work')).toBeTruthy();
++    render({ ...props, works: [] }); expect(btn('Add to a Work')).toBeUndefined();
++  });
++  it('Add to a Work lists the author’s Works and declares the one chosen (an untitled Work stays untitled)', () => {
++    render(); act(() => btn('Add to a Work').click());
++    const items = Array.from(container.querySelectorAll('ul button')).map(b => b.textContent);
++    expect(items).toEqual(['Elemental Alchemy', 'Untitled Work']);
++    act(() => (container.querySelectorAll('ul button')[0] as HTMLButtonElement).click());
++    expect(props.onAddToWork).toHaveBeenCalledWith('w1');
++  });
++  it('Make this a Work needs a name the author types; nothing is invented', () => {
++    render(); act(() => btn('Make this a Work').click());
++    const submit = () => container.querySelector('form button[type="submit"]') as HTMLButtonElement;
++    expect(submit().disabled).toBe(true);
++    act(() => { (container.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
++    expect(props.onMakeWork).not.toHaveBeenCalled();
++    type('  Elemental Alchemy  ');
++    expect(submit().disabled).toBe(false);
++    act(() => { (container.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
++    expect(props.onMakeWork).toHaveBeenCalledWith('Elemental Alchemy');
++  });
++  it('is inert while a declaration is in flight, and shows a failure without claiming success', () => {
++    render({ ...props, busy: true, error: 'We couldn’t add this writing to that Work. Nothing was changed. Please try again.' });
++    expect(btn('Make this a Work').disabled).toBe(true);
++    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Nothing was changed');
++  });
++});
++
++describe('wiring', () => {
++  const root = join(__dirname, '..');
++  const view = readFileSync(join(root, 'P4R1DevelopView.tsx'), 'utf8');
++  const controller = readFileSync(join(root, 'P4R1DevelopController.tsx'), 'utf8');
++  it('the panel replaces the dead-end message ONLY when no Work declares the writing', () => {
++    expect(view).toMatch(/!props\.work && props\.workContextKind === 'none' \? \(\s*<DevelopAddToWork/);
++    expect(view).toContain('could not be confirmed'); // unknown/ambiguous keep their honest message
++  });
++  it('declares through the existing expressions route as the manuscript, then re-reads the Works', () => {
++    expect(controller).toContain("'/api/sovereign/living-works/' + workId + '/expressions'");
++    expect(controller).toContain("expressionType: 'manuscript'");
++    expect(controller).toMatch(/await declareManuscript\(workId\);\s*await reloadWorks\(\);/);
++  });
++});

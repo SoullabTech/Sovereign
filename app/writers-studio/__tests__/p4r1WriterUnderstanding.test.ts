@@ -52,7 +52,10 @@ describe('C14 writer understanding', () => {
   it('feeds Develop, Attention and Focus through governed server-side context', () => {
     const workContext = read('lib/manuscript/ask/workContext.ts');
     const askReader = read('lib/manuscript/ask/askReader.ts');
-    const attention = read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts');
+    /* The synthesis moved, unchanged, from the attention-map route into the one function the route and the server-side pass both
+       call (relational architecture step 4, 2026-11-11). The route must still go through it. */
+    expect(read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts')).toContain('synthesizeAttentionMap(');
+    const attention = read('lib/writersStudio/studio/synthesizeAttentionMap.ts');
     const editorial = read('lib/manuscript/editorialRuntime/turn.ts');
 
     expect(workContext).toContain('writerUnderstandingContextForManuscript');

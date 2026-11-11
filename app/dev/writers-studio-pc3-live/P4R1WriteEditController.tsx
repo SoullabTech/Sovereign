@@ -96,6 +96,7 @@ interface ContextReady {
   manuscriptId: string;
   title: string | null;
   version: number;
+  draftRevision?: number | null;
   updatedAt: string;
   sections: RebuildSection[];
 }
@@ -2496,6 +2497,19 @@ export default function FlagshipWriteEditController() {
     router.push(studioPlaceHref(pathname, params?.toString() ?? '', place));
   }, [params, pathname, router]);
 
+  /* The writer chose "Show me options" on a place in MAIA's letter. Same room, same arrival act Develop uses: the carried observation
+     is re-verified against the current draft, the exact passage is held, and the passage desk opens. Nothing is proposed or changed
+     except by the writer's acts there. */
+  const onOpenPassIssue = useCallback((target: { sectionId: string; readingId: string; observationKey: string }) => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set(SECTION_PARAM, target.sectionId);
+    next.set(INSIGHT_READING, target.readingId);
+    next.set(INSIGHT_OBSERVATION, target.observationKey);
+    next.set('insightAction', 'try-revision');
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}`);
+  }, [params, pathname, router]);
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-p4-opening">
@@ -2542,6 +2556,7 @@ export default function FlagshipWriteEditController() {
             onHoldPassage={holdPassage}
             onMode={onMode}
             onStudioPlace={onStudioPlace}
+            onOpenPassIssue={onOpenPassIssue}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}

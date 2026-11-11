@@ -106,7 +106,7 @@ export function renderDiagnostic(
     }
 
     for (const force of impact.forces) {
-      const dir = force.applying ? 'APPLYING' : 'SEPARATING';
+      const dir = force.applying === null ? 'PHASE NOT ESTABLISHED' : force.applying ? 'APPLYING' : 'SEPARATING';
       lines.push(
         `  ↳ ${cap(force.transitPlanet)} ${force.aspectType.toUpperCase()} (orb: ${force.orb}°, ${dir})`,
         `     element:  ${force.transitElement}`,
@@ -165,11 +165,11 @@ function formatForcesNatural(forces: TransitForce[]): string {
   if (forces.length === 0) return '';
   if (forces.length === 1) {
     const f = forces[0];
-    const dir = f.applying ? 'moving in' : 'moving through';
+    const dir = f.applying === null ? 'at' : f.applying ? 'moving in' : 'moving through';
     return `${cap(f.transitPlanet)} is ${dir} ${f.aspectType} — ${f.effect}`;
   }
   const parts = forces.map(f => {
-    const dir = f.applying ? '(approaching)' : '(separating)';
+    const dir = f.applying === null ? '(phase not established)' : f.applying ? '(approaching)' : '(separating)';
     return `${cap(f.transitPlanet)} ${f.aspectType} ${dir}`;
   });
   return parts.join(', ') + ` — ${forces[0].effect}`;
@@ -230,7 +230,7 @@ export interface PractitionerImpactBlock {
     planet: string;
     aspect: string;
     orb: number;
-    timing: 'applying' | 'separating';
+    timing: 'applying' | 'separating' | 'not-established';
     element: string;
     effect: string;
   }>;
@@ -265,7 +265,7 @@ export function renderPractitioner(
         planet: f.transitPlanet,
         aspect: f.aspectType,
         orb: f.orb,
-        timing: (f.applying ? 'applying' : 'separating') as 'applying' | 'separating',
+        timing: (f.applying === null ? 'not-established' : f.applying ? 'applying' : 'separating') as 'applying' | 'separating' | 'not-established',
         element: f.transitElement,
         effect: f.effect,
       })),
@@ -302,7 +302,7 @@ export function renderPractitionerText(
     }
 
     for (const f of block.forces) {
-      const timing = f.timing === 'applying' ? 'building' : 'releasing';
+      const timing = f.timing === 'applying' ? 'building' : f.timing === 'separating' ? 'releasing' : 'phase not established';
       lines.push(`- ${cap(f.planet)} ${f.aspect} / ${f.orb}° orb / ${timing} — ${f.effect}`);
     }
 
