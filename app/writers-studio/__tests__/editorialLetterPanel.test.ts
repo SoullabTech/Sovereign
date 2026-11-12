@@ -271,3 +271,15 @@ describe('step 5: the letter opens with her reading of the book, as a question',
     expect(p.onShowSection).toHaveBeenCalledWith('s1');
   });
 });
+
+
+describe('a letter that could not be gathered (EA walk 2026-11-12)', () => {
+  it('⭐ says she read the book and the letter failed, not that the reading failed; offers to try the letter again', async () => {
+    fetchRun.mockResolvedValue({ id: 'run1', draftRevision: 5, state: 'failed', done: 9, total: 9, lens: null, refusal: 'synthesis:attention_map_unbound_evidence', letterId: null, createdAt: 'now' });
+    await mount();
+    expect(host.textContent).toContain('I’ve read your book. My letter isn’t ready yet.');
+    expect(host.textContent).toContain('I read all 9 lenses of your book, but I couldn’t gather them into a letter');
+    expect(host.textContent).not.toContain('I couldn’t finish the');
+    expect(q('[data-letter-continue]')?.textContent).toBe('Try the letter again');
+  });
+});
