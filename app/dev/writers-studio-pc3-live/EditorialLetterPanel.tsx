@@ -223,11 +223,12 @@ export function EditorialLetterPanel(props: {
   }
   const runEnded = run && (run.state === 'failed' || run.state === 'stopped') ? (
     <p role="note" data-letter-run-ended={run.state} style={{ margin: '6px 0 0', fontSize: 12 }}>
-      {run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
+      {run.state === 'failed' && (run.refusal ?? '').startsWith('synthesis') ? `I read all ${run.total} lenses of your book, but I couldn’t gather them into a letter this time. My readings are kept, so trying again only redoes that last step.`
+        : run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
         : run.state === 'stopped' && run.refusal === 'permission_withdrawn' ? 'I stopped reading because you withdrew my permission to read the whole book.'
         : run.state === 'stopped' && run.refusal === 'draft_changed' ? 'I stopped because the book changed while I was reading.'
         : `I couldn’t finish the ${run.lens ?? ''} reading (${run.done} of ${run.total} were done; they are kept).`}
-      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>Continue</button>
+      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>{run.state === 'failed' && (run.refusal ?? '').startsWith('synthesis') ? 'Try the letter again' : 'Continue'}</button>
     </p>
   ) : null;
   if (!pass) {
@@ -236,7 +237,9 @@ export function EditorialLetterPanel(props: {
         <p style={{ margin: 0 }}>
           {draftRevision === null
             ? 'I can’t establish your current draft safely just now, so I haven’t read it.'
-            : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
+            : run && run.done >= run.total
+              ? 'I’ve read your book. My letter isn’t ready yet.'
+              : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
         </p>
         {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}>{error}</p> : null}
         {runEnded}

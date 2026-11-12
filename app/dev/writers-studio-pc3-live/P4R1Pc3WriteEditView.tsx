@@ -52,7 +52,7 @@ import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
 import StudioFirstPageMaia from './StudioFirstPageMaia';
-import { firstPageEligible } from '@/lib/writersStudio/inspirationOpening';
+import { firstPageEligible, letterOfferVisible } from '@/lib/writersStudio/inspirationOpening';
 import CraftsmansTableR1 from './CraftsmansTableR1';
 import CraftFocusToolsR1 from './CraftFocusToolsR1';
 import MaiaCraftCompanionR1, { type MaiaCraftComposerPort, type MaiaCraftComposerSnapshot } from './MaiaCraftCompanionR1';
@@ -1256,17 +1256,24 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </div>
         {/* MAIA's letter and the walk: beside the manuscript, never instead of it. It stays mounted while the writer talks with
             MAIA, so the place they were on in the walk is still theirs when they come back. */}
-        <div hidden={workConversationOpen} data-write-letter="true" style={{ marginBottom: 12 }}>
-          <EditorialLetterPanel
-            manuscriptId={props.context.manuscriptId}
-            sections={props.context.sections}
-            draftRevision={props.context.draftRevision ?? null}
-            onShowSection={go}
-            onEditOptions={(target) => props.onOpenPassIssue?.(target)}
-            onTalk={(words) => openWorkConversation(words)}
-            onRead={() => setCoverageEpoch((n) => n + 1)}
-          />
-        </div>
+        {/* S5 (F16): no "Read my book" when there is no book yet; on a first page, B's "Show MAIA this page" is the offer.
+            Not mounted at all then, so reading by herself (when switched on) cannot start on an empty Work or a first page. */}
+        {letterOfferVisible({
+          sections: props.context.sections.length,
+          bodies: props.context.sections.map((section) => props.writing.bodyOf(section.draftSectionId)),
+        }) ? (
+          <div hidden={workConversationOpen} data-write-letter="true" style={{ marginBottom: 12 }}>
+            <EditorialLetterPanel
+              manuscriptId={props.context.manuscriptId}
+              sections={props.context.sections}
+              draftRevision={props.context.draftRevision ?? null}
+              onShowSection={go}
+              onEditOptions={(target) => props.onOpenPassIssue?.(target)}
+              onTalk={(words) => openWorkConversation(words)}
+              onRead={() => setCoverageEpoch((n) => n + 1)}
+            />
+          </div>
+        ) : null}
         {workConversationOpen ? (
           workConversation
         ) : railSelectionId && railSection ? (

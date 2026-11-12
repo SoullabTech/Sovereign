@@ -49,6 +49,8 @@ export interface WholeManuscriptAttentionMap {
   items: readonly AttentionItem[];
   /** step 5: the letter's opening, verified by the server (see lib/writersStudio/studio/letterOpening.ts). Absent on older letters. */
   opening?: import('./letterOpening').LetterOpening | null;
+  /** items the synthesis proposed without any supplied frozen evidence, removed before the writer sees the map (never shown) */
+  droppedUnbound?: number;
 }
 
 export type AttentionMapValidation =
