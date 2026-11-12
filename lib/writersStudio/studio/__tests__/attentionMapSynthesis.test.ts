@@ -57,6 +57,13 @@ describe('attention-map synthesis contract', () => {
     expect(map.droppedUnbound).toBeUndefined();
   });
 
+  it('⭐ a half-written item (cut off, no evidenceRefs) is dropped, never crashes the letter', () => {
+    const cut = { ...result, items: [result.items[0]!, { label: 'Cut off mid', notice: 'The' } as never] } as AttentionSynthesisResult;
+    const map = buildAttentionMap(commission, cut);
+    expect(map.items).toHaveLength(1);
+    expect(map.droppedUnbound).toBe(1);
+  });
+
   it('refuses a synthesis in which nothing is evidence-bound', () => {
     const bad: AttentionSynthesisResult = {
       ...result,
@@ -80,5 +87,14 @@ describe('attention-map synthesis contract', () => {
     expect(system).toMatch(/begin-here, next, later, watch/);
     expect(system).toMatch(/Do not emit numeric scores, grades, severity, confidence, priority/);
     expect(system).toMatch(/Do not propose replacement prose/);
+  });
+});
+
+describe('the synthesis call itself (source)', () => {
+  const SRC = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'lib/writersStudio/studio/synthesizeAttentionMap.ts'), 'utf8');
+  it('⭐ a reply cut off at the ceiling is refused by name, before anything is built from it', () => {
+    expect(SRC).toMatch(/SYNTHESIS_MAX_TOKENS = 32_000/);
+    expect(SRC.indexOf("error: 'attention_map_incomplete'")).toBeLessThan(SRC.indexOf('buildAttentionMap(commission'));
+    expect(SRC).toMatch(/stop === 'max_tokens'/);
   });
 });

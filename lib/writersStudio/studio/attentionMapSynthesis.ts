@@ -126,8 +126,9 @@ export function buildAttentionMap(
      removed and COUNTED (droppedUnbound); only a synthesis with no evidence-bound item at all is refused. Nothing is invented or
      re-attributed to fill a gap. */
   let droppedUnbound = 0;
+  if (!Array.isArray(result?.items)) throw new Error('attention_synthesis_unreadable');
   const reboundItems = result.items
-    .map((item) => ({ ...item, evidenceRefs: reboundEvidenceRefs(commission, item).filter((ref) => canonical.has(ref)) }))
+    .map((item) => ({ ...item, evidenceRefs: Array.isArray(item?.evidenceRefs) ? reboundEvidenceRefs(commission, item).filter((ref) => typeof ref === 'string' && canonical.has(ref)) : [] }))
     .filter((item) => {
       if (item.evidenceRefs.length > 0) return true;
       droppedUnbound += 1;
