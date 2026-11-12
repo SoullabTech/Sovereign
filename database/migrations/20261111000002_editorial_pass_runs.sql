@@ -36,7 +36,22 @@ BEGIN
 END $$;
 DROP TRIGGER IF EXISTS editorial_pass_runs_no_update ON editorial_pass_runs;
 CREATE TRIGGER editorial_pass_runs_no_update BEFORE UPDATE ON editorial_pass_runs FOR EACH ROW EXECUTE FUNCTION ws_pass_run_append_only();
+-- The events trigger admits exactly one UPDATE: the letter_id foreign key's own ON DELETE SET NULL (issued from within the
+-- referential-action trigger, letter_id going to NULL, every other column unchanged). Without it, deleting a letter, erasing
+-- its manuscript or deleting the member's account was refused once a pass had recorded its letter (found 2026-11-11, before
+-- this file was ever applied; tests/constitutional/ws-delete/dynamic/run-pass-run-letter-erasure-pg16.sh). Every other UPDATE
+-- is refused.
+CREATE OR REPLACE FUNCTION ws_pass_run_event_append_only() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF pg_trigger_depth() > 1
+     AND OLD.letter_id IS NOT NULL
+     AND NEW.letter_id IS NULL
+     AND (to_jsonb(NEW) - 'letter_id') = (to_jsonb(OLD) - 'letter_id') THEN
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION '% is append-only', TG_TABLE_NAME;
+END $$;
 DROP TRIGGER IF EXISTS editorial_pass_run_events_no_update ON editorial_pass_run_events;
-CREATE TRIGGER editorial_pass_run_events_no_update BEFORE UPDATE ON editorial_pass_run_events FOR EACH ROW EXECUTE FUNCTION ws_pass_run_append_only();
+CREATE TRIGGER editorial_pass_run_events_no_update BEFORE UPDATE ON editorial_pass_run_events FOR EACH ROW EXECUTE FUNCTION ws_pass_run_event_append_only();
 
 COMMIT;
