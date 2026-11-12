@@ -205,7 +205,9 @@ export const PRO_ASK_VIEWS = {
   'chart-views': { phrase: 'alternative views of the chart (sidereal, harmonic, chart points)', sees: false },
   'house-wheel': { phrase: 'the Spiralogic house wheel', sees: false },
   ephemeris: { phrase: 'the graphical ephemeris', sees: false },
-  'astro-map': { phrase: 'the astro map and relocated chart', sees: false },
+  // The astro map, not "and relocated chart": the page does not say whether a
+  // place was chosen, so MAIA must not assume a relocation happened.
+  'astro-map': { phrase: 'the astro map (whether they have relocated the chart to a place is not known)', sees: false },
   vedic: { phrase: 'the Vedic (sidereal) view of the chart', sees: false },
   mayan: { phrase: 'the Mayan view of the chart', sees: true },
   'tradition-report': { phrase: 'the written report of what tradition says about the placements', sees: true },

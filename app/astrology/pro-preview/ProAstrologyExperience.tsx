@@ -110,6 +110,8 @@ interface Tool { id: ToolId; label: string; icon: LucideIcon; tabs: ToolTab[] }
 
 const STAGE_WIDTH_KEY = 'astro-pro.stage-width';
 const RAIL_WIDTH = 86;
+/** At most this many tools sit on the desk: the one in hand and two folded below it. */
+const DESK_LIMIT = 3;
 const STAGE_MIN = 280;
 const WORK_MIN = 360;
 
@@ -501,7 +503,9 @@ function Cockpit() {
 
   function openTool(id: ToolId, tab?: string) {
     // One tool in hand: the others stay on the desk, folded to their header bars.
-    setOpenTools((current) => [id, ...current.filter((t) => t !== id)]);
+    // The desk holds a few tools at most; the oldest leaves it rather than piling
+    // up below. A panel's place is kept (usePanelState), so reopening loses nothing.
+    setOpenTools((current) => [id, ...current.filter((t) => t !== id)].slice(0, DESK_LIMIT));
     setFolded((current) => {
       const next: Partial<Record<ToolId, boolean>> = {};
       for (const t of [id, ...openTools]) next[t] = t !== id;
@@ -520,7 +524,8 @@ function Cockpit() {
   }
   function toggleTool(id: ToolId) {
     // From the conversation, a tool on the rail is being asked for, never dismissed.
-    if (openTools.includes(id) && !dock?.open) closeTool(id);
+    // Only the tool already in hand closes; one folded further down is brought forward.
+    if (openTools.includes(id) && !dock?.open && lead === id && !folded[id]) closeTool(id);
     else openTool(id);
   }
 
@@ -651,7 +656,7 @@ function Cockpit() {
         render: () => privateChart && <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={chartLabel} questions={INQUIRY} /> },
     ] },
     { id: 'research', label: 'Research', icon: FlaskConical, tabs: [
-      { id: 'research', label: 'Research', view: 'research', render: () => <ProResearchWorkbench chart={privateChart} /> },
+      { id: 'research', label: 'Research', view: 'research', render: () => <ProResearchWorkbench chart={privateChart} subjectLabel={savedSubject?.label ?? null} /> },
     ] },
     { id: 'study', label: 'Study', icon: GraduationCap, tabs: [
       { id: 'study', label: 'Study', view: 'study', render: () => <ProStudyWorkbench chart={privateChart} /> },
@@ -787,11 +792,8 @@ function Cockpit() {
       </header>
 
       {shareOpen && privateChart && savedSubject && (
-        <section className={cockpit.method} aria-label={`Share ${savedSubject.label}’s chart`}>
-          <p>
-            The client’s page shows this chart and its transits, view-only, with no account needed. “View” opens
-            exactly what they will see. The same link is under Saved charts.
-          </p>
+        <section className={`${cockpit.method} ${cockpit.sharePopover}`} aria-label={`Share ${savedSubject.label}’s chart`}>
+          <p>“View” opens exactly what they will see. The same link is under Saved charts.</p>
           <ProChartSharePanel chartId={savedSubject.id} label={savedSubject.label} onClose={() => setShareOpen(false)} />
         </section>
       )}

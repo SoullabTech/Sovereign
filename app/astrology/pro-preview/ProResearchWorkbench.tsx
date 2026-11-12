@@ -12,7 +12,11 @@ import styles from './pro-research-workbench.module.css';
 
 type OrbSetting = 'all' | '1' | '3' | '5' | '8';
 
-export default function ProResearchWorkbench({ chart }: { chart: BirthChart | null }) {
+export default function ProResearchWorkbench({ chart, subjectLabel = null }: {
+  chart: BirthChart | null;
+  /** The saved (client) chart's label; null when the astrologer's own chart is open. */
+  subjectLabel?: string | null;
+}) {
   const [orbSetting, setOrbSetting] = useState<OrbSetting>('all');
   const snapshot = useMemo(() => chart ? createProResearchSnapshot(chart) : null, [chart]);
   const orb = orbSetting === 'all' ? null : Number(orbSetting);
@@ -33,7 +37,7 @@ export default function ProResearchWorkbench({ chart }: { chart: BirthChart | nu
       ) : (
         <div className={styles.privateFacts}>
           <p className={styles.disclosure} role="note">
-            This is the current authorized private chart only. House placement may follow a
+            These are the figures for {subjectLabel ? <>{subjectLabel}’s chart</> : 'your own chart'}, the chart now open. House placement may follow a
             separate 5° pre-angular-cusp convention; geometric house membership is shown alongside it.
             Astronomical accuracy is not yet independently certified.
           </p>
