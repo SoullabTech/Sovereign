@@ -81,6 +81,31 @@ describe('F8 · the same MAIA answers', () => {
   });
 });
 
+describe('F12/F13 · B: "Show MAIA this page"', () => {
+  const PAGE = 'She talked to the tomatoes like they owed her an apology. After the funeral nobody went out there.';
+  it('reads only the page, through askMaia with the first-page moment, and returns a reply that quotes it exactly', async () => {
+    ask.mockResolvedValue({ ok: true, answer: 'This line stopped me: “She talked to the tomatoes like they owed her an apology.” Is this the start of something?', seen: 'x', seenForQuotes: 'x', provenance: {} });
+    const res = await POST(post({ answer: PAGE, moment: 'first_page' }));
+    expect(res.status).toBe(200);
+    expect(ask.mock.calls[0][0]).toEqual({ kind: 'arrival', sanctuary: false, moment: 'first_page' });
+    expect(ask.mock.calls[0][1]).toEqual([]);
+    expect(ask.mock.calls[0][2]).toBe(PAGE);
+  });
+  it('never shows a reply that misquotes the writer', async () => {
+    ask.mockResolvedValue({ ok: true, answer: 'This stopped me: “She whispered to the tomatoes every morning.”', seen: 'x', seenForQuotes: 'x', provenance: {} });
+    const res = await POST(post({ answer: PAGE, moment: 'first_page' }));
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.reply).toBeUndefined();
+    expect(body.refusal).toBe('quote_unverified');
+  });
+  it('takes no history for a page, accepts a page up to the first-page size, and refuses an unknown moment', async () => {
+    expect((await POST(post({ answer: PAGE, moment: 'first_page', history: [{ speaker: 'author', body: 'x' }] }))).status).toBe(400);
+    expect((await POST(post({ answer: PAGE, moment: 'chapter' }))).status).toBe(400);
+    expect((await POST(post({ answer: 'a'.repeat(12001), moment: 'first_page' }))).status).toBe(413);
+  });
+});
+
 describe('F7 · the opening conversation is never kept (founder Q1)', () => {
   it('the route cannot write: it imports no database, store, thread, or keep module', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'route.ts'), 'utf8');
@@ -89,6 +114,7 @@ describe('F7 · the opening conversation is never kept (founder Q1)', () => {
       '@/lib/auth/getMemberFromRequest',
       '@/lib/manuscript/ask/askReader',
       '@/lib/writersStudio/betaAccessServer',
+      '@/lib/writersStudio/inspirationOpening',
       'next/server',
     ]);
     expect(src).not.toMatch(/\bquery\s*\(|INSERT|UPDATE|console\.(log|info)\([^)]*answer/);

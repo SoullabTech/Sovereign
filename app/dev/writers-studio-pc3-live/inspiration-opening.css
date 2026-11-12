@@ -60,5 +60,30 @@
 .wsio-facet-q { margin-top: 8px; }
 .wsio-talk { display: grid; gap: 14px; width: 100%; }
 .wsio-turn { display: grid; gap: 6px; }
+/* B · The First Page: the blank-page card becomes an invitation line on the page itself. */
+.p4r1-root .p4r1-blank-arrival.p4r1-blank-arrival--invitation {
+  border: 0; background: transparent; box-shadow: none; padding: 0 6px; display: grid; gap: 10px; justify-items: start;
+  /* Below the section heading, where the first sentence will go (the card it replaces sat over the heading). */
+  top: 196px;
+}
+@media (max-width: 900px) { .p4r1-root .p4r1-blank-arrival.p4r1-blank-arrival--invitation { top: 170px; } }
+.p4r1-root .p4r1-blank-invitation {
+  background: none; border: 0; padding: 0; text-align: left; cursor: text;
+  font: italic 400 21px/1.5 var(--fr-serif-stack); color: var(--fr-muted); max-width: 38ch;
+}
+.p4r1-root .p4r1-blank-presence { margin: 0; font: 13px/1.5 var(--fr-sans-stack); color: var(--fr-muted); }
+.p4r1-root .p4r1-blank-arrival-ways { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.p4r1-root .p4r1-blank-arrival-ways > button {
+  background: none; border: 0; padding: 2px 0; cursor: pointer; color: var(--fr-ink2);
+  font: 13px/1.4 var(--fr-sans-stack); text-decoration: underline; text-underline-offset: 3px;
+}
+.p4r1-root .p4r1-blank-arrival-ways > .p4r1-blank-primary { color: var(--fr-title); }
+.p4r1-root .p4r1-blank-arrival-ways > button:hover { color: var(--fr-title); }
+.wsio-first-page { display: grid; gap: 10px; padding: 12px 0; }
+.wsio-first-page blockquote { margin: 0; }
+.wsio-first-page-reply { font-family: var(--fr-serif-stack, Georgia, serif); font-size: 17px; line-height: 1.55; white-space: pre-wrap; }
+/* C · Bring What You Carry: MAIA's question sits above the import, quietly. */
+.wsio-carry-invite { max-width: 760px; margin: 24px auto 0; padding: 0 0 18px; display: grid; gap: 8px; border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+.wsio-carry-note { max-width: 760px; margin: 18px auto 0; }
 .wsio-optional { font-size: 12.5px; opacity: .55; margin-left: 6px; }
 .wsio button:focus-visible { outline: 2px solid #c9a43a; outline-offset: 2px; }
