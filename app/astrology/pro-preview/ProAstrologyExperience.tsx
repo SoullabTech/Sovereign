@@ -853,6 +853,7 @@ function Cockpit() {
                 <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
               </div>
               <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
+                centreLabel={savedSubject ? savedSubject.label : 'Your chart'}
                 showAspects={showAspects} showHouseLines={showHouseLines}
                 maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
                 outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />

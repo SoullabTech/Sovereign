@@ -27,6 +27,17 @@ interface Props {
   /** Optional second outer ring, for a triwheel. */
   outerBodies2?: readonly TransitBody[];
   outerLabel2?: string;
+  /** The words in the wheel's centre. Defaults to "Your chart"; Pro passes the
+   *  client's label when a saved (client) chart is open. */
+  centreLabel?: string;
+}
+
+/** Fits a label into the centre circle: shorter labels stay large, longer ones shrink, then truncate. */
+function centreText(label: string): { text: string; size: number } {
+  const clean = label.trim() || 'Your chart';
+  if (clean.length <= 13) return { text: clean, size: 30 };
+  if (clean.length <= 19) return { text: clean, size: 22 };
+  return { text: `${clean.slice(0, 18).trimEnd()}…`, size: 22 };
 }
 
 const OUTER_RADIUS = 352;
@@ -62,7 +73,9 @@ export function CelestialChartWheel({
   outerLabel = 'Outer ring',
   outerBodies2,
   outerLabel2 = 'Second ring',
+  centreLabel = 'Your chart',
 }: Props) {
+  const centre = centreText(centreLabel);
   const outerMarkers = useMemo(() => outerBodies?.length ? layoutOuter(outerBodies) : [], [outerBodies]);
   const outerMarkers2 = useMemo(() => outerBodies2?.length ? layoutOuter(outerBodies2) : [], [outerBodies2]);
   const hasOuter = outerMarkers.length > 0;
@@ -277,7 +290,7 @@ export function CelestialChartWheel({
           <g data-centre-label>
             <circle cx={center} cy={center} r="111" fill="#0b1c2d" stroke="#627989" strokeWidth="1.5" opacity=".94" />
             <text x={center} y="323" textAnchor="middle" fontSize="11" fill="#cbb88f" letterSpacing="3">SOULLAB</text>
-            <text x={center} y="359" textAnchor="middle" fontSize="30" fontFamily="Georgia,serif" fill="#f2e7d5">Your chart</text>
+            <text x={center} y="359" textAnchor="middle" fontSize={centre.size} fontFamily="Georgia,serif" fill="#f2e7d5">{centre.text}</text>
             <text x={center} y="388" textAnchor="middle" fontSize="12" fill="#a7b5be">Not a verdict</text>
           </g>
         )}

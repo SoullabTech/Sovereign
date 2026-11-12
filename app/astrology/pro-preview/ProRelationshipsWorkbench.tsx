@@ -65,7 +65,8 @@ export default function ProRelationshipsWorkbench({ chart }: { chart: BirthChart
           <p className={styles.disclaimer}>
             {lens.sourceNote} Neither these questions nor the aspects establish compatibility,
             predict outcomes, score relationships, or establish applying/separating phase.
-            No chart data is transmitted to MAIA.
+            This page sends nothing to MAIA. If you ask MAIA from here, she receives this
+            chart’s calculated facts, never a name or birth details, and nothing is kept.
           </p>
         </div>
       )}
