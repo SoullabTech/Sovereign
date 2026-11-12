@@ -55,6 +55,11 @@ export type ShellProps = {
    * Omitted by every S1/S2 state, whose output is unchanged.
    */
   canvas?: boolean;
+  /**
+   * The Spark door (JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01). On a writer's first visit the rooms stay out of
+   * sight until the writer's first act: only the Soullab mark remains. Omitted everywhere else, so nothing else changes.
+   */
+  threshold?: boolean;
 };
 
 type Side = 'left' | 'right';
@@ -232,7 +237,14 @@ export function Shell(props: ShellProps) {
       data-canvas={props.canvas === undefined ? undefined : canvas ? 'full' : 'resting'}
       style={style}
     >
-      {canvas ? null : (
+      {canvas ? null : props.threshold ? (
+        <header className="fr-bar" data-region="topbar" data-threshold="">
+          <a className="fr-brand" href="/home" aria-label="Return to Soullab Home" title="Soullab Home">
+            <SoullabMark />
+            <span>Soullab</span>
+          </a>
+        </header>
+      ) : (
         <header className="fr-bar" data-region="topbar">
           {/* The mark is the door back to Soullab Home, as in every other Studio
               shell. The "Home" tab below is the Studio's own home room. */}
