@@ -282,6 +282,9 @@ export async function POST(
   /* WS-WHOLE-BOOK-CONVERSATION (founder approval 2026-11-10, D1): the carried account's scope is DECLARED by the writer's "About" control.
      ⛔ Never inferred from the question text: anything but an explicit 'whole_book' is the ordinary chapter scope. */
   const carryScope: CarryScope = body.carryScope === 'whole_book' ? 'whole_book' : 'here';
+  /* WS-STUDIO-GUIDE-WHOLE-01 (2026-11-12): the conversation says whether its room can carry out MAIA's acting offers, so she is told only
+     about buttons that will appear. It changes what she may OFFER, never what anyone may do: every click is gated where it lands. */
+  const roomActs = body.roomActs === true;
 
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -427,7 +430,7 @@ export async function POST(
   if (check.anchor.on === 'work') {
     return workTurn({ keep: studioPosture.witness, manuscriptId: id, memberId, anchor: check.anchor, existing,
                       question, sectionId: bodySectionId, carryScope, posture: turnPosture, postureKnown: postureDeclared,
-                      responseStyle, teachingAnchor });
+                      responseStyle, teachingAnchor, roomActs });
   }
 
   if (!reading) {
@@ -597,6 +600,8 @@ async function workTurn(input: {
   teachingAnchor?: TeachingAnchor;
   /** WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope for her carried account. */
   carryScope?: CarryScope;
+  /** The conversation's room can carry out MAIA's acting offers (the Develop stage). */
+  roomActs?: boolean;
 }): Promise<NextResponse> {
   const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown, responseStyle, teachingAnchor } = input;
   const carryScope: CarryScope = input.carryScope ?? 'here';
@@ -748,7 +753,8 @@ async function workTurn(input: {
     sanctuary: posture.sanctuary === true,
     /* WS-CRAFT-CONVENTIONS-01 · G-3: the writer's working style and a pressed Teach me reach the Work conversation, as they do the observation dialogue. */
     ...(responseStyle ? { responseStyle } : {}),
-    ...(teachingAnchor ? { teachingAnchor } : {}) };
+    ...(teachingAnchor ? { teachingAnchor } : {}),
+    ...(input.roomActs ? { roomActs: true } : {}) };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that

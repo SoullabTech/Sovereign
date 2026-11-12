@@ -471,7 +471,8 @@ export async function runEditorialTurn(
       input.opening ? conversationOpeningInstruction() : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
-      studioGuideInstruction(),
+      // In Sanctuary it leaves out every tool that reads, keeps or plans (walk 2026-11-09, defect 5).
+      studioGuideInstruction({ sanctuary: input.sanctuary }),
       // Design 1B: MAIA may offer one control as a marker; the writer clicks it.
       studioActionsInstruction('passage-focus'),
       // Founder 2026-11-05: a closed question may carry two or three one-click answers.

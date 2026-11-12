@@ -1,6 +1,7 @@
 import { runStructured } from '@/lib/ai/structured/router';
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
+import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 
 export const REVIEW_DISCUSS_READER_VERSION = 'review-discuss-r2-2-v1';
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
@@ -39,6 +40,9 @@ function systemFor(ctx: DevelopmentalAskContext): string {
     '',
     'TEMPORAL POSTURE:',
     location,
+    '',
+    // WS-STUDIO-GUIDE-WHOLE-01 (2026-11-11): Review → Discuss is a Studio conversation too, so "how do I…" gets the real control here.
+    studioGuideInstruction(),
   ].join('\n');
 }
 

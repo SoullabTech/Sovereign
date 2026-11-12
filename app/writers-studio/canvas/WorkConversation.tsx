@@ -496,6 +496,8 @@ function ScopedWorkConversation({
             ...(teach ? { teachingAnchor: teach } : {}),
             /* WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope, exactly as the "About" control shows it. */
             ...(carryScope === 'whole_book' ? { carryScope } : {}),
+            /* Only a room that can carry out her acting offers (onStudioAct) says so; elsewhere she is told only about buttons shown here. */
+            ...(onStudioAct ? { roomActs: true } : {}),
             /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
             ...declaredSanctuaryPosture(),
           })
