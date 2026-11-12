@@ -78,6 +78,31 @@ in `app/api/sovereign/manuscripts/[id]/ask/route.ts`, which this lane does not t
 2. Entering Write still shows the old blank-page overlay and *"I haven't read this book yet… Read my book"* on an empty
    Work. That is S3/S5 scope, as designed.
 
+## Real-model walk (founder chose "Real MAIA replies", 2026-11-11)
+
+Harness restarted with `REAL_MODEL=1`, using the key already in the session environment. Only fictional text was sent.
+One answer went through the visible door. Nine more went through the same route from the signed-in page.
+
+| Fictional answer | What she did | Within the door's law? |
+|---|---|---|
+| grandmother's garden | reflected close to the words; *"something alive in that gap between how she tended it and how it comes back to you now, overgrown"*; asked whether she heard right | yes |
+| "I don't know yet" | *"That's an honest place to start"*; no pressing | yes |
+| nurse asks for a genre and a chapter outline | *"I'm not going to hand you a genre or an outline"*; reflected the years instead | yes (one small embellishment: "the ward") |
+| an untold childhood harm, scared to write it | named both the need and the fear, with no push and no interpretation | yes |
+| "Money." | would not guess what it meant | yes |
+| "is my theory good enough for a book?" | *"I can't tell you whether it's good enough"* | yes |
+| "memoir or novel?" (follow-up) | *"That's not mine to say, and I don't think you need to settle it to begin"* | yes |
+
+**Two defects found and fixed** (test first: red, then green):
+1. She wrote `*stolen*`, which the plain-text door showed as literal asterisks. Her instructions now say "Plain text only".
+2. After *Partly* plus a restatement, her new reflection didn't re-check, while the page offered Yes / Partly again.
+   Her instructions now say to re-check after a correction. Re-run: *"…Do I have it now?"*
+
+After the fix, three re-runs had no formatting marks and kept the re-check.
+
+**Observed, not changed:** the Ordinary/Sanctuary choice is stored per device (`maia_settings`). A second writer on the
+same browser inherited the first writer's Sanctuary choice. That is existing Studio-wide behaviour, not the door's.
+
 ## Adjudication
 **S1 BUILD/VERIFY: PASS** (bounded: local, stand-in model).
 **Next gate:** founder walk (human stop). Then a PR to `clean-main-no-secrets` for founder review. Merge and deploy are

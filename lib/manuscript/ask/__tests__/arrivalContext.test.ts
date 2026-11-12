@@ -37,6 +37,13 @@ it('the arrival frame forbids defining, categorizing, outlining, grading and cla
   }
 });
 
+it('walk 2026-11-11 (real model): a correction gets a fresh check, and no formatting marks reach the page', () => {
+  // After "Partly" + a restatement the page shows Yes / Partly / Not quite again, so her reply must ask again.
+  expect(ARRIVAL_STANDING).toContain('When they correct you or say it again differently');
+  // She wrote *stolen*; the door renders plain text, so asterisks showed literally.
+  expect(ARRIVAL_STANDING).toContain('Plain text only');
+});
+
 it('a later turn in the opening is grounded in the history and gets a different hash than a first turn', async () => {
   await askMaia({ kind: 'arrival', sanctuary: false }, [{ speaker: 'author', body: 'a garden' }, { speaker: 'maia', body: 'I hear a garden.' }], 'and her hands');
   const req = mockRun.mock.calls[0][0] as { messages: { role: string }[] };
