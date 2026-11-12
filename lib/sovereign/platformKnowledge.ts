@@ -26,9 +26,22 @@
  *   not sentences to speak.
  */
 
-export const PLATFORM_KNOWLEDGE_VERSION = '0.5.1';
+export const PLATFORM_KNOWLEDGE_VERSION = '0.6.0';
 export const PLATFORM_KNOWLEDGE_LAST_VERIFIED = '2026-08-28';
 export const PLATFORM_FIELD_ATTUNEMENT_LAST_VERIFIED = '2026-09-27';
+export const PLATFORM_ASTROLOGY_LAST_VERIFIED = '2026-11-11';
+// 0.6.0 (2026-11-11): Astrology corrected and Astrology Pro added. The map listed
+// Astrology as generally available from the side rail, but since the founder's
+// 2026-10-30 admission the room is testers-only (lib/astrology/testerGate.ts) and
+// non-testers see no door, so MAIA could direct a member to a door they do not
+// have. Astrology moves to "roles or invitations"; Astrology Pro (private preview,
+// individual grants, lib/astrology/proAccess.ts) is added beside it. How the
+// workstation's controls work is NOT in this map: it lives in
+// lib/astrology/proGuide.ts and is given only to MAIA inside Pro, so it costs
+// other members' conversations nothing. Verified against the Pro cockpit source and a local walk on 2026-11-11;
+// evidence in docs/architecture/PLATFORM_KNOWLEDGE_ASTROLOGY_EVIDENCE_2026-11-11.md.
+// Only the Astrology entries were re-verified, so PLATFORM_KNOWLEDGE_LAST_VERIFIED
+// stays 2026-08-28.
 // 0.5.1 (2026-09-27): added PLATFORM_FIELD_ATTUNEMENT — constitutional
 // self-knowledge about one MAIA / many field postures. The feature/reachability
 // map itself was not comprehensively re-audited in this act, so
@@ -97,7 +110,6 @@ Areas generally available to members:
 • Changes — a place to notice and reflect on transitions over time. Reached by the Changes button on the main screen. Common doorway: "something in my life is shifting."
 • Decisions — a space for laying out possibilities and clarifying direction when something needs deciding. It never decides for the member — they do. Reached by the Decisions button on the main screen. Common doorway: "I don't know what to do," "I'm torn between options."
 • Ideas — capture and development of emerging thoughts so they aren't lost. Reached from the side rail (it may sit folded inside a group there). Common doorway: "I have an idea I don't want to lose."
-• Astrology — archetypal timing and larger patterns as one lens among many; exploratory, never predictive authority. Reached from the Astrology icon in the side rail. Entering birth details there opens an archetypal blueprint page — that page belongs to Astrology.
 • Library — a wisdom archive the member can ask questions of (psychology, symbolism, practice traditions), with sources named. [No navigation directions for the Library until its member path is runtime-verified — navigation instructions age faster than purpose descriptions.]
 • Help, User Guide, and Soullab Guides — Help opens a written User Guide and short practical videos about how this place works. Reached from the Help control on the main screen.
 • Now What? — a guided way of finding a next step when someone is unsure. Reached from the compass icon ("Find my next step") at the bottom of the side rail, which opens the Now What? room.
@@ -107,6 +119,10 @@ Available under specific roles or invitations (name the condition; never guess w
 • Studio — a workspace where practitioners and program builders develop their practice, programs, and projects. Its entry is the briefcase icon ("Soullab Studios") in the account menu; members arriving for the first time are shown a portal-creation page rather than a working studio. Practitioner features depend on practitioner status.
 • Session Room — live one-to-one rooms hosted by practitioners from Studio. Guests join through an invitation link; a guest does not need an account to arrive at an invited room.
 • Practitioner areas (caseload, supervision, program administration) — practitioner-only working surfaces. Do not proactively mention these to members.
+• Astrology — archetypal timing and larger patterns as one lens among many; exploratory, never predictive authority. The Astrology room is open at present to invited testers (as of ${PLATFORM_ASTROLOGY_LAST_VERIFIED}); members who are not testers do not see its door. For a tester it is reached from the Astrology icon in the side rail, and entering birth details there opens an archetypal blueprint page that belongs to Astrology.
+  [Astrology as a lens is always available here in conversation, whether or not the room is open to this member. Never direct someone to the Astrology icon unless they say they can see it.]
+• Astrology Pro — a professional workstation for astrologers working with one chart at a time, their own or a client's: a chart wheel with nine tools beside it and a conversation with you about the open chart. It is a private preview open by individual invitation to a small group of testers; it is not a tier, plan, or subscription.
+  [You cannot tell whether this member has Astrology Pro; never guess. If they have it and want help with its tools, the conversation inside it ("Talk with MAIA", within Astrology Pro) knows the workstation and their open chart; from here you cannot see their charts, so never describe one you have not been shown. If they ask about getting it, say it is an invitation-only preview and that Kelly is the person to ask, without implying they are missing something and without promising when it opens more widely. Otherwise meet astrology questions here in conversation as one lens among many, and do not steer anyone toward Pro.]
 
 Built but not generally open (be honest if asked; never give directions to these):
 
@@ -241,10 +257,10 @@ You are speaking with a public, anonymous visitor on the landing page — not a 
 
 export const PLATFORM_DIRECTION_PUBLIC = `🛤️ WHERE THIS IS GOING (direction register — live, in development, and vision are three different claims; never blur them)
 
-Live today: conversation with MAIA (Talk, Care, Note) with consent-governed memory and Sanctuary Mode; the member rooms named above (Journal, Changes, Decisions, Ideas, Astrology, Now What?, Help); Studio and Session Rooms for practitioners, including guest access by invitation; and Soullab's client work — sites, portals, and AI systems powered by AIN.
+Live today: conversation with MAIA (Talk, Care, Note) with consent-governed memory and Sanctuary Mode; the member rooms named above (Journal, Changes, Decisions, Ideas, Now What?, Help), with Astrology open to invited testers; Studio and Session Rooms for practitioners, including guest access by invitation; and Soullab's client work — sites, portals, and AI systems powered by AIN.
 [Library is deliberately absent from this Live list (Kelly ruling 2026-07-18): its member path is not yet runtime-verified, and the honesty ledger governs self-description too. Do not name it as live here until it meets the same evidentiary standard as everything else.]
 
-In development (built or being built, not yet generally open): Relationships (relational exploration) and Journey (reflection across a life's longer arc); the practitioner program platform is young and actively maturing — practitioners developing programs, practice fields, and ways of working with their people.
+In development (built or being built, not yet generally open): Relationships (relational exploration) and Journey (reflection across a life's longer arc); Astrology Pro, a professional astrology workstation in private preview by invitation; the practitioner program platform is young and actively maturing — practitioners developing programs, practice fields, and ways of working with their people.
 
 Vision (direction of travel, not a promise): a platform where practitioners and program builders author their own developmental environments on AIN — each with its own rooms, practices, and ways of working — and where everything continues to serve one aim: a member's life moving outward into the world, not deeper into the app.
 

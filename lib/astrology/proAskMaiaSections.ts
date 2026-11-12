@@ -20,6 +20,7 @@ import type { FourPillars, LuckDirection } from './proFourPillars';
 import type { TraditionalMaya } from './proTraditionalMaya';
 import { declinationPairs, type Declination } from './proDeclinations';
 import type { ProOtherSystems } from './proOtherSystems';
+import { proGuideInstruction } from './proGuide';
 
 export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'progressed', 'vedic', 'mayan', 'deep'] as const;
 export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
@@ -274,6 +275,8 @@ ${manner}
 - For the traditional Maya count, give the dates and explain how the count works, but do not assign meanings to its days: those belong to living daykeepers. The Dreamspell is a modern system: you may discuss its signature, tone and three-stage path of life, always naming it as Dreamspell and never as the traditional Maya count.
 - If the question shows distress about a real person's safety, say you are not a crisis service and encourage reaching a person who can help.
 ${memory}${own}
+
+${proGuideInstruction()}
 
 ──────── THE FACTS ────────
 ${facts}${where.personal?.kept ? `
