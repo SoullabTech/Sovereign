@@ -115,6 +115,22 @@ const stripHeading = (s: StageSection): string => {
 };
 const labelOf = (s: StageSection): string => s.heading?.trim() || `Section ${s.position + 1}`;
 
+/** The sections to show for the open chapter: the whole span when a range is given and contains the current section, in book
+ *  order; otherwise just the current section. Never guesses a span. */
+export function chapterSections(
+  sections: readonly StageSection[], current: StageSection | null,
+  range: { fromSectionId: string; toSectionId: string } | null,
+): StageSection[] {
+  if (!current) return [];
+  if (!range) return [current];
+  const ordered = [...sections].sort((a, b) => a.position - b.position);
+  const from = ordered.findIndex((s) => s.draftSectionId === range.fromSectionId);
+  const to = ordered.findIndex((s) => s.draftSectionId === range.toSectionId);
+  if (from < 0 || to < from) return [current];
+  const span = ordered.slice(from, to + 1);
+  return span.some((s) => s.draftSectionId === current.draftSectionId) ? span : [current];
+}
+
 const ink = { color: 'inherit' } as const;
 const hair = '1px solid color-mix(in srgb, currentColor 16%, transparent)';
 
@@ -136,6 +152,8 @@ export function DevelopStage(props: {
   plan: { plan: StoredPlan | null; staleStepIds: readonly string[]; unverifiedStepIds?: readonly string[]; events?: Readonly<Record<string, StepEvent>>; decisionsChanged?: boolean | null; coverage?: { read: number; total: number; notRead: readonly string[] } } | null;
   planBusy: boolean;
   planNote: string | null;
+  /** when the session posture could not be read: the writer's own Ordinary / Sanctuary choice, shown with the note */
+  planPostureChoice?: ReactNode;
   onMakePlan: (ask: string) => void;
   onEditPlan: (edits: StepEdit[]) => void;
   /** open the passage desk on this step's exact words; the writer decides there */
@@ -159,6 +177,9 @@ export function DevelopStage(props: {
   /** MAIA's reading of the chapter the writer is on; the chapter itself never moves while she reads */
   reading?: StageReading | null;
   onReadChapter?: () => void;
+  /** The chapter's span (first and last section), the SAME range MAIA reads for this chapter (chapterSpanFor). When given, the
+   *  whole chapter is shown: every section in the span, in order. Absent (no confirmed chapter structure): the one section. */
+  chapterRange?: { fromSectionId: string; toSectionId: string } | null;
 }) {
   const { sections } = props;
   const allTools = props.view === 'full';
@@ -170,12 +191,27 @@ export function DevelopStage(props: {
   const [picked, setPicked] = useState<string | null>(null);
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
   const current = sections[idx] ?? null;
-  const text = current ? stripHeading(current) : '';
+  /* EA walk 2026-11-11: Develop showed only a chapter's first section (its title and epigraph) while MAIA read the whole chapter.
+     What is shown is now exactly what she reads: every section of the chapter's span, in order. */
+  const shown = chapterSections(sections, current, props.chapterRange ?? null);
   const spans = props.reading?.status === 'ready' ? evidenceSpans(props.reading.items) : [];
-  const citedHere = props.reading?.status === 'ready' && current
-    ? props.reading.items.map((it, i) => (it.sectionIds.includes(current.draftSectionId) ? i + 1 : 0)).filter(Boolean)
+  const citedIn = (s: StageSection) => props.reading?.status === 'ready'
+    ? props.reading.items.map((it, i) => (it.sectionIds.includes(s.draftSectionId) ? i + 1 : 0)).filter(Boolean)
     : [];
-  const paragraphs = text ? text.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) : [];
+  const blocks = shown.map((s) => ({
+    section: s,
+    paragraphs: stripHeading(s).split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean),
+    cited: citedIn(s),
+  }));
+  const anyText = blocks.some((b) => b.paragraphs.length > 0);
+  /* A sub-section chosen in the dropdown is shown inside its chapter, scrolled to; the chapter's first section starts at the top. */
+  const currentId = current?.draftSectionId ?? null;
+  const spanStartId = shown[0]?.draftSectionId ?? null;
+  useEffect(() => {
+    if (!currentId || currentId === spanStartId) return;
+    const t = window.setTimeout(() => rootRef.current?.querySelector(`[data-develop-section="${currentId}"]`)?.scrollIntoView?.({ block: 'start' }), 0);
+    return () => window.clearTimeout(t);
+  }, [currentId, spanStartId]);
   const rootRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!props.openAt) return;
@@ -289,7 +325,7 @@ export function DevelopStage(props: {
               ) : (
                 <button type="button" onClick={() => setAsking(true)} data-develop-plan-start="true"
                   style={{ alignSelf: 'flex-start', font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '5px 14px' }}>
-                  Turn this into a plan
+                  Make a plan with MAIA
                 </button>
               )
             ) : (
@@ -343,6 +379,7 @@ export function DevelopStage(props: {
               </div>
             )}
             {props.planNote ? <p role="status" data-develop-plan-note="true" style={{ margin: 0, fontSize: 12, opacity: .85 }}>{props.planNote}</p> : null}
+            {props.planPostureChoice ?? null}
           </section>
 
           {/* the chapters she read for her last answer, in place — from the writer's own copy; nothing is sent to show it */}
@@ -396,26 +433,33 @@ export function DevelopStage(props: {
         onMouseUp={(e) => notePick(e.currentTarget)} onKeyUp={(e) => notePick(e.currentTarget)}
         style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '18px 8px 40px', display: more && !allTools ? 'none' : 'block', order: 1 }}>
         <div style={{ maxWidth: '66ch', margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
-            {current ? labelOf(current) : 'Your Work'}
-          </h2>
-          {citedHere.length > 0 ? (
-            <p data-develop-cited-here="true" style={{ margin: '-6px 0 14px', fontSize: 12, opacity: .8 }}>
-              MAIA’s {citedHere.length === 1 ? 'observation' : 'observations'} {citedHere.join(' · ')} {citedHere.length === 1 ? 'comes' : 'come'} from this section.
-            </p>
-          ) : null}
-          {paragraphs.length === 0 ? (
-            <p style={{ opacity: .75, margin: 0 }}>{current ? 'This chapter has no text yet.' : 'Choose a chapter above.'}</p>
-          ) : paragraphs.map((p, i) => (
-            <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
-              {!focusAnchor && spans.length > 0 ? markEvidence(p, spans).map((piece, k) => piece.n === null
-                ? <span key={k}>{piece.text}</span>
-                : <span key={k} data-develop-evidence={piece.n} style={{ borderBottom: '2px solid color-mix(in srgb, #7c9ce0 70%, transparent)' }}>{piece.text}<sup aria-label={`MAIA’s observation ${piece.n} quotes this`} style={{ fontFamily: 'system-ui, sans-serif', fontSize: 10, marginLeft: 2, opacity: .85 }}>{piece.n}</sup></span>)
-              : markTerm(p, focusAnchor).map((piece, k) => piece.hit
-                ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
-                : <span key={k}>{piece.text}</span>)}
-            </p>
+          {!current ? <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>Your Work</h2> : null}
+          {blocks.map(({ section, paragraphs, cited }, b) => (
+            <section key={section.draftSectionId} data-develop-section={section.draftSectionId} style={{ marginBottom: b < blocks.length - 1 ? 26 : 0 }}>
+              {b === 0 ? (
+                <h2 style={{ margin: '0 0 14px', fontSize: 26, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{labelOf(section)}</h2>
+              ) : section.heading?.trim() ? (
+                <h3 style={{ margin: '0 0 12px', fontSize: 20, fontWeight: 500, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>{section.heading.trim()}</h3>
+              ) : null}
+              {cited.length > 0 ? (
+                <p data-develop-cited-here="true" style={{ margin: '-6px 0 14px', fontSize: 12, opacity: .8 }}>
+                  MAIA’s {cited.length === 1 ? 'observation' : 'observations'} {cited.join(' · ')} {cited.length === 1 ? 'comes' : 'come'} from this section.
+                </p>
+              ) : null}
+              {paragraphs.map((p, i) => (
+                <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
+                  {!focusAnchor && spans.length > 0 ? markEvidence(p, spans).map((piece, k) => piece.n === null
+                    ? <span key={k}>{piece.text}</span>
+                    : <span key={k} data-develop-evidence={piece.n} style={{ borderBottom: '2px solid color-mix(in srgb, #7c9ce0 70%, transparent)' }}>{piece.text}<sup aria-label={`MAIA’s observation ${piece.n} quotes this`} style={{ fontFamily: 'system-ui, sans-serif', fontSize: 10, marginLeft: 2, opacity: .85 }}>{piece.n}</sup></span>)
+                  : markTerm(p, focusAnchor).map((piece, k) => piece.hit
+                    ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
+                    : <span key={k}>{piece.text}</span>)}
+                </p>
+              ))}
+            </section>
           ))}
+          {current && !anyText ? <p style={{ opacity: .75, margin: 0 }}>This chapter has no text yet.</p> : null}
+          {!current ? <p style={{ opacity: .75, margin: 0 }}>Choose a chapter above.</p> : null}
         </div>
       </article>
 

@@ -52,6 +52,9 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+# ...but never an app ROUTE folder that happens to be called `coverage` (the coverage-map API route was silently left out of
+# commit 5fabecf025 by this rule, and every request to it 404'd in production).
+!app/api/**/coverage/
 *.lcov
 
 # nyc test coverage
