@@ -2,6 +2,7 @@
 // microphone. It builds into any BaseAudioContext, so the same graph renders live (the one persistent player)
 // and offline (for measurement). Nothing starts a context; the caller does, after the member's own Play.
 import { soundscapeNeedsRebuild } from './focusSoundscape';
+import { GENERATED_OUTPUT_SCALE } from './listeningLevel';
 import type { RecordedLayerId, SoundscapeSpec, TickSpec } from './focusSoundscape';
 
 /** Loads one recorded loop. Returns null when it is unavailable; the soundscape then plays without it. */
@@ -23,7 +24,7 @@ export type SoundscapeHandle = {
   dispose(): void;
 };
 
-const SCALE = 0.027; // same output scale as the original studies; the member's volume multiplies it
+const SCALE = GENERATED_OUTPUT_SCALE; // same output scale as the original studies; the member's volume multiplies it
 const PLUCK_RATIOS = [1, 1.125, 1.5, 1.6667, 2, 1.5, 1.125, 1];
 
 function noiseBuffer(context: BaseAudioContext, seconds = 2): AudioBuffer {

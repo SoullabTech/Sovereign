@@ -54,7 +54,7 @@ test('looping is explicit, permission-bound, and cleared by Stop', () => {
 test('gentle exit preserves immediate Stop and restores volume', () => {
   assert.match(dock, /FADE_DURATION_MS = 12_000/);
   assert.match(dock, /data-listen-companion-fade/);
-  assert.match(dock, /onStopMusic\(\);\s*onVolume\(restoreVolume\)/s);
+  assert.match(dock, /onStopMusic\(\);\s*onVolume\(restoreVolume, true\)/s);
   assert.match(dock, /aria-label="Stop and clear persistent music"/);
 });
 
