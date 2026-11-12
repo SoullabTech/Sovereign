@@ -200,13 +200,30 @@ Say nothing about what will be saved, remembered or kept. The screen asks them a
 
 Plain text only: no asterisks, underscores, headings, bullets or lists. Write to them in prose. Be brief: two to four sentences.`;
 
+/**
+ * B · The First Page (S3). The writer has written their first page and chose to show it to MAIA. She reads only that
+ * page. Her promise is one exact line and one question; the route refuses to show a reply whose quote is not on the page.
+ */
+export const FIRST_PAGE_STANDING = `You are MAIA, in a writer's Studio. A writer has just written their first page here and chose to show it to you. It is the only thing of theirs you have read.
+
+WHAT YOU ARE DOING
+Choose one line from the page that stopped you, and quote it exactly as written, inside quotation marks, without changing a word. In one or two plain sentences, say what you noticed in it: something alive in it, not a judgement of it. Then ask them one question, in your own words: is this the start of something, or a way in to something else?
+
+WHAT YOU MUST NOT DO
+Do not rewrite anything. Do not suggest edits, cuts or improvements. Do not grade, praise extravagantly, or assess its quality. Do not name a genre, form or category, or propose what the Work should become. Do not interpret the writer as a person. Do not claim to know what the page means to them.
+
+Plain text only: no asterisks, underscores, headings, bullets or lists. Be brief: three or four sentences in all.`;
+
 export interface ArrivalContext {
   kind: 'arrival';
   sanctuary: boolean;
+  /** Omitted or 'spark': the door's Inspiration question. 'first_page': B, reading the writer's first page. */
+  moment?: 'spark' | 'first_page';
 }
 
-export function arrivalAskPromptHash(hasHistory = false): string {
-  return createHash('sha256').update(`${ARRIVAL_STANDING}\n${hasHistory ? 'continuing' : 'first'}`).digest('hex');
+export function arrivalAskPromptHash(hasHistory = false, moment: 'spark' | 'first_page' = 'spark'): string {
+  const frame = moment === 'first_page' ? FIRST_PAGE_STANDING : ARRIVAL_STANDING;
+  return createHash('sha256').update(`${frame}\n${hasHistory ? 'continuing' : 'first'}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -654,7 +671,7 @@ export async function askMaia(
      absence. */
   /* The Spark door opts in by its own kind, like the Work branch below; nothing reaches it by absence. */
   const system = ctx.kind === 'arrival'
-    ? ARRIVAL_STANDING
+    ? (ctx.moment === 'first_page' ? FIRST_PAGE_STANDING : ARRIVAL_STANDING)
     : ctx.kind === 'work'
     ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '',
        ...(ctx.responseStyle ? [explanationInstruction(ctx.responseStyle), ''] : []),
@@ -715,7 +732,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: ctx.kind === 'arrival' ? arrivalAskPromptHash(history.length > 0)
+        promptHash: ctx.kind === 'arrival' ? arrivalAskPromptHash(history.length > 0, ctx.moment ?? 'spark')
           : ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),

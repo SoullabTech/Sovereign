@@ -6,8 +6,12 @@
  * Each case names the weaker candidate it exists to catch.
  */
 import {
+  CARRY_COPY,
   INSPIRATION_UNSURE_ANSWER,
+  MAX_FIRST_PAGE_CHARS,
   MAX_SPARK_CHARS,
+  firstPageEligible,
+  quotesVerified,
   facetWorkingStyle,
   shouldShowInspirationDoor,
   sparkCommitPlan,
@@ -87,6 +91,46 @@ describe('F6 · shouldShowInspirationDoor — first visit only', () => {
   });
   it('never shows the full door to a writer with any writing', () => {
     expect(shouldShowInspirationDoor({ works: 0, manuscripts: 1 })).toBe(false);
+  });
+});
+
+describe('F12 · B: "Show MAIA this page" is for a first page only', () => {
+  it('is offered for a Work with exactly one section that has words in it', () => {
+    expect(firstPageEligible({ sections: 1, body: 'She talked to the tomatoes.' })).toBe(true);
+  });
+  it('is never offered on an empty page, a longer Work, or a page beyond a first page', () => {
+    expect(firstPageEligible({ sections: 1, body: '   \n' })).toBe(false);
+    expect(firstPageEligible({ sections: 2, body: 'words' })).toBe(false);
+    expect(firstPageEligible({ sections: 1, body: 'a'.repeat(MAX_FIRST_PAGE_CHARS + 1) })).toBe(false);
+  });
+});
+
+describe('F13 · B: a line MAIA quotes must be on the page', () => {
+  const PAGE = 'She talked to the tomatoes like they owed her an apology. After the funeral nobody went out there.';
+  it('accepts an exact quote, with curly or straight quotes and loose whitespace', () => {
+    expect(quotesVerified('This line stopped me: “She talked to the tomatoes like they owed her an apology.” Is it a start?', PAGE)).toBe(true);
+    expect(quotesVerified('"After the funeral nobody   went out there." What is it?', PAGE)).toBe(true);
+  });
+  it('refuses a quote the writer never wrote', () => {
+    expect(quotesVerified('This stopped me: “She whispered to the tomatoes every morning.”', PAGE)).toBe(false);
+  });
+  it('refuses a reply that quotes nothing, because the promise was one exact line', () => {
+    expect(quotesVerified('There is humour and grief here. Is this the start of something?', PAGE)).toBe(false);
+  });
+  it('ignores short quoted words that are not a line', () => {
+    expect(quotesVerified('You said “owed” — and this: “After the funeral nobody went out there.”', PAGE)).toBe(true);
+  });
+});
+
+describe('F14 · C: the import’s Inspiration question keeps exactly what the door keeps', () => {
+  it('uses the same commit plan: only own words, only held, never in Sanctuary', () => {
+    expect(sparkCommitPlan({ ...base, answer: 'I walked that coast for a year.' }).purpose).toBe('I walked that coast for a year.');
+    expect(sparkCommitPlan({ ...base, answer: 'I walked that coast.', sanctuary: true }).purpose).toBeNull();
+    expect(sparkCommitPlan({ ...base, answer: 'I walked that coast.', hold: 'not_yet' }).purpose).toBeNull();
+  });
+  it('asks C’s question, never the table of contents or a category', () => {
+    expect(CARRY_COPY.question).toContain('What made you need to write it?');
+    expect(CARRY_COPY.question).toContain('Not the table of contents');
   });
 });
 

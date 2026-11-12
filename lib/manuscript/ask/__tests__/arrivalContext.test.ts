@@ -8,7 +8,7 @@ jest.mock('@/lib/writersStudio/workSituation', () => ({
   formatWorkSituationForPrompt: () => undefined,
 }));
 import { runStructured } from '../../../ai/structured/router';
-import { askMaia, ARRIVAL_STANDING, arrivalAskPromptHash } from '../askReader';
+import { askMaia, ARRIVAL_STANDING, FIRST_PAGE_STANDING, arrivalAskPromptHash } from '../askReader';
 
 const mockRun = runStructured as jest.MockedFunction<typeof runStructured>;
 
@@ -42,6 +42,17 @@ it('walk 2026-11-11 (real model): a correction gets a fresh check, and no format
   expect(ARRIVAL_STANDING).toContain('When they correct you or say it again differently');
   // She wrote *stolen*; the door renders plain text, so asterisks showed literally.
   expect(ARRIVAL_STANDING).toContain('Plain text only');
+});
+
+it('B · a first page is read with its own frame: one exact line, one question, no edits, no verdict', async () => {
+  await askMaia({ kind: 'arrival', sanctuary: false, moment: 'first_page' }, [], 'She talked to the tomatoes.');
+  const req = mockRun.mock.calls[0][0] as { system: string };
+  expect(req.system).toContain(FIRST_PAGE_STANDING);
+  expect(req.system).not.toContain(ARRIVAL_STANDING);
+  for (const phrase of ['exactly as written', 'Do not rewrite', 'Do not suggest', 'grade', 'start of something', 'Plain text only']) {
+    expect(FIRST_PAGE_STANDING).toContain(phrase);
+  }
+  expect(arrivalAskPromptHash(false, 'first_page')).not.toBe(arrivalAskPromptHash(false));
 });
 
 it('a later turn in the opening is grounded in the history and gets a different hash than a first turn', async () => {

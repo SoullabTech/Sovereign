@@ -25,7 +25,8 @@ import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/wr
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
 import { reReadAll, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
-import { shouldShowInspirationDoor } from '@/lib/writersStudio/inspirationOpening';
+import { CARRY_COPY, shouldShowInspirationDoor } from '@/lib/writersStudio/inspirationOpening';
+import StudioInspirationOpening from './StudioInspirationOpening';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -156,6 +157,8 @@ export default function P4R1HomeController() {
   /* A spark held at the door and carried into "Bring what I've written". Held in this view only; a reload forgets it. */
   const pendingSpark = useRef<string | null>(null);
   const [sparkCarryFailed, setSparkCarryFailed] = useState<string | null>(null);
+  /* C · Bring What You Carry (S4): the import asks MAIA's question before anyone reads a word. Optional, skippable. */
+  const [carryStep, setCarryStep] = useState<'invite' | 'asking' | 'held' | 'not_held' | 'skipped'>('invite');
 
   const completeImport = useCallback(async (manuscriptId: string) => {
     // Refresh is useful for the real member path and harmless in the bounded
@@ -381,12 +384,38 @@ export default function P4R1HomeController() {
         memberInitial=""
         onSelectMode={onMode}
         work={
-          <P4R1ImportManuscript
-            localReview={localReviewRequested}
-            sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}
-            onCancel={closeImport}
-            onComplete={completeImport}
-          />
+          <>
+            {pendingSpark.current !== null || carryStep === 'held' ? (
+              <p className="wsio-note wsio-carry-note" data-carry-held>{CARRY_COPY.held}</p>
+            ) : carryStep === 'invite' ? (
+              <section className="wsio-carry-invite" data-carry-invite>
+                <p className="wsio-maia wsio-small">{CARRY_COPY.invite}</p>
+                <p className="wsio-note">{CARRY_COPY.inviteHint}</p>
+                <div className="wsio-row">
+                  <button type="button" className="fr-home-quiet" onClick={() => setCarryStep('asking')}>Tell MAIA first</button>
+                  <button type="button" className="wsio-link" onClick={() => setCarryStep('skipped')}>Skip</button>
+                </div>
+              </section>
+            ) : carryStep === 'asking' ? (
+              <StudioInspirationOpening
+                variant="carry"
+                busy={busy}
+                error={null}
+                onCarry={(purpose) => {
+                  pendingSpark.current = purpose;
+                  setCarryStep(purpose !== null ? 'held' : 'not_held');
+                }}
+              />
+            ) : carryStep === 'not_held' ? (
+              <p className="wsio-note wsio-carry-note">{CARRY_COPY.notHeld}</p>
+            ) : null}
+            <P4R1ImportManuscript
+              localReview={localReviewRequested}
+              sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}
+              onCancel={closeImport}
+              onComplete={completeImport}
+            />
+          </>
         }
         footer={sparkCarryFailed ? (
           <div className="p4r1-error" role="alert" data-spark-carry-failed>

@@ -97,7 +97,52 @@ export function shouldShowInspirationDoor(counts: { works: number; manuscripts: 
   return counts.works === 0 && counts.manuscripts === 0;
 }
 
-export type FacetChoice = 'guide' | 'teach' | 'control' | 'not_now';
+/* ── B · The First Page (S3) ─────────────────────────────────────────────────────────────────────────────────── */
+
+export const FIRST_PAGE_COPY = {
+  invitation: 'Write whatever is closest. A memory, an image, the sentence that won’t leave you alone. No one is grading this.',
+  presence: 'I’m here when you want me. I won’t read this page until you show it to me.',
+  show: 'Show MAIA this page',
+  scope: 'MAIA will read only this page. Her answer isn’t kept.',
+  reading: 'MAIA is reading this page…',
+  answers: { start: 'The start of something', way_in: 'A way in', unsure: 'I don’t know yet' },
+  unverified: 'MAIA’s answer didn’t quote your page exactly, so it isn’t shown. Nothing was kept. You can ask again.',
+} as const;
+
+/** A first page, not a chapter: the "Show MAIA this page" offer is for this size and smaller. */
+export const MAX_FIRST_PAGE_CHARS = 12000;
+
+/** B is offered only for a Work's first page: exactly one section, with the writer's words in it (F12). */
+export function firstPageEligible(page: { sections: number; body: string }): boolean {
+  return page.sections === 1 && page.body.trim().length > 0 && page.body.length <= MAX_FIRST_PAGE_CHARS;
+}
+
+const QUOTE_PATTERN = /[“"]([^”"]{12,})[”"]/g;
+const normal = (s: string) => s.replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim().toLowerCase();
+
+/**
+ * B's promise is one exact line from the writer's own page. A reply is shown only if it quotes at least one line,
+ * and every quoted line (12+ characters) is on the page as written, allowing for curly quotes and whitespace (F13).
+ */
+export function quotesVerified(reply: string, page: string): boolean {
+  const quotes = [...reply.matchAll(QUOTE_PATTERN)].map((m) => m[1].replace(/[.,;:!?—–-]+$/, ''));
+  if (quotes.length === 0) return false;
+  const haystack = normal(page);
+  return quotes.every((q) => haystack.includes(normal(q)));
+}
+
+/* ── C · Bring What You Carry (S4) ───────────────────────────────────────────────────────────────────────────── */
+
+export const CARRY_COPY = {
+  invite: 'Before anyone reads a word, would you tell MAIA what this book means to you?',
+  inviteHint: 'Optional. You can bring the file first, or skip this entirely.',
+  question: 'Not the table of contents or the shelf it belongs on. What made you need to write it?',
+  invitation: 'In your own words. It doesn’t need to be polished.',
+  held: 'Your spark will be kept with this book’s Work when it comes in.',
+  notHeld: 'Nothing from this was kept.',
+} as const;
+
+export type FacetChoice ='guide' | 'teach' | 'control' | 'not_now';
 
 export const FACET_COPY: Record<FacetChoice, string> = {
   guide: 'Guide me',
