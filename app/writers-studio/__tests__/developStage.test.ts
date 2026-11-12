@@ -261,7 +261,8 @@ describe('density View on the stage (spec §10-§11, B3)', () => {
   test('every control reachable in All tools is reachable from Quiet within one step (falsifier a)', () => {
     const names = (root: HTMLElement) => [...root.querySelectorAll('button, select, textarea, input')]
       .map((el) => el.getAttribute('data-develop-plan-start') ?? el.getAttribute('aria-label') ?? el.textContent?.trim() ?? '')
-      .filter((n) => n && n !== 'More' && n !== 'Back to the chapter' && !n.startsWith('View:')).sort();
+      /* layout controls, not capabilities: More / Back to the chapter, and the All-tools fold (founder 2026-11-12, resizable tools) */
+      .filter((n) => n && n !== 'More' && n !== 'Back to the chapter' && n !== 'Hide tools' && n !== 'Show tools' && !n.startsWith('View:')).sort();
     mount({ closed: true, view: 'full', onView: jest.fn() });
     const all = names(host);
     act(() => root.unmount()); host.remove(); host = document.createElement('div'); document.body.append(host); root = createRoot(host);
