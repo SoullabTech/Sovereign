@@ -36,7 +36,28 @@ describe('attention-map synthesis contract', () => {
     expect(map.items[0]?.evidence).toHaveLength(2);
   });
 
-  it('refuses invented evidence', () => {
+  it('⭐ an item citing only invented evidence never reaches the writer; the evidence-bound items do, and the drop is counted', () => {
+    const mixed: AttentionSynthesisResult = {
+      ...result,
+      items: [result.items[0]!, { ...result.items[0]!, label: 'Invented', evidenceRefs: ['E999'] }],
+    };
+    const map = buildAttentionMap(commission, mixed);
+    expect(map.items).toHaveLength(1);
+    expect(map.items.some((i) => i.label === 'Invented')).toBe(false);
+    expect(map.droppedUnbound).toBe(1);
+  });
+
+  it('⭐ an invented citation is removed from an item that also cites real evidence; nothing is re-attributed', () => {
+    const partly: AttentionSynthesisResult = {
+      ...result,
+      items: [{ ...result.items[0]!, evidenceRefs: [...result.items[0]!.evidenceRefs, 'E999'] }],
+    };
+    const map = buildAttentionMap(commission, partly);
+    expect(map.items[0]!.evidence).toHaveLength(result.items[0]!.evidenceRefs.length);
+    expect(map.droppedUnbound).toBeUndefined();
+  });
+
+  it('refuses a synthesis in which nothing is evidence-bound', () => {
     const bad: AttentionSynthesisResult = {
       ...result,
       items: [{
