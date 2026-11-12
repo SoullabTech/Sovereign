@@ -118,3 +118,55 @@ prune_old_sha_tags() {
     echo "[deploy-tag] SHA-tag retention: kept newest $kept, removed $removed (RETAIN_SHA_TAGS=$retain)." >&2
     return 0
 }
+
+# ───────────────────────────────────────────────────────────────────────────────
+# :prod guard — a deploy refused before the swap must not leave :prod moved.
+#
+# :prod is the compose image name (docker-compose.production.yml x-maia-image), so
+# `compose build` repoints it at the candidate BEFORE the migration review gate,
+# the migration run and the image verify. On 2026-11-11 a deploy of 3555668f5 was
+# refused at the gate, yet :prod stayed on the unswapped candidate. Any later
+# `docker compose up` (e.g. an env-change recreate) would then have started an
+# unreviewed build whose migrations never ran.
+#
+# Arm immediately before the build; disarm immediately before the swap (from then
+# on the candidate is the legitimate :prod). prod_tag_guard_restore runs from the
+# deploy-context EXIT handler: if still armed, it restores :prod to the image it
+# had before the build and keeps the candidate as :refused-<sha> for evidence.
+# Best effort and loud; it never changes the deploy's exit status.
+# ───────────────────────────────────────────────────────────────────────────────
+_DEPLOY_PROD_PRIOR_ID=""
+_DEPLOY_PROD_GUARD_ARMED=""
+_DEPLOY_PROD_CANDIDATE_SHA=""
+
+prod_tag_guard_arm() {
+    _DEPLOY_PROD_CANDIDATE_SHA="${1:-unknown}"
+    _DEPLOY_PROD_PRIOR_ID="$(docker image inspect "$MAIA_IMAGE_REPO:prod" --format '{{.Id}}' 2>/dev/null || true)"
+    _DEPLOY_PROD_GUARD_ARMED=1
+}
+
+prod_tag_guard_disarm() {
+    _DEPLOY_PROD_GUARD_ARMED=""
+}
+
+prod_tag_guard_restore() {
+    [ -n "$_DEPLOY_PROD_GUARD_ARMED" ] || return 0
+    _DEPLOY_PROD_GUARD_ARMED=""
+    local repo="$MAIA_IMAGE_REPO" now
+    now="$(docker image inspect "$repo:prod" --format '{{.Id}}' 2>/dev/null || true)"
+    [ "$now" = "$_DEPLOY_PROD_PRIOR_ID" ] && return 0
+    if [ -n "$now" ]; then
+        docker tag "$repo:prod" "$repo:refused-$_DEPLOY_PROD_CANDIDATE_SHA" 2>/dev/null || true
+    fi
+    if [ -n "$_DEPLOY_PROD_PRIOR_ID" ]; then
+        if docker tag "$_DEPLOY_PROD_PRIOR_ID" "$repo:prod" 2>/dev/null; then
+            echo "[deploy-tag] Deploy ended before the swap: restored :prod to its pre-build image; the candidate is kept as :refused-$_DEPLOY_PROD_CANDIDATE_SHA." >&2
+        else
+            echo "[deploy-tag] WARNING: could not restore :prod to $_DEPLOY_PROD_PRIOR_ID — :prod may point at an unswapped, unreviewed candidate. Fix before any 'docker compose up'." >&2
+        fi
+    elif [ -n "$now" ]; then
+        docker image rm "$repo:prod" >/dev/null 2>&1 || true
+        echo "[deploy-tag] Deploy ended before the swap with no prior :prod; untagged the candidate (kept as :refused-$_DEPLOY_PROD_CANDIDATE_SHA)." >&2
+    fi
+    return 0
+}
