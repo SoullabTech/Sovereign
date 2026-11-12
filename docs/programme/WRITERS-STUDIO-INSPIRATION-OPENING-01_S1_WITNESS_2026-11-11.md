@@ -78,6 +78,20 @@ in `app/api/sovereign/manuscripts/[id]/ask/route.ts`, which this lane does not t
 2. Entering Write still shows the old blank-page overlay and *"I haven't read this book yet… Read my book"* on an empty
    Work. That is S3/S5 scope, as designed.
 
+## Reconciliation before the PR
+
+Rebased onto canonical `a5a80f7e05`, which includes #2230. Seven intervening commits; the one shared path,
+`Shell.tsx`, rebased cleanly. Re-run on the reconciled tree:
+- falsifiers 27/27;
+- typecheck 214 against baseline 214, no regressions;
+- no Supabase;
+- neighbours: 190 suites, 188 pass.
+
+The 2 failures are inherited, and this branch touches no file either one reads:
+- `askSourceCloseout` (above).
+- `app/writers-studio/__tests__/p4r1RelationalDevelopGuidance.test.ts` › *chapter-root rail selections*. It expects an
+  import line in the Develop view that canonical #2230 changed. This failure is new on canonical, not here.
+
 ## Real-model walk (founder chose "Real MAIA replies", 2026-11-11)
 
 Harness restarted with `REAL_MODEL=1`, using the key already in the session environment. Only fictional text was sent.
