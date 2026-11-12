@@ -176,6 +176,39 @@ export function workAskPromptHash(responseStyle?: ExplanationDepth, teachingAnch
   return createHash('sha256').update(`${WORK_STANDING}\n${WORK_LEVELS_RULES}\n${WORK_CONVENTION_RULES}\n${workIntegrityRules(hasHistory)}${style}${teaching}`).digest('hex');
 }
 
+/**
+ * JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01 — the Spark door.
+ *
+ * A writer's first visit, before any Work or text exists. It is the same MAIA through the same askMaia path and
+ * provider seam as every other Studio turn: one mind, a different situation. The writer has no Work here yet, so
+ * nothing about a manuscript is set out, and she must not imply she has read anything.
+ * Governing law: ELEMENTAL-ARRIVAL-01 §III–IV, §VII; ARRIVAL-EXPERIENCE-01 §A3 and finding 1; founder rulings Q1, Q4.
+ */
+export const ARRIVAL_STANDING = `You are MAIA, in a writer's Studio, meeting a writer on their first visit. They have no Work here yet and you have read nothing of theirs. You asked them one question: what's calling you to write?
+
+WHAT YOU ARE DOING
+Reflect back what you heard, in a few warm, plain sentences, staying close to their own words and images. Notice what seems alive in what they said. On your first reply, end by asking whether you heard them right, in your own words (for example: "Am I hearing that right?"). When they correct you or say it again differently, reflect what you now hear and end by asking again whether you have it now. Otherwise, on later replies, follow where they take it and ask at most one question, or none.
+
+WHAT YOU MUST NOT DO
+Do not define the Work for them. Do not name a genre, form, category or market for it. Do not propose an outline, chapters, a structure, a premise or a title. Do not grade or assess what they said. Do not claim to know their real purpose or what the Work is "really" about. Do not interpret them psychologically or characterise them as a person. Do not move them toward a plan. Meaning may arrive through the writing rather than before it.
+
+WHEN THEY ARE NOT SURE
+If they say they don't know, honour it as a complete answer. "I don’t know yet" is an honest place to begin; do not press them for more.
+
+WHAT YOU CANNOT PROMISE
+Say nothing about what will be saved, remembered or kept. The screen asks them about that separately, in their own act.
+
+Plain text only: no asterisks, underscores, headings, bullets or lists. Write to them in prose. Be brief: two to four sentences.`;
+
+export interface ArrivalContext {
+  kind: 'arrival';
+  sanctuary: boolean;
+}
+
+export function arrivalAskPromptHash(hasHistory = false): string {
+  return createHash('sha256').update(`${ARRIVAL_STANDING}\n${hasHistory ? 'continuing' : 'first'}`).digest('hex');
+}
+
 export interface AskAnswerProvenance {
   provider: 'anthropic';
   /** The resolved model string actually sent, never the default's name. */
@@ -391,7 +424,7 @@ function standingReadSays(read: StandingRead): string {
   return lines.join('\n');
 }
 
-export type AskContext = ProposalContext | WorkContext;
+export type AskContext = ProposalContext | WorkContext | ArrivalContext;
 
 /**
  * ⭐ What the member is pointing at, when the subject is the Work.
@@ -619,7 +652,10 @@ export async function askMaia(
      what *"ProposalContext unchanged"* has to mean at runtime and not only in
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
-  const system = ctx.kind === 'work'
+  /* The Spark door opts in by its own kind, like the Work branch below; nothing reaches it by absence. */
+  const system = ctx.kind === 'arrival'
+    ? ARRIVAL_STANDING
+    : ctx.kind === 'work'
     ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '',
        ...(ctx.responseStyle ? [explanationInstruction(ctx.responseStyle), ''] : []),
        ...(ctx.teachingAnchor ? [teachingTurnInstruction(ctx.teachingAnchor), ''] : []),
@@ -679,7 +715,8 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
+        promptHash: ctx.kind === 'arrival' ? arrivalAskPromptHash(history.length > 0)
+          : ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
         stopReason: outcome.result.stopReason,
