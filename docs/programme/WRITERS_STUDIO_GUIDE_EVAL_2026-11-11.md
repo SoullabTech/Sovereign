@@ -47,8 +47,17 @@ The scorer was not changed after the run. Both misses were read by hand and are 
 - **read-chapter.** She offered the take-me-there button `[[studio:read-chapter]]` (it renders as the clickable control) instead of writing the label.
 - **sanctuary-what.** She said "nothing from the session is saved at all", which the regex did not match.
 
-**Found by reading, not by the scorer (a real defect):**
-- **stage-off** was scored PASS. With the Develop stage switched off, she correctly said the plan control is not on here. But she then offered the `show:plan` button, which opens Develop's More panel, and that panel does not exist with the stage off. The take-me-there actions (`studioActions.ts`) are not runtime-aware. This matters only where the stage is off, and production compose defaults it on. Reported, not fixed here.
+**Found by reading, not by the scorer (a real defect, now FIXED in this PR):**
+- **stage-off** was scored PASS. With the Develop stage switched off, she correctly said the plan control was not on here, but then offered the `show:plan` button. That button opens Develop's More panel, which isn't there with the stage off.
+- The cause was wider than the stage switch. `WorkConversation` shows an acting offer only when its room passes `onStudioAct`, and a reading offer only with `onReadChapter`. Only the Develop stage does that. Write, Review and the older Develop map show the same conversation without them, yet MAIA was told about all of those offers everywhere. So in those rooms "click below" could lead to no button, **in production today**.
+- The fix:
+  - the conversation now sends `roomActs: true` only when its room can act;
+  - the ask route and `askMaia` carry it through;
+  - `studioActionsInstruction` describes only the buttons that room will show, and tells her to name the control instead of saying "click below".
+- The new test `studioActionsRoomActs.test.ts` pins `ROOM_ACTS` to WorkConversation's own `ACTING` set and checks the flag end to end. The flag changes only what she may *offer*; every click is still gated where it lands.
+- **Targeted re-check on the real model** (subset of 6, about 7 calls; `WRITERS_STUDIO_GUIDE_EVAL_RUN_2026-11-12_ROOMACTS_RECHECK.md`): 5/6.
+  - stage-off now passes with a stricter check (no acting marker at all). She points to the older map's "Read this chapter" and "Start an editorial pass", and to Review.
+  - The one miss is the same read-chapter false negative: she offered the button, which is correct on the stage.
 
 **Also noted:**
 - **Revision latitude names differ between surfaces.** `editorialScope/contract.ts` uses Touch, Line, Passage, Shape, Open, while `IsolatedEditorialRoom.tsx` calls band 1 "Light". The guide used to say "from Light upward" and now names no band. Product inconsistency, reported only.

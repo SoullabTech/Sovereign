@@ -22,9 +22,10 @@ import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 
 const ON = process.env.STUDIO_GUIDE_EVAL === '1';
 
-function ctx(sanctuary: boolean): AskContext {
+/** The conversation's room: on the Develop stage it carries out acting offers (roomActs); with the stage off there is no such room. */
+function ctx(sanctuary: boolean, roomActs = true): AskContext {
   return {
-    kind: 'work', anchor: { on: 'work' }, staleness: UNMEASURED, sanctuary,
+    kind: 'work', anchor: { on: 'work' }, staleness: UNMEASURED, sanctuary, roomActs,
     facts: {
       work: {} as never,
       manuscript: { id: 'eval-ms', draftId: 'eval-draft', version: 1 },
@@ -70,16 +71,20 @@ async function countTokens(system: string): Promise<number | null> {
     const overhead = base !== null && full !== null && sanct !== null
       ? `guide overhead ≈ ${full - base} input tokens per turn (Sanctuary variant ≈ ${sanct - base}); ${studioGuideInstruction().length} characters`
       : `token count unavailable; ${studioGuideInstruction().length} characters`;
-    for (const q of GUIDE_QUESTIONS) {
+    // STUDIO_GUIDE_EVAL_ONLY=id,id runs a subset (bounded spend for a targeted re-check); the report says so.
+    const only = (process.env.STUDIO_GUIDE_EVAL_ONLY ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    const questions = only.length ? GUIDE_QUESTIONS.filter((q) => only.includes(q.id)) : GUIDE_QUESTIONS;
+    for (const q of questions) {
       setRuntime(q);
+      const acts = q.runtime?.developStage !== false;
       const history: { speaker: 'author' | 'maia'; body: string }[] = [];
       let broke = false;
       for (const h of q.history ?? []) {
-        const prior = await askMaia(ctx(q.sanctuary === true), history, h);
+        const prior = await askMaia(ctx(q.sanctuary === true, acts), history, h);
         if (!prior.ok) { broke = true; break; }
         history.push({ speaker: 'author', body: h }, { speaker: 'maia', body: (prior as unknown as { answer: string }).answer });
       }
-      const out = broke ? { ok: false } : await askMaia(ctx(q.sanctuary === true), history, q.ask);
+      const out = broke ? { ok: false } : await askMaia(ctx(q.sanctuary === true, acts), history, q.ask);
       if (!out.ok) { rows.push(`### ${q.id} — ERROR\n${JSON.stringify(out).slice(0, 300)}\n`); continue; }
       const answer = (out as unknown as { answer: string }).answer;
       model ||= JSON.stringify((out as unknown as { provenance?: unknown }).provenance ?? '');
@@ -93,12 +98,12 @@ async function countTokens(system: string): Promise<number | null> {
     }
     process.env = savedEnv;
     const cats = Object.entries(byCategory).map(([c, [p, n]]) => `${c} ${p}/${n}`).join(' · ');
-    const header = `# Studio guide eval — ${new Date().toISOString()}\n\n${passed}/${GUIDE_QUESTIONS.length} passed · ${cats}\n\n${overhead}\n\nprovenance ${model}\n\n`;
+    const header = `# Studio guide eval — ${new Date().toISOString()}\n\n${passed}/${questions.length} passed${only.length ? ` (subset: ${only.join(', ')})` : ''} · ${cats}\n\n${overhead}\n\nprovenance ${model}\n\n`;
     const dir = path.resolve(__dirname, '../reports');
     fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, `studio-guide-${Date.now()}.md`);
     fs.writeFileSync(file, header + rows.join('\n'));
     // eslint-disable-next-line no-console
-    console.log(`studio guide eval: ${passed}/${GUIDE_QUESTIONS.length} → ${file}`);
+    console.log(`studio guide eval: ${passed}/${questions.length} → ${file}`);
   });
 });

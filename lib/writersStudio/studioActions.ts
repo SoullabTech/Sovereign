@@ -147,25 +147,43 @@ export function studioPlaceHref(pathname: string, search: string, place: StudioP
   return `${pathname}${query ? `?${query}` : ''}#${STUDIO_PLACE_HASH[place]}`;
 }
 
+/**
+ * Offers only a room that can CARRY THEM OUT shows as buttons (2026-11-12, WS-STUDIO-GUIDE-WHOLE-01 eval finding).
+ * WorkConversation shows an acting offer only when its room passes `onStudioAct` (its `ACTING` set) and a reading only when
+ * it passes `onReadChapter` — today only the Develop stage does. Write, Review and the older Develop map show the same
+ * conversation without them, so there MAIA's "click below" led to no button. The conversation now says whether its room
+ * acts (`roomActs`), and she is told only about the buttons that room will show. Pinned to `ACTING` by the test.
+ */
+export const ROOM_ACTS: ReadonlySet<StudioActionId> = new Set<StudioActionId>(
+  ['read-chapter', 'grant-reading', 'make-plan', 'note-settled', 'open-desk', 'show', 'go-chapter']);
+
 /** What MAIA is told about offering a control, on surfaces that show the button. */
-export function studioActionsInstruction(surface: StudioActionSurface): string {
-  const allowed = STUDIO_ACTIONS.filter((a) => a.surfaces.includes(surface));
+export function studioActionsInstruction(surface: StudioActionSurface, opts: { roomActs?: boolean } = {}): string {
+  const allowed = STUDIO_ACTIONS.filter((a) => a.surfaces.includes(surface)
+    && (surface !== 'work-conversation' || opts.roomActs === true || !ROOM_ACTS.has(a.id)));
+  const has = (id: StudioActionId) => allowed.some((a) => a.id === id);
   return [
     'OFFERING A STUDIO CONTROL',
     'When pointing the writer to one of the controls below would genuinely help, you may end your reply with exactly one marker on its own line, and the Studio shows it as a button the writer can click. Use it only when you have just pointed to that control in your reply. Never more than one. Never invent a marker; anything not listed is removed and does nothing. Unless its description below says otherwise, the button only takes the writer there; it does not press anything. Where a description says only their click does something, you never do it yourself.',
     ...allowed.map((a) => `- [[studio:${a.id}]] — ${a.does}.`),
-    ...(allowed.some((a) => a.id === 'read-chapter') ? [
+    ...(has('read-chapter') ? [
       `To offer a reading through a particular lens, write it after a colon: [[studio:read-chapter:arc]]. Lenses: ${DEVELOPMENTAL_LENSES.join(', ')}.`,
       'Offer [[studio:read-chapter]] when the writer asks you to read the chapter they are in, or when reading it whole would genuinely help and you have no reading of it. Ask; never assume the answer. You never start a reading yourself.',
     ] : []),
-    ...(allowed.some((a) => a.id === 'grant-reading') ? [
+    ...(has('grant-reading') ? [
       'Offer [[studio:grant-reading:chapter]] or [[studio:grant-reading:work]] only when the writer asks you to read more than you have been given, or asks to look across chapters, and you were not given that text. Ask; never press for it. Consent is theirs.',
       'Offer [[studio:make-plan]] when the writer asks for a plan, or asks how to get from here to what they want across several passages.',
       'Offer [[studio:note-settled]] when the writer states something they have decided about the book. The decision is in their words, never yours.',
       'Offer [[studio:open-desk]] when the writer wants to work on the exact passage you are discussing.',
       'Offer [[studio:show:…]] when the writer asks to see or change their plan, the book’s kind, what you may read (or to stop you reading), what they have settled (or to withdraw it), or the chapters you read. For the book’s kind, the writer chooses; never suggest which.',
+      'Offer [[studio:go-chapter:ID]] when the writer asks to go to a chapter, using only an id from the section list.',
+    ] : []),
+    ...(surface === 'work-conversation' && !has('grant-reading') ? [
+      'In this room those offers that act (reading a chapter, reading permission, a plan, a settled decision, the passage desk, opening Develop’s More at a place, moving chapter) show no button. Do not say "click below" for them: name the control and where it is instead.',
+    ] : []),
+    ...(has('teach-me') ? [
       'Offer [[studio:teach-me]] when the writer asks how or why something in their writing works, or says they want to understand the craft, and you have answered what they asked. Never offer it as a lesson they did not ask for.',
-      'Offer [[studio:go-chapter:ID]] when the writer asks to go to a chapter, using only an id from the section list. Offer [[studio:show-keeps]], [[studio:open-in-maia]], [[studio:focus]] or [[studio:close-conversation]] when the writer asks for exactly that.',
+      'Offer [[studio:show-keeps]], [[studio:open-in-maia]], [[studio:focus]] or [[studio:close-conversation]] when the writer asks for exactly that.',
     ] : []),
   ].join('\n');
 }

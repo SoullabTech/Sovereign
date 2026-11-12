@@ -104,6 +104,8 @@ export async function ask(input: {
   teachingAnchor?: TeachingAnchor;
   /** WS-WHOLE-BOOK-CONVERSATION: the writer's declared scope ("About: where I am · the whole book"). Omitted = where I am. */
   carryScope?: 'here' | 'whole_book';
+  /** The conversation's room can carry out MAIA's acting offers (WorkConversation with `onStudioAct`). */
+  roomActs?: boolean;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -118,6 +120,7 @@ export async function ask(input: {
         ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
         ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
         ...(input.carryScope === 'whole_book' ? { carryScope: 'whole_book' } : {}),
+        ...(input.roomActs ? { roomActs: true } : {}),
         // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
         ...(input.sanctuary !== undefined ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),

@@ -48,7 +48,7 @@ describe('the closed allowlist', () => {
 describe('what MAIA is told', () => {
   it('lists exactly the actions each surface can show, and forbids inventing', () => {
     const focus = studioActionsInstruction('passage-focus');
-    const work = studioActionsInstruction('work-conversation');
+    const work = studioActionsInstruction('work-conversation', { roomActs: true });
     for (const a of STUDIO_ACTIONS) {
       expect(focus.includes(`[[studio:${a.id}]]`)).toBe(a.surfaces.includes('passage-focus'));
       expect(work.includes(`[[studio:${a.id}]]`)).toBe(a.surfaces.includes('work-conversation'));
@@ -60,7 +60,7 @@ describe('what MAIA is told', () => {
   it('only the Focus and Work-conversation paths tell her; Develop does not', () => {
     const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), 'utf8');
     expect(read('lib/manuscript/editorialRuntime/turn.ts')).toContain("studioActionsInstruction('passage-focus')");
-    expect(read('lib/manuscript/ask/askReader.ts')).toContain("studioActionsInstruction('work-conversation')");
+    expect(read('lib/manuscript/ask/askReader.ts')).toContain("studioActionsInstruction('work-conversation', { roomActs: ctx.roomActs === true })");
     expect(read('lib/manuscript/ask/developmentalAskReader.ts')).not.toContain('studioActionsInstruction');
   });
 
@@ -86,7 +86,7 @@ describe('G4: Read this chapter, offered in conversation', () => {
     expect(parseStudioActions('[[studio:develop-overview:arc]]', 'work-conversation').action).toBeNull();
   });
   it('MAIA is told only the click starts it, and the lenses she may name', () => {
-    const work = studioActionsInstruction('work-conversation');
+    const work = studioActionsInstruction('work-conversation', { roomActs: true });
     expect(work).toContain('You never start a reading yourself');
     expect(work).toContain('[[studio:read-chapter:arc]]');
     expect(studioActionsInstruction('passage-focus')).not.toContain('read-chapter');
@@ -105,8 +105,8 @@ describe('Design 1B amendment 2: acting offers', () => {
       expect(parseStudioActions(`x\n[[studio:${id}]]`, 'passage-focus').action).toBeNull();
       expect(parseStudioActions(`x\n[[studio:${id}]]`, 'work-conversation').action?.id).toBe(id);
     }
-    expect(studioActionsInstruction('work-conversation')).toMatch(/Consent is theirs/);
-    expect(studioActionsInstruction('work-conversation')).toMatch(/never yours/);
+    expect(studioActionsInstruction('work-conversation', { roomActs: true })).toMatch(/Consent is theirs/);
+    expect(studioActionsInstruction('work-conversation', { roomActs: true })).toMatch(/never yours/);
   });
 });
 

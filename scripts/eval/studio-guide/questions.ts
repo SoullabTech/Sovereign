@@ -126,6 +126,7 @@ export const GUIDE_QUESTIONS: readonly GuideQuestion[] = [
   { id: 'pro-gate-on', category: 'disabled', runtime: { proGate: true }, ask: 'Why won’t the whole-book editorial pass start for me?', mustSay: [/pro/i],
     expected: 'with the Pro gate on: it is part of Writer’s Studio Pro; nothing in the manuscript changed' },
   { id: 'stage-off', category: 'disabled', runtime: { developStage: false }, ask: 'Where is "Make a plan with MAIA"?', mustSay: [/not (switched )?on|isn['’]t (switched )?on|not available|don['’]t (see|have)/i],
+    mustNot: [/\[\[studio:(show|make-plan|grant-reading|note-settled|open-desk|go-chapter|read-chapter)/],
     expected: 'with the Develop stage off: not switched on in this Studio' },
   { id: 'download', category: 'disabled', ask: 'How do I download my finished EPUB file?', mustSay: [/(verification|not yet|preview|can['’]t)/i],
     expected: 'downloads are awaiting final verification' },

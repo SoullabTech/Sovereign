@@ -38,7 +38,7 @@ It describes only what is on. What production actually has set was not witnessed
 7. **Sanctuary got no guide in the Work conversation** (askReader, walk 2026-11-09 defect 5). Passage Focus got the full guide, including reading permission, even in Sanctuary. Both now get a Sanctuary variant that leaves out every reading or keeping tool. See the guide's `inSanctuary: false`.
 8. **Review → Discuss** (`reviewDiscussReader.ts`) was a Studio conversation without the guide. It now has it. Its entry point is "Discuss with MAIA" on a Review finding (`full-redesign/LiveReviewRoom.tsx`), and Sanctuary refuses it ("Review Discuss is unavailable while Sanctuary is on.").
 9. **Revision latitude names differ between surfaces.** `editorialScope/contract.ts` uses Touch, Line, Passage, Shape and Open; `IsolatedEditorialRoom.tsx` calls band 1 "Light".
-10. **The take-me-there actions are not runtime-aware.** With the Develop stage off, MAIA can still offer `show:*`, which opens a More panel that is not there. This was found in the eval.
+10. **Acting offers were described in rooms that cannot carry them out.** Write, Review and the older Develop map show the Work conversation without `onStudioAct` or `onReadChapter`, so MAIA's acting offers (`show:*`, plan, reading permission, settled, desk, go-chapter, read-chapter) produced no button there. Found in the eval and **fixed in this PR** with `roomActs`.
 
 ## 1. Top bar and shell (`full-redesign/Shell.tsx` unless noted)
 | Label | file:line | Where | Does | Condition |
