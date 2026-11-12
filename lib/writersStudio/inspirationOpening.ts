@@ -142,7 +142,42 @@ export const CARRY_COPY = {
   notHeld: 'Nothing from this was kept.',
 } as const;
 
-export type FacetChoice ='guide' | 'teach' | 'control' | 'not_now';
+/* ── S5 · Home honesty ───────────────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Home's greeting for one Work. "Welcome back" and "Pick up where you left off" are true only when the writer has
+ * written something; seconds after beginning an empty Work they were not (census 2026-11-11, F15).
+ */
+export function returnGreeting(w: { title: string; hasWriting: boolean; distinctPlace: boolean }): { heading: string; place: string } {
+  if (!w.hasWriting) return { heading: `${w.title} is here.`, place: 'Nothing written yet. Begin whenever you’re ready.' };
+  return {
+    heading: `Welcome back to ${w.title}.`,
+    place: w.distinctPlace ? 'Pick up where you left off.' : 'Open it and carry on.',
+  };
+}
+
+/** The writing fact under a Work, in plain words when nothing has been written. */
+export function writtenFact(lastWorkedLabel: string | null): string {
+  return lastWorkedLabel ?? 'not written in yet';
+}
+
+/**
+ * MAIA's "Read my book" belongs to a book. On an empty Work there is nothing to read, and on a first page B's
+ * "Show MAIA this page" is the offer (F16).
+ */
+export function letterOfferVisible(book: { sections: number; bodies: readonly string[] }): boolean {
+  if (!book.bodies.some((b) => b.trim().length > 0)) return false;
+  if (book.sections === 1 && firstPageEligible({ sections: 1, body: book.bodies[0] ?? '' })) return false;
+  return true;
+}
+
+/** "I don't know yet — look around" with nothing held: a gentler landing than "What are you beginning?". */
+export const LOOK_AROUND_COPY = {
+  heading: 'Take your time. Nothing here needs deciding yet.',
+  back: 'Go back to MAIA’s question',
+} as const;
+
+export type FacetChoice = 'guide' | 'teach' | 'control' | 'not_now';
 
 export const FACET_COPY: Record<FacetChoice, string> = {
   guide: 'Guide me',

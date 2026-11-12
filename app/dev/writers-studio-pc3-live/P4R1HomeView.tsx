@@ -27,7 +27,7 @@ import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConf
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import StudioInspirationOpening from './StudioInspirationOpening';
-import { INSPIRATION_COPY, MAX_SPARK_CHARS } from '@/lib/writersStudio/inspirationOpening';
+import { INSPIRATION_COPY, LOOK_AROUND_COPY, MAX_SPARK_CHARS, returnGreeting, writtenFact } from '@/lib/writersStudio/inspirationOpening';
 
 function fixedDate(iso: string | null | undefined): string {
   if (!iso) return 'date not recorded';
@@ -62,9 +62,9 @@ function workFacts(work: LivingWork, manuscripts: readonly CurrentManuscript[]):
     extent: manuscript.sectionCount > 0
       ? `${manuscript.sectionCount} section${manuscript.sectionCount === 1 ? '' : 's'} · ~${words.toLocaleString()} words`
       : words > 0 ? `~${words.toLocaleString()} words` : 'No writing yet',
-    written: manuscript.lastMemberDraftActivityAt
+    written: writtenFact(manuscript.lastMemberDraftActivityAt
       ? `worked ${fixedDate(manuscript.lastMemberDraftActivityAt)}`
-      : 'no authored return date recorded',
+      : null),
   };
 }
 
@@ -93,6 +93,8 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
   const choices = manuscriptsForWork(work, manuscripts);
   const manuscript = choices.length === 1 ? choices[0] : null;
   const [producing, setProducing] = useState(produceInitially);
+  const hasWriting = choices.some((m) => homeWritingExtent(m) > 0);
+  const greeting = returnGreeting({ title: work.title?.trim() || 'Untitled Work', hasWriting, distinctPlace: activity?.kind === 'distinct' });
 
   useEffect(() => {
     if (produceInitially) setProducing(true);
@@ -125,9 +127,12 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
   return (
     <section className="fr-home-anchor fr-home-return p4r1-home-anchor" data-field="anchor">
       <header className="fr-home-arrive">
-        <p className="fr-home-eyebrow">{HOME_COPY.returnEyebrow}</p>
-        <h1 className="fr-home-greeting">{HOME_COPY.returnWelcome(title)}</h1>
-        {activity?.kind === 'distinct' ? (
+        <p className="fr-home-eyebrow">{hasWriting ? HOME_COPY.returnEyebrow : 'Your Work'}</p>
+        {/* S5: "Welcome back… Pick up where you left off." only when something has been written (F15). */}
+        <h1 className="fr-home-greeting">{greeting.heading}</h1>
+        {!hasWriting ? (
+          <p className="fr-home-place" data-home-place="empty">{greeting.place}</p>
+        ) : activity?.kind === 'distinct' ? (
           <p className="fr-home-place" data-home-place="distinct">Pick up where you left off.</p>
         ) : (
           <p className="fr-home-place" data-home-place="work">Open it and carry on.</p>
@@ -145,7 +150,7 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
             <>
               <div className="fr-home-actions">
                 <button type="button" className="fr-home-primary" onClick={() => onOpen(manuscript.id, sectionId)}>
-                  {HOME_COPY.returnAction}
+                  {hasWriting ? HOME_COPY.returnAction : 'Begin writing'}
                 </button>
                 <button
                   type="button"
@@ -584,7 +589,15 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
         <div className="fr-home-field" data-field="room">
           {deleteNoticeEl}
           <section className="fr-home-anchor fr-home-threshold" data-field="anchor">
-            <h1 className="fr-home-welcome">{HOME_COPY.beginWelcome}</h1>
+            {/* S5: arriving here from the door's "I don't know yet — look around" is not a demand to decide. */}
+            {doorSetAside
+              ? <h1 className="fr-home-welcome" data-look-around>{LOOK_AROUND_COPY.heading}</h1>
+              : <h1 className="fr-home-welcome">{HOME_COPY.beginWelcome}</h1>}
+            {doorSetAside && props.inspirationDoor ? (
+              <button type="button" className="wsio-link" data-look-around-back onClick={() => setDoorSetAside(false)}>
+                {LOOK_AROUND_COPY.back}
+              </button>
+            ) : null}
             {!beginning ? (
               <div className="fr-home-actions">
                 <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>Start writing</button>

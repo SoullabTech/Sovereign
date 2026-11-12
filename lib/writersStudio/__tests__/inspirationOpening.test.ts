@@ -11,7 +11,10 @@ import {
   MAX_FIRST_PAGE_CHARS,
   MAX_SPARK_CHARS,
   firstPageEligible,
+  letterOfferVisible,
   quotesVerified,
+  returnGreeting,
+  writtenFact,
   facetWorkingStyle,
   shouldShowInspirationDoor,
   sparkCommitPlan,
@@ -131,6 +134,35 @@ describe('F14 · C: the import’s Inspiration question keeps exactly what the d
   it('asks C’s question, never the table of contents or a category', () => {
     expect(CARRY_COPY.question).toContain('What made you need to write it?');
     expect(CARRY_COPY.question).toContain('Not the table of contents');
+  });
+});
+
+describe('F15 · S5: Home never welcomes a writer "back" to a Work with nothing written', () => {
+  it('a Work with writing keeps the return greeting and place line', () => {
+    expect(returnGreeting({ title: 'The Garden', hasWriting: true, distinctPlace: true }))
+      .toEqual({ heading: 'Welcome back to The Garden.', place: 'Pick up where you left off.' });
+    expect(returnGreeting({ title: 'The Garden', hasWriting: true, distinctPlace: false }).place).toBe('Open it and carry on.');
+  });
+  it('an empty Work is greeted as here, not returned to', () => {
+    const g = returnGreeting({ title: 'Untitled Work', hasWriting: false, distinctPlace: true });
+    expect(g.heading).not.toMatch(/welcome back/i);
+    expect(g.place).not.toMatch(/left off|carry on/i);
+    expect(g).toEqual({ heading: 'Untitled Work is here.', place: 'Nothing written yet. Begin whenever you’re ready.' });
+  });
+  it('plain words for an unwritten Work, never the database’s ("no authored return date recorded")', () => {
+    expect(writtenFact(null)).toBe('not written in yet');
+  });
+});
+
+describe('F16 · S5: MAIA offers to read a book only when there is one to read', () => {
+  it('no read offer on an empty Work, and none on a first page (B’s "Show MAIA this page" is that offer)', () => {
+    expect(letterOfferVisible({ sections: 1, bodies: [''] })).toBe(false);
+    expect(letterOfferVisible({ sections: 2, bodies: ['', '  '] })).toBe(false);
+    expect(letterOfferVisible({ sections: 1, bodies: ['A first page.'] })).toBe(false);
+  });
+  it('offers to read once there is more than a first page', () => {
+    expect(letterOfferVisible({ sections: 2, bodies: ['Chapter one.', ''] })).toBe(true);
+    expect(letterOfferVisible({ sections: 1, bodies: ['a'.repeat(MAX_FIRST_PAGE_CHARS + 1)] })).toBe(true);
   });
 });
 
