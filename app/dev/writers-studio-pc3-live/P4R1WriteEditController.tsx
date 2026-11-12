@@ -2472,7 +2472,10 @@ export default function FlagshipWriteEditController() {
       router.push(`${pathname}${query ? `?${query}` : ''}`);
       return;
     }
-    const next = new URLSearchParams(params?.toString() ?? '');
+    /* EA walk 2026-11-11: Write records the writer's place with history.replaceState, which the framework's search-param snapshot
+       never sees, so building from `params` dropped `s` and Develop opened on the first section. Read the live address instead. */
+    const live = typeof window !== 'undefined' ? window.location.search : (params?.toString() ?? '');
+    const next = new URLSearchParams(live);
     next.set('mode', mode);
     next.delete('insightReading');
     next.delete('insightObservation');
@@ -2494,7 +2497,7 @@ export default function FlagshipWriteEditController() {
      navigates: Develop → Overview for the same Work, scrolled to the control.
      Nothing is pressed there. */
   const onStudioPlace = useCallback((place: StudioPlace) => {
-    router.push(studioPlaceHref(pathname, params?.toString() ?? '', place));
+    router.push(studioPlaceHref(pathname, typeof window !== 'undefined' ? window.location.search : (params?.toString() ?? ''), place));
   }, [params, pathname, router]);
 
   /* The writer chose "Show me options" on a place in MAIA's letter. Same room, same arrival act Develop uses: the carried observation

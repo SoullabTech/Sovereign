@@ -74,11 +74,14 @@ seed_sections() {
   python3 - "$1" "$2" "$PSQL_BIN" "$PGPORT" "$3" <<'PYSEED'
 import sys, subprocess, json
 dr, ms, psql, port, chfile = sys.argv[1:6]
-chapters = [(c["h"], c["b"]) for c in json.load(open(chfile))]
+raw = json.load(open(chfile))
+chapters = [(c["h"], c["b"]) for c in raw]
+# optional "d": the CONFIRMED heading level (1..3) of that section, as an import that recognised the heading would record it
+depth = lambda c: (f"{int(c['d'])},'markdown'" if c.get("d") else "NULL,NULL")
 q = lambda x: x.replace("'", "''")
 sql = []
 for i, (h, b) in enumerate(chapters):
-    sql.append(f"WITH src AS (INSERT INTO manuscript_sections(manuscript_id,position,heading,body) VALUES ('{ms}',{i+1},'{q(h)}','{q(b)}') RETURNING id) "
+    sql.append(f"WITH src AS (INSERT INTO manuscript_sections(manuscript_id,position,heading,body,heading_depth,heading_signal) VALUES ('{ms}',{i+1},'{q(h)}','{q(b)}',{depth(raw[i])}) RETURNING id) "
                f"INSERT INTO manuscript_draft_sections(draft_id,position,text,source_section_id) SELECT '{dr}',{i+1},'{q(h + chr(10) + chr(10) + b)}',id FROM src;")
 content = "".join(h + "\n\n" + b for h, b in chapters)
 sql.append(f"UPDATE manuscript_working_drafts SET content='{q(content)}', section_addressable_at=NOW() WHERE id='{dr}';")
@@ -145,6 +148,21 @@ NFJSON
  {"h":"The Second Chair","b":"I keep a second chair in the room that nobody is asked to use. Clients notice it. Marcus Bell, a bus driver from the Eastgate depot, asked about it on his first visit and moved into it on his sixth."},
  {"h":"What the Room Teaches","b":"The room teaches the counsellor more than any training did. Safety is not a technique; it is a pace, kept steadily, until the person sets their own."}]
 HELPERJSON
+  # A STRUCTURED BOOK shaped like a real nonfiction import (EA walk 2026-11-11): Parts and Chapters at level 1, each Chapter's own
+  # section holding only its title and an epigraph, the prose in the sections that follow. Chapter 1's sub-sections came in WITHOUT
+  # a confirmed level; Chapter 2's came in at level 2. Fictional text throughout.
+  cat > "$STATE/structured.json" <<'STRUCTJSON'
+[{"h":"Preface","d":1,"b":"This book follows four practices through a single year. Each chapter opens with a line I have carried for a long time."},
+ {"h":"Part One — The Ground","d":1,"b":"The first part is about what holds still."},
+ {"h":"Chapter 1: The Elements of Wholeness","d":1,"b":"“The river does not hurry, yet it arrives.” — a fisherman on the Wye"},
+ {"h":"My Morning Ritual","b":"I wake before the house does and sit by the cold window. The first ten minutes are only breath; the next ten are a slow walk around the kitchen table, counting nothing."},
+ {"h":"The Four Walkers","b":"Four walkers sheltered under one bridge during a storm that did not negotiate. Each thought the others foolish in a different way, and by morning each had learned the others' road."},
+ {"h":"Chapter 2: Fire — The Element of Spirit","d":1,"b":"“A small fire, well kept, outlasts a great one.” — my grandmother"},
+ {"h":"An Invitation to Sit Around the Campfire","d":2,"b":"Come and sit. The fire asks nothing but that you stay long enough to see it change."},
+ {"h":"The Wisdom of the Firekeeper","d":2,"b":"The firekeeper adds one stick at a time, and only when the last has caught. Patience here is a craft, not a virtue."},
+ {"h":"Part Two — The Elements","d":1,"b":"The second part is about what moves."},
+ {"h":"Chapter 3: Water — The Element of Feeling","d":1,"b":"Water finds the low place and fills it. This chapter is about letting feeling do the same."}]
+STRUCTJSON
   OUT=$(seed_book "$MEMBER" "The Long Harbour" "A novel about leaving a place and finding it smaller on return.")
   MS="${OUT%%|*}"; DR="${OUT##*|}"
   seed_sections "$DR" "$MS" "$STATE/novel.json"
@@ -154,7 +172,10 @@ HELPERJSON
   OUT3=$(seed_book "$MEMBER" "Holding the Room" "A book by a counsellor about the first ten minutes of a session, told through fictional client stories.")
   MS3="${OUT3%%|*}"; DR3="${OUT3##*|}"
   seed_sections "$DR3" "$MS3" "$STATE/helper.json"
-  echo "$MS" > "$STATE/manuscript.id"; echo "$MS2" > "$STATE/manuscript2.id"; echo "$MS3" > "$STATE/manuscript3.id"
+  OUT4=$(seed_book "$MEMBER" "The Four Practices" "A nonfiction book in parts and chapters about four practices kept through one year.")
+  MS4="${OUT4%%|*}"; DR4="${OUT4##*|}"
+  seed_sections "$DR4" "$MS4" "$STATE/structured.json"
+  echo "$MS" > "$STATE/manuscript.id"; echo "$MS2" > "$STATE/manuscript2.id"; echo "$MS3" > "$STATE/manuscript3.id"; echo "$MS4" > "$STATE/manuscript4.id"
 
   if [ "${REAL_MODEL:-0}" = "1" ]; then
     [ -n "${ANTHROPIC_API_KEY:-}" ] || { echo "REAL_MODEL=1 needs ANTHROPIC_API_KEY in this command's environment"; down; exit 2; }
@@ -185,6 +206,7 @@ HELPERJSON
   echo "   novel:     http://localhost:$APPPORT/writers-studio?mode=develop&m=$MS"
   echo "   nonfiction: http://localhost:$APPPORT/writers-studio?mode=develop&m=$MS2"
   echo "   helper:    http://localhost:$APPPORT/writers-studio?mode=develop&m=$MS3   (fictional case material)"
+  echo "   structured: http://localhost:$APPPORT/writers-studio?mode=develop&m=$MS4   (parts, chapters, sub-sections)"
   echo "   stop:      $0 down"
   echo "   logs:      $STATE/app.log   $STATE/stub.log"
   echo "────────────────────────────────────────────────────────────────────────────"

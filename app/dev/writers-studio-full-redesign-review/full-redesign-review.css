@@ -16,7 +16,10 @@
 
 /* ── product bar ───────────────────────────── */
 .fr-bar { height: 56px; flex: none; display: flex; align-items: center; padding: 0 22px 0 32px; background: var(--fr-bar);
-  border-bottom: 1px solid var(--fr-line); box-shadow: 0 2px 6px rgba(8, 20, 59, .035); position: relative; z-index: 2; }
+  border-bottom: 1px solid var(--fr-line); box-shadow: 0 2px 6px rgba(8, 20, 59, .035); position: relative;
+  /* 60: the bar's menus (Preferences, View, the Work switcher) must open ABOVE the room's own controls (up to 46), and below
+     dialogs (70+). At 2 they opened underneath the Write view switch, chapter headings and rail (EA walk 2026-11-11). */
+  z-index: 60; }
 .fr-brand { display: flex; align-items: center; gap: 11px; margin-right: 52px; font-family: var(--fr-serif-stack);
   font-size: 25px; font-weight: 500; color: var(--fr-title); letter-spacing: -.005em; }
 a.fr-brand { text-decoration: none; border-radius: 6px; }

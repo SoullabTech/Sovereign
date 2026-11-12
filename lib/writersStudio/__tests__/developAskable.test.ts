@@ -18,6 +18,8 @@ const NOT_CONTROLS = new Set([
   'data-pending-question', 'data-resume', 'data-sanctuary-turn', 'data-sanctuary-turns', 'data-send-mode', 'data-studio-act-status',
   'data-studio-action', 'data-turn', 'data-work-thread', 'data-studio-conversation', 'data-maia-presentation-notice',
   'data-develop-place', 'data-develop-panel-open',
+  /* EA walk 2026-11-11: each section of the whole chapter, on the stage and in the lens pane (read-only display) */
+  'data-develop-section', 'data-lens-section',
 ]);
 
 it('every control on the Develop stage and in its conversation is classified against the rule', () => {

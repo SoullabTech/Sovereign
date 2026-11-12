@@ -5,6 +5,7 @@
  */
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useId, useState } from 'react';
+import SessionPostureChoice from '@/app/writers-studio/canvas/SessionPostureChoice';
 import { listDecisions, settleDecisionNote, withdrawDecisionById, type SettledDecision } from '@/lib/writersStudio/decisionClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 
@@ -12,6 +13,7 @@ export default function SettledDecisions({ workId }: { workId: string }) {
   const [items, setItems] = useState<SettledDecision[] | undefined>(undefined);
   const [draft, setDraft] = useState('');
   const [note, setNote] = useState<string | null>(null);
+  const [, setPostureTick] = useState(0); // re-read the posture after the writer chooses it
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const refresh = useCallback(() => { void listDecisions(workId).then(setItems); }, [workId]);
@@ -25,7 +27,7 @@ export default function SettledDecisions({ workId }: { workId: string }) {
     if (!posture.resolved || posture.sanctuary) {
       setNote(posture.resolved
         ? 'Sanctuary is on, so nothing is kept. Turn it off to record a decision.'
-        : 'Your Sanctuary setting could not be read on this device, so nothing was recorded. Open MAIA here once, then try again.');
+        : 'Nothing was recorded yet: choose how MAIA holds this session below, then press it again.');
       return;
     }
     const r = await settleDecisionNote(workId, draft);
@@ -66,6 +68,7 @@ export default function SettledDecisions({ workId }: { workId: string }) {
             aria-label="In your words: what have you decided?" placeholder="In your words: what have you decided?" style={{ font: 'inherit' }} />
           <button type="button" style={{ ...btn, alignSelf: 'flex-start' }} disabled={draft.trim().length === 0} onClick={() => void add()}>Keep this</button>
           {note ? <span data-settled-note="true" role="status">{note}</span> : null}
+          {note && !posture.resolved ? <SessionPostureChoice compact onChosen={() => { setNote(null); setPostureTick((x) => x + 1); }} /> : null}
         </div>
       ) : null}
     </div>
