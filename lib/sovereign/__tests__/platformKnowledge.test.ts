@@ -9,9 +9,7 @@ import {
   PLATFORM_KNOWLEDGE_ADDENDUM,
   PLATFORM_KNOWLEDGE_LAST_VERIFIED,
   PLATFORM_KNOWLEDGE_VERSION,
-  PLATFORM_ASTROLOGY_PRO_GUIDE,
   PLATFORM_ASTROLOGY_LAST_VERIFIED,
-  PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM,
   PLATFORM_DIRECTION_PUBLIC,
 } from '../platformKnowledge';
 
@@ -348,36 +346,16 @@ describe('Astrology and Astrology Pro (2026-11-11)', () => {
     expect(lower(invited)).toContain('you cannot tell whether this member has astrology pro; never guess');
   });
 
-  it('the Pro guide carries its own verification date and stays off the public surface', () => {
-    expect(PLATFORM_ASTROLOGY_PRO_GUIDE).toContain(PLATFORM_ASTROLOGY_LAST_VERIFIED);
-    // The guide's own heading; the AREAS guidance line may name it, but the
-    // guide text itself is member-surface only.
-    expect(ALL).toContain('🔭 ASTROLOGY PRO GUIDE');
-    expect(PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM).not.toContain('🔭 ASTROLOGY PRO GUIDE');
-    expect(PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM).not.toContain('The nine tools:');
+  it('the dated entry, and from the main conversation MAIA cannot see charts', () => {
+    expect(invited).toContain(PLATFORM_ASTROLOGY_LAST_VERIFIED);
+    expect(lower(invited)).toContain('from here you cannot see their charts');
+    expect(lower(invited)).toContain('never describe one you have not been shown');
+    expect(lower(invited)).toContain('do not steer anyone toward pro');
   });
 
-  it('the guide names all nine tools', () => {
-    for (const tool of ['Chart', 'Timing', 'Relationships', 'Places', 'Traditions', 'Readings', 'Research', 'Study', 'Saved charts']) {
-      expect(PLATFORM_ASTROLOGY_PRO_GUIDE).toContain(`• ${tool} —`);
-    }
-  });
-
-  it('MAIA in the main conversation cannot see charts and the astrologer stays the author', () => {
-    const g = lower(PLATFORM_ASTROLOGY_PRO_GUIDE);
-    expect(g).toContain('you cannot see their charts');
-    expect(g).toContain('never describe a chart you have not been shown here');
-    expect(g).toContain('never a verdict or a prediction');
-    expect(g).toContain('the astrologer is the author of any reading');
-    expect(g).toContain('do not steer them toward pro');
-  });
-
-  it('client consent and the honest limits are stated', () => {
-    const g = lower(PLATFORM_ASTROLOGY_PRO_GUIDE);
-    expect(g).toContain("permission to keep the birth details");
-    expect(g).toContain('only after the astrologer confirms the person agreed');
-    expect(g).toContain('not yet independently certified');
-    expect(g).toContain('66° latitude');
+  it('the workstation guide is not in the main map: it lives in lib/astrology/proGuide.ts, inside Pro only', () => {
+    expect(ALL).not.toContain('THE WORKSTATION YOU ARE IN');
+    expect(ALL).not.toContain('Draw astro map');
   });
 
   it('public direction keeps live and in-development apart for Astrology', () => {

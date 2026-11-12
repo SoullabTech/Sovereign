@@ -1,8 +1,10 @@
 # Platform knowledge — Astrology and Astrology Pro evidence (2026-11-11)
 
-Evidence for the Astrology entries and `PLATFORM_ASTROLOGY_PRO_GUIDE` in
-`lib/sovereign/platformKnowledge.ts` (version 0.6.0). Each claim MAIA carries is
-listed with where it was verified.
+Evidence for the Astrology entries in `lib/sovereign/platformKnowledge.ts`
+(version 0.6.0) and the workstation guide in `lib/astrology/proGuide.ts`, which only
+MAIA inside Astrology Pro receives. Each claim MAIA carries is listed with where it
+was verified. Control labels in `proGuide.ts` are additionally checked against the
+Pro UI source by `lib/astrology/__tests__/proGuide.test.ts`.
 
 The file's header names `docs/architecture/PLATFORM_KNOWLEDGE_AUDIT_2026-07-16.md`
 as the evidence register. That file is not present on canonical as of this date,
