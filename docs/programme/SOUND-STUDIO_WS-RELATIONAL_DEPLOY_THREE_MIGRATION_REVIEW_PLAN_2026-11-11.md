@@ -1,7 +1,12 @@
 # Sound Studio + Writer's Studio relational architecture deploy 2026-11-11: three-migration review plan
 
 **Date:** 2026-11-11
-**Status:** a bounded, independent review plan. It confers no deployment authority by itself.
+**Status:** a bounded, independent review plan. It confers no deployment authority by itself. **Revision 2.**
+**Revision history (kept):**
+- Revision 1 (plan sha256 `8938f7ed…`, target `31d56f00d9`) was reviewed by session `e6abe353-da6f-4d03-9be3-6ac8b4159461`: APPROVED · COMPATIBLE · ALL_PREFIXES_COMPATIBLE, with findings medium 1 and low 5. It was **not admitted**, because a medium finding stands.
+- Its F1 (medium) was correct. The regression test's stub declared `member_manuscripts.member_id` ON DELETE CASCADE, but production declares RESTRICT (`database/migrations/20260721000003_press_manuscript_room.sql`). So the test's account-delete case did not model production, and question 7's expectation was not established.
+- Revision 2 corrects the test (`ON DELETE RESTRICT`; account deletion modelled as erase-every-manuscript-then-delete-member; a new case showing the pre-existing RESTRICT refusal; migration 1 applied; every new table populated) and restates questions 5 and 7 and the evidence below.
+- The migrations and their hashes are unchanged. The low findings F2–F6 are left to this review to re-judge.
 **Supersedes:** `docs/programme/WRITERS-STUDIO_RELATIONAL_ARCHITECTURE_TWO_MIGRATION_REVIEW_PLAN_2026-11-11.md`. That plan named two migrations and the pre-correction SHA-256 of `20261111000002`; both are now wrong. It is left byte-for-byte as written.
 **Live old reader:** supplied by the harness through the bundle's `MIGRATION_COMPATIBILITY_CONTEXT.json`, not embedded here, because a plan that names a live release goes stale when another lane deploys. The deploy lane re-witnesses the old reader immediately before mutation.
 **Founder authorization:**
@@ -84,14 +89,29 @@ A failed migration must leave the candidate unswapped and the old reader live.
 2. **Additive.** Establish that no migration alters, drops, rewrites or backfills any existing table, column, constraint, trigger or data. Nothing they create exists in production.
 3. **Lock-timeout law.** Each migration sets `lock_timeout` inside its transaction before any DDL. Judge the lock risk of the new foreign keys, which take a SHARE ROW EXCLUSIVE lock on `members` (migrations 1–3) and `member_manuscripts` (migrations 2–3).
 4. **Old reader unaffected, and prefix compatibility.** The exact old reader has no code that reads or writes the new tables or functions; confirm by search, and read what you rely on. Prefix 1, prefix 1–2 and prefix 1–3 must each be compatible with the exact old reader still being live. Migration 3 requires migration 2's `work_editorial_letters`.
-5. **The events trigger allows exactly the foreign key's SET NULL.** Judge whether `ws_pass_run_event_append_only()` admits anything other than the referential SET NULL of `letter_id`. The test `tests/constitutional/ws-delete/dynamic/run-pass-run-letter-erasure-pg16.sh` claims these results: deleting a letter, a manuscript and an account succeeds, while five ordinary UPDATEs are refused. Those five are a direct `letter_id → NULL`, a state change, `letter_id → NULL` together with another column, an update on `editorial_pass_runs`, and an update on `work_editorial_letters`. Read the test; say whether it proves that claim, and what it does not cover.
+5. **The events trigger allows exactly the foreign key's SET NULL.** Judge whether `ws_pass_run_event_append_only()` admits anything other than the referential SET NULL of `letter_id`. The test `tests/constitutional/ws-delete/dynamic/run-pass-run-letter-erasure-pg16.sh` (revision 2) applies all three migrations over stub parents that use production's `member_manuscripts` RESTRICT. It populates every new table, then claims these results:
+- deleting a letter succeeds;
+- erasing a manuscript succeeds;
+- account deletion, modelled as erase-every-manuscript-then-delete-member, succeeds and removes the member's rows from all five tables;
+- deleting a member who still holds a manuscript is refused by `member_manuscripts`' RESTRICT, not by any new table or trigger;
+- five ordinary UPDATEs are refused: a direct `letter_id → NULL`, a state change, `letter_id → NULL` together with another column, an update on `editorial_pass_runs`, and an update on `work_editorial_letters`.
+
+Read the test; say whether it proves that claim, and what it does not cover. Revision 1's review noted that the exception holds for letter_id-only nulling from any nested trigger, not only the referential action (F2), and that no such trigger exists; re-judge that.
 6. **Target reader against the final schema.** Judge whether the target's writers and readers produce statements consistent with the columns, CHECKs and triggers, and whether any issues an UPDATE the triggers refuse:
    - `lib/writersStudio/letter/letterStore.ts`
    - `lib/writersStudio/studio/passRun.ts`
    - `app/api/listen/review/route.ts`
    - `app/api/listen/review/[id]/route.ts`
    - `app/api/admin/monitor/sound-studio-reviews/route.ts`
-7. **Deletion with the tables populated.** Every new foreign key that references `members` or `member_manuscripts` is ON DELETE CASCADE. Judge whether target account deletion (`app/api/members/delete-account/route.ts`) and manuscript erasure (`lib/manuscript/source/eraseManuscript.ts`) succeed when all five tables hold the member's rows, including a completed pass with its letter. Also judge whether the old reader's account deletion succeeds in the window between migration and swap.
+7. **Deletion with the tables populated: the new tables add no new block.** Every new foreign key that references `members` or `member_manuscripts` is ON DELETE CASCADE.
+
+   Pre-existing and out of scope for this deploy: `member_manuscripts.member_id` is ON DELETE RESTRICT, so in both readers a member who still holds a manuscript cannot be deleted until their manuscripts are erased. Revision 1's review also found that the target `delete-account` route does not name `member_manuscripts` in its preflight, so such a member receives a 500 rather than a 409. That is a separate decision for its owner, not this deploy.
+
+   Judge whether:
+   - (a) manuscript erasure (`lib/manuscript/source/eraseManuscript.ts`) succeeds when the new tables hold rows for that manuscript, including a completed pass with its letter;
+   - (b) once a member's manuscripts are erased, deleting the member succeeds with `sound_studio_reviews` and any remaining rows present;
+   - (c) none of the three migrations introduces a new refusal on either path;
+   - (d) the old reader's account deletion and manuscript erasure behave exactly as before in the window between migration and swap.
 8. **Rollback.** Rollback is `scripts/deploy-production.sh rollback` to the previous image, with the schema left in place. `scripts/rollback-guards/` holds no guard for the old reader. Judge what the old reader would do with rows the target wrote. Expected: it ignores them, and account deletion cascades them away. Name anything lost or blocked, and whether a data guard is needed.
 9. **Consent, Sanctuary and the dark launch.**
    - A Sound Studio review row is written only by the reviewer's deliberate confirm (`POST /api/listen/review`, behind `requireListenReviewer`), and the raw transcript only when the reviewer chose to keep it. Confirm that with the review flag off, no route writes or reads `sound_studio_reviews` for a member.
@@ -144,7 +164,11 @@ And `migration_compatibility`:
 - **#2202 (Sound Studio review guide):** listening suite green; CI green, including empty-database reconstruction.
 - **#2203 (media tickets):** listening suite 253/253 after the merge with canonical; CI green.
 - **#2220 (merged as `053fde302`):** CI green, including empty-database reconstruction, the TypeScript no-regression gate and the covenant gates (Class B). The Writer's Studio suite passed 1,688 tests, with one known red.
-- **#2227:** the regression test above fails on PostgreSQL 16.15 at its test-only commit (all three deletes refused) and passes at the fix on PostgreSQL 16.15 and 17.7, run on throwaway loopback clusters.
+- **#2227:** revision 1 of the regression test failed on PostgreSQL 16.15 at its test-only commit (all three deletes refused) and passed at the fix on PostgreSQL 16.15 and 17.7, run on throwaway loopback clusters. That revision's account case used a CASCADE stub (revision 1 F1).
+- **Revision 2 of the test, on PostgreSQL 16.15:**
+  - With the pre-#2227 `20261111000002` swapped in, it fails: the letter delete, the manuscript erasure and the account deletion are refused with "editorial_pass_run_events is append-only".
+  - With the target migrations, all nine cases pass: the four deletion cases (including the RESTRICT refusal) and the five refused UPDATEs.
+- **Revision 1 review:** session `e6abe353-da6f-4d03-9be3-6ac8b4159461`; evidence in `~/rc-evidence-31d56f0/` on the Mac Studio. Not admitted.
 
 Not done anywhere: a browser walk, or a real-database run of the new routes.
 
