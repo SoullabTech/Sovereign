@@ -274,7 +274,7 @@ export function Shell(props: ShellProps) {
               They never grant source, MAIA or editorial authorization. */}
           <WriterPreferencesMenu />
           <details className="fr-view-menu" ref={viewMenuRef} data-studio-view-menu>
-            <summary>View</summary>
+            <summary aria-label="Layout: text size and which panels show">Layout</summary>
             <div className="fr-view-menu-body">
           {/* Preserve existing writer-owned topbar download/actions. */}
           <div className="fr-bar-accessories" data-studio-topbar-accessories />

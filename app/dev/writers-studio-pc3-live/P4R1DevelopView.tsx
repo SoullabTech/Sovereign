@@ -1,5 +1,6 @@
 'use client';
 
+import SessionPostureChoice from '@/app/writers-studio/canvas/SessionPostureChoice';
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { STUDIO_PLACE_HASH, type StudioPlace } from '@/lib/writersStudio/studioActions';
@@ -18,7 +19,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
 import type { LiveThemesPayload, LiveGovernedTheme, LiveThemeCandidate } from '@/lib/writersStudio/themes/liveTypes';
-import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, isConfirmedChapterRoot, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationClient';
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
@@ -307,8 +308,19 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
   onSection: (id: string) => void;
 }) {
   const current = sections.find((section) => section.draftSectionId === currentSectionId) ?? null;
+  /* EA walk 2026-11-11: a headed section with NO confirmed level (e.g. "My Morning Ritual" inside Chapter 4) vanished from this rail
+     while Write's rail listed it and the chapter span included it. It is listed now, under the chapter it falls in, marked
+     data-depth-unconfirmed: shown as part of its chapter, never claimed to be a level-2 heading. */
+  /* EA live walk 2026-11-12: in Elemental Alchemy, Chapters 1-4 keep their sub-sections at level 3 ("My Morning Ritual", "The Story
+     of the Four Yogis"), which this rail also left out. A level-3 or unconfirmed heading is listed when it sits INSIDE a confirmed
+     chapter (the nearest level-1 heading before it is a Chapter), so table-of-contents lines in the front matter are not duplicated. */
+  const insideChapter = (section: RebuildSection): boolean => {
+    if (section.headingDepth !== null && section.headingDepth !== 3) return false;
+    const before = sections.filter((s) => s.position < section.position && s.headingDepth === 1);
+    return isConfirmedChapterRoot(before[before.length - 1]);
+  };
   const structural = sections
-    .filter((section) => section.heading?.trim() && (section.headingDepth === 1 || section.headingDepth === 2))
+    .filter((section) => section.heading?.trim() && (section.headingDepth === 1 || section.headingDepth === 2 || insideChapter(section)))
     .filter((section, index, all) => {
       if (index === 0) return true;
       return all[index - 1]?.heading?.trim().toLowerCase() !== section.heading?.trim().toLowerCase();
@@ -334,7 +346,8 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
           <li
             key={section.draftSectionId}
             className={section.draftSectionId === activeRailId ? 'fr-current' : undefined}
-            data-depth={section.headingDepth ?? undefined}
+            data-depth={section.headingDepth ?? (section.heading?.trim() && insideChapter(section) ? '2' : undefined)}
+            data-depth-unconfirmed={section.headingDepth === null && section.heading?.trim() && insideChapter(section) ? 'true' : undefined}
           >
             <button
               type="button"
@@ -2145,6 +2158,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [planView, setPlanView] = useState<PlanView | null>(null);
   const [planBusy, setPlanBusy] = useState(false);
   const [planNote, setPlanNote] = useState<string | null>(null);
+  /* the session posture could not be read: offer the writer's own choice in place (SessionPostureChoice), never a guess */
+  const [planNeedsPosture, setPlanNeedsPosture] = useState(false);
   const stageManuscriptId = props.manuscriptId;
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE !== '1' || !stageManuscriptId) return;
@@ -2155,7 +2170,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const makePlan = async (ask: string): Promise<boolean> => {
     const posture = readCurrentSanctuaryPosture();
     if (!posture.resolved || posture.sanctuary) {
-      setPlanNote(posture.resolved ? 'Sanctuary is on, so MAIA is not reading your work and cannot make a plan.' : 'Your Sanctuary setting could not be read on this device, so no plan was made. Open MAIA here once, then try again.');
+      setPlanNote(posture.resolved ? 'Sanctuary is on, so MAIA is not reading your work and cannot make a plan.' : 'No plan was made yet: choose how MAIA holds this session, then press Make a plan again.');
+      setPlanNeedsPosture(!posture.resolved);
       return false;
     }
     setPlanBusy(true); setPlanNote(null);
@@ -3387,8 +3403,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0 && !leftStage;
   const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
   const stageLabel = stageSection?.heading?.trim() || 'this chapter';
-  const stageNext = props.sections[props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1];
-  const stageStarters = startersFor(workKind ?? null, stageLabel, stageNext ? (stageNext.heading?.trim() || 'what comes next') : null);
+  /* What comes AFTER this chapter (EA walk 2026-11-11: "How does Chapter 4 lead into My Morning Ritual?" named the chapter's own
+     sub-section). With a chapter span, the next section after its end; otherwise the next section. */
+  const stageNextIndex = props.chapterScope
+    ? props.sections.findIndex((x) => x.draftSectionId === props.chapterScope!.toSectionId) + 1
+    : props.sections.findIndex((x) => x.draftSectionId === stageSection?.draftSectionId) + 1;
+  const stageNext = stageNextIndex > 0 ? props.sections[stageNextIndex] : undefined;
+  const stageStarters = startersFor(workKind ?? null, props.chapterScope?.label ?? stageLabel, stageNext ? (stageNext.heading?.trim() || 'what comes next') : null);
   /* Founder 2026-11-11: "MAIA should automatically read manuscripts that are opened. Why be forced to ask her to read something we sent her
      already." She reads the chapter the writer is on by herself ONLY under the writer's own standing permission (the read scope the writer
      granted: "MAIA may read your saved work"), never in Sanctuary or when that setting cannot be read, once per chapter per visit, and a
@@ -3417,6 +3438,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       workTitle={props.workTitle || null}
       sections={props.sections}
       currentId={stageSection?.draftSectionId ?? null}
+      chapterRange={props.chapterScope ? { fromSectionId: props.chapterScope.fromSectionId, toSectionId: props.chapterScope.toSectionId } : null}
       onSelect={selectManuscriptLocus}
       starters={stageStarters}
       onStarter={placeInStageConversation}
@@ -3426,6 +3448,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       plan={planView}
       planBusy={planBusy}
       planNote={planNote}
+      planPostureChoice={planNeedsPosture ? <SessionPostureChoice compact onChosen={() => { setPlanNeedsPosture(false); setPlanNote(null); }} /> : null}
       onMakePlan={makePlan}
       onEditPlan={editPlan}
       onWorkOnStep={workOnStep}
@@ -3452,6 +3475,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const lensChapter = lensBeside && stageSection ? (
     <ChapterReadingPane
       section={stageSection}
+      sections={props.sections}
+      chapterRange={props.chapterScope ? { fromSectionId: props.chapterScope.fromSectionId, toSectionId: props.chapterScope.toSectionId } : null}
       lensLabel={NAV_LABEL[props.field]}
       onBackToReading={() => props.onField('overview')}
     />

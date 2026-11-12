@@ -66,6 +66,11 @@ ENV NEXT_PUBLIC_SHOW_BETA_BADGE=${NEXT_PUBLIC_SHOW_BETA_BADGE}
 # production compose passes 1 (founder ruling 2026-11-09: on for all Writer's Studio beta members).
 ARG NEXT_PUBLIC_WS_DEVELOP_STAGE=0
 ENV NEXT_PUBLIC_WS_DEVELOP_STAGE=${NEXT_PUBLIC_WS_DEVELOP_STAGE}
+# MAIA reads the opened chapter / the whole book by herself, ONLY under the writer's own standing permission to read the saved Work
+# and never in Sanctuary (the code enforces both). Off unless the build passes 1; production compose passes 1
+# (founder ruling 2026-11-12: "I don't open a manuscript and NOT want her to have read it").
+ARG NEXT_PUBLIC_WS_AUTO_READ=0
+ENV NEXT_PUBLIC_WS_AUTO_READ=${NEXT_PUBLIC_WS_AUTO_READ}
 
 # Install psql for SQL migrations (used by migrate service)
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
