@@ -193,7 +193,8 @@ describe('Ask MAIA inside Pro', () => {
     it('has MAIA say what it cannot see in a view it is not given figures for', async () => {
       await ask({ section: 'natal', subject: 'first', view: 'astro-map', question: 'Where is my Venus line?' });
       const prompt = generateSimple.mock.calls[0][0].systemPrompt as string;
-      expect(prompt).toContain('the astro map and relocated chart open');
+      expect(prompt).toContain('the astro map (whether they have relocated the chart to a place is not known) open');
+      expect(prompt).not.toContain('relocated chart open');
       expect(prompt).toContain('say plainly what you cannot see from here');
     });
 

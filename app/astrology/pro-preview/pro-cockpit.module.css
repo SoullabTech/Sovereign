@@ -15,6 +15,7 @@
   height: 100svh;
   min-height: 560px;
   overflow: hidden;
+  position: relative;
   background: #090e15;
   color: var(--ink);
   color-scheme: dark;
@@ -62,6 +63,13 @@
 .method { flex: 0 0 auto; padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); display: grid; gap: 6px; max-height: 40svh; overflow: auto; }
 .method p { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--ink-soft); max-width: 110ch; }
 .method button { justify-self: start; }
+/* Sharing floats over the desk instead of pushing the wheel and tools down. */
+.sharePopover {
+  position: absolute; top: 56px; right: 16px; z-index: 30;
+  width: min(560px, calc(100% - 32px)); max-height: 70svh;
+  border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .55);
+}
 
 /* ── Body grid ──────────────────────────────────────────────── */
 .body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 42fr) 9px minmax(400px, 58fr); }
@@ -170,6 +178,15 @@
   .work { display: block; }
   .talkBar { width: calc(100% - 20px); position: sticky; bottom: 8px; z-index: 4; background: #1a1f24; }
   .toolHead { position: static; flex-wrap: wrap; }
+  /* The header wraps here, so sharing returns to the flow beneath it. */
+  .sharePopover { position: static; width: auto; max-height: none; border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
+}
+@media (max-width: 600px) {
+  /* A phone header gets to the wheel sooner. The preview badge stays: it is a claim, not decoration. */
+  .statusBar { gap: 8px; padding: 8px 12px; }
+  .flag { font-size: .6rem; padding: 2px 7px; }
+  .identity h1 { font-size: 1.05rem; }
+  .sky { font-size: .74rem; column-gap: 10px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .rail button, .tabs button, .iconButton { transition: color .12s, background-color .12s, border-color .12s; }

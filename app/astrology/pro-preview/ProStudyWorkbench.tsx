@@ -89,7 +89,7 @@ export default function ProStudyWorkbench({ chart }: { chart: BirthChart | null 
           <p>{lesson.observation}</p>
         </div>
         <div className={styles.ownerChart} role="note">
-          <h5>With your chart</h5>
+          <h5>With the open chart</h5>
           <p>{studyChartObservation(lesson.id, snapshot)}</p>
         </div>
         <p className={styles.boundary}><strong>Method boundary:</strong> {lesson.boundary}</p>
