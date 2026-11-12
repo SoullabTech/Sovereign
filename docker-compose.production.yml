@@ -30,6 +30,9 @@ x-maia-build: &maia_build
     # Writer's Studio Develop stage — build-time (Next.js inlines NEXT_PUBLIC_*).
     # Founder ruling 2026-11-09: ON for all Writer's Studio beta members.
     NEXT_PUBLIC_WS_DEVELOP_STAGE: ${NEXT_PUBLIC_WS_DEVELOP_STAGE:-1}
+    # MAIA reads opened chapters / the whole book by herself, only under the writer's own standing read permission, never in
+    # Sanctuary. Founder ruling 2026-11-12: ON. Build-time (inlined). Set to 0 and rebuild to turn off.
+    NEXT_PUBLIC_WS_AUTO_READ: ${NEXT_PUBLIC_WS_AUTO_READ:-1}
     # Deploy-lane tripwire: deliberately NO default. Only the deploy lane
     # (scripts/deploy-lock.sh acquire_deploy_lock) exports this, so a raw
     # `docker compose ... up -d --build` FAILS LOUDLY in the Dockerfile

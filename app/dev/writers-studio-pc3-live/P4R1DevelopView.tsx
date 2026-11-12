@@ -19,7 +19,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
 import type { LiveThemesPayload, LiveGovernedTheme, LiveThemeCandidate } from '@/lib/writersStudio/themes/liveTypes';
-import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, isConfirmedChapterRoot, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationClient';
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
@@ -311,10 +311,13 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
   /* EA walk 2026-11-11: a headed section with NO confirmed level (e.g. "My Morning Ritual" inside Chapter 4) vanished from this rail
      while Write's rail listed it and the chapter span included it. It is listed now, under the chapter it falls in, marked
      data-depth-unconfirmed: shown as part of its chapter, never claimed to be a level-2 heading. */
+  /* EA live walk 2026-11-12: in Elemental Alchemy, Chapters 1-4 keep their sub-sections at level 3 ("My Morning Ritual", "The Story
+     of the Four Yogis"), which this rail also left out. A level-3 or unconfirmed heading is listed when it sits INSIDE a confirmed
+     chapter (the nearest level-1 heading before it is a Chapter), so table-of-contents lines in the front matter are not duplicated. */
   const insideChapter = (section: RebuildSection): boolean => {
-    if (section.headingDepth !== null) return false;
-    const before = sections.filter((s) => s.position < section.position && s.headingDepth !== null);
-    return before[before.length - 1]?.headingDepth === 1 && sections.some((s) => s.headingDepth === 1);
+    if (section.headingDepth !== null && section.headingDepth !== 3) return false;
+    const before = sections.filter((s) => s.position < section.position && s.headingDepth === 1);
+    return isConfirmedChapterRoot(before[before.length - 1]);
   };
   const structural = sections
     .filter((section) => section.heading?.trim() && (section.headingDepth === 1 || section.headingDepth === 2 || insideChapter(section)))

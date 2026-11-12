@@ -384,10 +384,12 @@
 }
 
 /* Develop structural rail + complete field row */
-.p4r1-root .p4r1-structural-rail li[data-depth='2'] button{
+.p4r1-root .p4r1-structural-rail li[data-depth='2'] button,
+.p4r1-root .p4r1-structural-rail li[data-depth='3'] button{
   padding-left:34px
 }
-.p4r1-root .p4r1-structural-rail li[data-depth='2'] b{
+.p4r1-root .p4r1-structural-rail li[data-depth='2'] b,
+.p4r1-root .p4r1-structural-rail li[data-depth='3'] b{
   font-size:.92em;font-weight:500;color:var(--fr-ink2)
 }
 .p4r1-root .p4r1-structural-rail li[data-depth='2'] span{
