@@ -106,3 +106,28 @@ describe('F9 · no dead end when the session posture is unknown', () => {
     expect(src).not.toMatch(/useEffect/);
   });
 });
+
+describe('EA live walk 2026-11-12', () => {
+  it('⭐ level-3 sub-sections inside a confirmed chapter are listed in Develop’s rail (EA Chapters 1-4)', () => {
+    const view = read('app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx');
+    const rule = view.slice(view.indexOf('const insideChapter'), view.indexOf('const structural'));
+    expect(rule).toMatch(/headingDepth !== 3/);
+    expect(rule).toMatch(/isConfirmedChapterRoot\(/);
+    const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
+    expect(css).toMatch(/li\[data-depth='3'\] button/);
+  });
+  it('⭐ automatic reading is passed into the production build (founder ruling: on)', () => {
+    expect(read('docker-compose.production.yml')).toMatch(/NEXT_PUBLIC_WS_AUTO_READ: \$\{NEXT_PUBLIC_WS_AUTO_READ:-1\}/);
+    const docker = read('Dockerfile');
+    expect(docker).toMatch(/ARG NEXT_PUBLIC_WS_AUTO_READ=0/);
+    expect(docker).toMatch(/ENV NEXT_PUBLIC_WS_AUTO_READ=\$\{NEXT_PUBLIC_WS_AUTO_READ\}/);
+  });
+  it('the consent rules on automatic reading are unchanged: standing permission and never in Sanctuary', () => {
+    const view = read('app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx');
+    const auto = view.slice(view.indexOf("NEXT_PUBLIC_WS_AUTO_READ !== '1'"), view.indexOf("NEXT_PUBLIC_WS_AUTO_READ !== '1'") + 1400);
+    expect(auto).toMatch(/getReadScope\(/);
+    expect(auto).toMatch(/posture\.sanctuary/);
+    const letter = read('app/dev/writers-studio-pc3-live/EditorialLetterPanel.tsx');
+    expect(letter).toMatch(/scope\.level === 'work' && posture\.resolved && !posture\.sanctuary/);
+  });
+});
