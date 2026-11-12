@@ -35,6 +35,22 @@ hold, and is otherwise absent:
 The production environment is expected to leave these unset. That must be confirmed
 before any deploy (D1).
 
+**Access since 2026-11-10: restricted tester beta (supersedes "founder-only" above as
+current fact; the text above is kept as the D1 record).** On founder direction the
+production phase is `ASTRO_PRO_ACCESS_PHASE=tester-grant`: the founder plus members
+with an audited individual grant (`astro_pro_tester_grant_events`, nine at launch) can
+open the room; everyone else still receives no Pro content. It is still not a release,
+a tier or an entitlement. Where this contract says "founder" or "non-founder" about
+who may enter, read "the founder or a granted tester" and "a member without a grant".
+Launch record: #1893.
+
+**MAIA's guidance (2026-11-11).** Inside the room, MAIA is given a source-checked list
+of the workstation's controls (`lib/astrology/proGuide.ts`, guarded by a test that every
+label appears in this room's source) and told her scope here: astrology, the
+workstation itself, and its technical side. She names and locates controls; she cannot
+press any of them. Outside the room, MAIA's platform map carries only a short Astrology
+Pro entry (`lib/sovereign/platformKnowledge.ts`) and cannot see any chart.
+
 ## What this room is for
 
 The founder, working as a professional astrologer, testing a chart-first workstation

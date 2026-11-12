@@ -9,6 +9,8 @@ import {
   PLATFORM_KNOWLEDGE_ADDENDUM,
   PLATFORM_KNOWLEDGE_LAST_VERIFIED,
   PLATFORM_KNOWLEDGE_VERSION,
+  PLATFORM_ASTROLOGY_LAST_VERIFIED,
+  PLATFORM_DIRECTION_PUBLIC,
 } from '../platformKnowledge';
 
 // Platform-area grounding tests (2026-07-16).
@@ -322,5 +324,43 @@ describe('one relationship, one voice (composition ruling 2026-07-16)', () => {
     expect(lower(PLATFORM_RELATIONSHIPS)).toContain(
       'a member never needs a feature to be accompanied',
     );
+  });
+});
+
+describe('Astrology and Astrology Pro (2026-11-11)', () => {
+  const sectionOf = (start: string, end: string) =>
+    PLATFORM_AREAS.slice(PLATFORM_AREAS.indexOf(start), PLATFORM_AREAS.indexOf(end));
+  const open = sectionOf('Areas generally available to members', 'Available under specific roles or invitations');
+  const invited = sectionOf('Available under specific roles or invitations', 'Built but not generally open');
+
+  it('Astrology is not listed as generally available: the room is testers-only', () => {
+    expect(open).not.toContain('• Astrology');
+    expect(invited).toContain('• Astrology —');
+    expect(lower(invited)).toContain('open at present to invited testers');
+    expect(lower(invited)).toContain('never predictive');
+  });
+
+  it('Astrology Pro is an invitation-only preview, never a tier or a guess about this member', () => {
+    expect(invited).toContain('• Astrology Pro —');
+    expect(lower(invited)).toContain('it is not a tier, plan, or subscription');
+    expect(lower(invited)).toContain('you cannot tell whether this member has astrology pro; never guess');
+  });
+
+  it('the dated entry, and from the main conversation MAIA cannot see charts', () => {
+    expect(invited).toContain(PLATFORM_ASTROLOGY_LAST_VERIFIED);
+    expect(lower(invited)).toContain('from here you cannot see their charts');
+    expect(lower(invited)).toContain('never describe one you have not been shown');
+    expect(lower(invited)).toContain('do not steer anyone toward pro');
+  });
+
+  it('the workstation guide is not in the main map: it lives in lib/astrology/proGuide.ts, inside Pro only', () => {
+    expect(ALL).not.toContain('THE WORKSTATION YOU ARE IN');
+    expect(ALL).not.toContain('Draw astro map');
+  });
+
+  it('public direction keeps live and in-development apart for Astrology', () => {
+    expect(PLATFORM_DIRECTION_PUBLIC).toContain('with Astrology open to invited testers');
+    const inDev = PLATFORM_DIRECTION_PUBLIC.slice(PLATFORM_DIRECTION_PUBLIC.indexOf('In development'));
+    expect(inDev).toContain('Astrology Pro');
   });
 });
