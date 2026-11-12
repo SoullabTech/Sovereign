@@ -24,6 +24,8 @@ import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
 import { reReadAll, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { shouldShowInspirationDoor } from '@/lib/writersStudio/inspirationOpening';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -94,6 +96,17 @@ export default function P4R1HomeController() {
     return manuscriptId;
   }, [post]);
 
+  /* JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01 — a held spark reaches the Work ONLY through the existing member-act
+     PATCH, with the exact words the writer chose to hold (sparkCommitPlan decided that, never this function). */
+  const setPurpose = useCallback(async (workId: string, purpose: string) => {
+    const response = await apiFetch('/api/sovereign/living-works/' + workId, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ purpose }),
+    });
+    if (!response.ok) throw new Error('purpose:' + response.status);
+  }, []);
+
   // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
   const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts, reloadHistory]), [reloadWorks, reloadManuscripts, reloadHistory]);
 
@@ -140,13 +153,32 @@ export default function P4R1HomeController() {
     router.push(pathname + (next.toString() ? '?' + next.toString() : ''));
   }, [params, pathname, router]);
 
+  /* A spark held at the door and carried into "Bring what I've written". Held in this view only; a reload forgets it. */
+  const pendingSpark = useRef<string | null>(null);
+  const [sparkCarryFailed, setSparkCarryFailed] = useState<string | null>(null);
+
   const completeImport = useCallback(async (manuscriptId: string) => {
     // Refresh is useful for the real member path and harmless in the bounded
     // founder fixture. A transient list failure must not strand a successfully
     // created manuscript, so identity navigation remains the final authority.
     await refresh().catch(() => undefined);
+    const spark = pendingSpark.current;
+    if (spark !== null) {
+      try {
+        const listing = await apiFetch('/api/sovereign/living-works');
+        const body = await listing.json().catch(() => null) as { works?: { id: string; expressions?: { expressionId: string }[] }[] } | null;
+        const work = body?.works?.find((w) => (w.expressions ?? []).some((e) => e.expressionId === manuscriptId));
+        if (!work) throw new Error('work for import');
+        await setPurpose(work.id, spark);
+        pendingSpark.current = null;
+      } catch {
+        // Told plainly, never silently dropped: the manuscript is saved; the spark is not yet.
+        setSparkCarryFailed(manuscriptId);
+        return;
+      }
+    }
     open(manuscriptId, undefined, true);
-  }, [refresh, open]);
+  }, [refresh, open, setPurpose]);
 
   /* H1-R2 — a mode request with no Work carried. A single manuscript (in the
      Continue Work, or in the whole Studio when there is none) is a place to go;
@@ -198,16 +230,17 @@ export default function P4R1HomeController() {
     navigateMode(mode, manuscriptId);
   }, [navigateMode]);
 
-  const onBegin = useCallback(async (title: string) => {
+  const onBegin = useCallback(async (title: string, spark: string | null = null) => {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      const gesture = 'begin:' + title.trim();
+      const gesture = 'begin:' + title.trim() + (spark !== null ? ':spark' : '');
       const workId = createdWorkForGesture.current.get(gesture)
         ?? idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
       createdWorkForGesture.current.set(gesture, workId);
+      if (spark !== null) await setPurpose(workId, spark);
       const manuscriptId = await startWritingInWork(workId);
       createdWorkForGesture.current.delete(gesture);
       await refresh();
@@ -217,7 +250,28 @@ export default function P4R1HomeController() {
     } finally {
       setBusy(false);
     }
-  }, [busy, post, startWritingInWork, refresh, open]);
+  }, [busy, post, setPurpose, startWritingInWork, refresh, open]);
+
+  /* "I don't know yet — let me look around" with a held spark: the Work is begun (unnamed) so the spark the writer chose
+     to hold has somewhere to live. Without a held spark nothing is created (HomeView sets the door aside instead). */
+  const onDoorLookWithSpark = useCallback(async (purpose: string) => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const gesture = 'door-look';
+      const workId = createdWorkForGesture.current.get(gesture) ?? idFrom(await post('/api/sovereign/living-works', {}));
+      if (!workId) throw new Error('work id');
+      createdWorkForGesture.current.set(gesture, workId);
+      await setPurpose(workId, purpose);
+      createdWorkForGesture.current.delete(gesture);
+      await refresh();
+    } catch {
+      setError('Your spark could not be kept just now. Anything already created remains intact. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, post, setPurpose, refresh]);
 
   const onStartWriting = useCallback(async (workId: string) => {
     if (busy) return;
@@ -334,9 +388,26 @@ export default function P4R1HomeController() {
             onComplete={completeImport}
           />
         }
+        footer={sparkCarryFailed ? (
+          <div className="p4r1-error" role="alert" data-spark-carry-failed>
+            <p>Your manuscript is saved. The spark you chose to hold could not be added to its Work just now.</p>
+            <div className="wsio-row">
+              <button type="button" className="fr-home-primary" onClick={() => { const id = sparkCarryFailed; setSparkCarryFailed(null); void completeImport(id); }}>Try again</button>
+              <button type="button" className="fr-home-quiet" onClick={() => { const id = sparkCarryFailed; pendingSpark.current = null; setSparkCarryFailed(null); open(id, undefined, true); }}>Open my manuscript without it</button>
+            </div>
+          </div>
+        ) : undefined}
       />
     );
   }
+
+  const ordinaryNow = () => {
+    const read = readCurrentSanctuaryPosture();
+    return read.resolved && !read.sanctuary;
+  };
+  const inspirationDoor = worksPhase === 'ready'
+    && (manuscriptPhase === 'ready' || manuscriptPhase === 'none')
+    && shouldShowInspirationDoor({ works: works.length, manuscripts: manuscripts.length });
 
   if (arrivedFromHouse && studioArrival.kind !== 'fallback') {
     const withoutWork = () => {
@@ -400,6 +471,15 @@ export default function P4R1HomeController() {
       onRemoveWork={onRemoveWork}
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
+      inspirationDoor={inspirationDoor}
+      onDoorBegin={(destination, purpose) => {
+        if (destination === 'write') { void onBegin('', purpose); return; }
+        pendingSpark.current = purpose;
+        openImport();
+      }}
+      onDoorLookWithSpark={(purpose) => void onDoorLookWithSpark(purpose)}
+      // Q3: the one-line spark on a later new Work is kept only in a readable Ordinary session, never in Sanctuary.
+      onBeginWithSpark={(title, spark) => void onBegin(title, ordinaryNow() ? spark : null)}
       onSources={() => router.push('/writers-studio/sources')}
     />
   );

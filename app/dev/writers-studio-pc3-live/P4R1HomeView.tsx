@@ -26,6 +26,8 @@ import { NoticeList, useNoticeStack } from './useNoticeStack';
 import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConfirmCopy, type ActResult } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import StudioInspirationOpening from './StudioInspirationOpening';
+import { INSPIRATION_COPY, MAX_SPARK_CHARS } from '@/lib/writersStudio/inspirationOpening';
 
 function fixedDate(iso: string | null | undefined): string {
   if (!iso) return 'date not recorded';
@@ -356,6 +358,14 @@ export interface P4R1HomeViewProps {
   /** Removes one Work and keeps its writing, offered only when Delete was refused because another Work holds the same writing. */
   onRemoveWork: (workId: string) => Promise<ActResult | void>;
   onStartWriting: (workId: string) => void;
+  /** JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01: a first visit (no Works, no writing) opens on the Spark door. */
+  inspirationDoor?: boolean;
+  /** The writer chose where to begin from the door. `purpose` is exactly what sparkCommitPlan allowed, or null. */
+  onDoorBegin?: (destination: 'write' | 'import', purpose: string | null) => void;
+  /** "I don't know yet — look around" WITH a held spark: the Work is begun so the spark has somewhere to live. */
+  onDoorLookWithSpark?: (purpose: string) => void;
+  /** Q3: later new Works carry one optional line, "What's calling this one?". */
+  onBeginWithSpark?: (title: string, spark: string) => void;
   onImport: () => void;
   onSources: () => void;
 }
@@ -365,6 +375,13 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   // The full History view lives inside Home, so Back is this view's own state: nothing Home was showing is reset.
   const [viewingHistory, setViewingHistory] = useState(false);
   const [title, setTitle] = useState('');
+  // The Spark door is set aside by "I don't know yet" with nothing held: Home's ordinary threshold for this visit only.
+  const [doorSetAside, setDoorSetAside] = useState(false);
+  const [sparkLine, setSparkLine] = useState('');
+  const beginNewWork = () => {
+    if (sparkLine.trim() && props.onBeginWithSpark) props.onBeginWithSpark(title, sparkLine);
+    else props.onBegin(title);
+  };
   // Only one deletion question is ever open: a confirmation the author has lost track of has stopped confirming anything.
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -456,11 +473,20 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
         </div>
       ) : (
         <div className="p4r1-home-begin-form">
+          {/* Founder Q3 (2026-11-11): later new Works carry the opening question in one line. Leaving it empty is the skip. */}
+          {props.onBeginWithSpark ? (
+            <>
+              <label htmlFor="p4r1-work-spark">{INSPIRATION_COPY.nextWorkQuestion} <span className="wsio-optional">Optional. Leave it empty to skip.</span></label>
+              <div>
+                <input id="p4r1-work-spark" autoFocus value={sparkLine} maxLength={MAX_SPARK_CHARS} onChange={(e) => setSparkLine(e.target.value)} />
+              </div>
+            </>
+          ) : null}
           <label htmlFor="p4r1-work-title">Give the new Work a name, or leave it blank for now.</label>
           <div>
-            <input id="p4r1-work-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !props.busy) props.onBegin(title); if (e.key === 'Escape') setBeginning(false); }} />
-            <button type="button" className="fr-home-primary" disabled={props.busy} onClick={() => props.onBegin(title)}>
+            <input id="p4r1-work-title" autoFocus={!props.onBeginWithSpark} value={title} onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !props.busy) beginNewWork(); if (e.key === 'Escape') setBeginning(false); }} />
+            <button type="button" className="fr-home-primary" disabled={props.busy} onClick={beginNewWork}>
               {props.busy ? 'Beginning…' : 'Start writing'}
             </button>
             <button type="button" className="fr-home-quiet" onClick={() => setBeginning(false)}>Cancel</button>
@@ -739,6 +765,32 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           {creationControls}
         </div>
       </div>
+    );
+  }
+
+  if (props.inspirationDoor && !doorSetAside && props.arrival.kind === 'begin' && props.onDoorBegin) {
+    const onDoorBegin = props.onDoorBegin;
+    return (
+      <Shell
+        mode="home"
+        appearance={props.appearance}
+        geometry={HOME_GEOMETRY}
+        memberInitial=""
+        threshold
+        work={
+          <StudioInspirationOpening
+            busy={props.busy}
+            error={props.error}
+            onBegin={(destination, purpose) => {
+              if (destination !== 'look') onDoorBegin(destination, purpose);
+              else if (purpose !== null && props.onDoorLookWithSpark) props.onDoorLookWithSpark(purpose);
+              else setDoorSetAside(true);
+            }}
+            onJustWrite={() => props.onBegin('')}
+            onHavePages={props.onImport}
+          />
+        }
+      />
     );
   }
 
