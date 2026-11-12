@@ -139,7 +139,7 @@ export default function ProChartSharePanel({ chartId, label, onClose }: {
   if (state.kind === 'ask') {
     return (
       <span className={styles.shareBox} role="group" aria-label={`Share ${label}’s chart`}>
-        <span>A private link shows {label} this chart and its transits, view-only, with no account needed. You can turn it off any time.</span>
+        <span>A private link shows {label} their chart and its transits, view-only, with no account needed. You can turn it off any time.</span>
         <label>
           <input type="checkbox" checked={state.agreed} onChange={(e) => setState({ ...state, agreed: e.target.checked })} />
           {' '}{label} agreed to have their chart shared by link.
