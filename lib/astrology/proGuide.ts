@@ -64,9 +64,10 @@ export const PRO_CONTROLS: readonly ProControl[] = [
   { label: 'Share link', where: 'on each saved chart', does: 'the same private client link as Share with client' },
   { label: 'Share with client', where: 'top bar, while a saved chart is open', does: 'makes a private, view-only link to that person\'s chart and transits, only after the astrologer ticks that the person agreed; it can be turned off at any time' },
   // MAIA
-  { label: 'Talk with MAIA', where: 'top bar, and the bar at the foot of the tools', does: 'opens this conversation about the open chart' },
+  { label: 'Talk with MAIA', where: 'top bar, and the bar at the foot of the tools while a chart is open', does: 'opens this conversation about the open chart; before a chart is open it opens How do I…? help' },
   { label: 'Back to the tools', where: 'top of this conversation', does: 'returns to the tools; key M toggles' },
   { label: 'Mentor', where: 'top right of this conversation, beside Ask', does: 'teaching the technique, with the chart only as the example' },
+  { label: 'How do I…?', where: 'top right of this conversation, beside Ask and Mentor, and in this conversation before a chart is open', does: 'questions about the workstation and techniques in general; MAIA reads no chart in this mode' },
   { label: 'In depth', where: 'in this conversation, beside Brief', does: 'a fuller answer' },
   { label: 'Draw on all systems', where: 'in this conversation', does: 'adds progressions, the Four Pillars and the Maya count to what MAIA reads' },
   { label: 'Read this with what you know about me', where: 'in this conversation, for the astrologer\'s own chart only', does: 'MAIA reads the chart alongside what the astrologer has chosen to keep with her, for this conversation only' },

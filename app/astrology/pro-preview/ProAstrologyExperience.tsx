@@ -975,9 +975,9 @@ function Cockpit() {
             <span>
               {privateChart
                 ? <>Talk with MAIA about <b>{inHand?.subjectLabel ?? 'this chart'}</b></>
-                : 'Talk with MAIA once a chart is open'}
+                : 'Ask MAIA how the workstation works'}
             </span>
-            <small>Ask · Mentor · in depth</small>
+            <small>{privateChart ? 'Ask · Mentor · How do I…?' : 'How do I…? · no chart is read'}</small>
           </button>
         )}
         <ProMaiaStage chartOpen={!!privateChart}

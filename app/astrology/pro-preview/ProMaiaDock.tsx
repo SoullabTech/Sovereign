@@ -15,12 +15,17 @@
  * view and point in hand; an instrument's "Talk with MAIA about…" button
  * brings its own subject. Ask reads the chart with the astrologer; Mentor
  * teaches the technique and uses the chart only as an example.
+ *
+ * "How do I…?" (ASTRO-PRO-MAIA-GUIDE-R2, founder ruling D-03 A) reads no chart:
+ * it is the stage's content before a chart is open, and the third mode beside
+ * Ask and Mentor when one is. It sends only the question (ProMaiaHelp.tsx).
  */
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import type { ProAskMode, ProAskSection } from '@/lib/astrology/proAskMaiaSections';
 import { usePanelState } from './panelMemory';
 import { useMaiaDock, type MaiaSubject } from './maiaDock';
 import { ProAskMaiaConversation } from './ProAskMaiaPanel';
+import { ProHelpConversation } from './ProMaiaHelp';
 import styles from './pro-cockpit.module.css';
 
 /** The subject the conversation is on: the one pointed at, else the open view's, else the chart. */
@@ -43,7 +48,7 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
   preferSections: readonly ProAskSection[];
 }) {
   const dock = useMaiaDock();
-  const [mode, setMode] = usePanelState<ProAskMode>('dock.mode', 'ask');
+  const [mode, setMode] = usePanelState<ProAskMode | 'help'>('dock.mode', 'ask');
   if (!dock || !dock.open) return null;
 
   const all = [...dock.subjects.values()];
@@ -62,14 +67,30 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
             title="Ask reads the chart with you">Ask</button>
           <button type="button" aria-pressed={mode === 'mentor'} onClick={() => setMode('mentor')}
             title="Mentor teaches the technique and uses this chart only as an example">Mentor</button>
+          <button type="button" aria-pressed={mode === 'help'} onClick={() => setMode('help')}
+            title="How do I…? answers questions about the workstation and reads no chart">How do I…?</button>
         </div>}
       </header>
 
       {!chartOpen || !subject ? (
-        <p className={styles.maiaEmpty}>
-          Open a chart and MAIA can read it with you. Until then there is nothing for MAIA to see.
-          Use “Open my chart” beside the wheel, or Saved charts on the rail.
-        </p>
+        <div className={styles.maiaColumn}>
+          <p className={styles.maiaEmpty}>
+            Open a chart and MAIA can read it with you. Until then there is nothing for MAIA to see.
+            Use “Open my chart” beside the wheel, or Saved charts on the rail.
+          </p>
+          <div className={styles.maiaBody}>
+            <ProHelpConversation />
+          </div>
+        </div>
+      ) : mode === 'help' ? (
+        <div className={styles.maiaColumn}>
+          <p className={styles.maiaMode}>
+            How do I…? answers questions about the workstation. MAIA is not reading {subject.subjectLabel} or any chart in this mode.
+          </p>
+          <div className={styles.maiaBody}>
+            <ProHelpConversation />
+          </div>
+        </div>
       ) : (
         <div className={styles.maiaColumn}>
           <div className={styles.maiaAbout}>
