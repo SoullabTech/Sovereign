@@ -9,6 +9,10 @@ import {
   PLATFORM_KNOWLEDGE_ADDENDUM,
   PLATFORM_KNOWLEDGE_LAST_VERIFIED,
   PLATFORM_KNOWLEDGE_VERSION,
+  PLATFORM_ASTROLOGY_PRO_GUIDE,
+  PLATFORM_ASTROLOGY_LAST_VERIFIED,
+  PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM,
+  PLATFORM_DIRECTION_PUBLIC,
 } from '../platformKnowledge';
 
 // Platform-area grounding tests (2026-07-16).
@@ -322,5 +326,63 @@ describe('one relationship, one voice (composition ruling 2026-07-16)', () => {
     expect(lower(PLATFORM_RELATIONSHIPS)).toContain(
       'a member never needs a feature to be accompanied',
     );
+  });
+});
+
+describe('Astrology and Astrology Pro (2026-11-11)', () => {
+  const sectionOf = (start: string, end: string) =>
+    PLATFORM_AREAS.slice(PLATFORM_AREAS.indexOf(start), PLATFORM_AREAS.indexOf(end));
+  const open = sectionOf('Areas generally available to members', 'Available under specific roles or invitations');
+  const invited = sectionOf('Available under specific roles or invitations', 'Built but not generally open');
+
+  it('Astrology is not listed as generally available: the room is testers-only', () => {
+    expect(open).not.toContain('• Astrology');
+    expect(invited).toContain('• Astrology —');
+    expect(lower(invited)).toContain('open at present to invited testers');
+    expect(lower(invited)).toContain('never predictive');
+  });
+
+  it('Astrology Pro is an invitation-only preview, never a tier or a guess about this member', () => {
+    expect(invited).toContain('• Astrology Pro —');
+    expect(lower(invited)).toContain('it is not a tier, plan, or subscription');
+    expect(lower(invited)).toContain('you cannot tell whether this member has astrology pro; never guess');
+  });
+
+  it('the Pro guide carries its own verification date and stays off the public surface', () => {
+    expect(PLATFORM_ASTROLOGY_PRO_GUIDE).toContain(PLATFORM_ASTROLOGY_LAST_VERIFIED);
+    // The guide's own heading; the AREAS guidance line may name it, but the
+    // guide text itself is member-surface only.
+    expect(ALL).toContain('🔭 ASTROLOGY PRO GUIDE');
+    expect(PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM).not.toContain('🔭 ASTROLOGY PRO GUIDE');
+    expect(PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM).not.toContain('The nine tools:');
+  });
+
+  it('the guide names all nine tools', () => {
+    for (const tool of ['Chart', 'Timing', 'Relationships', 'Places', 'Traditions', 'Readings', 'Research', 'Study', 'Saved charts']) {
+      expect(PLATFORM_ASTROLOGY_PRO_GUIDE).toContain(`• ${tool} —`);
+    }
+  });
+
+  it('MAIA in the main conversation cannot see charts and the astrologer stays the author', () => {
+    const g = lower(PLATFORM_ASTROLOGY_PRO_GUIDE);
+    expect(g).toContain('you cannot see their charts');
+    expect(g).toContain('never describe a chart you have not been shown here');
+    expect(g).toContain('never a verdict or a prediction');
+    expect(g).toContain('the astrologer is the author of any reading');
+    expect(g).toContain('do not steer them toward pro');
+  });
+
+  it('client consent and the honest limits are stated', () => {
+    const g = lower(PLATFORM_ASTROLOGY_PRO_GUIDE);
+    expect(g).toContain("permission to keep the birth details");
+    expect(g).toContain('only after the astrologer confirms the person agreed');
+    expect(g).toContain('not yet independently certified');
+    expect(g).toContain('66° latitude');
+  });
+
+  it('public direction keeps live and in-development apart for Astrology', () => {
+    expect(PLATFORM_DIRECTION_PUBLIC).toContain('with Astrology open to invited testers');
+    const inDev = PLATFORM_DIRECTION_PUBLIC.slice(PLATFORM_DIRECTION_PUBLIC.indexOf('In development'));
+    expect(inDev).toContain('Astrology Pro');
   });
 });
