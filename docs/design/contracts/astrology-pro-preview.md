@@ -1,6 +1,6 @@
 ---
-room: Astrology Pro — founder-only preview
-human_activity: A professional astrologer working with one chart at a time in a dedicated workstation (natal chart, relationships, research and study), as a private founder-only preview that is disabled for everyone else.
+room: Astrology Pro — restricted tester preview
+human_activity: A professional astrologer working with one chart at a time in a dedicated workstation (natal chart, relationships, research and study), as a private preview open to the founder and individually granted testers and disabled for everyone else.
 surfaces:
   - app/astrology/pro-preview/**
 change_class: experiential
@@ -13,13 +13,19 @@ reference_surfaces:
   - docs/design/contracts/astrology.md
   - docs/design/contracts/astrology-room-experience-architecture.md
 shared_with_house: the same chart geometry and calculated facts as the Free Astrology room · human-language section names · provenance-aware labels
-distinct_to_room: a dense professional instrument (chart studio, relationships, research and study work areas) rather than a member's reflective room. It exists only when the server runs the founder-only preview and the verified session is the founder's; for every other session the route serves no Pro content.
+distinct_to_room: a dense professional instrument (chart studio, relationships, research and study work areas) rather than a member's reflective room. It exists only when the server runs the preview and the verified session is the founder's or a member's with an audited Pro grant; for every other session the route serves no Pro content.
 screenshot_desktop: docs/design/contracts/screenshots/astrology-pro-preview-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/astrology-pro-preview-mobile.png
 experience_verification: 2026-10-30 automated witness on the same production build and fictional database. With the founder-only preview flags absent (production-like), /astrology/pro-preview served no Pro content to the would-be founder and /api/astrology/pro/my-chart returned 404; note the page returns HTTP 200 wrapping the not-found page (App Router notFound after streaming), not a true 404. With ASTRO_PRO_PREVIEW_ENABLED=true, ASTRO_PRO_ACCESS_PHASE=founder-only and the fictional founder's id, the founder saw Chart Studio on desktop and phone, labelled 'Professional workspace · Private preview', with 'MAIA Mentor · transfer held'; a non-founder member received no Pro content (again HTTP 200 around not-found). Zero MAIA or conversation requests and zero external requests. Not the founder's experiential acceptance.
 ---
 
-# Astrology Pro — founder-only preview — Experience Contract
+# Astrology Pro — restricted tester preview — Experience Contract
+
+**Amended 2026-11-12 under founder ruling D-07 (ASTRO-PRO-MAIA-GUIDE-01, option A):**
+this contract now describes the restricted tester beta and the accepted facts-only
+MAIA pathway. Every privacy line is kept; where a line changed, its earlier wording is
+quoted in "Contract drift, resolved" below. The 2026-10-30 D1 text that follows is kept
+as the record of how the room first shipped.
 
 **Scope.** `app/astrology/pro-preview/**`, carried dark with the Free Astrology
 reconciliation under founder decision D1 (2026-10-30: ship the founder-only Pro
@@ -53,8 +59,8 @@ Pro entry (`lib/sovereign/platformKnowledge.ts`) and cannot see any chart.
 
 ## What this room is for
 
-The founder, working as a professional astrologer, testing a chart-first workstation
-before anyone else can see it.
+The founder and a small group of individually invited testers, working as professional
+astrologers, testing a chart-first workstation before it is offered to anyone else.
 
 ## Arrival
 
@@ -97,22 +103,28 @@ The dark and non-founder responses carry HTTP 200 around the not-found page rath
 
 ## Forbidden here
 
-- any route by which a non-founder session receives Pro content
+- any route by which a session that is neither the founder's nor a member's with an audited Pro grant receives Pro content
 - presenting the preview as a member feature, tier or entitlement
 - MAIA speaking as astrological authority
-- sending chart material to MAIA
+- sending chart material to MAIA, except the calculated facts of the open view when the astrologer asks: never a name or birth details, and nothing kept
+- moving any chart material into the main MAIA conversation or its memory (the R4F hold, #1817)
 
-## Contract drift, for founder ruling
+## Contract drift, resolved (founder ruling D-07, 2026-11-12)
 
-Two lines above, "MAIA speaking as astrological authority" and "sending chart material
-to MAIA", predate Ask MAIA inside Pro (founder request 2026-11-07, merged 2026-11-08),
-which sends a section's calculated facts to MAIA when the astrologer asks: never a name
-or birth details, nothing kept, and MAIA told the chart is symbolic and the astrologer
-is the author. The cockpit's dock uses that same route and adds a Mentor mode. The
-"Forbidden here" list has not been edited: whether it should now read "sending chart
-material to MAIA except as the astrologer's own question, facts only" is the founder's
-to rule. The separate hold on transferring a chart into the main MAIA conversation
-(R4F, #1817) is untouched; the dock does not use the main conversation or its memory.
+The earlier wording of two "Forbidden here" lines was "any route by which a non-founder
+session receives Pro content" and "sending chart material to MAIA". Both predated the
+restricted tester beta (2026-11-10, #1893) and Ask MAIA inside Pro (founder request
+2026-11-07, merged 2026-11-08), which sends a section's calculated facts to MAIA when
+the astrologer asks: never a name or birth details, nothing kept, and MAIA told the
+chart is symbolic and the astrologer is the author. The cockpit's dock uses that same
+route and adds a Mentor mode. The lines now state what is permitted and what stays
+forbidden. "MAIA speaking as astrological authority" is unchanged. The R4F hold on
+transferring a chart into the main MAIA conversation is now its own line, unchanged in
+substance; the dock does not use the main conversation or its memory.
+
+Not covered by this contract: the client's shared-chart page (`app/shared-chart/**`)
+has its own MAIA path, which addresses the client by first name. Whether that is
+acceptable is an open founder question (ASTRO-PRO-MAIA-GUIDE-01 census).
 
 ## Founder ruling 2026-11-09: MAIA may read the astrologer's own chart with what she knows of them
 
@@ -133,4 +145,4 @@ MAIA may read the chart alongside what the astrologer has chosen to keep with he
 **Same house?** Yes: the same chart geometry and calculated facts as the Free room.
 
 **Distinct room?** Yes: a professional instrument, not a reflective room, and unseen
-by anyone but the founder.
+by anyone without the founder's identity or an audited Pro grant.
