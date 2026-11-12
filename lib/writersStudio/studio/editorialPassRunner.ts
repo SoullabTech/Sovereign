@@ -107,9 +107,28 @@ export function savePassDecisions(manuscriptId: string, decisions: Record<string
   try { window.localStorage.setItem(DKEY(manuscriptId), JSON.stringify(decisions)); } catch { /* ignore */ }
 }
 
-/** The places in the order they come in the writer's book (the first section each one touches). Never ranked by importance. */
-export function inBookOrder<T extends { sectionIds: readonly string[] }>(items: readonly T[], sectionOrder: readonly string[]): T[] {
+/** The section a place is ABOUT: the one its evidence names most often (ties: earliest in the book). Not simply the first section it
+ *  touches — a place often also cites front matter (contents, title page) that the readings noted in passing, and taking the first
+ *  sent the writer to the contents page for a point about the aether chapter (founder walk 2026-11-12). */
+export function primarySectionId(
+  item: { sectionIds: readonly string[]; evidence?: readonly { sectionIds: readonly string[] }[] },
+  sectionOrder: readonly string[],
+): string | null {
   const pos = new Map(sectionOrder.map((id, i) => [id, i]));
-  const first = (it: T) => Math.min(...it.sectionIds.map((id) => pos.get(id) ?? Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
-  return items.map((it, i) => ({ it, i })).sort((a, b) => (first(a.it) - first(b.it)) || (a.i - b.i)).map((x) => x.it);
+  const counts = new Map<string, number>();
+  for (const ev of item.evidence ?? []) for (const id of new Set(ev.sectionIds)) if (pos.has(id)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  if (counts.size === 0) for (const id of item.sectionIds) if (pos.has(id)) counts.set(id, 1);
+  let best: string | null = null;
+  for (const [id, n] of counts) {
+    const b = best === null ? -1 : counts.get(best)!;
+    if (n > b || (n === b && pos.get(id)! < pos.get(best!)!)) best = id;
+  }
+  return best;
+}
+
+/** The places in the order of the book — by the section each place is about — never ranked by importance. */
+export function inBookOrder<T extends { sectionIds: readonly string[]; evidence?: readonly { sectionIds: readonly string[] }[] }>(items: readonly T[], sectionOrder: readonly string[]): T[] {
+  const pos = new Map(sectionOrder.map((id, i) => [id, i]));
+  const at = (it: T) => { const p = primarySectionId(it, sectionOrder); return p === null ? Number.MAX_SAFE_INTEGER : pos.get(p)!; };
+  return items.map((it, i) => ({ it, i })).sort((a, b) => (at(a.it) - at(b.it)) || (a.i - b.i)).map((x) => x.it);
 }

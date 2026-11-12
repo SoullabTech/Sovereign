@@ -28,7 +28,7 @@ import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
-  inBookOrder, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
+  inBookOrder, primarySectionId, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
   type PassDecision, type SavedPass,
 } from '@/lib/writersStudio/studio/editorialPassRunner';
 
@@ -187,7 +187,7 @@ export function EditorialLetterPanel(props: {
       return next;
     });
   };
-  const sectionOf = (it: AttentionItem) => sections.find((s) => it.sectionIds.includes(s.draftSectionId));
+  const sectionOf = (it: AttentionItem) => { const id = primarySectionId(it, sections.map((x) => x.draftSectionId)); return sections.find((x) => x.draftSectionId === id); };
   /* Founder 2026-11-12: "If I click onto an issue … it should bring up the manuscript copy in the center." Opening a place (from the
      letter, or with Previous / Next) is the writer's own act, so it also brings that place's section into the centre — the same act
      as "Show me where", which stays for coming back to it. Nothing moves unless the writer clicks. */
@@ -203,9 +203,14 @@ export function EditorialLetterPanel(props: {
     if (resolving) return;
     setResolving(true); setNote(null);
     try {
-      for (const ev of it.evidence) {
+      /* Open the desk on the section this place is ABOUT: evidence naming that section first, and a passage in that section first.
+         Opening it elsewhere put MAIA in front of words the place was not about, and the desk rightly refused her edits (2026-11-12). */
+      const primary = sectionOf(it)?.draftSectionId ?? null;
+      const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
+      for (const ev of ordered) {
         const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        const passage = insight?.passages.find((p) => p.verified && p.editable && p.range);
+        const verified = insight?.passages.filter((p) => p.verified && p.editable && p.range) ?? [];
+        const passage = verified.find((p) => p.sectionId === primary) ?? verified[0];
         if (passage?.range) { props.onEditOptions({ sectionId: passage.sectionId, readingId: ev.readingId, observationKey: ev.observationKey }); return; }
       }
       setNote('I can’t tie this to exact words in your current draft, so I won’t propose a change from here. Open the section and select the words you mean; I’ll work with those.');
