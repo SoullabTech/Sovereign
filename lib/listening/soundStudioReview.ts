@@ -5,7 +5,7 @@
 // memory, and nothing it hears is saved until the reviewer confirms the summary lines.
 // Design: docs/programme/LISTEN-01_SOUND_STUDIO_REVIEW_CONVERSATION_DESIGN_DRAFT_2026-11-09.md
 
-export const REVIEW_CONSENT_VERSION = 'sound-studio-review-v1-2026-11-09';
+export const REVIEW_CONSENT_VERSION = 'sound-studio-review-v2-2026-11-12';
 export const REVIEW_GUIDE_NAME = 'Sound Studio review';
 
 export const REVIEWABLE_WORKS: Readonly<Record<string, string>> = Object.freeze({
@@ -15,6 +15,11 @@ export const REVIEWABLE_WORKS: Readonly<Record<string, string>> = Object.freeze(
   'night-ground-01-extended-night-v0.1': 'Night Ground 01 — Extended Night',
   'night-ground-01-music-only-v0.1': 'Night Ground 01 — Music Only',
 });
+
+export const SANCTUARY_REVIEW_MESSAGE =
+  'Reviews are unavailable during Sanctuary. Nothing was sent or saved. Turn Sanctuary off to review.';
+export const UNDECLARED_REVIEW_MESSAGE =
+  'Your Sanctuary setting could not be read on this device, so nothing was sent or saved. Reload and try again.';
 
 export const MAX_MESSAGES = 24;          // guide + reviewer messages in one conversation
 export const MAX_MESSAGE_CHARS = 2000;

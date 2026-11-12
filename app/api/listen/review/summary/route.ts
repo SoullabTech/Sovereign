@@ -2,6 +2,7 @@
 // Stateless: nothing is stored until the reviewer confirms and saves (POST /api/listen/review).
 import { NextResponse } from 'next/server';
 import { generateWithClaude } from '@/lib/ai/claudeClient';
+import { refuseIfNotOrdinary } from '@/lib/listening/listenReviewPosture';
 import { requireListenReviewer } from '@/lib/listening/listenReviewerGate';
 import {
   isReviewableWork,
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
   if (!gate.ok) return new NextResponse(null, { status: gate.status, headers: NO_STORE });
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object' || Object.keys(body).some(k => k !== 'workId' && k !== 'transcript')) {
+  if (!body || typeof body !== 'object' || Object.keys(body).some(k => k !== 'workId' && k !== 'transcript' && k !== 'sanctuary')) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400, headers: NO_STORE });
   }
+  const notOrdinary = await refuseIfNotOrdinary(gate.memberId, body);
+  if (notOrdinary) return notOrdinary;
   if (!isReviewableWork(body.workId)) return NextResponse.json({ refusal: 'unknown_work' }, { status: 400, headers: NO_STORE });
   const raw = body.transcript;
   const endWith = Array.isArray(raw) && raw.length % 2 === 0 ? 'reviewer' : 'guide';
