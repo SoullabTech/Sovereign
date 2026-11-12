@@ -51,6 +51,8 @@ import EditorialDancePanel, { type PassageAct } from './EditorialDancePanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
+import StudioFirstPageMaia from './StudioFirstPageMaia';
+import { firstPageEligible } from '@/lib/writersStudio/inspirationOpening';
 import CraftsmansTableR1 from './CraftsmansTableR1';
 import CraftFocusToolsR1 from './CraftFocusToolsR1';
 import MaiaCraftCompanionR1, { type MaiaCraftComposerPort, type MaiaCraftComposerSnapshot } from './MaiaCraftCompanionR1';
@@ -1297,6 +1299,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           </div>
         ) : (
           <>
+            {/* B · The First Page: on a Work's first page, MAIA waits to be shown it (S3). */}
+            {firstPageEligible({ sections: props.context.sections.length, body: currentBody }) ? (
+              <StudioFirstPageMaia
+                page={currentBody}
+                sanctuary={!props.sessionPosture.resolved || props.sessionPosture.sanctuary}
+                onAnswer={(starter) => openWorkConversation(starter)}
+              />
+            ) : null}
             <div className="fr-say">
               <p>
                 Choose a chapter or section at left and I’ll orient to that place immediately.

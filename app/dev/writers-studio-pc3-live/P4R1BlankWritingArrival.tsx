@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { LivingWork, DeclaredMaterial } from '@/app/writers-studio/useLivingWorks';
+import { FIRST_PAGE_COPY } from '@/lib/writersStudio/inspirationOpening';
 
 type Props = {
   work: LivingWork;
@@ -37,35 +38,24 @@ export default function P4R1BlankWritingArrival({
   );
 
   return (
-    <section className="p4r1-blank-arrival" data-blank-writing-arrival>
-      <div className="p4r1-blank-arrival-copy">
-        <span className="p4r1-eyebrow">A blank page</span>
-        <h2>Begin in the way that helps.</h2>
-        <p>
-          Nothing feeding this Work has been copied here. You can write freely, talk with MAIA,
-          or return to something you already brought into the Work.
-        </p>
-      </div>
+    /* B · The First Page (JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01 · S3). Not a card over the page: one invitation
+       line where the first sentence will go, and MAIA nearby, silent until shown the page. The three beginnings stay,
+       as quiet words rather than a menu of boxes. */
+    <section className="p4r1-blank-arrival p4r1-blank-arrival--invitation" data-blank-writing-arrival data-first-page-invitation>
+      <button type="button" className="p4r1-blank-invitation" onClick={onStartWriting}>
+        {FIRST_PAGE_COPY.invitation}
+      </button>
+      <p className="p4r1-blank-presence">{FIRST_PAGE_COPY.presence}</p>
 
-      <div className="p4r1-blank-arrival-actions">
-        <button type="button" className="p4r1-blank-primary" onClick={onStartWriting}>
-          <b>Just start writing</b>
-          <span>Put the cursor on the page and begin in your own words.</span>
-        </button>
-
-        <button type="button" onClick={onTalkWithMaia}>
-          <b>Talk with MAIA</b>
-          <span>Talk about what you want to say before writing anything.</span>
-        </button>
-
-        <button type="button" onClick={onHelpBegin}>
-          <b>Help me find a beginning</b>
-          <span>MAIA can help you orient, but the question waits for you to send it.</span>
-        </button>
+      <div className="p4r1-blank-arrival-ways">
+        <button type="button" className="p4r1-blank-primary" onClick={onStartWriting}>Just start writing</button>
+        <button type="button" onClick={onTalkWithMaia}>Talk with MAIA</button>
+        <button type="button" onClick={onHelpBegin}>Help me find a beginning</button>
       </div>
 
       {usableMaterials.length > 0 ? (
         <div className="p4r1-blank-materials">
+          <p className="p4r1-blank-presence">Nothing feeding this Work has been copied here.</p>
           <header>
             <b>Start from something already feeding this Work</b>
             <span>Opening it does not copy it into this page.</span>

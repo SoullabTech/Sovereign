@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
+import { MAX_FIRST_PAGE_CHARS, quotesVerified } from '@/lib/writersStudio/inspirationOpening';
 
 const MAX_ANSWER_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
@@ -61,25 +62,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400, headers: privateHeaders });
   }
   const body = raw as Record<string, unknown>;
-  const allowed = new Set(['answer', 'history', 'sanctuary']);
+  const allowed = new Set(['answer', 'history', 'sanctuary', 'moment']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown field' }, { status: 400, headers: privateHeaders });
   }
+  if (body.moment !== undefined && body.moment !== 'spark' && body.moment !== 'first_page') {
+    return NextResponse.json({ refusal: 'malformed', detail: 'moment' }, { status: 400, headers: privateHeaders });
+  }
+  // B (S3): the writer's first page, shown by their own act. One page, no conversation history.
+  const firstPage = body.moment === 'first_page';
   if (typeof body.answer !== 'string' || !body.answer.trim()) {
     return NextResponse.json({ refusal: 'malformed', detail: 'answer' }, { status: 400, headers: privateHeaders });
   }
-  if (body.answer.length > MAX_ANSWER_CHARS) {
+  if (body.answer.length > (firstPage ? MAX_FIRST_PAGE_CHARS : MAX_ANSWER_CHARS)) {
     return NextResponse.json({ refusal: 'answer_too_long' }, { status: 413, headers: privateHeaders });
   }
   if (body.sanctuary !== undefined && typeof body.sanctuary !== 'boolean') {
     return NextResponse.json({ refusal: 'malformed', detail: 'sanctuary' }, { status: 400, headers: privateHeaders });
   }
   const history = historyFrom(body.history);
-  if (!history) return NextResponse.json({ refusal: 'malformed', detail: 'history' }, { status: 400, headers: privateHeaders });
+  if (!history || (firstPage && history.length > 0)) {
+    return NextResponse.json({ refusal: 'malformed', detail: 'history' }, { status: 400, headers: privateHeaders });
+  }
 
-  const outcome = await askMaia({ kind: 'arrival', sanctuary: body.sanctuary === true }, history, body.answer);
+  const outcome = await askMaia(
+    firstPage
+      ? { kind: 'arrival', sanctuary: body.sanctuary === true, moment: 'first_page' }
+      : { kind: 'arrival', sanctuary: body.sanctuary === true },
+    history,
+    body.answer,
+  );
   if (!outcome.ok) {
     return NextResponse.json({ refusal: outcome.refusal }, { status: 502, headers: privateHeaders });
+  }
+  // B's promise is one exact line of the writer's own page. A misquote is never shown as hers (F13).
+  if (firstPage && !quotesVerified(outcome.answer, body.answer)) {
+    return NextResponse.json({ refusal: 'quote_unverified' }, { status: 502, headers: privateHeaders });
   }
   return NextResponse.json({ reply: outcome.answer }, { status: 200, headers: privateHeaders });
 }

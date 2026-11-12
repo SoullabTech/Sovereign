@@ -15,6 +15,7 @@ import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPostur
 import { applySessionSanctuary } from '@/lib/settings/sessionSanctuaryInit';
 import { writeWorkingStyle } from '@/lib/writersStudio/workingStyle';
 import {
+  CARRY_COPY,
   FACET_COPY,
   INSPIRATION_COPY as C,
   INSPIRATION_UNSURE_ANSWER,
@@ -42,11 +43,19 @@ function readPosture(): Posture {
 export default function StudioInspirationOpening(props: {
   busy: boolean;
   error: string | null;
+  /**
+   * 'door' (S1): the first-visit opening. 'carry' (S4, C · Bring What You Carry): the same reflection and separate hold,
+   * asked inside import before anyone reads a word, ending by handing back what may be kept instead of asking where to begin.
+   */
+  variant?: 'door' | 'carry';
   /** The writer chose where to begin. `purpose` is exactly what `sparkCommitPlan` allows, or null. */
-  onBegin: (destination: DoorDestination, purpose: string | null) => void;
-  onJustWrite: () => void;
-  onHavePages: () => void;
+  onBegin?: (destination: DoorDestination, purpose: string | null) => void;
+  /** 'carry' only: the import's question is finished. `purpose` is exactly what `sparkCommitPlan` allows, or null. */
+  onCarry?: (purpose: string | null) => void;
+  onJustWrite?: () => void;
+  onHavePages?: () => void;
 }) {
+  const carry = props.variant === 'carry';
   const [step, setStep] = useState<Step>('door');
   const [answer, setAnswer] = useState('');
   const [unsure, setUnsure] = useState(false);
@@ -120,17 +129,29 @@ export default function StudioInspirationOpening(props: {
       return;
     }
     // An unsure answer is complete; there is nothing to hold, so the hold question is never shown (F5).
-    if (unsure) { setStep('begin'); return; }
+    if (unsure) {
+      if (carry) props.onCarry?.(null);
+      else setStep('begin');
+      return;
+    }
     setHoldReached(true);
     setStep('hold');
   };
 
-  const begin = (destination: DoorDestination) => {
+  const planNow = (holdChoice: HoldChoice | null = hold) => sparkCommitPlan({
     // Evaluated NOW, against the posture as it is now. Anything but a readable Ordinary keeps nothing.
-    const plan = sparkCommitPlan({
-      answer, unsure, reflection, understood, holdReached, hold, sanctuary: posture !== 'ordinary',
-    });
-    props.onBegin(destination, plan.purpose);
+    answer, unsure, reflection, understood, holdReached, hold: holdChoice, sanctuary: posture !== 'ordinary',
+  });
+
+  const begin = (destination: DoorDestination) => {
+    props.onBegin?.(destination, planNow().purpose);
+  };
+
+  /* The hold answer. On the door it leads to "Where would you like to begin?"; inside import (C) it finishes. */
+  const decideHold = (choice: HoldChoice) => {
+    setHold(choice);
+    if (carry) props.onCarry?.(planNow(choice).purpose);
+    else setStep('begin');
   };
 
   const chooseFacet = (choice: FacetChoice) => {
@@ -163,8 +184,8 @@ export default function StudioInspirationOpening(props: {
       <>
         <div className="wsio-ember" aria-hidden="true" />
         <p className="wsio-who">MAIA</p>
-        <h1 className="wsio-maia">{C.question}</h1>
-        <p className="wsio-note">{C.invitation}</p>
+        {carry ? <h2 className="wsio-maia wsio-small">{CARRY_COPY.question}</h2> : <h1 className="wsio-maia">{C.question}</h1>}
+        <p className="wsio-note">{carry ? CARRY_COPY.invitation : C.invitation}</p>
         <label className="wsio-label" htmlFor="wsio-answer">{C.answerLabel}</label>
         <textarea id="wsio-answer" className="wsio-input" rows={3} value={answer} autoFocus
           onChange={(e) => setAnswer(e.target.value)} />
@@ -174,10 +195,16 @@ export default function StudioInspirationOpening(props: {
           <button type="button" className="fr-home-quiet" disabled={asking}
             onClick={() => void tell(INSPIRATION_UNSURE_ANSWER, true, [])}>{C.unsure}</button>
         </div>
-        <div className="wsio-row wsio-ways">
-          <button type="button" className="wsio-link" disabled={props.busy} onClick={props.onJustWrite}>{C.justWrite}</button>
-          <button type="button" className="wsio-link" onClick={props.onHavePages}>{C.havePages}</button>
-        </div>
+        {carry ? (
+          <div className="wsio-row wsio-ways">
+            <button type="button" className="wsio-link" onClick={() => props.onCarry?.(null)}>Skip this</button>
+          </div>
+        ) : (
+          <div className="wsio-row wsio-ways">
+            <button type="button" className="wsio-link" disabled={props.busy} onClick={props.onJustWrite}>{C.justWrite}</button>
+            <button type="button" className="wsio-link" onClick={props.onHavePages}>{C.havePages}</button>
+          </div>
+        )}
         {posture === 'sanctuary' ? <p className="wsio-note wsio-sanctuary">Sanctuary is on. This session won’t be remembered. Speak freely.</p> : null}
       </>
     );
@@ -222,7 +249,7 @@ export default function StudioInspirationOpening(props: {
         <div className="wsio-ember wsio-water" aria-hidden="true" />
         <p className="wsio-maia wsio-small">{C.sanctuaryHold}</p>
         <div className="wsio-row">
-          <button type="button" className="fr-home-primary" onClick={() => { setHold('not_yet'); setStep('begin'); }}>Continue</button>
+          <button type="button" className="fr-home-primary" onClick={() => decideHold('not_yet')}>Continue</button>
           <button type="button" className="wsio-link" onClick={() => choosePosture(false)}>{C.switchToOrdinary}</button>
         </div>
       </>
@@ -233,7 +260,7 @@ export default function StudioInspirationOpening(props: {
         {tooLong ? <p className="wsio-note" role="status">{C.tooLong}</p> : null}
         <div className="wsio-choices">
           {!tooLong ? (
-            <button type="button" className="wsio-choice" onClick={() => { setHold('own'); setStep('begin'); }}>
+            <button type="button" className="wsio-choice" onClick={() => decideHold('own')}>
               <b>{C.holdOwn}</b><span>{C.holdOwnHint}</span>
             </button>
           ) : (
@@ -241,7 +268,7 @@ export default function StudioInspirationOpening(props: {
               <b>Say it in fewer words</b><span>Your full words can still go on the page</span>
             </button>
           )}
-          <button type="button" className="wsio-choice" onClick={() => { setHold('not_yet'); setStep('begin'); }}>
+          <button type="button" className="wsio-choice" onClick={() => decideHold('not_yet')}>
             <b>{C.notYet}</b><span>{C.notYetHint}</span>
           </button>
         </div>
