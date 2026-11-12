@@ -128,6 +128,8 @@ _DEPLOY_CTX_PRIOR_EXIT_TRAP=""
 
 _deploy_ctx_exit_handler() {
     local rc=$?               # the status that triggered the trap — preserve it
+    # A deploy that ends before its swap must not leave :prod on the candidate (deploy-tag.sh).
+    if declare -F prod_tag_guard_restore >/dev/null; then prod_tag_guard_restore || true; fi
     # Re-run whatever EXIT trap existed before we took over (e.g. lockfile rm).
     [ -n "$_DEPLOY_CTX_PRIOR_EXIT_TRAP" ] && eval "$_DEPLOY_CTX_PRIOR_EXIT_TRAP" || true
     local d

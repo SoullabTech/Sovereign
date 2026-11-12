@@ -736,6 +736,8 @@ cmd_deploy() {
     # (compose reads MAIA_BUILD_CONTEXT for every build `context:`).
     # Build + swap use the SNAPSHOT's compose file (deploy_ctx_compose) — the
     # deployment structure is the authorized commit's (2026-09-03 provenance repair).
+    # :prod guard: the build moves :prod; restore it if we stop before the swap.
+    prod_tag_guard_arm "$GIT_COMMIT"
     deploy_ctx_compose build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
@@ -754,6 +756,8 @@ cmd_deploy() {
     run_migrations_or_abort "Deployment"
 
     # Only a successful pre-swap migration may advance rollback roles or the reader.
+    # From here the candidate is the legitimate :prod.
+    prod_tag_guard_disarm
     tag_images_for_rollback "$GIT_COMMIT"
 
     log_info "Starting containers after successful migrations..."
@@ -825,6 +829,8 @@ cmd_update() {
 
     # Build + swap from the immutable snapshot — code AND compose structure
     # (deploy_ctx_compose; 2026-09-03 provenance repair).
+    # :prod guard: the build moves :prod; restore it if we stop before the swap.
+    prod_tag_guard_arm "$GIT_COMMIT"
     deploy_ctx_compose build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
@@ -841,6 +847,8 @@ cmd_update() {
     run_migrations_or_abort "Update"
 
     # Rollback roles advance only after the pre-swap schema transition succeeds.
+    # From here the candidate is the legitimate :prod.
+    prod_tag_guard_disarm
     tag_images_for_rollback "$GIT_COMMIT"
 
     deploy_ctx_compose up -d
