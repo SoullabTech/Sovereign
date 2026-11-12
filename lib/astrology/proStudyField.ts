@@ -52,14 +52,14 @@ export function studyChartObservation(
   switch (id) {
     case 'positions':
       return snapshot.positions.length
-        ? 'Your chart includes ' + snapshot.positions.length +
+        ? 'The open chart includes ' + snapshot.positions.length +
           ' validated points. Open Research to compare their sign-degree positions with 0–360° longitude.'
         : 'No verified positions are available.';
     case 'houses':
       return snapshot.countWithHouseConventionDifference + ' currently verified positions differ between reported and geometric house conventions.';
     case 'aspects':
       return snapshot.aspects.length
-        ? 'Your calculator reported ' + snapshot.aspects.length +
+        ? 'The calculator reported ' + snapshot.aspects.length +
           ' validated aspects; the narrowest has an orb of ' + snapshot.aspects[0].orb.toFixed(2) + '°.'
         : 'No validated aspects are reported in the currently open chart.';
     case 'motion':
