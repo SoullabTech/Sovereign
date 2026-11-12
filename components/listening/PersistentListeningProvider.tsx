@@ -9,6 +9,9 @@ import { FOCUS_SOUND_SKETCHES, focusSoundLabel } from '@/lib/listening/focusSoun
 import { DEFAULT_SOUNDSCAPE_INPUT, focusSoundscapeSpec } from '@/lib/listening/focusSoundscape';
 import type { SoundscapeInput, SoundscapeSpec } from '@/lib/listening/focusSoundscape';
 import { buildSoundscape } from '@/lib/listening/soundscapeEngine';
+import {
+  DEFAULT_LISTENING_LEVEL, generatedGainForLevel, readStoredListeningLevel, writeStoredListeningLevel,
+} from '@/lib/listening/listeningLevel';
 import type { SoundscapeHandle } from '@/lib/listening/soundscapeEngine';
 import type { FocusSoundId } from '@/lib/listening/focusSoundChoices';
 import type { FocusTimeDisplay } from '@/lib/listening/focusTimeDisplay';
@@ -105,7 +108,7 @@ type Sketch = {
 export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
-  setVolume: (volume: number) => void;
+  setVolume: (volume: number, transient?: boolean) => void;
   looping: boolean;
   loopAvailable: boolean;
   setLooping: (enabled: boolean) => void;
@@ -328,7 +331,7 @@ export function PersistentListeningProvider({
   reviewMemberKey,
 }: { children: ReactNode; reviewMemberKey: string }) {
   const [snapshot, setSnapshot] = useState(defaultSnapshot);
-  const [volume, saveVolume] = useState(45);
+  const [volume, saveVolume] = useState(DEFAULT_LISTENING_LEVEL);
   const [looping, saveLooping] = useState(false);
   const [loopAvailable, saveLoopAvailable] = useState(false);
   const [shape, saveShape] = useState<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
@@ -348,11 +351,11 @@ export function PersistentListeningProvider({
   useEffect(() => {
     const element = media.current;
     if (!element) return;
-    const before = element.volume;
     try { element.volume = 0.5; } catch { setVolumeAdjustable(false); return; }
     const timer = window.setTimeout(() => {
       setVolumeAdjustable(Math.abs(element.volume - 0.5) < 0.01);
-      try { element.volume = before; } catch { /* read-only on this platform */ }
+      // Back to the member's level, not the element's default, so the next file starts where the control says.
+      try { element.volume = volumeRef.current / 100; } catch { /* read-only on this platform */ }
     }, 150);
     return () => window.clearTimeout(timer);
   }, []);
@@ -369,7 +372,7 @@ export function PersistentListeningProvider({
   const reviewSegmentIndex = useRef(0);
   const reviewContinuationCycles = useRef(0);
   const segmentTransitioning = useRef(false);
-  const volumeRef = useRef(45);
+  const volumeRef = useRef(DEFAULT_LISTENING_LEVEL);
   const epoch = useRef(0);
   // Stable within this one member-bound provider instance, never serialized or shared.
   const listeningInstance = useRef<object>({}).current;
@@ -705,16 +708,30 @@ export function PersistentListeningProvider({
     return () => window.clearInterval(interval);
   }, [snapshot.kind, snapshot.playback, experienceElapsed, releaseOutput]);
 
-  const setVolume = useCallback((value: number) => {
+  // One level for every source: a generated sound's master gain and the one media element both follow it.
+  // `transient` is a fade or sleep-timer step: audible now, but never written over the member's remembered level.
+  const setVolume = useCallback((value: number, transient = false) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
     volumeRef.current = next;
     saveVolume(next);
     if (sketch.current) {
       const { context, master } = sketch.current;
-      master.gain.setTargetAtTime(Math.max(0.0001, next / 100 * 0.027),
+      master.gain.setTargetAtTime(generatedGainForLevel(next),
         context.currentTime, 0.06);
     }
     if (media.current) media.current.volume = next / 100;
+    if (!transient) {
+      try { writeStoredListeningLevel(window.localStorage, next); } catch { /* storage unavailable */ }
+    }
+  }, []);
+
+  // The remembered level on this device, read once after mount. Reading it never starts or resumes sound.
+  useEffect(() => {
+    let stored = DEFAULT_LISTENING_LEVEL;
+    try { stored = readStoredListeningLevel(window.localStorage); } catch { /* storage unavailable */ }
+    volumeRef.current = stored;
+    saveVolume(stored);
+    try { if (media.current) media.current.volume = stored / 100; } catch { /* fixed by the platform */ }
   }, []);
 
   const setLooping = useCallback((enabled: boolean) => {
@@ -1022,6 +1039,7 @@ export function PersistentListeningProvider({
     kind.current = 'local-file';
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
     try {
+      media.current.volume = volumeRef.current / 100;
       await media.current.play();
       // A MAIA queue might become audible while HTMLMediaElement.play awaits.
       if (isMaiaSpeechActive() || generation !== epoch.current) {

@@ -23,8 +23,13 @@ reference_surfaces:
   - docs/canon/SOULLAB_THEME.md — one continuous field of aware containment
 shared_with_house: deep contained field, editorial serif hierarchy, restrained signal colour, explicit Home return, human-language gestures, progressive disclosure and the same stable-root authenticated Soullab shell
 distinct_to_room: sound is the primary material and may continue while the member moves elsewhere in Soullab; the room offers Experience, Explore, Create and Professional / Research as different relationships to one Sound Work, while the persistent dock remains a small direct-control threshold back into the field rather than becoming a second room or player
-screenshot_desktop: docs/design/contracts/screenshots/sound-studio-field-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/sound-studio-field-mobile.png
+screenshot_desktop:
+  - docs/design/contracts/screenshots/sound-studio-field-desktop.png
+  - docs/design/contracts/screenshots/sound-studio-field-level-desktop.png
+screenshot_mobile:
+  - docs/design/contracts/screenshots/sound-studio-field-mobile.png
+  - docs/design/contracts/screenshots/sound-studio-field-level-mobile.png
+  - docs/design/contracts/screenshots/sound-studio-field-level-mobile-device.png
 experience_verification: >
   2026-10-29 authenticated fictional-member witness on the exact local LISTEN-61 successor source,
   using Next 16.3.8 at /listen and the existing stable-root PersistentListeningProvider. The field
@@ -78,6 +83,7 @@ The doors progressively disclose depth. They are not four competing applications
 | return from elsewhere | the playing work title / `Open field` | the persistent dock is a doorway back to the same field, not a second player |
 | balance beneath another app | `Mix` / `Play alongside another app` | makes the Soullab field independently adjustable without claiming access to the foreground service |
 | leave gently | `Fade 12s & stop` | offers a composed exit while immediate `Stop` remains available |
+| set how loud | `Level` slider in the player bar · `Level: phone volume buttons` | one plain word, always in reach; where the device owns the level, the bar says so instead of offering a slider that changes nothing |
 | leave sound complete | `After listening` | reflection is available but never required |
 | return to Soullab | `Home` | clear movement back into the House, not a browser-level escape |
 
@@ -135,6 +141,19 @@ A member may run Soullab quietly beneath music chosen in another app. This is a 
 - Tonal, spectral, rhythmic or adaptive shaping is not exposed for a fixed master merely because volume control exists. Those controls require actual stems, transparent method, and creator permission.
 
 The boundary text remains visible in the control panel: other music stays in its original app, and Soullab changes only its own field.
+
+## Level — one control in the bar for every source (LISTEN-79, 12 November 2026)
+
+The founder's walk of `/listen` found the level only under **More**. The level now sits in the player bar itself, for every source the one shared player plays: recorded works (Open Ground, the Night Ground editions, Music Only), the generated *Your soundscape* / Focus Field sound, the Focus presets (Open Ground, Deep focus, Creative flow) and a file from the member's own device.
+
+- **Desktop:** `Level`, the slider and its percentage sit inline after Pause / Stop / More.
+- **Phone:** the level takes its own slim full-width row beneath the title and Pause / Stop / More, so it never narrows those buttons; they keep their 44 px targets.
+- **One slider at a time:** opening **More** hides the bar's slider; the panel's *Field volume*, Under / Soft / Present and Mute remain the fuller form of the same one level.
+- **Honest where the device owns the level:** on iOS a web page cannot set a media file's level. For a recorded work there, the bar reads *Level: phone volume buttons* and shows no slider. A generated sound is set inside Soullab, so its slider appears on every device.
+- **The member's own setting:** the level is remembered on this device only, and is read once after the page opens without starting or resuming anything. Only the member's own changes are remembered; *Fade 12s & stop* and the sleep-timer fade move what is heard for a moment but never rewrite the remembered level.
+- Stop stays terminal, nothing auto-resumes, and MAIA's speech still takes priority; the level grants no new playback authority.
+
+**Verification (local, this branch):** `tests/listening/listen79_level_control.test.mjs` (source and pure level) pins that every start path begins at the member's level and every source's audible output ends in what the control sets; six deliberate mutations (recorded works, local file, soundscape, a recorded nature layer, the slider's media path, the slider back behind More) each fail it. `tests/listening/listen79_level_bar_fixture_witness.cjs` renders the real dock in local Chrome at 1440×900 and 390×844 with fictional snapshots: **36/36 PASS** (slider visible without More, a change reaches the level, Pause / Stop ≥ 44 px, no overlap with the buttons, its own row on a phone, one slider with More open, the device-fixed note, no overflow, no page errors). These are an isolated component fixture and viewport emulation — not the authenticated route, physical iPhone / iPad Safari, lock-screen behaviour, or the founder's felt acceptance, which remain separate.
 
 ## 29 October 2026 Night Ground guided-review verification
 
