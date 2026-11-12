@@ -59,6 +59,7 @@ export const DEVELOP_CAPABILITIES: readonly DevelopCapability[] = [
   { key: 'focus', what: 'focus the conversation', controls: ['data-maia-focus-toggle'], reach: { kind: 'offer', action: 'focus' } },
   { key: 'close-conversation', what: 'close the conversation', controls: ['data-close-conversation'], reach: { kind: 'offer', action: 'close-conversation' } },
   { key: 'more', what: 'the one quiet More on the stage and in the conversation', controls: ['data-develop-more', 'data-conversation-more'], reach: { kind: 'doorway' } },
+  { key: 'tools-size', what: 'resize or fold the All-tools panel under the chapter (layout only; reveals nothing new)', controls: ['data-develop-tools-splitter', 'data-develop-tools-fold'], reach: { kind: 'doorway' } },
 ];
 
 export const DEVELOP_ASKABLE_DEFECTS = DEVELOP_CAPABILITIES.filter((c) => c.reach.kind === 'defect');

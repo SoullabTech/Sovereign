@@ -26,7 +26,7 @@ experience_verification: >
   Chrome at 1440×1000 and 390×844. 8/8 checks pass: the consent discloses that words are sent to Claude (Anthropic);
   the summary shows three editable lines; keeping the transcript is unchecked by default; no page errors. Screens were
   viewed: a textarea overflow and monospace font at phone width were found and fixed before capture. OWED before any
-  reviewer sees it: an authenticated walk on a deployed build with the flag on and a founder session, real guide
+  reviewer sees it (2026-11-12 addendum: consent v2 now also discloses theme synthesis, and a 'Reviews are paused in Sanctuary' state refuses before anything is sent or saved; fixture witness re-run): an authenticated walk on a deployed build with the flag on and a founder session, real guide
   replies, keyboard and screen-reader pass, and iPhone Safari.
 ---
 

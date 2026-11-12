@@ -3,6 +3,7 @@
 //   POST — save reviewer-confirmed lines; the raw transcript only if keepTranscript is true
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { refuseIfNotOrdinary } from '@/lib/listening/listenReviewPosture';
 import { requireListenReviewer } from '@/lib/listening/listenReviewerGate';
 import { validateSaveRequest } from '@/lib/listening/soundStudioReview';
 
@@ -29,7 +30,12 @@ export async function GET() {
 export async function POST(request: Request) {
   const gate = await requireListenReviewer();
   if (!gate.ok) return new NextResponse(null, { status: gate.status, headers: NO_STORE });
-  const save = validateSaveRequest(await request.json().catch(() => null));
+  const raw = await request.json().catch(() => null) as Record<string, unknown> | null;
+  // F4: Sanctuary refuses before validation, before any insert.
+  const notOrdinary = await refuseIfNotOrdinary(gate.memberId, raw && typeof raw === 'object' ? raw : null);
+  if (notOrdinary) return notOrdinary;
+  if (raw && typeof raw === 'object') delete raw.sanctuary;
+  const save = validateSaveRequest(raw);
   if (!save) return NextResponse.json({ refusal: 'malformed' }, { status: 400, headers: NO_STORE });
   const result = await query<{ id: string; created_at: string }>(
     `INSERT INTO sound_studio_reviews

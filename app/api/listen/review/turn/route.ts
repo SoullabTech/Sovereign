@@ -2,6 +2,7 @@
 // Stateless: the client holds the conversation; nothing is stored here. Not MAIA; no memory read or written.
 import { NextResponse } from 'next/server';
 import { generateWithClaude } from '@/lib/ai/claudeClient';
+import { refuseIfNotOrdinary } from '@/lib/listening/listenReviewPosture';
 import { requireListenReviewer } from '@/lib/listening/listenReviewerGate';
 import { SOUND_STUDIO_WORKS } from '@/lib/listening/soundStudioExperience';
 import {
@@ -22,9 +23,11 @@ export async function POST(request: Request) {
   if (!gate.ok) return new NextResponse(null, { status: gate.status, headers: NO_STORE });
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object' || Object.keys(body).some(k => k !== 'workId' && k !== 'transcript')) {
+  if (!body || typeof body !== 'object' || Object.keys(body).some(k => k !== 'workId' && k !== 'transcript' && k !== 'sanctuary')) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400, headers: NO_STORE });
   }
+  const notOrdinary = await refuseIfNotOrdinary(gate.memberId, body);
+  if (notOrdinary) return notOrdinary;
   if (!isReviewableWork(body.workId)) return NextResponse.json({ refusal: 'unknown_work' }, { status: 400, headers: NO_STORE });
   const turns = validateTranscript(body.transcript, 'reviewer');
   if (!turns) return NextResponse.json({ refusal: 'malformed_transcript' }, { status: 400, headers: NO_STORE });
