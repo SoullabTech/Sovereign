@@ -125,10 +125,14 @@ describe('the letter and the walk', () => {
     act(() => q('[data-letter-next]')!.click());
     expect(q('[data-letter-place="2"]')).not.toBeNull();
   });
-  it('"Show me where" and "Talk about it" are the writer\'s calls; nothing else moves', async () => {
+  it('⭐ opening a place brings its passage into the centre (the writer\'s click); Next does the same; "Talk about it" is the writer\'s call', async () => {
     const p = await mount();
-    act(() => q('[data-letter-start]')!.click());
     expect(p.onShowSection).not.toHaveBeenCalled();
+    act(() => q('[data-letter-start]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s1');
+    act(() => q('[data-letter-next]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s2');
+    act(() => q('[data-letter-prev]')!.click());
     act(() => q('[data-letter-act="where"]')!.click());
     expect(p.onShowSection).toHaveBeenCalledWith('s1');
     act(() => q('[data-letter-act="talk"]')!.click());

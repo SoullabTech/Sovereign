@@ -188,6 +188,16 @@ export function EditorialLetterPanel(props: {
     });
   };
   const sectionOf = (it: AttentionItem) => sections.find((s) => it.sectionIds.includes(s.draftSectionId));
+  /* Founder 2026-11-12: "If I click onto an issue … it should bring up the manuscript copy in the center." Opening a place (from the
+     letter, or with Previous / Next) is the writer's own act, so it also brings that place's section into the centre — the same act
+     as "Show me where", which stays for coming back to it. Nothing moves unless the writer clicks. */
+  const openPlace = (i: number) => {
+    const it = places[i];
+    if (!it) return;
+    setCursor(i); setNote(null);
+    const sec = sectionOf(it);
+    if (sec) props.onShowSection(sec.draftSectionId);
+  };
 
   const options = async (it: AttentionItem) => {
     if (resolving) return;
@@ -274,8 +284,8 @@ export function EditorialLetterPanel(props: {
         </div>
         {note ? <p role="note" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-          <button type="button" data-letter-prev="true" disabled={cursor === 0} onClick={() => { setCursor(cursor - 1); setNote(null); }} style={btn}>‹ Previous</button>
-          <button type="button" data-letter-next="true" disabled={cursor >= places.length - 1} onClick={() => { setCursor(cursor + 1); setNote(null); }} style={btn}>Next place ›</button>
+          <button type="button" data-letter-prev="true" disabled={cursor === 0} onClick={() => openPlace(cursor - 1)} style={btn}>‹ Previous</button>
+          <button type="button" data-letter-next="true" disabled={cursor >= places.length - 1} onClick={() => openPlace(cursor + 1)} style={btn}>Next place ›</button>
         </div>
       </section>
     );
@@ -330,12 +340,12 @@ export function EditorialLetterPanel(props: {
           <ol data-letter-places="true" style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {places.map((it, i) => (
               <li key={it.id}>
-                <button type="button" data-letter-open={i + 1} onClick={() => { setCursor(i); setNote(null); }} style={{ ...quiet, textAlign: 'left' }}>{it.label}</button>
+                <button type="button" data-letter-open={i + 1} onClick={() => openPlace(i)} style={{ ...quiet, textAlign: 'left' }}>{it.label}</button>
                 <span style={{ fontSize: 11, opacity: .7 }}> · {labelOf(sectionOf(it))}{decisions[it.id] ? ` · ${decisions[it.id] === 'intended' ? 'intended' : 'later'}` : ''}</span>
               </li>
             ))}
           </ol>
-          <button type="button" data-letter-start="true" className="p4r1-talk" onClick={() => setCursor(0)}>Start with the first</button>
+          <button type="button" data-letter-start="true" className="p4r1-talk" onClick={() => openPlace(0)}>Start with the first</button>
         </>
       )}
     </section>
