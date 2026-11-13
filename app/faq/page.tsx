@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { trackOnboarding } from '@/lib/onboarding/telemetryClient';
 import { apiFetch } from '@/lib/http/apiBase';
+import { onboardingAfterFaq } from '@/lib/onboarding/faqContinuation';
 
 export default function FAQPage() {
   const router = useRouter();
@@ -44,7 +45,9 @@ export default function FAQPage() {
       // Non-fatal — continue regardless
     }
 
-    router.push('/onboarding');
+    // Carry the member's return place (sign-up sends `/faq?next=…`) into onboarding, which honours it on completion.
+    const searchParams = new URLSearchParams(window.location.search);
+    router.push(onboardingAfterFaq(searchParams?.get('next')));
   };
 
   if (isLoading) return null;
