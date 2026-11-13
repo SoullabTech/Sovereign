@@ -589,6 +589,42 @@ chart.soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Studio doorways — STUDIO-A-LA-CARTE-01 Phase 4 (founder rulings R1/R2 2026-11-12)
+# Each Studio's own front door. Routing lives in proxy.ts (lib/studios/doorways.ts),
+# NOT here: `/` → the Studio's public preview and `/join` → its invitation sign-up,
+# only while STUDIO_DOORWAYS_ENABLED=true; every other path keeps its normal rules.
+# ⚠️ DNS A records for these four hosts must exist BEFORE this block is deployed,
+#    or Caddy's ACME certificate requests fail (and are retried) for each host.
+# ═══════════════════════════════════════════════════════════════════════════════
+writer.soullab.life, sound.soullab.life, guide.soullab.life, astrology.soullab.life {
+    import deny_disabled_routes
+
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-studio-doorway"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/studio-doorways-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Elemental Alchemy Audiobook
 # ═══════════════════════════════════════════════════════════════════════════════
 elementalalchemy.soullab.life {
