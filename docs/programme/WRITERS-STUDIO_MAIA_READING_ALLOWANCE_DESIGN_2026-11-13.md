@@ -121,6 +121,13 @@ Default mode is off: no row written, nothing refused, today's behaviour exactly.
 Everything else here follows from rulings already recorded or from existing instruments (Sanctuary invariants,
 fail-closed doctrine, the oracle quota precedent) and needs no ruling. **F** and **P** wait for M2.
 
+### 3.1 Founder ruling (Kelly, 2026-11-13, in the Claude Code session): **A — words MAIA reads**
+
+Asked "count words MAIA reads, or number of readings?", the founder answered *"whatever is best"*, delegating to the
+recommendation. **A is taken:** the allowance is an amount of reading, measured from input tokens at the seam and shown
+to the writer as words. **F** and **P** are expressed in words per calendar month and still wait for M2.
+**Standing:** settles §3 only. ⛔ M1–M4 each still need their own go; M1 adds a migration and is at least Class A.
+
 ## 4. Falsifiers
 
 | # | Given | Expect | Mutation that must fail it |
