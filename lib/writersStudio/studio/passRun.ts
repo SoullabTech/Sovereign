@@ -21,7 +21,7 @@ import { LENS_ORDER } from '@/lib/writersStudio/developPresentation';
 import { synthesizeAttentionMap } from '@/lib/writersStudio/studio/synthesizeAttentionMap';
 import { EDITORIAL_PASS_REQUEST } from '@/lib/writersStudio/studio/editorialPassRequest';
 import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
-import { composeOpening } from '@/lib/writersStudio/studio/letterOpening';
+import { composeOpening, openingFields } from '@/lib/writersStudio/studio/letterOpening';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { holdsWholeWork } from '@/lib/auth/entitlements';
 import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
@@ -193,7 +193,7 @@ export async function advanceRun(memberId: string, manuscriptId: string, deps: R
     if (!synthesis.ok) { await record(deps, run!.id, 'failed', { refusal: `synthesis:${synthesis.error}` }); return viewRun(memberId, manuscriptId, deps); }
     if ((await deps.sanctuaryDefault(memberId)) !== false) { await record(deps, run!.id, 'stopped', { refusal: 'sanctuary' }); return viewRun(memberId, manuscriptId, deps); }
     const opening = await deps.opening(memberId, manuscriptId, synthesis.readingIds);
-    const letterId = await deps.keepLetter(memberId, manuscriptId, synthesis.revisionNumber, { ...synthesis.map, opening });
+    const letterId = await deps.keepLetter(memberId, manuscriptId, synthesis.revisionNumber, { ...synthesis.map, ...openingFields(opening) });
     await record(deps, run!.id, 'done', { letterId });
     return viewRun(memberId, manuscriptId, deps);
   } finally {

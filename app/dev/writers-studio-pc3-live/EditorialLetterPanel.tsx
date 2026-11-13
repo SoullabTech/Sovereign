@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
-import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import { loadCanvasInsight, pickDeskPassage, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClient';
 import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studio/passRunClient';
 import type { RunView } from '@/lib/writersStudio/studio/passRun';
@@ -207,12 +207,15 @@ export function EditorialLetterPanel(props: {
          Opening it elsewhere put MAIA in front of words the place was not about, and the desk rightly refused her edits (2026-11-12). */
       const primary = sectionOf(it)?.draftSectionId ?? null;
       const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
+      /* Among the evidence, prefer a passage placed by words MAIA quoted that are verbatim in that section: then the desk holds the very
+         words the place is about, and an edit of them can be admitted. */
+      const found: { ev: (typeof ordered)[number]; p: InsightPassage }[] = [];
       for (const ev of ordered) {
         const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        const verified = insight?.passages.filter((p) => p.verified && p.editable && p.range) ?? [];
-        const passage = verified.find((p) => p.sectionId === primary) ?? verified[0];
-        if (passage?.range) { props.onEditOptions({ sectionId: passage.sectionId, readingId: ev.readingId, observationKey: ev.observationKey }); return; }
+        for (const p of insight?.passages ?? []) if (p.verified && p.editable && p.range) found.push({ ev, p });
       }
+      const pick = pickDeskPassage(found, primary);
+      if (pick) { props.onEditOptions({ sectionId: pick.p.sectionId, readingId: pick.ev.readingId, observationKey: pick.ev.observationKey }); return; }
       setNote('I can’t tie this to exact words in your current draft, so I won’t propose a change from here. Open the section and select the words you mean; I’ll work with those.');
     } finally { setResolving(false); }
   };
@@ -333,6 +336,11 @@ export function EditorialLetterPanel(props: {
           ) : null}
           {pass.map.opening.divergence ? <p data-letter-divergence="true" style={{ margin: 0, lineHeight: 1.55 }}>{pass.map.opening.divergence}</p> : null}
         </div>
+      ) : pass.map.opening === null ? (
+        /* Founder walk 2026-11-12: the opening was missing and nothing said so. A kept letter without its opening now says it. */
+        <p role="note" data-letter-opening-missing={pass.map.openingRefusal ?? 'unknown'} style={{ margin: 0, fontSize: 12, opacity: .8 }}>
+          I couldn’t keep my opening to this letter, where I say what I think the book is reaching for. The places below stand on their own. When you ask me to read the book again, I’ll try the opening again.
+        </p>
       ) : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
