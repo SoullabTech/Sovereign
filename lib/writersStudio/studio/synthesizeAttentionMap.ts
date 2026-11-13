@@ -8,7 +8,7 @@ import { loadReading } from '@/lib/manuscript/developmentalReading/store';
 import type { DevelopmentalReading } from '@/lib/manuscript/developmentalReading/contract';
 import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import {
   ATTENTION_SYNTHESIS_VERSION,

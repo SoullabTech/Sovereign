@@ -2,7 +2,7 @@
  * WS-DEVELOP-STUDIO · M4 — MAIA drafts a development plan. Structured tool, no free prose into the manuscript.
  * She is handed ONLY chapters the writer authorized (the route mints a receipt per chapter first). Her steps are checked mechanically afterwards (`groundSteps`).
  */
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import type { PlanChapter, RawStep } from '@/lib/writersStudio/developmentPlan';
 

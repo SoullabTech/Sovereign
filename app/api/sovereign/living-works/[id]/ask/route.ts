@@ -22,6 +22,7 @@ import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { buildLivingWorkOnlyContext } from '@/lib/manuscript/ask/workContext';
 import { isHeldRetry, historyFor } from '@/lib/manuscript/ask/retry';
 import { workContextFingerprint } from '@/lib/writersStudio/workContextFingerprint';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +57,7 @@ export async function GET(
   });
 }
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -94,6 +95,7 @@ export async function POST(
   }
   const studioPosture = await resolveStudioPosture(memberId, body);
   const storing = studioPosture.keep;
+  bindMaiaMeter(memberId, { sanctuary: studioPosture.sanctuary === true });
   /* The store refuses any write without this witness; it exists only when storing is true. */
   const keep = studioPosture.witness as KeepWitness;
 
@@ -202,3 +204,5 @@ export async function POST(
     staleness,
   });
 }
+
+export const POST = meteredRoute('work_ask', postHandler);

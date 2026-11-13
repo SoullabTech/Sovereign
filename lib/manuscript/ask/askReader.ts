@@ -20,7 +20,7 @@
 
 import type { CarriedReading, CarriedSet } from './carriedReadings';
 import { createHash } from 'crypto';
-import { runStructured } from '../../ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { StructureInterpretation } from '../structure/interpret';
 import type { ReviewedStructure } from '../structure/review';
