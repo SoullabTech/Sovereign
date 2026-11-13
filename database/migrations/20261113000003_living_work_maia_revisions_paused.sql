@@ -16,5 +16,8 @@
 --
 -- Additive and defaulted: existing Works are unchanged (false).
 
+BEGIN;
+SET LOCAL lock_timeout = '5s';
 ALTER TABLE living_works
   ADD COLUMN IF NOT EXISTS maia_revisions_paused boolean NOT NULL DEFAULT false;
+COMMIT;
