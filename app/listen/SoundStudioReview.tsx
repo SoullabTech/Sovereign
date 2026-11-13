@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { verifiedSessionFetch } from '@/lib/http/verifiedSessionFetch';
+import { declaredSanctuaryPosture, readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import {
   MAX_LINE_CHARS,
   MAX_LINES,
@@ -13,12 +14,13 @@ import {
   REVIEW_CONSENT_VERSION,
   REVIEW_GUIDE_NAME,
   REVIEWABLE_WORKS,
+  SANCTUARY_REVIEW_MESSAGE,
   openingQuestion,
 } from '@/lib/listening/soundStudioReview';
 import type { ReviewLine, ReviewLineKind, ReviewTurn } from '@/lib/listening/soundStudioReview';
 import styles from './listen.module.css';
 
-type Stage = 'consent' | 'talk' | 'summary' | 'saved' | 'paused';
+type Stage = 'consent' | 'talk' | 'summary' | 'saved' | 'paused' | 'sanctuary';
 type SavedReview = { id: string; workId: string; lines: ReviewLine[]; keptTranscript: boolean; createdAt: string };
 
 const KIND_LABEL: Record<ReviewLineKind, string> = {
@@ -58,7 +60,20 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
   }, []);
   useEffect(() => { void loadMine(); }, [loadMine]);
 
+  const sanctuaryNow = () => {
+    const read = readCurrentSanctuaryPosture();
+    if (read.resolved && read.sanctuary) { setTurns([]); setStage('sanctuary'); return true; }
+    return false;
+  };
+  const refused = async (res: Response) => {
+    if (res.status !== 409) return false;
+    const data = await res.json().catch(() => null) as { refusal?: string } | null;
+    if (data?.refusal === 'sanctuary') { setTurns([]); setStage('sanctuary'); return true; }
+    return false;
+  };
+
   const begin = () => {
+    if (sanctuaryNow()) return;
     setTurns([{ role: 'guide', text: openingQuestion(workId) }]);
     setStage('talk');
   };
@@ -69,12 +84,14 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
     const next: ReviewTurn[] = [...turns, { role: 'reviewer', text: text.slice(0, MAX_MESSAGE_CHARS) }];
     setTurns(next);
     setDraft('');
+    if (sanctuaryNow()) return;
     if (next.length >= MAX_MESSAGES - 1) { void summarize(next); return; }
     setBusy(true); setError(null);
     try {
       const res = await verifiedSessionFetch('/api/listen/review/turn', {
-        method: 'POST', body: JSON.stringify({ workId, transcript: next }),
+        method: 'POST', body: JSON.stringify({ workId, transcript: next, ...declaredSanctuaryPosture() }),
       });
+      if (await refused(res)) return;
       if (!res.ok) throw new Error('turn');
       const data = (await res.json()) as { reply: string; paused: boolean; suggestFinish: boolean };
       if (data.paused) { setTurns([]); setStage('paused'); return; }
@@ -87,11 +104,13 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
 
   const summarize = async (current: ReviewTurn[] = turns) => {
     if (!current.some(t => t.role === 'reviewer')) { setError('Say something first, even a single line.'); return; }
+    if (sanctuaryNow()) return;
     setBusy(true); setError(null);
     try {
       const res = await verifiedSessionFetch('/api/listen/review/summary', {
-        method: 'POST', body: JSON.stringify({ workId, transcript: current }),
+        method: 'POST', body: JSON.stringify({ workId, transcript: current, ...declaredSanctuaryPosture() }),
       });
+      if (await refused(res)) return;
       if (!res.ok) throw new Error('summary');
       const data = (await res.json()) as { lines: ReviewLine[] };
       setLines(data.lines.length ? data.lines : [{ kind: 'observation', text: '' }]);
@@ -106,6 +125,7 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
   const save = async () => {
     const clean = lines.map(l => ({ kind: l.kind, text: l.text.trim() })).filter(l => l.text);
     if (!clean.length) { setError('Keep at least one line, or discard the review.'); return; }
+    if (sanctuaryNow()) { setLines([]); return; }
     setBusy(true); setError(null);
     try {
       const res = await verifiedSessionFetch('/api/listen/review', {
@@ -115,8 +135,10 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
           ...(keepTranscript ? { transcript: turns } : {}),
           passageLabel, elapsedMs: elapsedMs == null ? null : Math.round(elapsedMs),
           consentVersion: REVIEW_CONSENT_VERSION,
+          ...declaredSanctuaryPosture(),
         }),
       });
+      if (await refused(res)) { setLines([]); return; }
       if (!res.ok) throw new Error('save');
       setSavedId(((await res.json()) as { id: string }).id);
       setTurns([]);
@@ -143,7 +165,7 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
     <section className={`${styles.panel} ${styles.reviewPanel}`} aria-labelledby="sound-review-title" data-sound-studio-review="true">
       <span className={styles.smallcaps}>{REVIEW_GUIDE_NAME.toUpperCase()} · NOT MAIA</span>
       <h2 id="sound-review-title" ref={headingRef} tabIndex={-1}>
-        {stage === 'saved' ? 'Thank you' : stage === 'paused' ? 'Pausing the review' : `Review ${title}`}
+        {stage === 'saved' ? 'Thank you' : stage === 'paused' ? 'Pausing the review' : stage === 'sanctuary' ? 'Reviews are paused in Sanctuary' : `Review ${title}`}
       </h2>
 
       {stage === 'consent' && (
@@ -155,7 +177,7 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
           <ul className={styles.reviewTerms}>
             <li><strong>What is saved:</strong> only the summary lines you check and confirm at the end. The full conversation is kept only if you tick a box.</li>
             <li><strong>Who sees it:</strong> the Soullab team working on Sound Studio.</li>
-            <li><strong>How it works:</strong> your words are sent to Claude (Anthropic) through Soullab's server to ask follow-up questions and draft the summary. They are not used to train any model.</li>
+            <li><strong>How it works:</strong> your words are sent to Claude (Anthropic) through Soullab's server to ask follow-up questions and draft the summary. The lines you confirm and save may later be sent to Claude too, under anonymous references, so the team can find themes across reviews. Nothing is used to train any model.</li>
             <li><strong>Not MAIA:</strong> this guide has no memory of you and nothing here goes into MAIA's memory.</li>
             <li><strong>Yours to delete:</strong> you can delete a saved review at any time.</li>
           </ul>
@@ -229,6 +251,17 @@ export function SoundStudioReview({ workId, passageLabel, elapsedMs, onClose }: 
           <div className={styles.returnRow}>
             {savedId && <button type="button" className={styles.danger} onClick={() => void remove(savedId)}>Delete this review</button>}
             <button type="button" className={styles.ghost} onClick={onClose}>Back to the field</button>
+          </div>
+        </>
+      )}
+
+      {stage === 'sanctuary' && (
+        <>
+          <p className={styles.muted}>
+            {SANCTUARY_REVIEW_MESSAGE} Nothing you said in this review was kept.
+          </p>
+          <div className={styles.returnRow}>
+            <button type="button" className={styles.ghost} onClick={onClose}>Close</button>
           </div>
         </>
       )}

@@ -1,0 +1,6 @@
+-- Rollback for living_works.maia_revisions_paused.
+-- Removing it silently re-opens MAIA's wording proposals on every Work a writer had
+-- set to "MAIA asks, never rewrites". Tell those writers first.
+BEGIN;
+ALTER TABLE living_works DROP COLUMN IF EXISTS maia_revisions_paused;
+COMMIT;

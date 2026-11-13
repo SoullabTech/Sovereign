@@ -19,7 +19,7 @@ type Props = {
   onPauseMusic: () => void;
   onResumeMusic: () => void;
   onStopMusic: () => void;
-  onVolume: (volume: number) => void;
+  onVolume: (volume: number, transient?: boolean) => void;
   onLooping: (enabled: boolean) => void;
   onCompanionMode?: (enabled: boolean) => void;
   volumeAdjustable?: boolean;
@@ -162,12 +162,12 @@ export default function PersistentListeningDock({
     fadeTimer.current = window.setInterval(() => {
       step += 1;
       const remaining = Math.max(0, 1 - step / FADE_STEPS);
-      onVolume(Math.round(restoreVolume * remaining));
+      onVolume(Math.round(restoreVolume * remaining), true);
       if (step < FADE_STEPS) return;
       if (fadeTimer.current !== null) window.clearInterval(fadeTimer.current);
       fadeTimer.current = null;
       onStopMusic();
-      onVolume(restoreVolume);
+      onVolume(restoreVolume, true);
       setFading(false);
     }, FADE_DURATION_MS / FADE_STEPS);
   };
@@ -251,12 +251,19 @@ export default function PersistentListeningDock({
         )}
       </div>
 
-      {audioDisplayed && (
-        <label className={styles.volume}>Soullab volume
-          <input aria-label="Persistent music volume" type="range" min="0" max="100"
-            value={volume} onChange={event => setFieldVolume(Number(event.target.value))}/>
+      {/* The level sits in the bar itself for every source. Where the device fixes a media file's level (iOS),
+          the bar says so instead of showing a slider that would change nothing. */}
+      {audioDisplayed && !mixOpen && (volumeAdjustable ? (
+        <label className={styles.volume} data-listen-bar-level="adjustable">
+          <span aria-hidden="true">Level</span>
+          <input aria-label="Persistent music volume" type="range" min="0" max="100" step="1"
+            value={volume} aria-valuetext={`${Math.round(volume)}%`}
+            onChange={event => setFieldVolume(Number(event.target.value))}/>
+          <output>{Math.round(volume)}%</output>
         </label>
-      )}
+      ) : (
+        <span className={styles.volumeFixed} data-listen-bar-level="device">Level: phone volume buttons</span>
+      ))}
       {audioDisplayed && <Link className={styles.openField} href="/listen#sound-studio">Open field</Link>}
       {audioDisplayed && <span role="status" className={styles.message}>{snapshot.message}</span>}
 

@@ -43,6 +43,9 @@ import {
 import { findRecentIdenticalImport, sectionsDigest } from '@/lib/manuscript/source/duplicateImport';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
+import {
+  FREE_WORK_LIMIT_CODE, FREE_WORK_LIMIT_MESSAGE, freeWorkLimitEnabled, isWriterProForWorks, mayStartWorkInTx,
+} from '@/lib/writersStudio/workLimit';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
@@ -235,6 +238,9 @@ function classifyDepth(
  *                            longer verify). The lookup is member-bound, so it cannot reveal anyone else's data.
  */
 type UnboundCause = 'transient' | 'already_attached' | 'original_unavailable';
+
+/** A save that would declare a new Work for a Free member who already holds one (lib/writersStudio/workLimit.ts). */
+class FreeWorkLimitReached extends Error {}
 
 class CustodyNotBound extends Error {
   constructor(
@@ -522,6 +528,19 @@ export async function POST(request: NextRequest) {
     // Keep that declaration, its exact manuscript AND the binding of its original
     // together: a failed section, Work, expression or claim write must never
     // leave a partial import.
+    // Free new-Work limit (founder rulings 2026-11-02 / 2026-11-13; lib/writersStudio/workLimit.ts). Only when this save
+    // also declares a NEW Work. Off = as before. Decided inside the transaction BEFORE anything is written, so a refused
+    // save writes nothing at all — the manuscript, sections and original are untouched and the member can save again
+    // without declaring a new Work.
+    let workLimitPro: boolean | null = null;
+    if (createWork === true && freeWorkLimitEnabled()) {
+      try {
+        workLimitPro = await isWriterProForWorks(memberId);
+      } catch {
+        return NextResponse.json({ error: 'Could not check your plan just now. Please try again.' }, { status: 503 });
+      }
+    }
+
     let created: { manuscriptId: string; workId: string | null; custody: string; repeated?: boolean };
     try {
       created = await transaction(async (client) => {
@@ -538,6 +557,10 @@ export async function POST(request: NextRequest) {
         });
         if (recent) {
           return { manuscriptId: recent.manuscriptId, workId: recent.workId, custody: recent.sourceCustody, repeated: true };
+        }
+        if (workLimitPro !== null) {
+          const decision = await mayStartWorkInTx(client, memberId, workLimitPro);
+          if (!decision.allowed) throw new FreeWorkLimitReached();
         }
         const ms = await client.query<{ id: string }>(
           `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
@@ -596,6 +619,9 @@ export async function POST(request: NextRequest) {
         return { manuscriptId, workId, custody };
       });
     } catch (err) {
+      if (err instanceof FreeWorkLimitReached) {
+        return NextResponse.json({ error: FREE_WORK_LIMIT_MESSAGE, code: FREE_WORK_LIMIT_CODE }, { status: 403 });
+      }
       if (err instanceof CustodyNotBound) {
         noteUnboundCustody(memberId, err.reason, err.errorName, err.unboundCause);
         return NextResponse.json(custodyRefusalFor(err.unboundCause), { status: 409 });

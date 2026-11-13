@@ -20,7 +20,7 @@ import {
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap, type WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
-import { holdsWholeWork } from '@/lib/auth/entitlements';
+import { wholeWorkForManuscript } from '@/lib/writersStudio/proTaste';
 import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 const TOOL = 'return_attention_map';
@@ -72,6 +72,9 @@ function inputSchemaFor(evidenceRefs: readonly string[]) {
   } as const;
 }
 
+/** Generous enough for a whole-book letter; an answer that still hits it is refused as incomplete, never used. */
+export const SYNTHESIS_MAX_TOKENS = 32_000;
+
 export type SynthesisOutcome =
   | { ok: true; map: WholeManuscriptAttentionMap; deepMode: boolean; revisionNumber: number; readingIds: string[];
       provenance: { provider: unknown; model: unknown; reportedModel: unknown } }
@@ -118,7 +121,8 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
      whole-book editorial pass and needs `writing.wholeWork`. Here, so the route and the server run are gated by the same check.
      Overview mode serves chapter work and stays open. Refused before any model call; a failed lookup is 503, never "not Pro". */
   if (deepMode) {
-    const entitled = await holdsWholeWork(memberId).catch(() => null);
+    // Pro, or this Free writer's one complimentary pass claimed for THIS manuscript (founder ruling 2026-11-13).
+    const entitled = await wholeWorkForManuscript(memberId, manuscriptId).catch(() => null);
     if (entitled === null) return { ok: false, status: 503, error: 'entitlement_unavailable' };
     if (!entitled) return { ok: false, status: 403, error: WHOLE_WORK_REFUSAL };
   }
@@ -203,7 +207,8 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
         JSON.stringify(commission.observations),
       ].join('\n'),
     }],
-    maxTokens: 8000,
+    /* EA walk 2026-11-12: a nine-reading whole-book letter outgrew 8,000 tokens and came back cut off mid-item. */
+    maxTokens: SYNTHESIS_MAX_TOKENS,
     tools: [{
       name: TOOL,
       inputSchema: inputSchemaFor(observations.map((observation) => observation.synthesisRef)),
@@ -220,6 +225,12 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
     return { ok: false, status: 502, error: 'model_unattributable' };
   }
 
+  /* A reply cut off at the token ceiling is incomplete: its last item may be half-written. Refuse it by name; never build from it. */
+  const stop = (structured.result as { stopReason?: string | null }).stopReason ?? null;
+  if (stop === 'max_tokens' || stop === 'model_context_window_exceeded') {
+    console.warn('[attention-map] synthesis incomplete', { stopReason: stop, observations: observations.length });
+    return { ok: false, status: 502, error: 'attention_map_incomplete' };
+  }
   const input = oneTool(structured.result.content);
   if (!input || typeof input !== 'object') {
     return { ok: false, status: 502, error: 'attention_map_unreadable' };
@@ -228,9 +239,17 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
   let map;
   try {
     map = buildAttentionMap(commission, input as AttentionSynthesisResult);
-  } catch {
+  } catch (err) {
+    /* Counts and shape only — never manuscript text. */
+    const items = Array.isArray((input as { items?: unknown }).items) ? (input as { items: unknown[] }).items : null;
+    console.warn('[attention-map] synthesis unbound', {
+      reason: err instanceof Error ? err.message : 'unknown', stopReason: stop, observations: observations.length,
+      items: items ? items.length : 'missing',
+      itemsWithRefs: items ? items.filter((i) => Array.isArray((i as { evidenceRefs?: unknown })?.evidenceRefs)).length : 0,
+    });
     return { ok: false, status: 502, error: 'attention_map_unbound_evidence' };
   }
+  if (map.droppedUnbound) console.warn('[attention-map] synthesis dropped unbound items', { dropped: map.droppedUnbound, kept: map.items.length });
   const valid = validateAttentionMap(map);
   if (!valid.ok) {
     return { ok: false, status: 502, error: valid.reason };

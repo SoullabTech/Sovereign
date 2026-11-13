@@ -51,6 +51,8 @@ export interface LivingWork {
   stage: Stage | null;
   /** What kind of manuscript the writer says this currently is. Never inferred from size. */
   manuscriptState: 'pre-manuscript' | 'partial-manuscript' | 'existing-manuscript' | null;
+  /** The writer's own "MAIA asks, never rewrites" for this whole Work. Never set by the system. */
+  maiaRevisionsPaused?: boolean;
   createdAt: string;
   updatedAt: string;
   /** Only what the member declared in — never inferred, never system-placed. */

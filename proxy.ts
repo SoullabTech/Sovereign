@@ -20,6 +20,7 @@ import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { isTesterGatedAstrologyPage, memberIsAstrologyTester } from './lib/astrology/testerGate';
 import { writerStudioAdmissionForMember } from './lib/writersStudio/admissionServer';
 import { isWriterStudioRestrictedPath } from './lib/writersStudio/restrictedCorridor';
+import { doorwayForHost, doorwayRewrite, doorwaysEnabled } from './lib/studios/doorways';
 
 // =============================================================================
 // AUTH EXTRACTION — SERVER-DERIVED, AUTHORITATIVE
@@ -312,6 +313,29 @@ export async function proxy(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
+  // STUDIO DOORWAYS (STUDIO-A-LA-CARTE-01 Phases 3–4, founder rulings R1/R2
+  // 2026-11-12): writer./sound./guide./astrology.soullab.life are each Studio's
+  // own front door. Only while STUDIO_DOORWAYS_ENABLED === 'true'; off = today.
+  // `/` → the Studio's public preview, `/join` → its invitation sign-up. Both
+  // targets must be PUBLIC matrix routes or nothing is rewritten; every other
+  // path falls through to the normal boundary below, so a doorway never widens
+  // access. A doorway host is never treated as a Field page.
+  // ---------------------------------------------------------------------
+  const doorway = doorwaysEnabled()
+    ? doorwayForHost(host, process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'soullab.life')
+    : null;
+  if (doorway) {
+    const target = doorwayRewrite(doorway, pathname);
+    if (target && matchRule(target)?.public) {
+      const url = req.nextUrl.clone();
+      url.pathname = target;
+      return NextResponse.rewrite(url, {
+        request: { headers: stripClientIdentityAssertions(req.headers) },
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // MASTER FIELDS: Subdomain routing — jondi.soullab.life → /fields/jondi
   // Must run before all other checks so the field gets its own routing context.
   // ---------------------------------------------------------------------
@@ -320,7 +344,7 @@ export async function proxy(req: NextRequest) {
   const masterSlug = subdomainMatch?.[1];
   const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
 
-  if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
+  if (masterSlug && !doorway && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
     const isStaticAsset = pathname.startsWith('/_next/') || /\.[a-zA-Z0-9]+$/.test(pathname);
     // Only public field-page rewrites exit here. A pathname that already
     // carries a private matrix rule must be authenticated at its real path,

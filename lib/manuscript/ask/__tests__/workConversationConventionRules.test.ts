@@ -147,9 +147,9 @@ describe('the Work conversation takes the writer\'s working style and a Teach me
 
   it('the route forwards both into the Work conversation', () => {
     const route = fs.readFileSync(path.join(process.cwd(), 'app/api/sovereign/manuscripts/[id]/ask/route.ts'), 'utf8');
-    expect(route).toContain('responseStyle, teachingAnchor });');
+    expect(route).toContain('responseStyle, teachingAnchor, roomActs });');
     expect(route).toContain('...(responseStyle ? { responseStyle } : {}),');
-    expect(route).toContain('...(teachingAnchor ? { teachingAnchor } : {}) };');
+    expect(route).toContain('...(teachingAnchor ? { teachingAnchor } : {}),');
   });
 });
 

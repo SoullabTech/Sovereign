@@ -331,6 +331,8 @@ export interface WorkContext {
   responseStyle?: ExplanationDepth;
   /** G-3: the Teach me pressed (F1). The teaching shape is server-owned and never rides in the writer's question. */
   teachingAnchor?: TeachingAnchor;
+  /** The conversation's room can carry out acting offers (today: the Develop stage). Absent ⇒ she is told only about buttons every room shows. */
+  roomActs?: boolean;
 }
 
 export interface StandingRead {
@@ -680,12 +682,13 @@ export async function askMaia(
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
-       /* Not in Sanctuary: the guide sends writers to "Let MAIA read my saved work" and "Read this chapter", which Sanctuary refuses —
-          that is how she came to suggest granting reading permission there (walk 2026-11-09, defect 5). */
-       ...(ctx.sanctuary ? [] : [studioGuideInstruction(), '']),
+       /* In Sanctuary the guide leaves out every tool that reads, keeps or plans ("Let MAIA read my saved work", "Read this chapter with
+          MAIA", …), which Sanctuary refuses — sending writers there is how she came to suggest granting reading permission inside
+          Sanctuary (walk 2026-11-09, defect 5). Everything else stays, so "how do I…" still gets a real answer there (2026-11-11). */
+       studioGuideInstruction({ sanctuary: ctx.sanctuary === true }), '',
        // Design 1B: only the Work conversation shows take-me-there buttons. Not in Sanctuary: "Read this chapter" keeps observations,
        // which Sanctuary refuses, so she is not told about the buttons at all there.
-       ...(ctx.sanctuary ? [] : [studioActionsInstruction('work-conversation')]),
+       ...(ctx.sanctuary ? [] : [studioActionsInstruction('work-conversation', { roomActs: ctx.roomActs === true })]),
        ...(opts.correction ? ['', opts.correction] : [])].join('\n')
     : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
        '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',

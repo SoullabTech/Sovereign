@@ -1,4 +1,6 @@
 import { query } from '@/lib/db/postgres';
+import { activeBetaGrant, betaGrantMode } from './betaGrants';
+import { freeAdmissionOpen } from './freeAdmission';
 
 /**
  * SMALL-BETA-01 / B4 — server-side cohort membership.
@@ -9,9 +11,18 @@ import { query } from '@/lib/db/postgres';
  * Being a beta tester for another lane is not Writer's Studio admission; an
  * unmarked contact fails closed. Founder/CTO may enter for
  * witness/support without being represented as a beta tester.
+ *
+ * Dated beta grants (founder rulings 2026-11-13, #1800; lib/writersStudio/betaGrants.ts):
+ * WS_BETA_GRANT_MODE chooses the source of beta standing.
+ *   'legacy' (default) — the boolean above only. Exactly today's single query; the grant table is never read.
+ *   'transition'       — an active dated grant admits; the boolean admits ONLY members with no dated-grant history.
+ *                        Once a member has any grant event, a revoke or expiry stands (the boolean cannot re-admit).
+ *   'dated'            — an active dated grant only; the boolean no longer admits.
+ * A grant lookup failure throws (callers fail closed), never reads as "no grant".
  */
 export type WritersStudioBetaAccess =
   | { eligible: true; basis: 'active_beta_tester' | 'founder_witness' }
+  | { eligible: true; basis: 'dated_beta_grant'; expiresAt: string }
   | { eligible: false; basis: 'not_in_pilot' };
 
 export async function writersStudioBetaAccess(memberId: string): Promise<WritersStudioBetaAccess> {
@@ -33,6 +44,26 @@ export async function writersStudioBetaAccess(memberId: string): Promise<Writers
   );
   const row = result.rows[0];
   if (row?.founder) return { eligible: true, basis: 'founder_witness' };
+
+  const mode = betaGrantMode();
+  if (mode !== 'legacy') {
+    const grant = await activeBetaGrant(memberId);
+    if (grant.active) return { eligible: true, basis: 'dated_beta_grant', expiresAt: grant.expiresAt.toISOString() };
+    // Once a member has any dated-grant history, the grant alone decides: a revoked or expired grant is never
+    // overridden by the legacy boolean, in transition mode too.
+    if (mode === 'dated' || grant.hasHistory) return { eligible: false, basis: 'not_in_pilot' };
+  }
+
   if (row?.beta) return { eligible: true, basis: 'active_beta_tester' };
   return { eligible: false, basis: 'not_in_pilot' };
 }
+
+/**
+ * Is this member admitted to the Studio? Beta/Pro standing, or — while Free admission is open (step B, founder ruling
+ * 2026-11-02 "ADMIT FREE NOW"; ./freeAdmission.ts) — any signed-in member on the Free plan. Same decision as
+ * admissionServer.writerStudioAdmissionForMember, for routes that resolve access themselves.
+ */
+export function admittedToStudio(access: { eligible: boolean }): boolean {
+  return access.eligible || freeAdmissionOpen();
+}
+

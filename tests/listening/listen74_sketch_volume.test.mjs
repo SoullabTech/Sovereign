@@ -8,7 +8,7 @@ test('LISTEN-74 a generated sound always offers its own volume control, even whe
   assert.match(src, /volumeAdjustable=\{volumeAdjustable \|\| snapshot\.kind === 'sketch'\}/);
 });
 test('LISTEN-74 the volume control reaches the generated sound (master gain), not only the media element', () => {
-  assert.match(src, /master\.gain\.setTargetAtTime\(Math\.max\(0\.0001, next \/ 100 \* 0\.027\)/);
+  assert.match(src, /master\.gain\.setTargetAtTime\(generatedGainForLevel\(next\)/); // scale owned by lib/listening/listeningLevel.ts (listen79)
 });
 const css = fs.readFileSync(path.join(import.meta.dirname, '../../components/listening/persistentListeningDock.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 test('LISTEN-74 on a phone the open panel keeps its Pause / Stop / Less row pinned and does not chain scrolling', () => {

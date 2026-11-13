@@ -13,6 +13,7 @@ export type WriterStudioPlan = 'free' | 'pro';
 export type WriterStudioPlanBasis =
   | 'active_beta_tester'
   | 'founder_witness'
+  | 'dated_beta_grant'
   | 'public_not_launched';
 
 export type WriterStudioFeature =

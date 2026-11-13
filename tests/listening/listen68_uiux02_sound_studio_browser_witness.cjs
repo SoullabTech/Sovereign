@@ -33,7 +33,8 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   check(p.name,'first-sound-in-two-actions',true);
   check(p.name,'lock-screen-metadata-names-the-field',await page.evaluate(()=>navigator.mediaSession&&navigator.mediaSession.metadata&&navigator.mediaSession.metadata.title.includes('Night Ground')&&navigator.mediaSession.metadata.artist==='Soullab Sound Studio'&&navigator.mediaSession.playbackState==='playing'));
   const dockBox=await page.locator('[data-listen10-persistent-dock="true"]').boundingBox();check(p.name,'compact-dock-visible',!!dockBox);
-  check(p.name,'compact-hides-volume-until-expanded',!(await page.getByLabel('Persistent music volume').isVisible()));
+  // LISTEN-79 superseded UIUX-02's hidden bar slider: the level is in the compact bar (or an honest device note).
+  check(p.name,'compact-shows-level-in-bar',await page.locator('[data-listen-bar-level]').isVisible());
   await page.screenshot({path:path.join(evidence,`UIUX02_${p.name}_night_playing.png`)});
   // receded night mode: Stop stays visible, reachable, >=44px
   await page.clock.fastForward(16000);
