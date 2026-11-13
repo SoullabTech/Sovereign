@@ -50,6 +50,9 @@ export function EditorialLetterPanel(props: {
   /** "Show me where": hold the words this place is about in the centre and mark them (nothing changes). Absent: the section only. */
   onShowPassage?: (target: PassIssueTarget) => void;
   onTalk: (words: string) => void;
+  /** "Talk about it" on a place (founder direction 2026-11-12): the conversation happens in the centre, on that place's passage, the way
+   *  "Show me options" opens there, but nothing is asked for: MAIA waits for the writer. Absent: the conversation about the Work. */
+  onTalkPassage?: (target: PassIssueTarget) => void;
   /** she finished reading (so what she has read can be re-checked) */
   onRead?: () => void;
 }) {
@@ -175,6 +178,20 @@ export function EditorialLetterPanel(props: {
     [pass, sections],
   );
   const stale = pass !== null && draftRevision !== null && pass.draftRevision !== draftRevision;
+  /* Talking about a place happens in the centre, on its words (founder direction 2026-11-12: "the middle is where the creative process
+     between MAIA and writer happens"). The same verified passage "Show me options" would open; with none, the conversation about the
+     Work, in the centre, carrying the place. */
+  const talkAbout = async (it: AttentionItem, words: string) => {
+    if (resolving) return;
+    if (!props.onTalkPassage) { props.onTalk(words); return; }
+    setResolving(true);
+    try {
+      const target = await passageOf(it);
+      if (target) { props.onTalkPassage(target); return; }
+      props.onTalk(words);
+    } finally { setResolving(false); }
+  };
+
   const decide = async (id: string, d: PassDecision | null) => {
     if (pass?.letterId) {
       const refused = await postDecision(manuscriptId, pass.letterId, id, d ?? 'cleared');
@@ -305,7 +322,7 @@ export function EditorialLetterPanel(props: {
         <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {sec ? <button type="button" data-letter-act="where" disabled={resolving} onClick={() => void where(it, sec.draftSectionId)} style={btn}>Show me where</button> : null}
           <button type="button" data-letter-act="options" disabled={resolving} onClick={() => void options(it)} style={btn}>{resolving ? 'Finding the words…' : 'Show me options'}</button>
-          <button type="button" data-letter-act="talk" onClick={() => props.onTalk(`About “${it.label}” in ${labelOf(sec)}: you noticed that ${it.notice} `)} style={btn}>Talk about it</button>
+          <button type="button" data-letter-act="talk" disabled={resolving} onClick={() => void talkAbout(it, `About “${it.label}” in ${labelOf(sec)}: you noticed: ${it.notice} `)} style={btn}>Talk about it</button>
           <button type="button" data-letter-act="intended" onClick={() => void decide(it.id, 'intended')} style={btn}>It’s intended</button>
           <button type="button" data-letter-act="later" onClick={() => void decide(it.id, 'later')} style={btn}>Later</button>
         </div>
