@@ -44,6 +44,7 @@ interface WorkRow {
   form: string | null;
   stage: string | null;
   manuscript_state: string | null;
+  maia_revisions_paused?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +70,8 @@ const shape = (r: WorkRow) => ({
   form: r.form,
   stage: r.stage,
   manuscriptState: r.manuscript_state,
+  /* The writer's own "MAIA asks, never rewrites" for this Work. */
+  maiaRevisionsPaused: r.maia_revisions_paused === true,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -114,7 +117,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const rows = await query<WorkRow>(
-      `SELECT id, title, purpose, form, stage, manuscript_state, created_at, updated_at
+      `SELECT id, title, purpose, form, stage, manuscript_state, maia_revisions_paused, created_at, updated_at
          FROM living_works
         WHERE member_id = $1
         ORDER BY updated_at DESC`,
