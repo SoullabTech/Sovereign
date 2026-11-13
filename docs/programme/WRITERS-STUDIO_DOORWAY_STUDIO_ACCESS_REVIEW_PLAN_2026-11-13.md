@@ -3,8 +3,8 @@
 **Date:** 2026-11-13
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN. NO DEPLOYMENT AUTHORITY BY ITSELF.
 
-**Live old reader:** supplied by the harness through the bundle's `MIGRATION_COMPATIBILITY_CONTEXT.json`. The reviewer
-establishes it from the bundle, and the deploy lane re-witnesses it before mutation.
+**Live old reader:** `faac1d4824cff4504ea814678e5e8270abc60fa6`, as witnessed in production after the app-only
+College Essay cutover. The review bundle and deploy lane must independently re-witness that exact reader before mutation.
 
 **Founder authorization:** ledger #1938, College Essay controlled beta.
 - PR #2280: "Yes, build it". An invitation can carry Writer's Studio access.
@@ -15,9 +15,13 @@ All three were merged to canonical after the previous deploy (`a67406ff7`). So w
 
 ## Exact target relation
 
-The target is the canonical merge commit of the PR that adds this plan. It must differ from its own first parent only
-by this documentation file, and that first parent must add no migration beyond the one below. The reviewer
-establishes the relation from immutable git bytes where it can, and otherwise says so.
+The corrected **code target** is `117532a7cf9ea9d6781aa0aee7ad19e0a06ed395` from PR #2283. It is a descendant of
+the live old reader `faac1d4824cff4504ea814678e5e8270abc60fa6` and of canonical `c9283f4a6813f692e33ea2141c8d8c028b152320`.
+Its reconciliation merge is history-only with respect to the already-present hotfix bytes; the substantive changes are
+the allowlisted College Essay doorway return path and current issuer-authority check at redemption.
+
+The review-plan wrapper commit may follow the code target and must differ from it only by this documentation file. The
+reviewer establishes both relations from immutable git bytes and reports any mismatch.
 
 ## Exact production-pending set
 
@@ -34,12 +38,14 @@ issuer_member_id IS NOT NULL)`. It uses a constant default and does no backfill.
 
 ## Production facts supplied to the reviewer
 
-Read-only, 2026-11-13, under `BEGIN READ ONLY`. Counts and schema only.
-- Live: `a67406ff7`.
-- The ledger's newest applied migration is `20261113000005_writers_studio_maia_usage.sql`.
-- `studio_doorway_invitations.grants_writers_studio` does not exist.
-- `studio_doorway_invitations` has 0 rows, and `studio_doorway_redemptions` has 0 rows.
-- `STUDIO_DOORWAYS_ENABLED` is unset (the doorway routes return 404).
+Fresh release-ledger readbacks on 2026-11-13 establish:
+- Live reader: `faac1d4824cff4504ea814678e5e8270abc60fa6`.
+- The pending `20261113000010_studio_doorway_invitation_studio_access.sql` migration is not applied.
+- `studio_doorway_invitations.grants_writers_studio` does not exist in production.
+- `STUDIO_DOORWAYS_ENABLED` and `WS_BETA_GRANT_MODE` are unset.
+
+Any row counts or other schema facts must be re-witnessed read-only by Review Custody; do not inherit the older
+`a67406ff7` snapshot by assumption.
 
 ## Deployment ordering
 
@@ -67,11 +73,16 @@ As implemented in `scripts/deploy-production.sh`:
    - Can anything else, such as another Studio, a member without an invitation, or a different email, obtain
      Writer's Studio access through this path?
 4. **Issuer authority.** In target `scripts/studios/issue-doorway-invitation.ts`: is `--studio-access` limited to
-   Writer's Studio, and does it verify that the issuer is a founder or CTO? Does the CHECK hold the same line at the
-   database?
+   Writer's Studio, and does issuance verify founder/CTO authority? In target redemption, is the stored issuer's
+   **current** `members.admin_role` re-checked as `founder` or `cto` inside the same transaction, with the issuer row
+   locked so demotion cannot race admission? Confirm a demoted/revoked issuer fails closed and that the transaction
+   rolls back member creation, invitation use, roster change and audit. The migration CHECK only enforces row shape
+   (`studio='writer'` and non-null issuer); it is **not** an issuer-role authorization check.
 5. **Prefix compatibility.** The single prefix 1 is compatible with the exact old reader still being live.
-6. **Rollback.** Image rollback is to `a67406ff7`, and the schema stays. Judge what that reader does with a row
-   where `grants_writers_studio = true`. The rollback file drops the column, and the code must be rolled back first.
+6. **Rollback.** Image rollback is to the preserved pre-candidate production image for
+   `faac1d4824cff4504ea814678e5e8270abc60fa6`, and the schema stays unless the separately ordered migration rollback
+   is invoked. Judge what that old reader does with a row where `grants_writers_studio = true`. The rollback file drops
+   the column, and the code must be rolled back first.
 
 A verdict of `REVISE` or `BLOCKED` is lawful and must never be converted into approval.
 
