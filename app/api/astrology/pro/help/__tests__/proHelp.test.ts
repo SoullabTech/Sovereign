@@ -187,6 +187,10 @@ describe('the help prompt', () => {
 
 describe('Help scope and in-flight response regression', () => {
   const own = { memberId: 'member-one', chartOpen: true, subjectId: null, sourceRevision: 'revision-1', houseSystem: 'porphyry' };
+  it('separates two verified members in no-chart Help before a chart is loaded', () => {
+    const noChart = { memberId: 'member-one', chartOpen: false, subjectId: null, sourceRevision: null, houseSystem: 'porphyry' };
+    expect(helpConversationScope({ ...noChart, memberId: 'member-two' })).not.toBe(helpConversationScope(noChart));
+  });
   it('resets on member change, chart switch, chart close/reopen and house method', () => {
     const original = helpConversationScope(own);
     expect(helpConversationScope({ ...own, memberId: 'member-two' })).not.toBe(original);
