@@ -347,7 +347,7 @@ async function postHandler(
   if (effectiveAnchor.on !== 'work' && (turnPosture.sanctuary || !postureDeclared)) {
     return NextResponse.json({ refusal: turnPosture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared' }, { status: 409 });
   }
-  bindMaiaMeter(memberId, { sanctuary: turnPosture.sanctuary });
+  bindMaiaMeter(memberId, { sanctuary: !studioPosture.keep }); // recorded only when the turn is kept (declared ordinary)
 
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({

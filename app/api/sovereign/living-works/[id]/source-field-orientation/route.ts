@@ -114,7 +114,7 @@ async function postHandler(
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   const { id: workId } = await params;
-  bindMaiaMeter(memberId, { sanctuary: false }); // route has no Sanctuary/posture check
+  bindMaiaMeter(memberId, { sanctuary: true }); // no turn posture reaches this route, so the meter records nothing (Sanctuary closure; re-review R2-2)
 
   const work = await query<{ id: string; manuscript_state: string | null }>(
     `SELECT id, manuscript_state
