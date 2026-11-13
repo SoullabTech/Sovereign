@@ -27,6 +27,7 @@ import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterRelea
 import { reReadAll, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { CARRY_COPY, shouldShowInspirationDoor } from '@/lib/writersStudio/inspirationOpening';
+import { pathBeginPatch, pathFromParam } from '@/lib/writersStudio/studioPaths';
 import StudioInspirationOpening from './StudioInspirationOpening';
 
 function idFrom(payload: Record<string, unknown>): string | null {
@@ -277,6 +278,41 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, setPurpose, refresh]);
 
+  /* Studio paths: the member's Begin on the path their own link chose. One gesture: the Work is declared with the
+     member's title, then their held spark and each recommended setting THEY kept ticked go through the existing
+     member-act PATCH (pathBeginPatch decides what is sent: an unticked setting is not sent at all, F19), then the
+     first writing place opens. A retry of the same gesture reuses the Work already created. */
+  const studioPath = useMemo(() => pathFromParam(params?.get('path')), [params]);
+  const onPathBegin = useCallback(async (choice: { title: string; revisionsPausedConfirmed: boolean; purpose: string | null }) => {
+    if (busy || !studioPath) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { title, ...settings } = pathBeginPatch({ path: studioPath, ...choice });
+      const gesture = 'path:' + studioPath.id;
+      const workId = createdWorkForGesture.current.get(gesture)
+        ?? idFrom(await post('/api/sovereign/living-works', title !== undefined ? { title: title.trim() } : {}));
+      if (!workId) throw new Error('work id');
+      createdWorkForGesture.current.set(gesture, workId);
+      if (Object.keys(settings).length > 0) {
+        const response = await apiFetch('/api/sovereign/living-works/' + workId, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
+        if (!response.ok) throw new Error('path settings:' + response.status);
+      }
+      const manuscriptId = await startWritingInWork(workId);
+      createdWorkForGesture.current.delete(gesture);
+      await refresh();
+      open(manuscriptId);
+    } catch (e) {
+      setError(workLimitMessageOr(e, 'Your ' + studioPath.name.toLowerCase() + ' could not begin just now. Anything already created remains intact. Try again.'));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, studioPath, post, startWritingInWork, refresh, open]);
+
   const onStartWriting = useCallback(async (workId: string) => {
     if (busy) return;
     setBusy(true);
@@ -508,6 +544,8 @@ export default function P4R1HomeController() {
         openImport();
       }}
       onDoorLookWithSpark={(purpose) => void onDoorLookWithSpark(purpose)}
+      studioPath={studioPath}
+      onPathBegin={(choice) => void onPathBegin(choice)}
       // Q3: the one-line spark on a later new Work is kept only in a readable Ordinary session, never in Sanctuary.
       onBeginWithSpark={(title, spark) => void onBegin(title, ordinaryNow() ? spark : null)}
       onSources={() => router.push('/writers-studio/sources')}

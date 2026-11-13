@@ -27,6 +27,7 @@ import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConf
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import StudioInspirationOpening from './StudioInspirationOpening';
+import type { StudioPath } from '@/lib/writersStudio/studioPaths';
 import { INSPIRATION_COPY, LOOK_AROUND_COPY, MAX_SPARK_CHARS, returnGreeting, writtenFact } from '@/lib/writersStudio/inspirationOpening';
 
 function fixedDate(iso: string | null | undefined): string {
@@ -369,6 +370,10 @@ export interface P4R1HomeViewProps {
   onDoorBegin?: (destination: 'write' | 'import', purpose: string | null) => void;
   /** "I don't know yet — look around" WITH a held spark: the Work is begun so the spark has somewhere to live. */
   onDoorLookWithSpark?: (purpose: string) => void;
+  /** Studio paths: the environment the member's own link chose (`?path=`), shown at the door instead of the Spark question. */
+  studioPath?: StudioPath | null;
+  /** The member's Begin on a path: their title, their confirmation of each recommended setting, and any spark they held. */
+  onPathBegin?: (choice: { title: string; revisionsPausedConfirmed: boolean; purpose: string | null }) => void;
   /** Q3: later new Works carry one optional line, "What's calling this one?". */
   onBeginWithSpark?: (title: string, spark: string) => void;
   onImport: () => void;
@@ -801,6 +806,8 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             }}
             onJustWrite={() => props.onBegin('')}
             onHavePages={props.onImport}
+            studioPath={props.studioPath ?? null}
+            onPathBegin={props.onPathBegin}
           />
         }
       />

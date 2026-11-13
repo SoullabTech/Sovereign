@@ -87,5 +87,11 @@
 .wsio-carry-note { max-width: 760px; margin: 18px auto 0; }
 /* S5: the way back to MAIA's question sits under the look-around heading, aligned with it. */
 .fr-home-threshold [data-look-around-back] { align-self: flex-start; justify-self: start; margin-left: 0; padding-left: 0; text-align: left; }
+/* Studio paths: the environment's own head above MAIA's first question. */
+.wsio-path-head { display: grid; gap: 4px; padding-bottom: 6px; }
+.wsio-path-name { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: #c9a43a; }
+.wsio-path-stage { margin: 0; font-size: 12.5px; opacity: .6; }
+.wsio-check { display: flex; gap: 10px; align-items: flex-start; max-width: 600px; cursor: pointer; }
+.wsio-check input { margin-top: 4px; width: 16px; height: 16px; accent-color: #c9a43a; }
 .wsio-optional { font-size: 12.5px; opacity: .55; margin-left: 6px; }
 .wsio button:focus-visible { outline: 2px solid #c9a43a; outline-offset: 2px; }
