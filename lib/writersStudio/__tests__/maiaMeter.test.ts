@@ -188,3 +188,37 @@ describe('A13 · every Writer reader goes through the metered seam', () => {
     expect(router).not.toMatch(/maiaMeter|meteredStructured|writersStudio/);
   });
 });
+
+describe('A4b · a route tells the meter "not Sanctuary" only after it has established a KEPT turn (re-review R2-2)', () => {
+  /* Each route allowed to bind a literal `false`, with the refusal that must precede the bind in its source. Under the
+     Sanctuary closure (founder ruling 2026-11-09) only a declared-ordinary turn is kept; Sanctuary AND an undeclared
+     posture keep nothing, so they must record nothing. */
+  const LITERAL_FALSE_AFTER: Record<string, RegExp> = {
+    'app/api/sovereign/manuscripts/[id]/readings/route.ts': /!posture\.keep/,
+    'app/api/sovereign/manuscripts/[id]/editorial-pass/route.ts': /keepGate\(/,
+    'app/api/sovereign/manuscripts/[id]/plans/route.ts': /keepGate\(/,
+    'app/api/sovereign/manuscripts/[id]/structure/read/route.ts': /keepGate\(/,
+    'app/api/sovereign/manuscripts/[id]/review-discuss/route.ts': /typeof body\.sanctuary !== 'boolean'[\s\S]*if \(body\.sanctuary\)/,
+    'app/api/writers-studio/editorial/turn/route.ts': /posture_required[\s\S]*if \(posture\.sanctuary\)/,
+  };
+  const binds = () => execSync('git grep --untracked -n "bindMaiaMeter(memberId" -- app', { cwd: ROOT }).toString()
+    .split('\n').filter(Boolean).map((l) => {
+      const [file, line, ...rest] = l.split(':');
+      return { file, line: Number(line), arg: /\{ sanctuary: ([^}]+?) \}/.exec(rest.join(':'))?.[1] };
+    });
+
+  it('a literal `false` appears only in the routes listed, and only after their refusal', () => {
+    for (const b of binds().filter((x) => x.arg === 'false')) {
+      const gate = LITERAL_FALSE_AFTER[b.file];
+      expect(`${b.file}: literal false allowed ${gate !== undefined}`).toBe(`${b.file}: literal false allowed true`);
+      const before = execSync(`cat ${JSON.stringify(b.file)}`, { cwd: ROOT }).toString().split('\n').slice(0, b.line - 1).join('\n');
+      expect(`${b.file}: gate before bind ${gate!.test(before)}`).toBe(`${b.file}: gate before bind true`);
+    }
+  });
+
+  it('every other bind is `true` (records nothing) or the keep decision itself', () => {
+    for (const b of binds().filter((x) => x.arg !== 'false')) {
+      expect(`${b.file}:${b.line} ${b.arg}`).toMatch(/ (true|!studioPosture\.keep)$/);
+    }
+  });
+});

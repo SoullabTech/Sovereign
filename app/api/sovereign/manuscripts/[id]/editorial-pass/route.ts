@@ -26,7 +26,9 @@ async function getHandler(req: NextRequest, { params }: { params: Promise<{ id: 
   const { memberId, id } = await member(req, params);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   if (!UUID.test(id)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
-  bindMaiaMeter(memberId, { sanctuary: false });
+  // A GET carries no turn posture: a pass it resumes is not recorded (Sanctuary closure; re-review R2-2). The POST that
+  // started a pass passed keepGate, and the readings it runs are recorded in its own scope.
+  bindMaiaMeter(memberId, { sanctuary: true });
   const run = await viewRun(memberId, id);
   /* An unfinished run whose server process stopped (a restart) carries on when anyone asks about it. advanceRun never doubles. */
   if (run && !FINAL.has(run.state)) void advanceRun(memberId, id).catch(() => undefined);

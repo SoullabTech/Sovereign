@@ -95,7 +95,7 @@ async function postHandler(
   }
   const studioPosture = await resolveStudioPosture(memberId, body);
   const storing = studioPosture.keep;
-  bindMaiaMeter(memberId, { sanctuary: studioPosture.sanctuary === true });
+  bindMaiaMeter(memberId, { sanctuary: !studioPosture.keep }); // recorded only when the turn is kept (declared ordinary)
   /* The store refuses any write without this witness; it exists only when storing is true. */
   const keep = studioPosture.witness as KeepWitness;
 

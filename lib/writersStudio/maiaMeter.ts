@@ -60,6 +60,12 @@ export const UNMETERED_WRITER_MAIA_ACTS = {
   focus: 'MAIA shared conversation pipeline (getMaiaResponse), not the structured seam',
   candidates: 'shared LLMProvider (core tier), not the structured seam',
   attention_map: 'route reads MAIA before it resolves the turn posture, so it binds as Sanctuary (records nothing)',
+  lineage_scan: 'no turn posture reaches the route, so it binds as Sanctuary (records nothing; re-review R2-2)',
+  lineage_chapter: 'no turn posture reaches the route, so it binds as Sanctuary (records nothing; re-review R2-2)',
+  lineage_orientation: 'no turn posture reaches the route, so it binds as Sanctuary (records nothing; re-review R2-2)',
+  developmental_orientation: 'no turn posture reaches the route, so it binds as Sanctuary (records nothing; re-review R2-2)',
+  source_field_orientation: 'no turn posture reaches the route, so it binds as Sanctuary (records nothing; re-review R2-2)',
+  editorial_pass_resume: 'a GET carries no turn posture; the POST that started the pass records its readings',
   reading_classification: 'developmentalReading/classify.ts reads MAIA’s own claims, not the writer’s material; its role law allows no store',
   arrival: 'the Spark door pins its import list (F7, "the opening conversation is never kept"); not wired',
 } as const;
@@ -134,8 +140,11 @@ export function reportMaiaUsage(observation: MaiaUsageObservation): void {
 }
 
 /**
- * Called by a metered route once it knows the member and the turn's posture. `sanctuary` must be the route's own
- * answer; when the route cannot say, it passes `true` and nothing is recorded. Outside a metered scope: no-op.
+ * Called by a metered route once it knows the member and the turn's posture. `sanctuary: false` means the route has
+ * established that this turn is KEPT — declared ordinary under the Sanctuary closure (founder ruling 2026-11-09): a
+ * refusal of Sanctuary and of an undeclared posture has already run, or the route passes `!studioPosture.keep`.
+ * A route that receives no turn posture passes `true`, and nothing is recorded. Outside a metered scope: no-op.
+ * Which routes may pass a literal `false` is pinned in __tests__/maiaMeter.test.ts.
  */
 export function bindMaiaMeter(memberId: string, posture: { sanctuary: boolean }): void {
   const scope = scopes.getStore();
