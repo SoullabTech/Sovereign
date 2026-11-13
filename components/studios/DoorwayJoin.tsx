@@ -16,7 +16,17 @@ import type { DoorwayId } from '@/lib/studios/doorways';
 
 type Step = 'code' | 'account';
 
-export function DoorwayJoin({ studio, studioName, studioPath }: { studio: DoorwayId; studioName: string; studioPath: string }) {
+export function DoorwayJoin({
+  studio,
+  studioName,
+  selectedPath,
+  returnPath,
+}: {
+  studio: DoorwayId;
+  studioName: string;
+  selectedPath: string | null;
+  returnPath: string;
+}) {
   const [step, setStep] = useState<Step>('code');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -26,7 +36,7 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
   const [signIn, setSignIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [createdNotSignedIn, setCreatedNotSignedIn] = useState(false);
-  const signInHref = `/signin?next=${encodeURIComponent(studioPath)}`;
+  const signInHref = `/signin?next=${encodeURIComponent(returnPath)}`;
 
   async function checkCode(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +68,7 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
       const res = await fetch('/api/doorway/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studio, code, name, email, password }),
+        body: JSON.stringify({ studio, code, name, email, password, path: selectedPath }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.success && body.signedIn === false) {
@@ -70,7 +80,7 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
         try {
           localStorage.setItem('beta_user', JSON.stringify({ ...body.member, onboarded: true }));
         } catch { /* storage unavailable: the server session still holds */ }
-        window.location.assign(body.next || studioPath);
+        window.location.assign(body.next || returnPath);
         return;
       }
       setSignIn(!!body.signIn);

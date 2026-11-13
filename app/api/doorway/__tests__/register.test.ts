@@ -113,19 +113,43 @@ it('a good code creates a normal member, records the door, and sends them to the
   expect(logAuthEvent).toHaveBeenCalledWith(expect.objectContaining({ action: 'register_success', memberId: 'm1' }), expect.anything());
 });
 
-it('⭐ account created but session failed: reports signedIn false and sends them to sign in, not to the Studio', async () => {
+it('⭐ an allowlisted College Essay path survives registration', async () => {
+  txQuery.mockImplementation(async (sql: string) => {
+    if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7 }] };
+    if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+    return { rows: [] };
+  });
+  const res = await register(post('/api/doorway/register', { ...good, path: 'college-essay' }));
+  expect(res.status).toBe(200);
+  expect((await res.json()).next).toBe('/writers-studio?path=college-essay');
+});
+
+it('NEGATIVE: an unknown or cross-Studio path is ignored, never used as a return URL', async () => {
+  txQuery.mockImplementation(async (sql: string) => {
+    if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7 }] };
+    if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+    return { rows: [] };
+  });
+  const bad = await register(post('/api/doorway/register', { ...good, path: 'https://evil.example/' }));
+  expect((await bad.json()).next).toBe('/writers-studio');
+
+  const sound = await register(post('/api/doorway/register', { ...good, studio: 'sound', email: 'sound@example.com', path: 'college-essay' }));
+  expect((await sound.json()).next).toBe('/listen');
+});
+
+it('⭐ account created but session failed: reports signedIn false and preserves an allowlisted path through sign-in', async () => {
   txQuery.mockImplementation(async (sql: string) => {
     if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7 }] };
     if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
     return { rows: [] };
   });
   createSession.mockRejectedValue(new Error('sessions down'));
-  const res = await register(post('/api/doorway/register', good));
+  const res = await register(post('/api/doorway/register', { ...good, path: 'college-essay' }));
   expect(res.status).toBe(200);
   const body = await res.json();
   expect(body.signedIn).toBe(false);
   expect(body.session).toBeUndefined();
-  expect(body.next).toBe('/signin?next=%2Fwriters-studio');
+  expect(body.next).toBe('/signin?next=%2Fwriters-studio%3Fpath%3Dcollege-essay');
 });
 
 it('check answers only { valid } and never takes a use', async () => {
@@ -182,7 +206,8 @@ describe('an invitation that carries Writer\'s Studio access (ledger #1938, 2026
     txQuery.mockImplementation(async (sql: string) => {
       if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, beta_grant_until: null, ...claim }] };
       if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
-      if (sql.includes('FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ id: 'm1', name: 'Ada', username: 'ada', email: 'ada@example.com', tier: 'free', roles: ['member'], admin_role: null }] };
+      if (sql.includes('SELECT admin_role FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ admin_role: 'founder' }] };
+      if (sql.includes('SELECT id, name, username, email, tier, roles, admin_role')) return { rows: [{ id: 'm1', name: 'Ada', username: 'ada', email: 'ada@example.com', tier: 'free', roles: ['member'], admin_role: null }] };
       if (sql.includes('INSERT INTO ops_contacts')) return { rows: [{ id: 'c1' }] };
       return { rows: [] };
     });
@@ -214,11 +239,25 @@ describe('an invitation that carries Writer\'s Studio access (ledger #1938, 2026
     expect(sqls().some(s => s.includes('INSERT INTO audit_logs'))).toBe(false);
   });
 
-  it('NEGATIVE: a studio-access invitation without an issuer aborts the sign-up, so no session is opened', async () => {
+  it('NEGATIVE: a studio-access invitation without an issuer refuses and opens no session', async () => {
     tx({ issuer_member_id: null, grants_writers_studio: true });
     const res = await register(post('/api/doorway/register', good));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(403);
     expect(sqls().some(s => s.includes('INSERT INTO ops_contacts'))).toBe(false);
+    expect(createSession).not.toHaveBeenCalled();
+  });
+
+  it('NEGATIVE: a previously authorized issuer cannot confer access after losing founder/CTO authority', async () => {
+    txQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, beta_grant_until: null, issuer_member_id: ISSUER, grants_writers_studio: true }] };
+      if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      if (sql.includes('SELECT admin_role FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ admin_role: 'operations' }] };
+      return { rows: [] };
+    });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(403);
+    expect(sqls().some(s => s.includes('INSERT INTO ops_contacts'))).toBe(false);
+    expect(sqls().some(s => s.includes('INSERT INTO audit_logs'))).toBe(false);
     expect(createSession).not.toHaveBeenCalled();
   });
 });
