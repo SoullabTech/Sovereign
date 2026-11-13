@@ -64,6 +64,26 @@ describe('the stage: ways in view, reading never moves the chapter', () => {
     expect(q('[data-develop-way="editorial-pass"]')?.textContent).toContain('editorial pass');
     expect(q('[data-develop-more-panel]')).toBeNull();
   });
+  it('⭐ MUST FAIL IF one click on the editorial pass begins a paid whole-book reading (walk 2026-11-13)', () => {
+    const onEditorialPass = jest.fn();
+    stage({ ways: [{ key: 'arc', label: 'Arc' }], onWay: jest.fn(), editorialPass: { status: 'none', progress: null, error: null }, onEditorialPass });
+    act(() => q('[data-develop-way="editorial-pass"]')!.click());
+    expect(onEditorialPass).not.toHaveBeenCalled();
+    expect(q('[data-develop-pass-confirm]')?.textContent).toMatch(/paid readings/);
+    act(() => q('[data-develop-pass-cancel]')!.click());
+    expect(onEditorialPass).not.toHaveBeenCalled();
+    expect(q('[data-develop-pass-confirm]')).toBeNull();
+    act(() => q('[data-develop-way="editorial-pass"]')!.click());
+    act(() => q('[data-develop-pass-go]')!.click());
+    expect(onEditorialPass).toHaveBeenCalledTimes(1);
+  });
+  it('a ready pass opens without asking (nothing is paid)', () => {
+    const onEditorialPass = jest.fn(); const onOpenEditorialPass = jest.fn();
+    stage({ ways: [{ key: 'arc', label: 'Arc' }], onWay: jest.fn(), editorialPass: { status: 'ready', progress: null, error: null }, onEditorialPass, onOpenEditorialPass });
+    act(() => q('[data-develop-way="editorial-pass"]')!.click());
+    expect(onOpenEditorialPass).toHaveBeenCalledTimes(1);
+    expect(onEditorialPass).not.toHaveBeenCalled();
+  });
   it('choosing a way calls it; nothing else happens', () => {
     const onWay = jest.fn();
     stage({ ways: [{ key: 'arc', label: 'Arc' }], onWay });
