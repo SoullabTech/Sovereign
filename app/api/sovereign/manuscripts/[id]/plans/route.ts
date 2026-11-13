@@ -20,6 +20,7 @@ import { loadThread } from '@/lib/manuscript/ask/threadStore';
 import { draftPlan } from '@/lib/manuscript/ask/planReader';
 import { groundSteps, digestOfText, staleStepIds, stepStanding } from '@/lib/writersStudio/developmentPlan';
 import { stepEvents, createPlan, latestPlan } from '@/lib/writersStudio/developmentPlanStore';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     events: await stepEvents(memberId, plan.id) });
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function postHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!ask) return NextResponse.json({ refusal: 'malformed', detail: 'say, in your own words, what the plan is for' }, { status: 400 });
   /* A plan reads your saved work and is kept: Sanctuary or an undeclared posture refuses (founder ruling 2026-11-09). */
   { const refused = await keepGate(memberId, b); if (refused) return refused; }
+  bindMaiaMeter(memberId, { sanctuary: false });
 
   const grant = await loadActiveGrant(memberId, workId);
   if (!grant || grant.level !== 'work') {
@@ -112,3 +114,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!plan) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   return NextResponse.json({ plan, coverage: { read: supplied.length, total: heads.length, notRead }, decisionsChanged: false, staleStepIds: [], unverifiedStepIds: [], events: {}, dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
 }
+
+export const POST = meteredRoute('plans', postHandler);

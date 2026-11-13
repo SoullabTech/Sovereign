@@ -44,7 +44,7 @@ import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import { judgeEditorialQuotes, QUOTE_NOT_IN_TEXT_DETAIL } from './editorialQuoteGate';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';

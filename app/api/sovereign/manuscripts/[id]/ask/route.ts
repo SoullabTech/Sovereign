@@ -84,6 +84,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
 import { isExplanationDepth, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 import { randomUUID } from 'node:crypto';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 /** How long one authorization opportunity stays claimable. Continuity hygiene — ⛔ never authority. */
 const AUTHORIZATION_TTL_MINUTES = 30;
@@ -249,7 +250,7 @@ export async function GET(
  * BEFORE the model is called, so a transport failure loses the answer and never
  * the question.
  */
-export async function POST(
+async function postHandler(
   req: NextRequest, { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -346,6 +347,7 @@ export async function POST(
   if (effectiveAnchor.on !== 'work' && (turnPosture.sanctuary || !postureDeclared)) {
     return NextResponse.json({ refusal: turnPosture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared' }, { status: 409 });
   }
+  bindMaiaMeter(memberId, { sanctuary: turnPosture.sanctuary });
 
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({
@@ -547,6 +549,8 @@ export async function POST(
   const thread = await loadThread(liveThreadId, memberId);
   return NextResponse.json({ threadId: liveThreadId, thread, staleness });
 }
+
+export const POST = meteredRoute('ask', postHandler);
 
 /**
  * ⭐⭐ ASK-WORK-ANCHOR-01 · B3 — one author turn, one MAIA answer, about the WORK.

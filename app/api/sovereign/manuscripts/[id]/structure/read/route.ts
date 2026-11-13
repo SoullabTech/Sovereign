@@ -39,6 +39,7 @@ import {
   createMaiaStructureReader, boundedFetcher, StructureReaderError,
 } from '@/lib/manuscript/structure/maiaReader';
 import { createProposal, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ const STATUS: Record<ProposalRefusal, number> = {
   prose_in_payload: 422,
 };
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -59,6 +60,7 @@ export async function POST(
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   /* Sanctuary closure (founder ruling 2026-11-09): this records something MAIA keeps, so it needs a declared ordinary posture. */
   { const refused = await keepGate(memberId, await req.json().catch(() => ({}))); if (refused) return refused; }
+  bindMaiaMeter(memberId, { sanctuary: false });
 
   /* Ownership is enforced IN the query, not checked beside it. A row reaches
      this code only if it belongs to the authenticated member; a manuscript that
@@ -147,3 +149,5 @@ export async function POST(
     reviewPath: `/writers-studio/review?m=${manuscriptId}&p=${stored.value.id}`,
   }, { status: 201 });
 }
+
+export const POST = meteredRoute('structure_read', postHandler);

@@ -23,6 +23,7 @@ import {
   appendReviewDiscussEpisodeWithClient, prepareRelationshipForAppendWithClient,
   RelationshipCustodyRefused,
 } from '@/lib/writers-studio/relationshipCustody';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 const MAX_QUESTION = 4000;
@@ -31,7 +32,7 @@ const ACT_TTL_MINUTES = 30;
 const hash = (value: unknown): string =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -84,6 +85,7 @@ export async function POST(
   if (body.sanctuary) {
     return NextResponse.json({ refusal: 'sanctuary_unavailable' }, { status: 409 });
   }
+  bindMaiaMeter(memberId, { sanctuary: false });
   const posture = TurnPosture.resolve({ sanctuary: body.sanctuary });
   /* Sanctuary closure: the store refuses any write without this; `body.sanctuary` is the checked, explicit `false` above. */
   const keep = KeepWitness.fromDeclaration(body.sanctuary) as KeepWitness;
@@ -355,3 +357,5 @@ export async function POST(
     provenance: answerProvenance,
   });
 }
+
+export const POST = meteredRoute('review_discuss', postHandler);

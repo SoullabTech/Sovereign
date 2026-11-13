@@ -11,7 +11,7 @@
  *    shown as a question in both directions.
  *  - Nothing here changes the manuscript. The opening rides inside the letter's map (no schema of its own).
  */
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import { query } from '@/lib/db/postgres';
 import { loadReading } from '@/lib/manuscript/developmentalReading/store';
