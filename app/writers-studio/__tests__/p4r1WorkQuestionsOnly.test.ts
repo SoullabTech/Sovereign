@@ -71,6 +71,24 @@ describe('the live view wires it to the member’s own Work setting', () => {
   });
 });
 
+describe('the selection menu honours the Work-wide setting (live walk finding, 2026-11-13)', () => {
+  const view = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
+  it('NEGATIVE: "Show me an edit" is not offered while the Work is questions-only; a plain note is', () => {
+    const menu = view.slice(view.indexOf('or let MAIA offer'), view.indexOf('Teach me the craft'));
+    expect(menu).toMatch(/\{workRevisionsPaused \? \(\s*<p[^>]*data-questions-only-note>MAIA asks, never rewrites: on for this Work<\/p>\s*\) : \(\s*<button[^>]*data-passage-choice="revise"/);
+  });
+  it('every passage act, sent now or held behind a gate, goes through the Work pause', () => {
+    const run = view.slice(view.indexOf('const runPassageAct = '), view.indexOf('const runPassageAct = ') + 900);
+    expect(run).toMatch(/options: pausedSendOptions\(requested\.options, workRevisionsPaused\)/);
+    expect(run).toMatch(/props\.onSendEditorial\(act\.prompt, act\.options\)/);
+    expect(run).toMatch(/setRequestedPassageAct\(\{ key: Date\.now\(\), \.\.\.act \}\)/);
+  });
+  it('the Work setting is declared before the passage actions that read it', () => {
+    expect(view.indexOf('const [workRevisionsPaused')).toBeLessThan(view.indexOf('const runPassageAct = '));
+    expect(view.indexOf('const [workRevisionsPaused')).toBeLessThan(view.indexOf('const contextualActions = '));
+  });
+});
+
 describe('Focus "More" menu closes and fits the window (live walk, 2026-11-13)', () => {
   function stageRoom() {
     act(() => root.render(React.createElement(IsolatedEditorialRoom, {
