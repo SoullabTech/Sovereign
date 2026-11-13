@@ -141,6 +141,7 @@ describe('an invitation that carries a Writer\'s Studio beta grant (founder choi
     txQuery.mockImplementation(async (sql: string) => {
       if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, ...row }] };
       if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      if (sql.includes('SELECT admin_role FROM members WHERE id = $1 FOR SHARE')) return { rows: [{ admin_role: 'founder' }] };
       return { rows: [] };
     });
 
@@ -182,6 +183,7 @@ describe('an invitation that carries Writer\'s Studio access (ledger #1938, 2026
     txQuery.mockImplementation(async (sql: string) => {
       if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, beta_grant_until: null, ...claim }] };
       if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      if (sql.includes('SELECT admin_role FROM members WHERE id = $1 FOR SHARE')) return { rows: [{ admin_role: 'founder' }] };
       if (sql.includes('FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ id: 'm1', name: 'Ada', username: 'ada', email: 'ada@example.com', tier: 'free', roles: ['member'], admin_role: null }] };
       if (sql.includes('INSERT INTO ops_contacts')) return { rows: [{ id: 'c1' }] };
       return { rows: [] };
@@ -217,8 +219,52 @@ describe('an invitation that carries Writer\'s Studio access (ledger #1938, 2026
   it('NEGATIVE: a studio-access invitation without an issuer aborts the sign-up, so no session is opened', async () => {
     tx({ issuer_member_id: null, grants_writers_studio: true });
     const res = await register(post('/api/doorway/register', good));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(403);
+    expect(sqls().some(s => s.includes('INSERT INTO members'))).toBe(false);
     expect(sqls().some(s => s.includes('INSERT INTO ops_contacts'))).toBe(false);
+    expect(createSession).not.toHaveBeenCalled();
+  });
+});
+
+describe('College Essay selected path and current issuer authority', () => {
+  function claim(row: Record<string, unknown>, role = 'founder') {
+    txQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, ...row }] };
+      if (sql.includes('SELECT admin_role FROM members WHERE id = $1 FOR SHARE')) return { rows: [{ admin_role: role }] };
+      if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      if (sql.includes('FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ id: 'm1', name: 'Ada', username: 'ada', email: 'ada@example.com', tier: 'free', roles: ['member'], admin_role: null }] };
+      if (sql.includes('INSERT INTO ops_contacts')) return { rows: [{ id: 'c1' }] };
+      return { rows: [] };
+    });
+  }
+
+  it('preserves the exact selected College Essay path after successful registration', async () => {
+    claim({ beta_grant_until: null, grants_writers_studio: false });
+    const response = await register(post('/api/doorway/register', { ...good, path: 'college-essay' }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).next).toBe('/writers-studio?path=college-essay');
+  });
+
+  it('carries the selected path through session failure', async () => {
+    claim({ beta_grant_until: null, grants_writers_studio: false });
+    createSession.mockRejectedValue(new Error('session unavailable'));
+    const response = await register(post('/api/doorway/register', { ...good, path: 'college-essay' }));
+    expect((await response.json()).next).toBe('/signin?next=%2Fwriters-studio%3Fpath%3Dcollege-essay');
+  });
+
+  it.each(['../college-essay', 'https://evil.example', 'college-essay%2Fother', 'unknown'])(
+    'rejects untrusted path input %s without redirecting outside Studio', async (path) => {
+      claim({ beta_grant_until: null, grants_writers_studio: false });
+      const response = await register(post('/api/doorway/register', { ...good, path }));
+      expect((await response.json()).next).toBe('/writers-studio');
+    },
+  );
+
+  it.each(['member', ''])('rejects an issuer with role %s before member creation', async (role) => {
+    claim({ beta_grant_until: new Date('2027-11-13T23:59:59Z'), issuer_member_id: 'issuer', grants_writers_studio: true }, role);
+    const response = await register(post('/api/doorway/register', good));
+    expect(response.status).toBe(403);
+    expect(txQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO members'))).toBe(false);
     expect(createSession).not.toHaveBeenCalled();
   });
 });

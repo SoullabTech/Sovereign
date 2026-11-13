@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
 import { DoorwayJoin } from '@/components/studios/DoorwayJoin';
+import { pathFromParam } from '@/lib/writersStudio/studioPaths';
 
 /**
  * /doorway/[studio] — a Studio's own invitation sign-up (STUDIO-A-LA-CARTE-01 Phase 3).
@@ -11,9 +12,11 @@ import { DoorwayJoin } from '@/components/studios/DoorwayJoin';
  */
 export const dynamic = 'force-dynamic';
 
-export default async function DoorwayPage({ params }: { params: Promise<{ studio: string }> }) {
+export default async function DoorwayPage({ params, searchParams }: { params: Promise<{ studio: string }>; searchParams: Promise<{ path?: string }> }) {
   const { studio } = await params;
   const doorway = doorwayById(studio);
   if (!doorway || !doorwaysEnabled()) notFound();
-  return <DoorwayJoin studio={doorway.id} studioName={doorway.studioName} studioPath={doorway.studioPath} />;
+  const requested = (await searchParams).path;
+  const selectedPath = doorway.id === 'writer' && pathFromParam(requested)?.id === 'college-essay' ? 'college-essay' : undefined;
+  return <DoorwayJoin studio={doorway.id} studioName={doorway.studioName} studioPath={doorway.studioPath} selectedPath={selectedPath} />;
 }

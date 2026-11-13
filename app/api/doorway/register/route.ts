@@ -7,6 +7,7 @@ import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
 import { CLAIM_INVITATION_SQL, GRANT_FROM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 import { randomBytes } from 'crypto';
 import { applyChange, writeAudit } from '@/lib/admin/memberPermissions';
+import { pathFromParam } from '@/lib/writersStudio/studioPaths';
 
 /**
  * POST /api/doorway/register — a Studio's own front door (STUDIO-A-LA-CARTE-01 Phase 3).
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
     const name = (typeof body.name === 'string' ? body.name : '').trim();
     const email = (typeof body.email === 'string' ? body.email : '').trim().toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
+    const selectedPath = doorway?.id === 'writer' && pathFromParam(body.path)?.id === 'college-essay'
+      ? '/writers-studio?path=college-essay' : doorway?.studioPath;
 
     if (!doorway || code.trim().length < 6 || code.length > 64) {
       return NextResponse.json({ error: REFUSED }, { status: 403 });
@@ -85,6 +88,17 @@ export async function POST(request: NextRequest) {
         const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id, hashInvitedEmail(email)]);
         if (claimed.rows.length !== 1) throw new InvitationRefused();
         const invitationId = claimed.rows[0].id;
+        // Current issuer authority, protected by a row lock through transaction commit.
+        // A demotion or revoked issuer must not leave a usable pending access/grant invitation.
+        if (doorway.id === 'writer' &&
+            (claimed.rows[0].grants_writers_studio === true || claimed.rows[0].beta_grant_until != null)) {
+          const issuer = claimed.rows[0].issuer_member_id;
+          if (!issuer) throw new InvitationRefused();
+          const role = await tx.query('SELECT admin_role FROM members WHERE id = $1 FOR SHARE', [issuer]);
+          if (role.rows.length !== 1 || !['founder', 'cto'].includes(role.rows[0].admin_role)) {
+            throw new InvitationRefused();
+          }
+        }
         const carried: { until: Date; cohort: string | null; issuer: string } | null =
           claimed.rows[0].beta_grant_until && doorway.id === 'writer'
             ? { until: claimed.rows[0].beta_grant_until, cohort: claimed.rows[0].beta_grant_cohort ?? null, issuer: claimed.rows[0].issuer_member_id }
@@ -176,7 +190,7 @@ export async function POST(request: NextRequest) {
       signedIn,
       betaGrantUntil: member.betaGrantUntil,
       member: { id: member.id, username: member.username, name: member.name, onboarded: true },
-      next: signedIn ? doorway.studioPath : `/signin?next=${encodeURIComponent(doorway.studioPath)}`,
+      next: signedIn ? selectedPath : `/signin?next=${encodeURIComponent(selectedPath || doorway.studioPath)}`,
       session: session ? { expiresAt: session.expiresAt.toISOString(), token: session.sessionToken } : undefined,
     });
   } catch {
