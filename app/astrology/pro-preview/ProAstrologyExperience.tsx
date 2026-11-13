@@ -123,11 +123,11 @@ function typingTarget(target: EventTarget | null): boolean {
   return !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
 }
 
-export default function ProAstrologyExperience() {
-  return <MaiaDockProvider defaultOpen={false}><Cockpit /></MaiaDockProvider>;
+export default function ProAstrologyExperience({ verifiedSessionMemberId }: { verifiedSessionMemberId: string }) {
+  return <MaiaDockProvider defaultOpen={false}><Cockpit verifiedSessionMemberId={verifiedSessionMemberId} /></MaiaDockProvider>;
 }
 
-function Cockpit() {
+function Cockpit({ verifiedSessionMemberId }: { verifiedSessionMemberId: string }) {
   const dock = useMaiaDock();
   // The tools open beside the wheel, most recently opened first; `lead` is the one in hand.
   const [openTools, setOpenTools] = useState<ToolId[]>(['saved']);
@@ -981,7 +981,7 @@ function Cockpit() {
             <small>{privateChart ? 'Ask · Mentor · How do I…?' : 'How do I…? · no chart is read'}</small>
           </button>
         )}
-        <ProMaiaStage key={helpConversationScope({ memberId, chartOpen: !!privateChart, subjectId: savedSubject?.id ?? null, sourceRevision, houseSystem })}
+        <ProMaiaStage key={helpConversationScope({ memberId: verifiedSessionMemberId, chartOpen: !!privateChart, subjectId: savedSubject?.id ?? null, sourceRevision, houseSystem })}
           chartOpen={!!privateChart}
           whereLabel={leadTab ? (leadTab.label === leadTool?.label ? leadTab.label : `${leadTool?.label} · ${leadTab.label}`) : privateChart ? 'the chart wheel' : null}
           preferSections={leadTab?.prefer ?? []} />
