@@ -431,6 +431,17 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
 
   const ctx = { provider: provider.name, priority };
 
+  // Private portrait delivery is permitted ONLY on Soullab's resolved managed
+  // SMTP sender. A caller-supplied provider must never skip portrait admission.
+  if (opts.purpose === PORTRAIT_MAIL_PURPOSE &&
+      (opts.provider !== undefined || provider.name !== 'smtp')) {
+    const result = failure('provider_config',
+      'Private portrait email requires the managed SMTP transport',
+      'portrait_provider_override_refused', ctx);
+    logSend(opts.purpose, from, toLog, domain, result, trace);
+    return result;
+  }
+
   if (!provider.isConfigured()) {
     const result = failure('not_configured', `${provider.name} provider is not configured`, undefined, ctx);
     logSend(opts.purpose, from, toLog, domain, result, trace);
