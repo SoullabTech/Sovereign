@@ -121,7 +121,7 @@ export default function WriterPreferencesMenu() {
       <details className="fr-writer-about-access">
         <summary>About Studio access</summary>
         <p>Free and Pro belong to the same Studio. Pro offers extended capabilities, not a different atmosphere or lesser care for Free writers.</p>
-        <a href="/writers-studio/plans">See the planned Free and Pro experience</a>
+        <a href="/writers-studio/plans">Free and Pro</a>
       </details>
     </section>
   </details>;
