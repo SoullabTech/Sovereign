@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { WriteManuscriptRail, WriteRoom, isWriteRoomReadbackCurrent, type WriteBlock, type WriteRoomReadback } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
@@ -1070,7 +1071,38 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const heldKey = props.held
     ? JSON.stringify([props.held.draftSectionId, props.held.start, props.held.end, props.held.text])
     : null;
-  const revisionsPaused = heldKey !== null && pausedPassageKey === heldKey;
+  const passageRevisionsPaused = heldKey !== null && pausedPassageKey === heldKey;
+  /* Work-wide "MAIA asks, never rewrites" (ledger #1938, 2026-11-13). The writer's own
+     durable setting on the Work, saved through the member's Work PATCH; the server
+     enforces it on every editorial turn whatever this view sends. Here it only keeps
+     the controls honest: while it is on, every passage behaves as paused. */
+  const [workRevisionsPaused, setWorkRevisionsPaused] = useState(props.work?.maiaRevisionsPaused === true);
+  const [workPauseSaving, setWorkPauseSaving] = useState(false);
+  const [workPauseError, setWorkPauseError] = useState<string | null>(null);
+  useEffect(() => {
+    setWorkRevisionsPaused(props.work?.maiaRevisionsPaused === true);
+    setWorkPauseError(null);
+  }, [props.work?.id, props.work?.maiaRevisionsPaused]);
+  const saveWorkRevisionsPaused = useCallback(async (paused: boolean) => {
+    const workId = props.work?.id;
+    if (!workId) return;
+    setWorkPauseSaving(true);
+    setWorkPauseError(null);
+    try {
+      const res = await apiFetch(`/api/sovereign/living-works/${workId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maiaRevisionsPaused: paused }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setWorkRevisionsPaused(paused);
+    } catch {
+      setWorkPauseError('Could not save that just now. Nothing changed.');
+    } finally {
+      setWorkPauseSaving(false);
+    }
+  }, [props.work?.id]);
+  const revisionsPaused = passageRevisionsPaused || workRevisionsPaused;
   const focusSend: P4R1Pc3WriteEditViewProps['onSendEditorial'] = (text, options) => {
     props.onSendEditorial(text, pausedSendOptions(options, revisionsPaused));
   };
@@ -1709,8 +1741,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onNextPassage={focusNextPassage}
       nextPassageLabel={nextCraft?.label ?? null}
       onAskWhereNext={focusAskWhereNext}
-      revisionsPaused={revisionsPaused}
-      onPauseRevisions={heldKey ? (paused) => setPausedPassageKey(paused ? heldKey : null) : undefined}
+      revisionsPaused={passageRevisionsPaused}
+      onPauseRevisions={heldKey && !workRevisionsPaused ? (paused) => setPausedPassageKey(paused ? heldKey : null) : undefined}
+      workRevisionsPaused={workRevisionsPaused}
+      onPauseWorkRevisions={props.work?.id ? (paused) => { void saveWorkRevisionsPaused(paused); } : undefined}
+      workPauseSaving={workPauseSaving}
+      workPauseError={workPauseError}
     >
       {props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>
