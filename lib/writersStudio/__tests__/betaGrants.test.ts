@@ -39,7 +39,11 @@ describe('decision', () => {
     const f = future();
     expect(decideBetaGrant({ action: 'grant', expires_at: f })).toEqual({ active: true, expiresAt: f, hasHistory: true });
     expect(decideBetaGrant(null)).toEqual({ active: false, hasHistory: false });
-    expect(decideBetaGrant({ action: 'revoke', expires_at: null })).toEqual({ active: false, hasHistory: true });
+    expect(decideBetaGrant({ action: 'revoke', expires_at: null }))
+      .toEqual({ active: false, hasHistory: true, ended: 'revoked', endedAt: null });
+    const p = past();
+    expect(decideBetaGrant({ action: 'grant', expires_at: p }))
+      .toEqual({ active: false, hasHistory: true, ended: 'expired', endedAt: p });
     expect(decideBetaGrant({ action: 'extend', expires_at: f }).active).toBe(true);
     expect(decideBetaGrant({ action: 'grant', expires_at: past() }).active).toBe(false);
     expect(decideBetaGrant({ action: 'revoke', expires_at: null }).active).toBe(false);
@@ -110,9 +114,10 @@ describe('dated mode', () => {
 });
 
 describe('plan projection', () => {
-  it('a dated grant is complimentary Pro; expiry returns the member to Free (their Works are not touched here)', () => {
-    expect(decideWriterStudioPlan({ eligible: true, basis: 'dated_beta_grant', expiresAt: future().toISOString() }))
-      .toMatchObject({ plan: 'pro', basis: 'dated_beta_grant', complimentary: true, pilotEligible: true });
-    expect(decideWriterStudioPlan({ eligible: false, basis: 'not_in_pilot' })).toMatchObject({ plan: 'free' });
+  it('a dated grant is complimentary Pro, with its expiry; a member never admitted is outside', () => {
+    const f = future().toISOString();
+    expect(decideWriterStudioPlan({ admitted: true, plan: 'pro', basis: 'dated_beta_grant', expiresAt: f }))
+      .toMatchObject({ plan: 'pro', basis: 'dated_beta_grant', complimentary: true, pilotEligible: true, expiresAt: f });
+    expect(decideWriterStudioPlan({ admitted: false, plan: null, basis: 'not_in_pilot' })).toMatchObject({ plan: 'free', admitted: false });
   });
 });
