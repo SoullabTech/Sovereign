@@ -104,7 +104,8 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
         {createdNotSignedIn ? (
           <div className="relative mt-10 space-y-4 text-center" role="status">
             <p className="text-slate-300 text-sm font-light leading-relaxed">
-              Your account was created, but we couldn&rsquo;t sign you in just now. Please sign in with your email and password.
+              Your account was created, but we couldn&rsquo;t sign you in just now. Please sign in with your email and
+              password &mdash; here or at soullab.life.
             </p>
             <a className={button + ' inline-block'} href={signInHref}>Sign in</a>
           </div>
@@ -135,6 +136,9 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
             <button type="submit" className={button} disabled={busy}>
               {busy ? 'Creating your account…' : 'Create account'}
             </button>
+            <p className="text-slate-500 text-xs font-light leading-relaxed text-center">
+              This is your Soullab account. The same email and password also open {studioName} from soullab.life.
+            </p>
           </form>
         )}
 

@@ -9,6 +9,9 @@ import { deriveVerifiedAccess } from '../lib/auth/verifiedAccess';
 
 jest.mock('../lib/auth/verifiedAccess', () => ({ deriveVerifiedAccess: jest.fn() }));
 const verified = deriveVerifiedAccess as jest.MockedFunction<typeof deriveVerifiedAccess>;
+jest.mock('../lib/writersStudio/admissionServer', () => ({ writerStudioAdmissionForMember: jest.fn() }));
+import { writerStudioAdmissionForMember } from '../lib/writersStudio/admissionServer';
+const admission = writerStudioAdmissionForMember as jest.MockedFunction<typeof writerStudioAdmissionForMember>;
 
 function request(host: string, pathname: string): NextRequest {
   return new NextRequest(`https://${host}${pathname}`, { headers: { host } });
@@ -62,3 +65,26 @@ describe('switch on', () => {
     expect(rewriteOf(await proxy(request('jondi.soullab.life', '/')))).toBe('/fields/jondi');
   });
 });
+
+describe('⭐ access is decided per member, never per entrance', () => {
+  const memberId = '11111111-1111-4111-8111-111111111111';
+  beforeEach(() => {
+    process.env.STUDIO_DOORWAYS_ENABLED = 'true';
+    verified.mockResolvedValue({ authenticated: true, memberId, tier: 'free', roles: ['member'] } as never);
+  });
+  it('an admitted member passes the Writer gate at writer.soullab.life AND at soullab.life (Home \u2192 Writing)', async () => {
+    admission.mockResolvedValue({ allowed: true } as never);
+    const viaDoor = await proxy(request('writer.soullab.life', '/api/sovereign/writers-studio/arrival'));
+    const viaHome = await proxy(request('soullab.life', '/api/sovereign/writers-studio/arrival'));
+    expect(viaDoor.status).toBe(200);
+    expect(viaHome.status).toBe(200);
+    expect(admission.mock.calls).toEqual([[memberId], [memberId]]);
+  });
+  it('a member without admission is refused identically at both', async () => {
+    admission.mockResolvedValue({ allowed: false, code: 'WRITER_STUDIO_INVITATION_REQUIRED' } as never);
+    const viaDoor = await proxy(request('writer.soullab.life', '/api/sovereign/writers-studio/arrival'));
+    const viaHome = await proxy(request('soullab.life', '/api/sovereign/writers-studio/arrival'));
+    expect([viaDoor.status, viaHome.status]).toEqual([403, 403]);
+  });
+});
+

@@ -5,8 +5,10 @@
 --
 -- An invitation lets a person create a normal Soullab member account at a Studio's door
 -- (writer./sound./guide./astrology.soullab.life) without the AIN beta passkey — the same shape as the
--- Now What? door, where the invitation is the gate. It does NOT admit anyone into a Studio: each Studio's
--- own gate (beta roster, allowlist, grant log, entitlement) still decides entry, unchanged.
+-- Now What? door, where the invitation is the gate. By itself it does NOT admit anyone into a Studio: each
+-- Studio's own gate (beta roster, allowlist, grant log, entitlement) still decides entry. A Writer's Studio
+-- invitation MAY carry a dated beta grant (beta_grant_until), chosen by the issuer; that grant — not the
+-- code — is what admits, and it admits the same member at every entrance (writer.soullab.life and Home).
 --
 -- Only SHA-256 hashes of each code and of the invited email are stored; the code itself is shown once to the issuer.
 -- Nothing reads or writes these tables unless STUDIO_DOORWAYS_ENABLED = 'true'.
@@ -26,7 +28,17 @@ CREATE TABLE IF NOT EXISTS studio_doorway_invitations (
   revoked_at  TIMESTAMPTZ,
   issued_by   TEXT        NOT NULL CHECK (char_length(issued_by) BETWEEN 1 AND 200),
   note        TEXT        CHECK (note IS NULL OR char_length(note) <= 300),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  -- Optional Writer's Studio beta grant carried by this invitation (founder choice 2026-11-13): when set, redeeming
+  -- the invitation also writes a dated grant (writers_studio_beta_grant_events) for the new member, in the same
+  -- transaction, until this date, attributed to the issuing founder/owner. Writer's Studio only.
+  beta_grant_until  TIMESTAMPTZ,
+  beta_grant_cohort TEXT      CHECK (beta_grant_cohort IS NULL OR beta_grant_cohort ~ '^[a-z0-9][a-z0-9-]{0,39}$'),
+  issuer_member_id  UUID,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT studio_doorway_invitation_grant_shape CHECK (
+    (beta_grant_until IS NULL AND beta_grant_cohort IS NULL) OR
+    (studio = 'writer' AND issuer_member_id IS NOT NULL AND beta_grant_until > created_at)
+  )
 );
 
 -- Which door a member came through. Provenance only; it grants nothing.

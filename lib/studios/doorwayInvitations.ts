@@ -50,4 +50,14 @@ export const CLAIM_INVITATION_SQL = `
      AND revoked_at IS NULL
      AND expires_at > now()
      AND uses < max_uses
-  RETURNING id`;
+     AND (beta_grant_until IS NULL OR beta_grant_until > now())
+  RETURNING id, beta_grant_until, beta_grant_cohort, issuer_member_id`;
+
+/**
+ * Writes the dated Writer's Studio beta grant an invitation carries (founder choice 2026-11-13), inside the same
+ * transaction as the member insert. Admission and Pro then follow from that grant through the one seam
+ * (writersStudioBetaAccess), so the member gets the same decision at writer.soullab.life and from soullab.life Home.
+ */
+export const GRANT_FROM_INVITATION_SQL = `
+  INSERT INTO writers_studio_beta_grant_events (member_id, action, expires_at, cohort, actor_member_id, reason)
+  VALUES ($1, 'grant', $2, $3, $4, $5)`;

@@ -45,6 +45,7 @@ Where am I: the Studio's door. What is it for: joining with an invitation. Where
 | Create account | "Create your Soullab account to use with Writer's Studio." · "Create account" | Honest that this is a Soullab account (one identity), used with this Studio |
 | Existing member | "Already have a Soullab account? Sign in" | An existing member is never forked into a second account |
 | Code used with another email | "This code and email don't match an open invitation. Use the email address your invitation was sent to, or ask the person who invited you." | Each invitation is bound to the address it was sent to, so it cannot claim (and lock out) someone else's email |
+| Same account at soullab.life | "This is your Soullab account. The same email and password also open Writer's Studio from soullab.life." | Sign-in stays per address (founder choice 2026-11-13), so the writer is told plainly that the one account opens the Studio from Home too |
 | Account made, session failed | "Your account was created, but we couldn't sign you in just now. Please sign in with your email and password." · "Sign in" | Says what is true instead of sending them to a Studio that would bounce them |
 
 ## Known gap (not hidden)
@@ -58,4 +59,14 @@ an invitation must be paired with the Studio's own admission (roster / allowlist
 Two findings from an external review were fixed after the walk above and are covered by API tests, not re-walked:
 invitations are now bound to the invited email (registration must use it), and a failed session after account
 creation is reported as "created, please sign in" instead of a silent success.
+
+## Two-entrance walk (2026-11-13, after the founder's "same access at the door and on Home" requirement)
+
+Local dev server, schema-only throwaway database, `STUDIO_DOORWAYS_ENABLED=true`, `WS_BETA_GRANT_MODE=transition`.
+A fictional founder issued a Writer's Studio invitation carrying the one-year dated beta grant (until 2027-11-13).
+A fictional writer joined at `writer.localhost:3124/join` and landed **inside** Writer's Studio ("What are you
+beginning?"); beta access answered `dated_beta_grant` until 2027-11-13, and the Studio arrival route answered 400
+`malformed` (past the gate — a refusal is 403). The same writer then signed in at `localhost:3124` (standing for
+soullab.life) with the same email and password, landed on Home, entered Writing, and reached the Studio (the Spark
+door) with the **identical** `dated_beta_grant` and end date. Sign-in was separate per address, as decided.
 

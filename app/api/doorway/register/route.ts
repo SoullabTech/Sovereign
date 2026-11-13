@@ -4,7 +4,7 @@ import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
-import { CLAIM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
+import { CLAIM_INVITATION_SQL, GRANT_FROM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 import { randomBytes } from 'crypto';
 
 /**
@@ -18,7 +18,9 @@ import { randomBytes } from 'crypto';
  * The invitation is the gate, enforced here: the use is claimed atomically INSIDE the same transaction as the member
  * insert, so a failed sign-up gives it back and two people cannot both take the last use. Each invitation is bound to
  * the email it was sent to (hash only), so it cannot be used to register — and so lock out — someone else's address.
- * The invitation admits no one INTO a Studio; that Studio's own gate still decides.
+ * By itself the invitation admits no one INTO a Studio; that Studio's own gate still decides. A Writer's Studio invitation
+ * may carry a dated beta grant chosen by its issuer (founder choice 2026-11-13); it is written in the same transaction,
+ * and admission + Pro then follow from it for this member at every entrance (writer.soullab.life and soullab.life Home).
  *
  * 404 unless STUDIO_DOORWAYS_ENABLED === 'true'.
  */
@@ -76,12 +78,16 @@ export async function POST(request: NextRequest) {
     const codeHash = hashInvitationCode(code);
     const base = email.split('@')[0].replace(/[^a-z0-9._-]/gi, '').slice(0, 24) || 'member';
 
-    let member: { id: string; username: string; name: string; tier: string | null; roles: string[] | null };
+    let member: { id: string; username: string; name: string; tier: string | null; roles: string[] | null; betaGrantUntil: string | null };
     try {
       member = await transaction(async (tx) => {
         const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id, hashInvitedEmail(email)]);
         if (claimed.rows.length !== 1) throw new InvitationRefused();
         const invitationId = claimed.rows[0].id;
+        const carried: { until: Date; cohort: string | null; issuer: string } | null =
+          claimed.rows[0].beta_grant_until && doorway.id === 'writer'
+            ? { until: claimed.rows[0].beta_grant_until, cohort: claimed.rows[0].beta_grant_cohort ?? null, issuer: claimed.rows[0].issuer_member_id }
+            : null;
 
         let created: any = null;
         let username = base;
@@ -109,7 +115,14 @@ export async function POST(request: NextRequest) {
           `INSERT INTO studio_doorway_redemptions (invitation_id, member_id, studio) VALUES ($1, $2, $3)`,
           [invitationId, created.id, doorway.id],
         );
-        return created;
+        // The invitation's dated beta grant, if the issuer attached one: same transaction, so either the person gets
+        // both the account and the grant, or neither. Admission and Pro then follow from this grant at every entrance.
+        if (carried) {
+          await tx.query(GRANT_FROM_INVITATION_SQL, [
+            created.id, carried.until, carried.cohort, carried.issuer, `Studio doorway invitation #${invitationId}`,
+          ]);
+        }
+        return { ...created, betaGrantUntil: carried ? new Date(carried.until).toISOString() : null };
       });
     } catch (e) {
       if (e instanceof InvitationRefused) {
@@ -148,6 +161,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       signedIn,
+      betaGrantUntil: member.betaGrantUntil,
       member: { id: member.id, username: member.username, name: member.name, onboarded: true },
       next: signedIn ? doorway.studioPath : `/signin?next=${encodeURIComponent(doorway.studioPath)}`,
       session: session ? { expiresAt: session.expiresAt.toISOString(), token: session.sessionToken } : undefined,

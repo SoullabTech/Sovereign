@@ -134,3 +134,44 @@ it('check answers only { valid } and never takes a use', async () => {
   expect(await res.json()).toEqual({ valid: true });
   expect(String(query.mock.calls[0][0])).toMatch(/^\s*SELECT/);
 });
+
+describe('an invitation that carries a Writer\'s Studio beta grant (founder choice 2026-11-13)', () => {
+  const until = new Date('2027-11-13T23:59:59Z');
+  const claimWith = (row: Record<string, unknown>) =>
+    txQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, ...row }] };
+      if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      return { rows: [] };
+    });
+
+  it('⭐ writes the dated grant in the same transaction, attributed to the issuer, and reports its end date', async () => {
+    claimWith({ beta_grant_until: until, beta_grant_cohort: 'beta-2026', issuer_member_id: 'f1' });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(200);
+    const grant = txQuery.mock.calls.find(([sql]) => String(sql).includes('INSERT INTO writers_studio_beta_grant_events'));
+    expect(grant).toBeDefined();
+    expect(grant![1]).toEqual(['m1', until, 'beta-2026', 'f1', 'Studio doorway invitation #7']);
+    expect((await res.json()).betaGrantUntil).toBe(until.toISOString());
+  });
+
+  it('an invitation without a grant writes none', async () => {
+    claimWith({ beta_grant_until: null, beta_grant_cohort: null, issuer_member_id: null });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(200);
+    expect(txQuery.mock.calls.some(([sql]) => String(sql).includes('writers_studio_beta_grant_events'))).toBe(false);
+    expect((await res.json()).betaGrantUntil).toBeNull();
+  });
+
+  it('⭐ only Writer\'s Studio invitations can carry it (another studio never writes a Writer grant)', async () => {
+    claimWith({ beta_grant_until: until, beta_grant_cohort: null, issuer_member_id: 'f1' });
+    await register(post('/api/doorway/register', { ...good, studio: 'sound' }));
+    expect(txQuery.mock.calls.some(([sql]) => String(sql).includes('writers_studio_beta_grant_events'))).toBe(false);
+  });
+
+  it('the claim refuses an invitation whose grant date has already passed', async () => {
+    txQuery.mockResolvedValue({ rows: [] });
+    await register(post('/api/doorway/register', good));
+    expect(String(txQuery.mock.calls[0][0])).toContain('beta_grant_until IS NULL OR beta_grant_until > now()');
+  });
+});
+
