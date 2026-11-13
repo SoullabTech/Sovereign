@@ -106,13 +106,25 @@ perform_safe_cleanup() {
         cleanup_performed=true
     fi
 
-    # Clean Next.js caches
-    find /Users/soullab/MAIA-SOVEREIGN -name ".next" -type d 2>/dev/null | while read dir; do
-        echo "Cleaning Next.js cache: $dir"
-        rm -rf "$dir" 2>/dev/null || true
-        echo "[$(date)] Cleaned Next.js cache: $dir" >> "$CLEANUP_LOG"
+    # Checkout lifecycle: reclaim finished worktrees and strip regenerable
+    # caches across every checkout root on the boot volume.
+    #
+    # This replaces a blind `find ~/MAIA-SOVEREIGN -name .next -delete`, which
+    # had two defects. It knew one root out of the fifteen that exist, so it
+    # never touched the ~5 GB/day of worktrees that are the real growth; and it
+    # deleted .next with no check for a build in progress, so a scheduled run
+    # could corrupt a build someone was waiting on. checkout-lifecycle.sh gates
+    # on custody (uncommitted changes, commits on no remote) and on an activity
+    # window, and reclaims nothing it cannot vouch for.
+    local lifecycle="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}/checkout-lifecycle.sh"
+    if [ -x "$lifecycle" ]; then
+        echo "Running checkout lifecycle..."
+        "$lifecycle" --apply >> "$CLEANUP_LOG" 2>&1 || true
+        echo "[$(date)] Ran checkout lifecycle" >> "$CLEANUP_LOG"
         cleanup_performed=true
-    done
+    else
+        echo "[$(date)] checkout-lifecycle.sh not found at $lifecycle — skipped" >> "$CLEANUP_LOG"
+    fi
 
     # Clean npm cache
     echo "Cleaning npm cache..."
@@ -120,10 +132,20 @@ perform_safe_cleanup() {
     echo "[$(date)] Cleaned npm cache" >> "$CLEANUP_LOG"
     cleanup_performed=true
 
-    # Clean system temp files
-    echo "Cleaning temporary files..."
-    sudo rm -rf /tmp/* 2>/dev/null || true
-    echo "[$(date)] Cleaned system temp files" >> "$CLEANUP_LOG"
+    # Clean OUR OWN stale temp files.
+    #
+    # This was `sudo rm -rf /tmp/*`, which is not a safe operation at any hour,
+    # let alone unattended on a Sunday morning. /tmp holds the unix sockets and
+    # lock files of PostgreSQL, Docker and every running editor, plus live
+    # fixtures such as /tmp/ws-continuity-walk (a 503-migration Postgres
+    # cluster). Wiping it kills running services rather than reclaiming waste.
+    #
+    # Scoped instead to plain files we own, untouched for a week, with sockets,
+    # directories and anything currently open left alone. No sudo: if we do not
+    # own it, it is not ours to delete.
+    echo "Cleaning stale temporary files (ours, >7d, files only)..."
+    find /tmp -maxdepth 1 -type f -user "$(id -un)" -mtime +7 -delete 2>/dev/null || true
+    echo "[$(date)] Cleaned stale temp files owned by $(id -un), older than 7 days" >> "$CLEANUP_LOG"
 
     if [ "$cleanup_performed" = true ]; then
         echo -e "${GREEN}✅ Automated cleanup completed${NC}"
