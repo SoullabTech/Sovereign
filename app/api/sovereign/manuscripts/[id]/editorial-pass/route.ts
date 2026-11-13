@@ -10,6 +10,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { keepGate } from '@/lib/sanctuary/keepGate';
 import { advanceRun, cancelRun, startRun, viewRun } from '@/lib/writersStudio/studio/passRun';
 import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -21,23 +22,27 @@ async function member(req: NextRequest, params: Promise<{ id: string }>) {
   return { memberId, id };
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function getHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { memberId, id } = await member(req, params);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   if (!UUID.test(id)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
+  bindMaiaMeter(memberId, { sanctuary: false });
   const run = await viewRun(memberId, id);
   /* An unfinished run whose server process stopped (a restart) carries on when anyone asks about it. advanceRun never doubles. */
   if (run && !FINAL.has(run.state)) void advanceRun(memberId, id).catch(() => undefined);
   return NextResponse.json({ run });
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = meteredRoute('editorial_pass', getHandler);
+
+async function postHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { memberId, id } = await member(req, params);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   if (!UUID.test(id)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const gate = await keepGate(memberId, body);
   if (gate) return gate;
+  bindMaiaMeter(memberId, { sanctuary: false });
   const out = await startRun(memberId, id);
   if (!out.ok) {
     const status = out.refusal === 'daily_limit' ? 429 : out.refusal === WHOLE_WORK_REFUSAL ? 403 : 409;
@@ -46,6 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   void advanceRun(memberId, id).catch(() => undefined);
   return NextResponse.json({ runId: out.runId, resumed: out.resumed, run: await viewRun(memberId, id) }, { status: 202 });
 }
+
+export const POST = meteredRoute('editorial_pass', postHandler);
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { memberId, id } = await member(req, params);

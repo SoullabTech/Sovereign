@@ -34,6 +34,7 @@ import { commissionReading, type CommissionStage } from '@/lib/manuscript/develo
 import { listReadings } from '@/lib/manuscript/developmentalReading/store';
 import { normalizeDetail, recordRefusal } from '@/lib/manuscript/developmentalReading/refusalRecord';
 import { CAUSE_UNKNOWN } from '@/lib/manuscript/developmentalReader/contract';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,7 +135,7 @@ function statusFor(stage: CommissionStage, refusal: string): number {
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function postHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   const { id: manuscriptId } = await params;
   const memberId = await getMemberIdFromRequest(req);
@@ -172,6 +173,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       { status: 409 },
     );
   }
+  bindMaiaMeter(memberId, { sanctuary: false });
 
   const rawScope = (body as { scope?: unknown } | null)?.scope;
   const scope: ReadingScope =
@@ -238,3 +240,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     frozenAt: reading.provenance.frozenAt,
   }, { status: 201 });
 }
+
+export const POST = meteredRoute('readings', postHandler);

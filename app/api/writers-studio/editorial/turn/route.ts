@@ -43,6 +43,7 @@ import { isArrivalOriginRef, type ArrivalOrigin, type ArrivalOriginRef } from '@
 import { resolveArrivalOrigin } from '@/lib/writersStudio/arrivalOriginServer';
 import { OPENING_GESTURE } from '@/lib/writersStudio/conversationOpening';
 import { query } from '@/lib/db/postgres';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -306,7 +307,7 @@ function parseClosed(body: unknown): Parsed {
   };
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   if (!enabled()) return new NextResponse(null, { status: 404 });
 
   /* ⭐ THE ONE MINT. Everything downstream uses this object. */
@@ -339,6 +340,7 @@ export async function POST(request: NextRequest) {
   }
 
   const memberId = identity.memberId;
+  bindMaiaMeter(memberId, { sanctuary: false });
 
   const relationship = await preflightEditorialRelationshipCarriage({
     memberId,
@@ -587,3 +589,5 @@ export async function POST(request: NextRequest) {
     voice: turn.voice,
   });
 }
+
+export const POST = meteredRoute('editorial_turn', postHandler);

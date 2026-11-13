@@ -4,13 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { synthesizeAttentionMap } from '@/lib/writersStudio/studio/synthesizeAttentionMap';
 import { composeOpening, openingFields } from '@/lib/writersStudio/studio/letterOpening';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
 const strings = (v: unknown): v is string[] =>
   Array.isArray(v) && v.every((x) => typeof x === 'string' && x.length > 0);
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -26,6 +27,8 @@ export async function POST(
   if (!strings(body.readingIds) || typeof body.request !== 'string') {
     return NextResponse.json({ error: 'readingIds_and_request_required' }, { status: 400 });
   }
+  // Posture is not established before the model call (only the optional letter is keep-gated, after); cannot tell -> true (records nothing).
+  bindMaiaMeter(memberId, { sanctuary: true });
   const synthesis = await synthesizeAttentionMap(memberId, manuscriptId, body.readingIds, body.request);
   if (!synthesis.ok) {
     return NextResponse.json(
@@ -60,3 +63,5 @@ export async function POST(
     provenance: { ...synthesis.provenance, readingIds },
   });
 }
+
+export const POST = meteredRoute('attention_map', postHandler);
