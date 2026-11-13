@@ -40,6 +40,12 @@ const hair = '1px solid color-mix(in srgb, currentColor 16%, transparent)';
 const btn = { font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 8, padding: '5px 10px' } as const;
 const quiet = { ...btn, border: 'none', textDecoration: 'underline', padding: '2px 0' } as const;
 
+/** Pure: a kept letter is this attempt's when it is of this draft and was kept after the attempt began (a minute of clock slack). */
+export function keptDuring(letter: { draftRevision: number; createdAt: string }, draftRevision: number, startedAt: number): boolean {
+  const at = Date.parse(letter.createdAt);
+  return letter.draftRevision === draftRevision && Number.isFinite(at) && at >= startedAt - 60_000;
+}
+
 export function EditorialLetterPanel(props: {
   manuscriptId: string;
   sections: readonly LetterSection[];
@@ -140,9 +146,22 @@ export function EditorialLetterPanel(props: {
     if (await readOnServer()) return;
     setBusy(true); setError(null); setNote(null);
     setProgress('MAIA is reading your book…');
+    const startedAt = Date.now();
     try {
       const out = await runEditorialPass({ manuscriptId, revisionNumber: draftRevision, sectionIds: sections.map((s) => s.draftSectionId), onProgress: setProgress, keepAsLetter: true });
-      if (!out.ok) { setError(out.message); return; }
+      if (!out.ok) {
+        /* Walk 2026-11-13: the page's connection dropped (net::ERR_NETWORK_CHANGED) while the server went on, wrote the letter and kept
+           it; the page said she could not prepare one until the writer reloaded. Before saying so, ask the server: a letter of this draft
+           kept during this attempt is the letter. */
+        const kept = await fetchLetter(manuscriptId);
+        if (kept?.letter && keptDuring(kept.letter, draftRevision, startedAt)) {
+          setPass({ draftRevision: kept.letter.draftRevision, map: kept.letter.map, letterId: kept.letter.id });
+          setDecisions(kept.decisions); setCursor(null); setError(null);
+          props.onRead?.();
+          return;
+        }
+        setError(out.message); return;
+      }
       const saved = { draftRevision, map: out.map, letterId: out.letterId };
       if (out.letterKept && out.letterKept !== 'kept') setNote(keepRefusalCopy(out.letterKept) ?? 'This letter is on this device only.');
       setDecisions(out.letterId ? {} : loadPassDecisions(manuscriptId));
