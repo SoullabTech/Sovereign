@@ -2,7 +2,12 @@
 .wsio {
   max-width: 760px;
   margin: 0 auto;
-  padding: clamp(28px, 6vw, 72px) 0;
+  /* Phone (walk 2026-11-13, the college essay path): a side gutter so text never meets the screen edge, and room at the
+     bottom so the floating Beta journey / Report a bug badges never sit on the door's buttons. */
+  padding-block: clamp(28px, 6vw, 72px) 112px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
   display: grid;
   gap: 18px;
 }
