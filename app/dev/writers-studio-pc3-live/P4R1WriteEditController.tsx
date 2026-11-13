@@ -2305,7 +2305,9 @@ export default function FlagshipWriteEditController() {
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
-    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    /* Hold the anchored passage (words the observation quotes, found verbatim, in whole paragraphs), not the reader's raw offsets,
+       which drift on long sections (founder walk 2026-11-12: the desk held other words and every edit was refused). */
+    const range = passage.holdRange ?? passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
 
     /* A Develop → Write focus handoff is one arrival act. Once the carried
@@ -2319,8 +2321,8 @@ export default function FlagshipWriteEditController() {
         arrivalInsight.readingId,
         arrivalInsight.observation.key,
         section.draftSectionId,
-        passage.range.start,
-        passage.range.end,
+        range.start,
+        range.end,
       ].join(':');
       if (focusInsightConsumed.current === key) return;
       focusInsightConsumed.current = key;

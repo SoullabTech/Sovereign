@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
-import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import { loadCanvasInsight, pickDeskPassage, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { fetchLetter, postDecision } from '@/lib/writersStudio/letter/letterClient';
 import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studio/passRunClient';
 import type { RunView } from '@/lib/writersStudio/studio/passRun';
@@ -207,12 +207,15 @@ export function EditorialLetterPanel(props: {
          Opening it elsewhere put MAIA in front of words the place was not about, and the desk rightly refused her edits (2026-11-12). */
       const primary = sectionOf(it)?.draftSectionId ?? null;
       const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
+      /* Among the evidence, prefer a passage placed by words MAIA quoted that are verbatim in that section: then the desk holds the very
+         words the place is about, and an edit of them can be admitted. */
+      const found: { ev: (typeof ordered)[number]; p: InsightPassage }[] = [];
       for (const ev of ordered) {
         const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        const verified = insight?.passages.filter((p) => p.verified && p.editable && p.range) ?? [];
-        const passage = verified.find((p) => p.sectionId === primary) ?? verified[0];
-        if (passage?.range) { props.onEditOptions({ sectionId: passage.sectionId, readingId: ev.readingId, observationKey: ev.observationKey }); return; }
+        for (const p of insight?.passages ?? []) if (p.verified && p.editable && p.range) found.push({ ev, p });
       }
+      const pick = pickDeskPassage(found, primary);
+      if (pick) { props.onEditOptions({ sectionId: pick.p.sectionId, readingId: pick.ev.readingId, observationKey: pick.ev.observationKey }); return; }
       setNote('I can’t tie this to exact words in your current draft, so I won’t propose a change from here. Open the section and select the words you mean; I’ll work with those.');
     } finally { setResolving(false); }
   };
