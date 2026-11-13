@@ -26,3 +26,10 @@ export async function postDecision(manuscriptId: string, letterId: string, place
     return body?.refusal ?? body?.error ?? `http_${res.status}`;
   } catch { return 'unreachable'; }
 }
+
+/** Pure: the kept letter's pass, when it is of this Work and this exact draft revision; otherwise null (a stale letter is not "ready"). */
+export function keptPassFor(letter: ServerLetter | null, manuscriptId: string, draftRevision: number | null): WholeManuscriptAttentionMap | null {
+  if (!letter || draftRevision === null || letter.draftRevision !== draftRevision) return null;
+  if (letter.map?.manuscriptId !== manuscriptId) return null;
+  return letter.map;
+}
