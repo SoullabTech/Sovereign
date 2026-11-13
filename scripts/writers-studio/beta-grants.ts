@@ -8,6 +8,7 @@
  *   grant          --member <uuid> --actor <uuid> (--until YYYY-MM-DD | --days N) [--cohort beta-2026] [--reason text]
  *   extend         --member <uuid> --actor <uuid> (--until YYYY-MM-DD | --days N) [--reason text]
  *   revoke         --member <uuid> --actor <uuid> [--reason text]
+ *                  Also clears that member's legacy writers_studio_beta flag, so the revoke holds in every mode.
  *   extend-cohort  --cohort <label> --actor <uuid> --until YYYY-MM-DD [--reason text]
  *                  Extends every member whose latest event is an ACTIVE grant/extend in that cohort, in one transaction.
  *   backfill-legacy --cohort <label> --actor <uuid> --until YYYY-MM-DD [--reason text]
@@ -148,8 +149,26 @@ async function main() {
           return (await tx.query(CONDITIONAL_EXTEND, [member, expiresAt, actor, reason])).rowCount ?? 0;
         });
         console.log(n ? 'written.' : 'not written: the member has no active grant ending before that date.');
+      } else if (cmd === 'revoke') {
+        // A revoke also clears the member's legacy writers_studio_beta flag in the same transaction, so the revocation
+        // survives a rollback of WS_BETA_GRANT_MODE to 'legacy' (which reads only that flag). Review on #2261, item 3.
+        const cleared = await transaction(async (tx) => {
+          await tx.query(LOCK_GRANTS, []);
+          await insertEvent((s, p) => tx.query(s, p as any[]), member, 'revoke', null, null, actor, reason);
+          const r = await tx.query(
+            `UPDATE ops_contacts
+                SET metadata = metadata || '{"writers_studio_beta": false}'::jsonb
+              WHERE member_id = $1 AND metadata @> '{"writers_studio_beta": true}'::jsonb`,
+            [member],
+          );
+          return r.rowCount ?? 0;
+        });
+        console.log(`written. Legacy beta flag cleared on ${cleared} contact row(s).`);
       } else {
-        await insertEvent((s, p) => query(s, p), member, cmd, expiresAt, cohort, actor, reason);
+        await transaction(async (tx) => {
+          await tx.query(LOCK_GRANTS, []);
+          await insertEvent((s, p) => tx.query(s, p as any[]), member, cmd, expiresAt, cohort, actor, reason);
+        });
         console.log('written.');
       }
     }
