@@ -1,4 +1,4 @@
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';

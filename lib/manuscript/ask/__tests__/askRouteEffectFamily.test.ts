@@ -98,6 +98,11 @@ describe('the developmental Ask route writes conversation and authority — neve
     ask_authorization_consumptions: 'the first durable fact that a human acted, and its completion',
     runtime_consent_state: 'the consent state the crossing was evaluated against',
     context_disclosure_receipts: 'the accountability record of a crossing',
+    /* ⚠️ GOVERNED AMENDMENT PROPOSED (MAIA reading allowance M1, founder rulings 2026-11-13 on #1800; PR review must
+       accept it explicitly). A content-free count of how much MAIA read for the member — member, act, token counts,
+       model, time. Not prose, structure, a draft, a revision or a reading; written only in WS_MAIA_METER_MODE=shadow,
+       never in Sanctuary. */
+    writers_studio_maia_usage: 'an accountability record of how much MAIA read (shadow meter) — never the Work',
   };
 
   /* ⛔ THE WORK. Named explicitly rather than left to the allowlist's silence, so

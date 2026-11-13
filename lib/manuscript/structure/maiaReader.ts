@@ -48,7 +48,7 @@
  */
 
 import { createHash } from 'crypto';
-import { runStructured } from '../../ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock, StructuredTool } from '../../ai/structured/types';
 import type {
   EditorialQuestion, EditorialSynthesis, ProposedUnitDraft, ProposedUncertainty,
