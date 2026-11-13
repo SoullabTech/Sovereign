@@ -6,7 +6,14 @@ jest.mock('server-only', () => ({}), { virtual: true });
 const beta = jest.fn();
 jest.mock('@/lib/writersStudio/betaAccessServer', () => {
   const real = jest.requireActual('@/lib/writersStudio/betaAccessServer');
-  return { ...real, writersStudioBetaAccess: (...a: unknown[]) => beta(...a) };
+  // Admission reads standing (design #2263); the same beta answer is fed through it, so these cases are unchanged.
+  const standing = async (...a: unknown[]) => {
+    const b = await beta(...a);
+    return b?.eligible
+      ? { admitted: true, plan: 'pro', basis: b.basis, ...(b.expiresAt ? { expiresAt: b.expiresAt } : {}) }
+      : { admitted: false, plan: null, basis: 'not_in_pilot' };
+  };
+  return { ...real, writersStudioBetaAccess: (...a: unknown[]) => beta(...a), writersStudioStanding: standing };
 });
 const query = jest.fn();
 jest.mock('@/lib/db/postgres', () => ({ query: (...a: unknown[]) => query(...a) }));

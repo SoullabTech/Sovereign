@@ -1,13 +1,13 @@
 /** @jest-environment node */
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import * as server from '@/lib/writersStudio/journeyServer';
 import { GET, POST } from '../route';
 import { PATCH } from '../[answerId]/route';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
-jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn() }));
+jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioStanding: jest.fn() }));
 jest.mock('@/lib/writersStudio/journeyServer', () => ({
   addJourneyAnswer: jest.fn(),
   colabShareAvailability: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock('@/lib/writersStudio/journeyServer', () => ({
 }));
 
 const auth = getMemberIdFromRequest as jest.Mock;
-const access = writersStudioBetaAccess as jest.Mock;
+const access = writersStudioStanding as jest.Mock;
 const ME = '11111111-1111-4111-8111-111111111111';
 const ANSWER = '22222222-2222-4222-8222-222222222222';
 const URL_BASE = 'http://localhost/api/sovereign/writers-studio/journey';
@@ -31,15 +31,21 @@ const patch = (body: unknown) => ({ ...json(body), method: 'PATCH' });
 beforeEach(() => {
   jest.clearAllMocks();
   auth.mockResolvedValue(ME);
-  access.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  access.mockResolvedValue({ admitted: true, plan: 'pro', basis: 'active_beta_tester' });
 });
 
 it('refuses anyone outside the Writer’s Studio pilot, and reads nothing', async () => {
-  access.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+  access.mockResolvedValue({ admitted: false, plan: null, basis: 'not_in_pilot' });
   expect((await GET(req(URL_BASE))).status).toBe(403);
   expect((await POST(req(URL_BASE, json({ promptKey: 'edit_felt_like_mine', answer: 'x' })))).status).toBe(403);
   expect(server.listOwnJourney).not.toHaveBeenCalled();
   expect(server.addJourneyAnswer).not.toHaveBeenCalled();
+});
+
+it('⭐ a writer whose beta grant ended keeps their own journey (Free standing, design #2263)', async () => {
+  access.mockResolvedValue({ admitted: true, plan: 'free', basis: 'grant_lapsed', endedAt: null });
+  expect((await GET(req(URL_BASE))).status).not.toBe(403);
+  expect(server.listOwnJourney).toHaveBeenCalled();
 });
 
 it('shows every writer’s answers only to the founder', async () => {

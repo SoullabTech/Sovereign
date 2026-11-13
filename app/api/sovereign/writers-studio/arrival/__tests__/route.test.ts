@@ -7,20 +7,20 @@ import fs from 'fs';
 import path from 'path';
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { POST } from '../route';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
-  writersStudioBetaAccess: jest.fn(),
-  // Free admission is closed by default (step B, lib/writersStudio/freeAdmission.ts): admitted = beta standing.
-  admittedToStudio: (access: { eligible: boolean }) => access.eligible,
+  writersStudioStanding: jest.fn(),
+  // Free admission is closed by default (step B, lib/writersStudio/freeAdmission.ts): admitted = standing.
+  admittedToStudio: (access: { admitted: boolean }) => access.admitted,
 }));
 jest.mock('@/lib/manuscript/ask/askReader', () => ({ askMaia: jest.fn() }));
 
 const auth = getMemberIdFromRequest as jest.Mock;
-const access = writersStudioBetaAccess as jest.Mock;
+const access = writersStudioStanding as jest.Mock;
 const ask = askMaia as jest.Mock;
 const ME = '11111111-1111-4111-8111-111111111111';
 const URL_BASE = 'http://localhost/api/sovereign/writers-studio/arrival';
@@ -31,7 +31,7 @@ const post = (body: unknown) => new NextRequest(URL_BASE, {
 beforeEach(() => {
   jest.clearAllMocks();
   auth.mockResolvedValue(ME);
-  access.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  access.mockResolvedValue({ admitted: true, plan: 'pro', basis: 'active_beta_tester' });
   ask.mockResolvedValue({
     ok: true, answer: 'I hear a garden. Am I hearing that right?', seen: 'x', seenForQuotes: 'x',
     provenance: { provider: 'anthropic', model: 'm', promptHash: 'h', askerVersion: 'v', answeredAt: 't' },
@@ -45,9 +45,15 @@ describe('F10 · pilot-gated and member-scoped', () => {
     expect(ask).not.toHaveBeenCalled();
   });
   it('refuses a member outside the Writer’s Studio pilot without asking MAIA', async () => {
-    access.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+    access.mockResolvedValue({ admitted: false, plan: null, basis: 'not_in_pilot' });
     expect((await POST(post({ answer: 'a garden' }))).status).toBe(403);
     expect(ask).not.toHaveBeenCalled();
+  });
+  it('⭐ keeps the Spark door open for a writer whose beta grant ended (Free standing, design #2263)', async () => {
+    for (const basis of ['grant_lapsed', 'grant_revoked'] as const) {
+      access.mockResolvedValue({ admitted: true, plan: 'free', basis, endedAt: '2027-11-13T00:00:00.000Z' });
+      expect((await POST(post({ answer: 'a garden' }))).status).toBe(200);
+    }
   });
 });
 

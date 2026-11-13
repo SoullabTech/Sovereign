@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { admittedToStudio, writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { admittedToStudio, writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { MAX_FIRST_PAGE_CHARS, quotesVerified } from '@/lib/writersStudio/inspirationOpening';
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: privateHeaders });
-  const access = await writersStudioBetaAccess(memberId);
+  const access = await writersStudioStanding(memberId);
   if (!admittedToStudio(access)) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
 
   let raw: unknown;
