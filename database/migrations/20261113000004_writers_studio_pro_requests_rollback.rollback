@@ -1,0 +1,5 @@
+-- Rollback for writers_studio_pro_requests (step C4). Export open requests first if any are unanswered.
+BEGIN;
+DROP INDEX IF EXISTS uq_writers_studio_pro_requests_open;
+DROP TABLE IF EXISTS writers_studio_pro_requests;
+COMMIT;

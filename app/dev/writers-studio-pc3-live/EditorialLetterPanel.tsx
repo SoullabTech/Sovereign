@@ -26,6 +26,7 @@ import { cancelPassRun, fetchRun, startPassRun } from '@/lib/writersStudio/studi
 import type { RunView } from '@/lib/writersStudio/studio/passRun';
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
+import { ProMention } from '@/app/writers-studio/ProMention';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
   inBookOrder, primarySectionId, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
@@ -314,7 +315,7 @@ export function EditorialLetterPanel(props: {
               ? 'I’ve read your book. My letter isn’t ready yet.'
               : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
         </p>
-        {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}>{error}</p> : null}
+        {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}><ProMention message={error} /></p> : null}
         {runEnded}
         {draftRevision !== null ? <button type="button" data-letter-read="true" className="p4r1-talk" onClick={() => void read()} style={{ marginTop: 8 }}>Read my book</button> : null}
       </section>
@@ -366,7 +367,7 @@ export function EditorialLetterPanel(props: {
           You’ve changed the book since I read it. <button type="button" onClick={() => void read()} style={quiet}>Read it again</button>
         </p>
       ) : null}
-      {error ? <p role="alert" style={{ margin: 0, fontSize: 12 }}>{error}</p> : null}
+      {error ? <p role="alert" style={{ margin: 0, fontSize: 12 }}><ProMention message={error} /></p> : null}
       {note ? <p role="note" data-letter-note="true" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
       {pass.map.opening ? (
         <div data-letter-opening="true" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
