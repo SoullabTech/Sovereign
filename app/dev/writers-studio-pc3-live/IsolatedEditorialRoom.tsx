@@ -55,6 +55,11 @@ type Props = {
   /** Pause MAIA's revisions for this passage: she keeps talking, offers no new wording. */
   revisionsPaused?: boolean;
   onPauseRevisions?: (paused: boolean) => void;
+  /** The writer's own Work-wide "MAIA asks, never rewrites" (server-enforced). */
+  workRevisionsPaused?: boolean;
+  onPauseWorkRevisions?: (paused: boolean) => void;
+  workPauseSaving?: boolean;
+  workPauseError?: string | null;
   children: ReactNode;
   /** Conversation Stage: one wide conversation; the panel pins the passage itself. */
   stage?: boolean;
@@ -159,6 +164,10 @@ export default function IsolatedEditorialRoom({
   onAskWhereNext,
   revisionsPaused,
   onPauseRevisions,
+  workRevisionsPaused,
+  onPauseWorkRevisions,
+  workPauseSaving,
+  workPauseError,
   children,
   stage = false,
 }: Props) {
@@ -460,6 +469,21 @@ export default function IsolatedEditorialRoom({
                   />
                   <span><b>Allow paragraph-removal proposals</b><small>Separate permission; never implied by the slider.</small></span>
                 </label>
+                {onPauseWorkRevisions ? (
+                  <label className="p4r1-working-style-check" data-pause-work-revisions>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(workRevisionsPaused)}
+                      disabled={busy || workPauseSaving}
+                      onChange={(event) => onPauseWorkRevisions(event.target.checked)}
+                    />
+                    <span>
+                      <b>MAIA asks, never rewrites</b>
+                      <small>For this whole Work: MAIA reflects and asks questions but never offers new wording. Every sentence stays yours. Good for a college essay.</small>
+                      {workPauseError ? <small role="alert">{workPauseError}</small> : null}
+                    </span>
+                  </label>
+                ) : null}
                 {onPauseRevisions ? (
                   <label className="p4r1-working-style-check" data-pause-revisions>
                     <input
