@@ -19,9 +19,10 @@ then was refused by this gate before any mutation. This plan is the lawful route
 
 The harness supplies the deployment target. The target must contain this plan and the five migrations
 below. The gate reads the plan from the target commit, so the target is the canonical merge commit of
-PR #2271, which adds this plan. It must differ from its own first parent only by this documentation file,
-and that first parent must add no migration beyond the five below. Canonical moves often, so no fixed
-base is named here. The
+the PR that adds the **Revision 2** section below. That PR also carries the F2 erasure fix. The target
+must differ from its own first parent only by this file, `app/api/members/delete-account/route.ts` and
+its test `app/api/members/delete-account/__tests__/route.test.ts`, and that first parent must add no
+migration beyond the five below. Canonical moves often, so no fixed base is named here. The
 reviewer establishes the exact relation from immutable git bytes where it can, and otherwise says so.
 Any movement after review invalidates applicability.
 
@@ -185,6 +186,43 @@ files, but it does not count as coverage.
 - **#2260, #2261, #2264, #2268:** CI green on merge.
 
 None of this was an independent review of the migration act. This review covers the migration act only.
+
+## Revision 2: dispositions of the first review (founder, 2026-11-13)
+
+The first independent review was bound to Revision 1 of this plan at `3e4f163106` (plan sha256
+`b8df4b47…`, reviewer session `467fc299-e689-48aa-bff3-84a7f3fab770`). It returned
+APPROVED · COMPATIBLE · ALL_PREFIXES_COMPATIBLE with 2 medium and 4 low findings. Review Custody refused
+admission (`MATERIAL_UNDER_APPROVED`). The founder ruled "Accept, re-review" and "and fix", and dispositioned
+the findings as follows:
+
+- **F1 (medium): accepted, with a rollback rule.** An image rollback to a reader older than #2267 does
+  not enforce `living_works.maia_revisions_paused`, so a Work set to "MAIA asks, never rewrites" would
+  silently receive wording proposals again. This cannot be fixed in the old reader. **Rule:** any rollback
+  past this deploy must be preceded by telling every writer whose Work has the setting on; at deploy time
+  that is at most one writer, in the College Essay controlled beta. Any rollback also follows PR #2267's
+  stated order: code first, then column.
+- **F2 (medium): fixed in this target.** On account erasure, `app/api/members/delete-account/route.ts` now
+  deletes, in a savepoint before the member row, the member's `studio_doorway_redemptions` row and every
+  `studio_doorway_invitations` row whose `email_sha256` equals the hash of the member's email and which no
+  other member has redeemed. **Accepted residual:** the email hash stays unsalted, and spent or expired
+  invitations are not otherwise purged; both are recorded follow-ups for the doorway lane.
+- **F3–F6 (low): noted, no change.**
+  - F3: invitation sign-up skips `/begin`, per founder rulings R1/R2 of 2026-11-12.
+  - F4: the founder's session runs `scripts/verify-constitution-colab.ts` and requires 0 failed before any
+    invitation is issued, whatever the deploy's smoke step logs.
+  - F5: `WS_BETA_GRANT_MODE` stays `legacy`. No grant-bearing invitation is issued while #1938 Gate 4 holds.
+    The beta invitee is admitted through the existing roster.
+  - F6: the 5-second lock wait is accepted; a timeout fails safe, before the swap.
+
+Additional independent review question for Revision 2:
+
+10. **F2 fix.** Read target `app/api/members/delete-account/route.ts` and judge:
+    - whether the new cleanup can block or abort an otherwise valid erasure;
+    - whether it can delete an invitation another member redeemed;
+    - whether it runs before `DELETE FROM members`.
+
+The re-review must re-read everything listed under Minimum physical Reads; the target
+`app/api/members/delete-account/route.ts` is already on that list.
 
 ## Closing condition
 
