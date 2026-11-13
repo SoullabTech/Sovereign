@@ -27,7 +27,7 @@ jest.mock('@/lib/writersStudio/studio/editorialPassRunner', () => ({
 }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-import { EditorialLetterPanel } from '@/app/dev/writers-studio-pc3-live/EditorialLetterPanel';
+import { keptDuring, EditorialLetterPanel } from '@/app/dev/writers-studio-pc3-live/EditorialLetterPanel';
 import { savePass, loadPassDecisions } from '@/lib/writersStudio/studio/editorialPassRunner';
 
 const sections = [
@@ -229,6 +229,21 @@ describe('step 2: the letter and decisions are kept on the server', () => {
     await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
     expect(runPass.mock.calls[0][0]).toMatchObject({ keepAsLetter: true });
   });
+  it('⭐ MUST FAIL IF a dropped connection hides a letter the server kept (walk 2026-11-13, net::ERR_NETWORK_CHANGED)', async () => {
+    runPass.mockResolvedValue({ ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now.' });
+    await mount();
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, createdAt: new Date().toISOString() }, decisions: {} });
+    await act(async () => { q('[data-letter-read]')!.click(); for (let i = 0; i < 6; i += 1) await Promise.resolve(); });
+    expect(host.textContent).not.toContain('could not prepare');
+    expect(host.textContent).toContain('I found 2 places');
+  });
+  it('a failure with no letter kept during this attempt still says so', async () => {
+    runPass.mockResolvedValue({ ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now.' });
+    await mount();
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, createdAt: '2026-01-01T00:00:00Z' }, decisions: {} });
+    await act(async () => { q('[data-letter-read]')!.click(); for (let i = 0; i < 6; i += 1) await Promise.resolve(); });
+    expect(host.textContent).toContain('could not prepare');
+  });
 });
 
 
@@ -304,5 +319,15 @@ describe('a letter that could not be gathered (EA walk 2026-11-12)', () => {
     expect(host.textContent).toContain('I read all 9 lenses of your book, but I couldn’t gather them into a letter');
     expect(host.textContent).not.toContain('I couldn’t finish the');
     expect(q('[data-letter-continue]')?.textContent).toBe('Try the letter again');
+  });
+});
+
+describe('keptDuring', () => {
+  it('only a letter of this draft, kept after the attempt began', () => {
+    const t = Date.parse('2026-11-13T00:54:00Z');
+    expect(keptDuring({ draftRevision: 5, createdAt: '2026-11-13T00:55:10Z' }, 5, t)).toBe(true);
+    expect(keptDuring({ draftRevision: 4, createdAt: '2026-11-13T00:55:10Z' }, 5, t)).toBe(false);
+    expect(keptDuring({ draftRevision: 5, createdAt: '2026-11-12T23:00:00Z' }, 5, t)).toBe(false);
+    expect(keptDuring({ draftRevision: 5, createdAt: 'now' }, 5, t)).toBe(false);
   });
 });
