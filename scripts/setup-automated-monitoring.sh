@@ -23,6 +23,22 @@ chmod +x "$MONITOR_SCRIPT"
 chmod +x "$SCRIPTS_DIR/emergency-cleanup.sh"
 chmod +x "$SCRIPTS_DIR/manage-dev-processes.sh"
 
+# Preflight: refuse to install a job that cannot run.
+#
+# The installed health plist was found on 2026-11-13 pointing at
+# scripts/jarvis-storage-observer-s4s6-v1.py, a file that has never existed in
+# this repository. It failed on every run with exit 2 and nothing reported it,
+# so the machine went unmonitored for weeks while disk emergencies were handled
+# by hand. A scheduled job that cannot run is worse than no job: it looks like
+# coverage. Verify the targets exist before writing any plist.
+for required in "$MONITOR_SCRIPT" "$SCRIPTS_DIR/checkout-lifecycle.sh"; do
+    if [ ! -x "$required" ]; then
+        echo "REFUSING TO INSTALL: $required is missing or not executable." >&2
+        echo "Fix that first — a job pointing at a missing file fails silently forever." >&2
+        exit 1
+    fi
+done
+
 # Create launchd directory if it doesn't exist
 mkdir -p ~/Library/LaunchAgents
 
@@ -94,8 +110,21 @@ EOF
 
 # Load the LaunchAgents
 echo -e "${BLUE}Loading automated monitoring services...${NC}"
-launchctl load ~/Library/LaunchAgents/com.soullab.maia.storage.health.plist
-launchctl load ~/Library/LaunchAgents/com.soullab.maia.storage.cleanup.plist
+launchctl unload ~/Library/LaunchAgents/com.soullab.maia.storage.health.plist 2>/dev/null || true
+launchctl unload ~/Library/LaunchAgents/com.soullab.maia.storage.cleanup.plist 2>/dev/null || true
+launchctl load -w ~/Library/LaunchAgents/com.soullab.maia.storage.health.plist
+launchctl load -w ~/Library/LaunchAgents/com.soullab.maia.storage.cleanup.plist
+
+# Confirm both are actually registered. The cleanup job was found unloaded on
+# 2026-11-13 despite its plist being present, so "the file exists" is not
+# evidence that anything is scheduled.
+for label in com.soullab.maia.storage.health com.soullab.maia.storage.cleanup; do
+    if launchctl list "$label" >/dev/null 2>&1; then
+        echo "  registered: $label"
+    else
+        echo "  NOT REGISTERED: $label — plist written but launchd did not accept it" >&2
+    fi
+done
 
 # Create logs directory
 mkdir -p /Users/soullab/MAIA-SOVEREIGN/logs
