@@ -175,3 +175,50 @@ describe('an invitation that carries a Writer\'s Studio beta grant (founder choi
   });
 });
 
+
+describe('an invitation that carries Writer\'s Studio access (ledger #1938, 2026-11-13)', () => {
+  const ISSUER = '11111111-1111-4111-8111-111111111111';
+  function tx(claim: Record<string, unknown>) {
+    txQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7, beta_grant_until: null, ...claim }] };
+      if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+      if (sql.includes('FROM members WHERE id = $1 FOR UPDATE')) return { rows: [{ id: 'm1', name: 'Ada', username: 'ada', email: 'ada@example.com', tier: 'free', roles: ['member'], admin_role: null }] };
+      if (sql.includes('INSERT INTO ops_contacts')) return { rows: [{ id: 'c1' }] };
+      return { rows: [] };
+    });
+  }
+  const sqls = () => txQuery.mock.calls.map(([s]) => String(s));
+
+  it('⭐ adds the new member to the Writer\'s Studio roster and audits it as the issuer, in the sign-up transaction', async () => {
+    tx({ issuer_member_id: ISSUER, grants_writers_studio: true });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(200);
+    const all = sqls();
+    const member = all.findIndex(s => s.includes('INSERT INTO members'));
+    const roster = all.findIndex(s => s.includes('INSERT INTO ops_contacts'));
+    const audit = all.findIndex(s => s.includes('INSERT INTO audit_logs'));
+    expect(member).toBeGreaterThanOrEqual(0);
+    expect(roster).toBeGreaterThan(member);
+    expect(audit).toBeGreaterThan(roster);
+    expect(all[roster]).toContain('"writers_studio_beta": true');
+    const auditParams = txQuery.mock.calls[audit][1] as unknown[];
+    expect(auditParams[0]).toBe(ISSUER);          // actor = the founder/CTO who issued it
+    expect(auditParams[2]).toBe('m1');            // target = the new member
+  });
+
+  it('NEGATIVE: an ordinary invitation adds no roster row and no audit record', async () => {
+    tx({ issuer_member_id: null, grants_writers_studio: false });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(200);
+    expect(sqls().some(s => s.includes('INSERT INTO ops_contacts'))).toBe(false);
+    expect(sqls().some(s => s.includes('INSERT INTO audit_logs'))).toBe(false);
+  });
+
+  it('NEGATIVE: a studio-access invitation without an issuer aborts the sign-up, so no session is opened', async () => {
+    tx({ issuer_member_id: null, grants_writers_studio: true });
+    const res = await register(post('/api/doorway/register', good));
+    expect(res.status).toBe(500);
+    expect(sqls().some(s => s.includes('INSERT INTO ops_contacts'))).toBe(false);
+    expect(createSession).not.toHaveBeenCalled();
+  });
+});
