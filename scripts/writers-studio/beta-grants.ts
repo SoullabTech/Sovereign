@@ -8,6 +8,7 @@
  *   grant          --member <uuid> --actor <uuid> (--until YYYY-MM-DD | --days N) [--cohort beta-2026] [--reason text]
  *   extend         --member <uuid> --actor <uuid> (--until YYYY-MM-DD | --days N) [--reason text]
  *   revoke         --member <uuid> --actor <uuid> [--reason text]
+ *                  Also clears that member's legacy writers_studio_beta flag, so the revoke holds in every mode.
  *   extend-cohort  --cohort <label> --actor <uuid> --until YYYY-MM-DD [--reason text]
  *                  Extends every member whose latest event is an ACTIVE grant/extend in that cohort, in one transaction.
  *   backfill-legacy --cohort <label> --actor <uuid> --until YYYY-MM-DD [--reason text]
@@ -34,6 +35,37 @@ function fail(msg: string): never {
   console.error(msg);
   process.exit(2);
 }
+
+/**
+ * The actor must be a founder/CTO member (members.admin_role). A well-formed UUID is not authority by itself
+ * (review on #2261). This is a check on the record, not a substitute for the founder's go-ahead to run the tool.
+ */
+async function requireOwnerActor(actor: string): Promise<void> {
+  const r = await query(`SELECT 1 FROM members WHERE id = $1 AND admin_role IN ('founder','cto')`, [actor]);
+  if (r.rows.length !== 1) fail('--actor must be the member id of a founder or CTO');
+}
+
+/** Serialises grant writers so a decision made inside the transaction cannot be overtaken by a concurrent revoke. */
+const LOCK_GRANTS = `LOCK TABLE writers_studio_beta_grant_events IN SHARE ROW EXCLUSIVE MODE`;
+
+/** Appends an 'extend' only if, at write time, the member's latest event is still an active grant/extend that ends
+ *  before the new date. Re-checked inside the locked transaction, so a revoke committed meanwhile always stands. */
+const CONDITIONAL_EXTEND = `
+  INSERT INTO writers_studio_beta_grant_events (member_id, action, expires_at, cohort, actor_member_id, reason)
+  SELECT $1, 'extend', $2, NULL, $3, $4
+   WHERE EXISTS (
+     SELECT 1 FROM (
+       SELECT action, expires_at FROM writers_studio_beta_grant_events
+        WHERE member_id = $1 ORDER BY id DESC LIMIT 1
+     ) latest
+      WHERE latest.action IN ('grant','extend') AND latest.expires_at > now() AND latest.expires_at < $2
+   )`;
+
+/** Appends a backfill 'grant' only if, at write time, the member still has no dated-grant history at all. */
+const CONDITIONAL_BACKFILL = `
+  INSERT INTO writers_studio_beta_grant_events (member_id, action, expires_at, cohort, actor_member_id, reason)
+  SELECT $1, 'grant', $2, $3, $4, $5
+   WHERE NOT EXISTS (SELECT 1 FROM writers_studio_beta_grant_events WHERE member_id = $1)`;
 
 function uuidArg(name: string): string {
   const v = arg(name);
@@ -103,6 +135,7 @@ async function main() {
   if (cmd === 'grant' || cmd === 'extend' || cmd === 'revoke') {
     const member = uuidArg('member');
     const actor = uuidArg('actor');
+    await requireOwnerActor(actor);
     const reason = reasonArg();
     const expiresAt = cmd === 'revoke' ? null : expiryArg();
     const cohort = cmd === 'grant' ? cohortArg(false) : null;
@@ -110,8 +143,34 @@ async function main() {
     if (exists.rows.length !== 1) fail('No member with that id');
     console.log(`${mode}: ${cmd} ${member}${expiresAt ? ` until ${expiresAt.toISOString()}` : ''}${cohort ? ` cohort ${cohort}` : ''}`);
     if (apply) {
-      await insertEvent((s, p) => query(s, p), member, cmd, expiresAt, cohort, actor, reason);
-      console.log('written.');
+      if (cmd === 'extend') {
+        const n = await transaction(async (tx) => {
+          await tx.query(LOCK_GRANTS, []);
+          return (await tx.query(CONDITIONAL_EXTEND, [member, expiresAt, actor, reason])).rowCount ?? 0;
+        });
+        console.log(n ? 'written.' : 'not written: the member has no active grant ending before that date.');
+      } else if (cmd === 'revoke') {
+        // A revoke also clears the member's legacy writers_studio_beta flag in the same transaction, so the revocation
+        // survives a rollback of WS_BETA_GRANT_MODE to 'legacy' (which reads only that flag). Review on #2261, item 3.
+        const cleared = await transaction(async (tx) => {
+          await tx.query(LOCK_GRANTS, []);
+          await insertEvent((s, p) => tx.query(s, p as any[]), member, 'revoke', null, null, actor, reason);
+          const r = await tx.query(
+            `UPDATE ops_contacts
+                SET metadata = metadata || '{"writers_studio_beta": false}'::jsonb
+              WHERE member_id = $1 AND metadata @> '{"writers_studio_beta": true}'::jsonb`,
+            [member],
+          );
+          return r.rowCount ?? 0;
+        });
+        console.log(`written. Legacy beta flag cleared on ${cleared} contact row(s).`);
+      } else {
+        await transaction(async (tx) => {
+          await tx.query(LOCK_GRANTS, []);
+          await insertEvent((s, p) => tx.query(s, p as any[]), member, cmd, expiresAt, cohort, actor, reason);
+        });
+        console.log('written.');
+      }
     }
     return;
   }
@@ -119,6 +178,7 @@ async function main() {
   if (cmd === 'extend-cohort') {
     const cohort = cohortArg(true)!;
     const actor = uuidArg('actor');
+    await requireOwnerActor(actor);
     const reason = reasonArg();
     const expiresAt = expiryArg(false);
     const r = await query<{ member_id: string; action: string; expires_at: Date | null; cohort: string | null }>(
@@ -134,10 +194,13 @@ async function main() {
       && x.expires_at.getTime() < expiresAt.getTime());
     console.log(`${mode}: extend ${targets.length} active member(s) in cohort ${cohort} to ${expiresAt.toISOString()}`);
     if (apply && targets.length) {
-      await transaction(async (tx) => {
-        for (const t of targets) await insertEvent((s, p) => tx.query(s, p as any[]), t.member_id, 'extend', expiresAt, null, actor, reason);
+      const written = await transaction(async (tx) => {
+        await tx.query(LOCK_GRANTS, []);
+        let n = 0;
+        for (const t of targets) n += (await tx.query(CONDITIONAL_EXTEND, [t.member_id, expiresAt, actor, reason])).rowCount ?? 0;
+        return n;
       });
-      console.log('written.');
+      console.log(`written: ${written} extended (${targets.length - written} skipped — changed since the plan was made, e.g. revoked).`);
     }
     return;
   }
@@ -145,6 +208,7 @@ async function main() {
   if (cmd === 'backfill-legacy') {
     const cohort = cohortArg(true)!;
     const actor = uuidArg('actor');
+    await requireOwnerActor(actor);
     const reason = reasonArg() ?? 'Dated grant for existing beta tester (founder ruling 2026-11-13: year starts when grants ship)';
     const expiresAt = expiryArg(false);
     const r = await query<{ member_id: string }>(
@@ -162,10 +226,13 @@ async function main() {
           )`, []);
     console.log(`${mode}: grant ${r.rows.length} current legacy tester(s) cohort ${cohort} until ${expiresAt.toISOString()}`);
     if (apply && r.rows.length) {
-      await transaction(async (tx) => {
-        for (const t of r.rows) await insertEvent((s, p) => tx.query(s, p as any[]), t.member_id, 'grant', expiresAt, cohort, actor, reason);
+      const written = await transaction(async (tx) => {
+        await tx.query(LOCK_GRANTS, []);
+        let n = 0;
+        for (const t of r.rows) n += (await tx.query(CONDITIONAL_BACKFILL, [t.member_id, expiresAt, cohort, actor, reason])).rowCount ?? 0;
+        return n;
       });
-      console.log('written.');
+      console.log(`written: ${written} granted (${r.rows.length - written} skipped — gained grant history since the plan was made).`);
     }
     return;
   }
