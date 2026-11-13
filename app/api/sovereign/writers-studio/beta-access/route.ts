@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { admittedToStudio, writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { writerPublicReleaseCapabilities } from '@/lib/writersStudio/releaseAuthority';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
     }
     const access = await writersStudioBetaAccess(memberId);
     return NextResponse.json(
-      { ...access, capabilities: writerPublicReleaseCapabilities() },
+      // `eligible` = beta/Pro standing (unchanged). `admitted` = may use the Studio (beta, or Free while Free admission
+      // is open). Release capabilities (export, erasure, intake) are author rights, not Pro, so admitted Free writers get
+      // them too (founder principle 2026-11-13: export never depends on Pro).
+      { ...access, admitted: admittedToStudio(access), capabilities: writerPublicReleaseCapabilities() },
       { headers: privateHeaders },
     );
   } catch {

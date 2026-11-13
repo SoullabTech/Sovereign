@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, type DragEvent } from 'react';
+import { ProMention } from '@/app/writers-studio/ProMention';
 import { apiFetch } from '@/lib/http/apiBase';
 import { writeLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
 import {
@@ -518,7 +519,7 @@ export default function P4R1ImportManuscript({
               </p>
             </div>
           ) : null}
-          {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}
+          {error ? <p className="p4r1-import-error" role="alert"><ProMention message={error} /></p> : null}
 
           <footer className="p4r1-import-actions">
             <p>
@@ -595,7 +596,7 @@ export default function P4R1ImportManuscript({
             ))}
           </div>
 
-          {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}
+          {error ? <p className="p4r1-import-error" role="alert"><ProMention message={error} /></p> : null}
           {custodyNotice ? <p className="p4r1-import-error" role="alert" data-custody-notice>{custodyNotice}</p> : null}
           <footer className="p4r1-import-actions">
             <p>
