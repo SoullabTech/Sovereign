@@ -18,8 +18,10 @@ then was refused by this gate before any mutation. This plan is the lawful route
 ## Exact target relation
 
 The harness supplies the deployment target. The target must contain this plan and the five migrations
-below. The gate reads the plan from the target commit, so the target is the canonical merge that adds
-this plan on top of `1645d041c9`. It must differ from `1645d041c9` only by this documentation file. The
+below. The gate reads the plan from the target commit, so the target is the canonical merge commit of
+PR #2271, which adds this plan. It must differ from its own first parent only by this documentation file,
+and that first parent must add no migration beyond the five below. Canonical moves often, so no fixed
+base is named here. The
 reviewer establishes the exact relation from immutable git bytes where it can, and otherwise says so.
 Any movement after review invalidates applicability.
 
