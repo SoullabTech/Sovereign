@@ -101,3 +101,49 @@ test('verifies stored heading bytes and translates exact Unicode offsets to the 
   p.reading.observations[0].evidenceRefs = [{ kind: 'passage', sectionId: 's0', range: { start: 0, end } }];
   expect((await buildCanvasInsight('m1', p, [row], 'o1', digest))?.passages[0]).toMatchObject({ verified: false, range: null });
 });
+
+/* Founder walk 2026-11-12: the "embedded URL" place cited a range ~660 code points before the URL, the desk held other words (mid-word),
+   and every edit MAIA proposed was refused as quote_not_in_text. */
+import { anchorHeldRange, quotedWords, pickDeskPassage } from '../insightCanvas';
+describe('the desk holds the words the observation is about', () => {
+  const body = 'First paragraph about wisdom and all creativity.\n\nThe children splash abouthttps://example.org/x?m=1 in the streams 😀.\n\nLast paragraph.';
+  const points = (s: string) => Array.from(s).length;
+  const slice = (r: { start: number; end: number }) => Array.from(body).slice(r.start, r.end).join('');
+  it('quoted words, split at an ellipsis, become anchors', () => {
+    expect(quotedWords('A web address is fused: "splash abouthttps://example.org/x?m=... in the streams." Also “short”.')).toEqual(['splash abouthttps://example.org/x?m=', 'in the streams']);
+  });
+  it('⭐ MUST FAIL IF a drifted cited range is held instead of the quoted words', () => {
+    const drifted = { start: 6, end: 30 }; // inside the first paragraph, mid-word
+    const held = anchorHeldRange(body, drifted, ['splash abouthttps://example.org/x?m=']);
+    expect(held.by).toBe('quoted_words');
+    expect(slice(held.range)).toBe('The children splash abouthttps://example.org/x?m=1 in the streams 😀.');
+  });
+  it('⭐ MUST FAIL IF a held passage begins or ends inside a word when no quoted words are found', () => {
+    const held = anchorHeldRange(body, { start: 6, end: 30 }, ['words that are not in the text']);
+    expect(held.by).toBe('cited_range');
+    expect(slice(held.range)).toBe('First paragraph about wisdom and all creativity.');
+  });
+  it('the occurrence nearest the cited range wins, and offsets are code points', () => {
+    const twice = 'Echo line here now.\n\n😀 middle.\n\nEcho line here now.';
+    const near = anchorHeldRange(twice, { start: points(twice) - 3, end: points(twice) }, ['Echo line here now']);
+    expect(near.range).toEqual({ start: points('Echo line here now.\n\n😀 middle.\n\n'), end: points(twice) });
+  });
+  it('the reader’s evidence range itself is unchanged; holdRange is separate', async () => {
+    const out = await buildCanvasInsight('m1', payload(), sections, 'o1', digest);
+    expect(out?.passages[0].range).toEqual({ start: 19, end: 24 });
+    expect(out?.passages[0].heldBy).toBe('cited_range');
+    expect(out?.passages[1]).toMatchObject({ range: null, holdRange: null, heldBy: null });
+  });
+  it('Show me options opens on the place’s own section, quoted words first', () => {
+    const a = { p: { sectionId: 'other', heldBy: 'quoted_words' as const } };
+    const b = { p: { sectionId: 'mine', heldBy: 'cited_range' as const } };
+    const c = { p: { sectionId: 'mine', heldBy: 'quoted_words' as const } };
+    expect(pickDeskPassage([a, b, c], 'mine')).toBe(c);
+    expect(pickDeskPassage([a, b], 'mine')).toBe(b);
+    expect(pickDeskPassage([], 'mine')).toBeNull();
+  });
+  it('the Write arrival holds holdRange, not the raw range', () => {
+    const src = require('fs').readFileSync(require('path').join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx'), 'utf8');
+    expect(src).toMatch(/const range = passage\.holdRange \?\? passage\.range \?\?/);
+  });
+});
