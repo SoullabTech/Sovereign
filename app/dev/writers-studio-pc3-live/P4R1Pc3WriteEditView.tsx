@@ -94,6 +94,8 @@ export type P4R1Pc3WriteEditViewProps = {
   };
   /** the writer chose "Show me options" on a place in MAIA's letter: open the passage desk on those exact, verified words */
   onOpenPassIssue?: (target: PassIssueTarget) => void;
+  /** "Show me where" on a place in the letter: hold and mark its words in the centre */
+  onShowPassIssue?: (target: PassIssueTarget) => void;
   writing: SectionWriting;
   work: LivingWork | null;
   appearance: Appearance;
@@ -1269,6 +1271,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               draftRevision={props.context.draftRevision ?? null}
               onShowSection={go}
               onEditOptions={(target) => props.onOpenPassIssue?.(target)}
+              onShowPassage={props.onShowPassIssue ? (target) => props.onShowPassIssue!(target) : undefined}
               onTalk={(words) => openWorkConversation(words)}
               onRead={() => setCoverageEpoch((n) => n + 1)}
             />
