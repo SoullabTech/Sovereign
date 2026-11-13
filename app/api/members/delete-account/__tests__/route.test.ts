@@ -192,3 +192,52 @@ describe('the caller no longer sends an account identifier', () => {
     expect(call).not.toMatch(/memberId/);
   });
 });
+
+describe('doorway invitations do not outlive the member (2026-11-13 migration review F2)', () => {
+  function txWithEmail(email: string | null, failOn?: RegExp) {
+    const calls: Array<{ sql: string; params: unknown[] }> = [];
+    mockTx.mockImplementation(async (cb: never) => {
+      const tx = { query: async (sql: string, params: unknown[] = []) => {
+        calls.push({ sql, params });
+        if (failOn && failOn.test(sql)) throw new Error('relation does not exist');
+        if (/SELECT email FROM members/.test(sql)) return { rows: [{ email }] };
+        return { rows: [] };
+      } };
+      return (cb as unknown as (c: unknown) => Promise<unknown>)(tx);
+    });
+    return calls;
+  }
+
+  it('removes the redemption and invitations issued to the member email hash, before the member row', async () => {
+    mockResolve.mockResolvedValue(ME);
+    const calls = txWithEmail('Liam@Example.com ');
+    const res = await POST(req({ confirmUsername: 'my-name' }));
+    expect(res.status).toBe(200);
+    const redemption = calls.findIndex(c => /DELETE FROM studio_doorway_redemptions WHERE member_id/.test(c.sql));
+    const invitation = calls.findIndex(c => /DELETE FROM studio_doorway_invitations/.test(c.sql));
+    const member = calls.findIndex(c => /DELETE FROM members/.test(c.sql));
+    expect(redemption).toBeGreaterThanOrEqual(0);
+    expect(redemption).toBeLessThan(invitation);
+    expect(invitation).toBeLessThan(member);
+    const { hashInvitedEmail } = jest.requireActual('@/lib/studios/doorwayInvitations');
+    expect(calls[invitation].params).toEqual([hashInvitedEmail('liam@example.com')]);
+    // Only invitations nobody else redeemed may go (the FK to redemptions is RESTRICT).
+    expect(calls[invitation].sql).toMatch(/NOT EXISTS \(SELECT 1 FROM studio_doorway_redemptions/);
+  });
+
+  it('NEGATIVE: missing doorway tables never abort the erasure', async () => {
+    mockResolve.mockResolvedValue(ME);
+    const calls = txWithEmail('liam@example.com', /studio_doorway_redemptions WHERE member_id/);
+    const res = await POST(req({ confirmUsername: 'my-name' }));
+    expect(res.status).toBe(200);
+    expect(calls.some(c => /ROLLBACK TO SAVEPOINT doorway_cleanup/.test(c.sql))).toBe(true);
+    expect(calls.some(c => /DELETE FROM members/.test(c.sql))).toBe(true);
+  });
+
+  it('a member with no email deletes no invitation', async () => {
+    mockResolve.mockResolvedValue(ME);
+    const calls = txWithEmail(null);
+    await POST(req({ confirmUsername: 'my-name' }));
+    expect(calls.some(c => /DELETE FROM studio_doorway_invitations/.test(c.sql))).toBe(false);
+  });
+});

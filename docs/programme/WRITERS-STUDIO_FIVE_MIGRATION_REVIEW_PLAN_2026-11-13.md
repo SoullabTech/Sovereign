@@ -1,4 +1,4 @@
-# Writer's Studio deploy 2026-11-13: review plan for the exact five pending migrations
+# Writer's Studio deploy 2026-11-13: review plan for the exact six pending migrations
 
 **Date:** 2026-11-13
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN. NO DEPLOYMENT AUTHORITY BY ITSELF.
@@ -9,7 +9,8 @@ the bundle, and the deploy lane re-witnesses it immediately before mutation.
 **Founder authorization:**
 - Ledger #1938, 2026-11-13 (College Essay controlled beta): Liam Kane's Writer's Studio access and the
   doorway invitation; PR #2267 (Work-wide "MAIA asks, never rewrites").
-- In session the same day: "Deploy all 10", then "Yes, all five" for this exact five-migration pending set,
+- In session the same day: "Deploy all 10", then "Yes, all five" for the first five migrations, then "Yes, include it" for the sixth
+  (#2273, Writer's Studio MAIA usage meter); together, this exact six-migration pending set,
   which includes two migrations from the Writer's Studio Free lane (#2264/#2268).
 
 The first deploy attempt (`deploy-production.sh deploy 5574be88fa`) built and verified image provenance,
@@ -17,11 +18,12 @@ then was refused by this gate before any mutation. This plan is the lawful route
 
 ## Exact target relation
 
-The harness supplies the deployment target. The target must contain this plan and the five migrations
+The harness supplies the deployment target. The target must contain this plan and the six migrations
 below. The gate reads the plan from the target commit, so the target is the canonical merge commit of
-PR #2271, which adds this plan. It must differ from its own first parent only by this documentation file,
-and that first parent must add no migration beyond the five below. Canonical moves often, so no fixed
-base is named here. The
+the PR that adds the **Revision 2** section below. That PR also carries the F2 erasure fix. The target
+must differ from its own first parent only by this file, `app/api/members/delete-account/route.ts` and
+its test `app/api/members/delete-account/__tests__/route.test.ts`, and that first parent must add no
+migration beyond the six below. Canonical moves often, so no fixed base is named here. The
 reviewer establishes the exact relation from immutable git bytes where it can, and otherwise says so.
 Any movement after review invalidates applicability.
 
@@ -39,11 +41,13 @@ In filename order, which is the order `scripts/run-sql-migrations.sh` applies:
    sha256 `8dd410e08b9e2b25f2778c548d709b36e1e794e089f6d4b5fffd843c82b3fa2e`
 5. `database/migrations/20261113000004_writers_studio_pro_requests.sql`
    sha256 `3b0a39c994c39598c56e56975ddc54ef6c026d3a798709c0ad72cc2daa831d23`
+6. `database/migrations/20261113000005_writers_studio_maia_usage.sql`
+   sha256 `06aa409d767544c2391754dce994ef48e1342adb96843e3f7e79a7a24d4e0d36`
 
 Items 3 and 4 share the prefix `20261113000003`. The reviewer confirms that filename order is
 deterministic and matches the order above, and that neither migration depends on the other.
 
-Each of the five has a sibling `*_rollback.rollback` file in `database/migrations/`. Each file carries
+Each of the six has a sibling `*_rollback.rollback` file in `database/migrations/`. Each file carries
 its own `BEGIN … COMMIT` with `SET LOCAL lock_timeout = '5s'` first. Each commits independently, so a
 failure can leave any prefix applied.
 
@@ -66,6 +70,10 @@ with a one-outcome CHECK. It is read only when `WS_PRO_TASTE_ENABLED=true`.
 
 **5. `writers_studio_pro_requests`.** Creates `writers_studio_pro_requests` (FK `members` ON DELETE CASCADE,
 note length CHECK) and a partial unique index on open requests. It is read only when `WS_PRO_ASK_ENABLED=true`.
+
+**6. `writers_studio_maia_usage`.** Creates an append-only usage log of MAIA acts: FK `members` ON DELETE CASCADE,
+CHECKs on act name, token counts and model, and an index on `(member_id, occurred_at DESC)`. It is written by
+`lib/writersStudio/maiaMeter.ts` only when the meter mode is exactly `shadow`, and it never refuses an act.
 
 ## Production facts supplied to the reviewer
 
@@ -113,7 +121,7 @@ A failed migration must leave the candidate unswapped and the old reader live.
    - and whether `studio_doorway_redemptions` CASCADE then still holds under its RESTRICT FK to invitations.
 
    Between migration and swap, all new tables are empty. Also judge the window after swap.
-5. **Prefix compatibility.** Prefixes 1, 1–2, 1–3, 1–4 and 1–5 are each compatible with the exact old reader
+5. **Prefix compatibility.** Prefixes 1, 1–2, 1–3, 1–4, 1–5 and 1–6 are each compatible with the exact old reader
    still being live.
 6. **Target reader against the final schema.** The target's writers and readers produce statements consistent
    with the columns, CHECKs, triggers and indexes:
@@ -145,7 +153,8 @@ A verdict of `REVISE` or `BLOCKED` is lawful and must never be converted into ap
 
 - This plan.
 - `MIGRATION_COMPATIBILITY_CONTEXT.json`.
-- The five migrations above.
+- The six migrations above.
+- Target `lib/writersStudio/maiaMeter.ts`.
 - `scripts/deploy-production.sh`.
 - `scripts/run-sql-migrations.sh`.
 - Target: `lib/studios/doorwayInvitations.ts`, `app/api/doorway/register/route.ts`, `lib/writersStudio/betaGrants.ts`,
@@ -167,14 +176,14 @@ files, but it does not count as coverage.
 - `instrument = migration-compatibility/v1`;
 - `verdict`: COMPATIBLE or INCOMPATIBLE;
 - the exact full old-reader and target commits;
-- `pending` = the five paths, each with its SHA-256, in the order above;
+- `pending` = the six paths, each with its SHA-256, in the order above;
 - `old_reader_evidence` = the old-reader files read, each with repo path, SHA-256 and trace path;
 - `rationale`;
 - `limitations`;
 - `failure_prefix_compatibility`, with:
   - `instrument = migration-prefix-compatibility/v1`;
-  - verdict `ALL_PREFIXES_COMPATIBLE` only if all five prefixes are established;
-  - exactly **five** prefix entries, prefix *n* bound to the *n*th migration's path and SHA-256, each with
+  - verdict `ALL_PREFIXES_COMPATIBLE` only if all six prefixes are established;
+  - exactly **six** prefix entries, prefix *n* bound to the *n*th migration's path and SHA-256, each with
     `through_path`, `through_sha256`, `rationale` and `limitations`.
 
 ## Existing evidence may inform, not substitute
@@ -185,6 +194,52 @@ files, but it does not count as coverage.
 - **#2260, #2261, #2264, #2268:** CI green on merge.
 
 None of this was an independent review of the migration act. This review covers the migration act only.
+
+## Revision 2: dispositions of the first review (founder, 2026-11-13)
+
+The first independent review was bound to Revision 1 of this plan at `3e4f163106` (plan sha256
+`b8df4b47…`, reviewer session `467fc299-e689-48aa-bff3-84a7f3fab770`). It returned
+APPROVED · COMPATIBLE · ALL_PREFIXES_COMPATIBLE with 2 medium and 4 low findings. Review Custody refused
+admission (`MATERIAL_UNDER_APPROVED`). The founder ruled "Accept, re-review" and "and fix", and dispositioned
+the findings as follows:
+
+- **F1 (medium): accepted, with a rollback rule.** An image rollback to a reader older than #2267 does
+  not enforce `living_works.maia_revisions_paused`, so a Work set to "MAIA asks, never rewrites" would
+  silently receive wording proposals again. This cannot be fixed in the old reader. **Rule:** any rollback
+  past this deploy must be preceded by telling every writer whose Work has the setting on; at deploy time
+  that is at most one writer, in the College Essay controlled beta. Any rollback also follows PR #2267's
+  stated order: code first, then column.
+- **F2 (medium): fixed in this target.** On account erasure, `app/api/members/delete-account/route.ts` now
+  deletes, in a savepoint before the member row, the member's `studio_doorway_redemptions` row and every
+  `studio_doorway_invitations` row whose `email_sha256` equals the hash of the member's email and which no
+  other member has redeemed. **Accepted residual:** the email hash stays unsalted, and spent or expired
+  invitations are not otherwise purged; both are recorded follow-ups for the doorway lane.
+- **F3–F6 (low): noted, no change.**
+  - F3: invitation sign-up skips `/begin`, per founder rulings R1/R2 of 2026-11-12.
+  - F4: the founder's session runs `scripts/verify-constitution-colab.ts` and requires 0 failed before any
+    invitation is issued, whatever the deploy's smoke step logs.
+  - F5: `WS_BETA_GRANT_MODE` stays `legacy`. No grant-bearing invitation is issued while #1938 Gate 4 holds.
+    The beta invitee is admitted through the existing roster.
+  - F6: the 5-second lock wait is accepted; a timeout fails safe, before the swap.
+
+Additional independent review question for Revision 2:
+
+10. **F2 fix.** Read target `app/api/members/delete-account/route.ts` and judge:
+    - whether the new cleanup can block or abort an otherwise valid erasure;
+    - whether it can delete an invitation another member redeemed;
+    - whether it runs before `DELETE FROM members`.
+
+11. **Sixth migration (#2273).** Read target `lib/writersStudio/maiaMeter.ts` and judge:
+    - what it records, and from which member acts;
+    - which runtime setting turns recording on, and its default;
+    - whether anything is recorded under Sanctuary posture or without a member's own act;
+    - whether the old reader's account deletion still succeeds with rows present.
+
+The pending set is the six migrations above. The sixth, `20261113000005_writers_studio_maia_usage.sql`,
+was merged to canonical after Revision 1 was reviewed.
+
+The re-review must re-read everything listed under Minimum physical Reads; the target
+`app/api/members/delete-account/route.ts` is already on that list.
 
 ## Closing condition
 

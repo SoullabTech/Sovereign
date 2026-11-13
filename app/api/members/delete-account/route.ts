@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { clearSessionCookie } from '@/lib/auth/serverSessions';
+import { hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 
 /**
  * POST /api/members/delete-account
@@ -271,6 +272,31 @@ export async function POST(request: NextRequest) {
         } catch {
           await tx.query('ROLLBACK TO SAVEPOINT optional_cleanup');
         }
+      }
+
+      // Studio doorway invitations are bound to the invited email's hash and are
+      // not linked to the member, so the member cascade would leave them behind.
+      // On erasure, remove this member's redemption and any invitation issued to
+      // their email that no other member redeemed (2026-11-13 migration review
+      // F2). Savepointed like the optional cleanup: environments without the
+      // doorway tables must not abort the erasure.
+      const emailRow = await tx.query<{ email: string | null }>(
+        `SELECT email FROM members WHERE id = $1`, [memberId]);
+      const email = emailRow.rows[0]?.email;
+      await tx.query('SAVEPOINT doorway_cleanup');
+      try {
+        await tx.query(`DELETE FROM studio_doorway_redemptions WHERE member_id = $1`, [memberId]);
+        if (email && email.trim()) {
+          await tx.query(
+            `DELETE FROM studio_doorway_invitations i
+              WHERE i.email_sha256 = $1
+                AND NOT EXISTS (SELECT 1 FROM studio_doorway_redemptions r WHERE r.invitation_id = i.id)`,
+            [hashInvitedEmail(email)],
+          );
+        }
+        await tx.query('RELEASE SAVEPOINT doorway_cleanup');
+      } catch {
+        await tx.query('ROLLBACK TO SAVEPOINT doorway_cleanup');
       }
 
       await tx.query(`DELETE FROM members WHERE id = $1`, [memberId]);
