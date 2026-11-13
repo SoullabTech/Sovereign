@@ -44,10 +44,13 @@ export function useWriterReleaseCapabilities(): WriterReleaseCapabilityState {
         const body = await response.json().catch(() => ({})) as Record<string, unknown>;
         if (!live) return;
         const eligible = response.ok && body.eligible === true;
+        // Release capabilities follow ADMISSION, not beta/Pro standing: an admitted Free writer keeps export, erasure
+        // and intake exactly as released (founder principle 2026-11-13: Pro never holds a writer's work hostage).
+        const admitted = eligible || (response.ok && body.admitted === true);
         setState({
           settled: true,
           eligible,
-          authority: eligible && isAuthority(body.capabilities) ? body.capabilities : HELD,
+          authority: admitted && isAuthority(body.capabilities) ? body.capabilities : HELD,
         });
       })
       .catch(() => {
