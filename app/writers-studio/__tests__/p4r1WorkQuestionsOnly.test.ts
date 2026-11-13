@@ -70,3 +70,37 @@ describe('the live view wires it to the member’s own Work setting', () => {
     expect(view).toMatch(/useState\(props\.work\?\.maiaRevisionsPaused === true\)/);
   });
 });
+
+describe('Focus "More" menu closes and fits the window (live walk, 2026-11-13)', () => {
+  function stageRoom() {
+    act(() => root.render(React.createElement(IsolatedEditorialRoom, {
+      appearance: 'evening', title: 'Fire', currentText: 'x', sectionBody: 'x', busy: false,
+      editingLatitude: 2, onEditingLatitude: jest.fn(), mayRemoveParagraphs: false, onMayRemoveParagraphs: jest.fn(),
+      mayProposeImmediately: false, onMayProposeImmediately: jest.fn(), onClose: jest.fn(), stage: true,
+      workRevisionsPaused: false, onPauseWorkRevisions: jest.fn(),
+      children: React.createElement('div'),
+    } as any)));
+    return host.querySelector<HTMLDetailsElement>('[data-stage-more]')!;
+  }
+  it('Escape closes the open More menu and any open sub-menu', () => {
+    const more = stageRoom();
+    more.open = true;
+    more.querySelectorAll('details').forEach(d => { d.open = true; });
+    act(() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
+    expect(more.open).toBe(false);
+    expect(Array.from(more.querySelectorAll('details')).some(d => d.open)).toBe(false);
+  });
+  it('a press outside closes it; NEGATIVE: a press inside does not', () => {
+    const more = stageRoom();
+    more.open = true;
+    const inside = more.querySelector('.p4r1-isolated-more-card')!;
+    act(() => { inside.dispatchEvent(new Event('pointerdown', { bubbles: true })); });
+    expect(more.open).toBe(true);
+    act(() => { document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })); });
+    expect(more.open).toBe(false);
+  });
+  it('the More card fits the window and scrolls', () => {
+    const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
+    expect(css).toMatch(/\.p4r1-isolated-more-card\{ width:min\(380px, calc\(100vw - 24px\)\); max-height:calc\(100vh - 120px\); overflow-y:auto;/);
+  });
+});
