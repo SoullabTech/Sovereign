@@ -86,9 +86,12 @@ adding a corrective condition at each caller.
 ```
 writersStudioStanding(memberId) →
   | { admitted: true,  plan: 'pro',  basis: 'founder_witness' | 'active_beta_tester' | 'dated_beta_grant', expiresAt? }
-  | { admitted: true,  plan: 'free', basis: 'grant_lapsed', endedAt }
-  | { admitted: false, basis: 'not_in_pilot' | 'grant_revoked' }
+  | { admitted: true,  plan: 'free', basis: 'grant_lapsed' | 'grant_revoked', endedAt }
+  | { admitted: false, basis: 'not_in_pilot' }
 ```
+
+(Revoke keeps Free per the founder ruling in §6. The two bases stay distinct so introspection and copy can tell the
+writer truthfully which happened.)
 
 - `writersStudioBetaAccess()` keeps its current meaning, **beta Pro**, so `resolveWholeWork()` and every Pro gate are
   untouched: a lapsed member is not `eligible`, so `writing.wholeWork` falls through to `members.tier`.
@@ -100,8 +103,8 @@ writersStudioStanding(memberId) →
 
 ### 3.2 Who gets the Free standing — and why this does not open the Studio
 
-`grant_lapsed` is reachable **only** by a member whose own dated-grant log shows a founder/CTO-recorded `grant` or
-`extend` that has run out. That is a person who was individually admitted, identity-bound and audited. Nobody else can
+`grant_lapsed` and `grant_revoked` are reachable **only** by a member whose own dated-grant log shows a founder/CTO-recorded `grant` or
+`extend` that has since run out or been revoked. That is a person who was individually admitted, identity-bound and audited. Nobody else can
 reach it:
 
 - a member with no grant history stays `not_in_pilot` (the legacy boolean is unchanged);
@@ -156,7 +159,7 @@ Each is a test that must be able to fail; the "mutation" column names the change
 | F2 | same as F1, `members.tier = 'free'` | `writersStudioBetaAccess` not eligible; `resolveWholeWork` not entitled; editorial pass → 403 `whole_work_entitlement_required` | lapsed basis counted as beta Pro |
 | F3 | same as F1 but **gate off** | standing **not admitted** (lapsed stays out) | removing the gate-on condition from §3.3 |
 | F4 | member never granted, no legacy flag, not founder | not admitted: page → redirect, API → 403 `WRITER_STUDIO_INVITATION_REQUIRED`, `arrival` → 403 | any default that admits no-history members as Free |
-| F5 | latest event `revoke` | per founder ruling (§6): **not admitted** under A | treating revoke as lapse (A) / as exclusion (B) |
+| F5 | latest event `revoke` (mode `dated`, gate on) | **Free**, basis `grant_revoked`; never Pro; `writing.wholeWork` only via tier (founder ruling §6.1) | revoke treated as exclusion, or as leaving Pro in place |
 | F6 | mode `legacy`, an expired grant row exists | grant log never read; behaviour identical to today | lapse logic running in legacy mode |
 | F7 | mode `transition`, legacy boolean true, latest grant expired | **Free**, never Pro | legacy boolean re-elevating a lapsed member |
 | F8 | lapsed member, second Work create / activate | refused honestly; existing Works still listed, readable, exportable | one-Work check missing or deleting/hiding Works |
@@ -185,6 +188,16 @@ of a lapsed account before dated grants go live.
   account out of the Studio short of clearing its history.
 
 Everything else in this document follows from rulings already recorded and needs no further ruling.
+
+### 6.1 Founder ruling (Kelly, 2026-11-13, in the Claude Code session): **B — "Yes, keep Free"**
+
+- A revoked writer keeps the Free Studio exactly as an expired one does: Works, Write, the Spark door. Revoke removes
+  only Pro. The recommendation (A) was not taken.
+- Consequence recorded, not a new question: the dated grant log no longer has a way to take an account out of the
+  Studio. Free standing only reaches the member's own Works, so a grant revoked from a wrong account exposes nothing of
+  anyone else's. If a full Studio exclusion is ever needed (for example for safety), it is a separate, explicit operator
+  act to be designed then, and it must not reuse `revoke`.
+- **Standing:** this ruling settles §6 only. The build in §4 (D1 first, then S1–S4) still needs its own go.
 
 ## 7. What this does not authorize
 
