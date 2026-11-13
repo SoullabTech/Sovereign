@@ -336,6 +336,11 @@ export function EditorialLetterPanel(props: {
           ) : null}
           {pass.map.opening.divergence ? <p data-letter-divergence="true" style={{ margin: 0, lineHeight: 1.55 }}>{pass.map.opening.divergence}</p> : null}
         </div>
+      ) : pass.map.opening === null ? (
+        /* Founder walk 2026-11-12: the opening was missing and nothing said so. A kept letter without its opening now says it. */
+        <p role="note" data-letter-opening-missing={pass.map.openingRefusal ?? 'unknown'} style={{ margin: 0, fontSize: 12, opacity: .8 }}>
+          I couldn’t keep my opening to this letter, where I say what I think the book is reaching for. The places below stand on their own. When you ask me to read the book again, I’ll try the opening again.
+        </p>
       ) : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
