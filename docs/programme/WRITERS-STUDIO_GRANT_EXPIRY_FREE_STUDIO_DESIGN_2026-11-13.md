@@ -66,11 +66,11 @@ but no admitted member can ever receive it.
 | `app/api/sovereign/writers-studio/arrival/route.ts:52` — Spark door / Inspiration Opening | Pro | **Admission** | Live on production `585e9d427` per the doorway session (not witnessed here). |
 | `app/api/sovereign/writers-studio/journey/route.ts:32,59`, `journey/[answerId]/route.ts:31` | Pro | **Admission** | |
 | `app/api/sovereign/writers-studio/beta-feedback/route.ts:18` | Pro | **Admission** | A writer whose beta ended is still a beta voice. |
-| `app/api/sovereign/manuscripts/ingest/route.ts:293` — audience D1, "same predicate as the page" | Pro | **Admission** + the one-Work check | Ingest creates a Work. `new_original_file_ingest` stays an independent release hold either way. |
+| `app/api/sovereign/manuscripts/ingest/route.ts:293` — audience D1, "same predicate as the page" | Pro | **Admission** | Ingest creates a Work; Works are not limited on Free (§6.2). `new_original_file_ingest` stays an independent release hold either way. |
 | `app/api/sovereign/writers-studio/beta-access/route.ts:21` — introspection | Pro | **Report both** | Must be able to say "your beta Pro ended on <date>; your Studio stays open". |
 | `app/api/sovereign/writers-studio/plan/route.ts:21` — introspection | plan (Pro-or-out) | **Report plan + basis** | `free` with a truthful lapsed basis. |
 | `lib/auth/entitlements.ts:51,61` → `resolveWholeWork` → `lib/writersStudio/studio/passRun.ts:108`, `synthesizeAttentionMap.ts:126`, `manuscripts/[id]/editorial-pass/route.ts:43` | Pro | **Pro** (unchanged) | The whole-book editorial pass. |
-| *(none)* — `multiple_active_works` | — | **Pro** | Not built. Required before any Free member exists (§4, D1). |
+| *(none)* — metered MAIA readings | — | **Free allowance / larger Pro allowance** | Not built. Replaces `multiple_active_works` (§6.2); required before the first lapse (§4, D1). |
 
 Outside the corridor and not affected: `/press/manuscript`, `manuscripts/route.ts`, `[id]/route.ts`, `[id]/draft/**`,
 `[id]/render`, `[id]/editorial-letter/**`, `[id]/editorial-pass` (gated only by `writing.wholeWork`), `local-review/**`.
@@ -122,10 +122,10 @@ in operating notes:
 1. **`grant_lapsed` admits only when `WS_PRO_GATE_ENABLED === 'true'`.** With the gate off, everyone holds
    `writing.wholeWork`; admitting a lapsed member then would hand them Pro. With the gate off, a lapsed member stays out
    exactly as today — no regression, no silent Pro.
-2. **The one-active-Work limit must exist before the first lapse can happen.** Otherwise a lapsed writer keeps
-   `multiple_active_works`. This is #2077 §6.2 step 1, already directed, with its open definition (which object is an
-   "active Work": `living_works` vs manuscripts). A lapsed writer with several Works keeps all of them readable and
-   exportable; only creating or activating another is refused, honestly, with nothing lost.
+2. **~~The one-active-Work limit must exist before the first lapse can happen.~~** *Superseded by the founder ruling in
+   §6.2: Works are not limited on Free; MAIA's readings are metered instead.* The metered MAIA allowance must exist
+   before the first lapse can happen (2027-11-13), or a lapsed writer keeps Pro's larger allowance. Until then Free and
+   Pro differ only in `writing.wholeWork`.
 
 ### 3.4 What the writer meets (scope note)
 
@@ -138,7 +138,7 @@ Works stay"), so that copy has something true to say.
 
 | Step | Change | Needs |
 |---|---|---|
-| D1 | One-active-Work enforcement (#2077 §6.2 step 1) | Definition of "active Work" |
+| D1 | ~~One-active-Work enforcement~~ → **metered MAIA reading allowance** (§6.2), its own reviewed change | which MAIA acts count as a reading; the monthly amounts for Free and Pro, from measured cost |
 | S1 | `decideBetaGrant()`: lapsed ≠ revoked (pure) | — |
 | S2 | `writersStudioStanding()` in `betaAccessServer.ts`; plan decision takes standing; correct the `betaGrants.ts:12-13` comment | S1 |
 | S3 | Admission callers (§2.2) move to standing; Pro callers untouched | S2 |
@@ -162,7 +162,7 @@ Each is a test that must be able to fail; the "mutation" column names the change
 | F5 | latest event `revoke` (mode `dated`, gate on) | **Free**, basis `grant_revoked`; never Pro; `writing.wholeWork` only via tier (founder ruling §6.1) | revoke treated as exclusion, or as leaving Pro in place |
 | F6 | mode `legacy`, an expired grant row exists | grant log never read; behaviour identical to today | lapse logic running in legacy mode |
 | F7 | mode `transition`, legacy boolean true, latest grant expired | **Free**, never Pro | legacy boolean re-elevating a lapsed member |
-| F8 | lapsed member, second Work create / activate | refused honestly; existing Works still listed, readable, exportable | one-Work check missing or deleting/hiding Works |
+| F8 | lapsed member with several Works, creates another | allowed; every Work listed, writable, readable, exportable (§6.2: Works are never limited) | any Work-count check, or hiding Works |
 | F9 | grant lookup throws | proxy answers 503 `WRITER_STUDIO_ADMISSION_UNAVAILABLE`; routes refuse; never read as Free or as out | catch that returns a default standing |
 | F10 | founder/CTO | Pro witness, unchanged in every mode | founder check moved after the grant lookup |
 | F11 | lapsed, then `extend` recorded | Pro again, `writing.wholeWork` restored | standing cached from the lapse |
@@ -172,7 +172,7 @@ Each is a test that must be able to fail; the "mutation" column names the change
 | F15 | lapsed member sets a query flag / cookie claiming Pro | no change | any client input reaching the decision |
 
 F1–F7, F9–F12 can run as pure-decision and proxy tests without a database (the deciders are already split into pure
-functions). F8 waits on D1. F13 is an existing-behaviour witness to keep. None of these substitutes for an F6 writer walk
+functions). F13 is an existing-behaviour witness to keep. None of these substitutes for an F6 writer walk
 of a lapsed account before dated grants go live.
 
 ## 6. The one question for the founder
@@ -198,6 +198,25 @@ Everything else in this document follows from rulings already recorded and needs
   anyone else's. If a full Studio exclusion is ever needed (for example for safety), it is a separate, explicit operator
   act to be designed then, and it must not reuse `revoke`.
 - **Standing:** this ruling settles §6 only. The build in §4 (D1 first, then S1–S4) still needs its own go.
+- **Build go given** by the founder later the same day (*"Yes, start the build"*).
+
+### 6.2 Founder ruling (Kelly, 2026-11-13, in the Claude Code session): **meter MAIA, not Works** — *"Yes, meter MAIA instead"*
+
+Asked how the Free limit should work when no Work has an active state, the founder first proposed a size allowance
+(*"what about allowing for a certain bandwidth?"*), asked for best practice, and then took the recommendation:
+
+- **Free:** the whole Studio, any number of Works of any size; Write and the Spark door unlimited; a **monthly allowance
+  of MAIA readings**. Nothing is ever locked or hidden; when the allowance runs out MAIA says so plainly and the writer
+  keeps writing.
+- **Pro:** the whole-book editorial pass (`writing.wholeWork`), a much larger MAIA allowance, and each Pro capability as
+  it ships.
+- **This supersedes the "one active Work" boundary** recorded in PR #2077 §6.2 (2026-11-02). `multiple_active_works`
+  becomes Free in `WRITER_STUDIO_FEATURE_INCLUSION`.
+- Rationale recorded: the writer's own words cost almost nothing to hold; MAIA's reading is the real cost and grows
+  with the words read. Common practice in writing tools leaves writing unlimited and meters the AI. The editorial-pass
+  runner's `daily_limit` refusal is the in-code precedent.
+- **Still open (implementation, not principle):** which MAIA acts count as one reading, and the monthly amounts — set
+  from measured cost, in the metering change (D1). Not built here.
 
 ## 7. What this does not authorize
 
