@@ -51,7 +51,7 @@ export const CLAIM_INVITATION_SQL = `
      AND expires_at > now()
      AND uses < max_uses
      AND (beta_grant_until IS NULL OR beta_grant_until > now())
-  RETURNING id, beta_grant_until, beta_grant_cohort, issuer_member_id`;
+  RETURNING id, beta_grant_until, beta_grant_cohort, issuer_member_id, grants_writers_studio`;
 
 /**
  * Writes the dated Writer's Studio beta grant an invitation carries (founder choice 2026-11-13), inside the same
