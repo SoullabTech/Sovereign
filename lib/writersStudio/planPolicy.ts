@@ -4,16 +4,24 @@
  * This is a product definition, not a purchase, public enrollment grant, Work
  * ownership decision, or release of independently held operations. During the
  * invitation-only beta, the existing server-side pilot authority receives the
- * approved Pro experience at no charge; everyone else remains outside the
- * Studio while the meaningful Free product is preserved for later admission.
+ * approved Pro experience at no charge. A writer whose dated beta grant expired
+ * or was revoked keeps the Free Studio (founder rulings 2026-11-13, #1800;
+ * design #2263). Everyone else remains outside the Studio while the meaningful
+ * Free product is preserved for later admission.
+ *
+ * Free never limits the writer's own Works or words (founder ruling 2026-11-13,
+ * "meter MAIA instead"): `multiple_active_works` is Free. The Free/Pro line is
+ * `writing.wholeWork` plus a metered MAIA reading allowance (not built yet).
  */
-import type { WritersStudioBetaAccess } from './betaAccessServer';
+import type { WritersStudioStanding } from './betaAccessServer';
 
 export type WriterStudioPlan = 'free' | 'pro';
 export type WriterStudioPlanBasis =
   | 'active_beta_tester'
   | 'founder_witness'
   | 'dated_beta_grant'
+  | 'grant_lapsed'
+  | 'grant_revoked'
   | 'public_not_launched';
 
 export type WriterStudioFeature =
@@ -50,7 +58,7 @@ export const WRITER_STUDIO_FEATURE_INCLUSION: Readonly<
   advanced_develop: { free: false, pro: true },
   advanced_review: { free: false, pro: true },
   whole_work_continuity: { free: false, pro: true },
-  multiple_active_works: { free: false, pro: true },
+  multiple_active_works: { free: true, pro: true },
   expanded_maia: { free: false, pro: true },
   advanced_academy: { free: false, pro: true },
   listen: { free: false, pro: true },
@@ -80,7 +88,14 @@ export const WRITER_INDEPENDENT_RELEASE_HOLDS = [
 export type WriterStudioPlanDecision = Readonly<{
   plan: WriterStudioPlan;
   basis: WriterStudioPlanBasis;
+  /** May this member be in the Studio corridor. Admission reads this, never `plan`. */
+  admitted: boolean;
+  /** Holds complimentary beta Pro (active pilot, dated grant, or founder witness). */
   pilotEligible: boolean;
+  /** Dated beta Pro: when it runs out. */
+  expiresAt?: string;
+  /** Free after a dated grant: when the grant ended (null if not recorded). */
+  endedAt?: string | null;
   complimentary: boolean;
   publicEnrollmentEnabled: false;
   paymentEnabled: false;
@@ -95,22 +110,38 @@ function includedFor(plan: WriterStudioPlan): Record<WriterStudioFeature, boolea
 }
 
 export function decideWriterStudioPlan(
-  pilot: WritersStudioBetaAccess,
+  standing: WritersStudioStanding,
 ): WriterStudioPlanDecision {
-  if (pilot.eligible) {
+  if (standing.admitted && standing.plan === 'pro') {
     return {
       plan: 'pro',
-      basis: pilot.basis,
+      basis: standing.basis,
+      admitted: true,
       pilotEligible: true,
+      ...(standing.basis === 'dated_beta_grant' ? { expiresAt: standing.expiresAt } : {}),
       complimentary: true,
       publicEnrollmentEnabled: false,
       paymentEnabled: false,
       included: includedFor('pro'),
     };
   }
+  if (standing.admitted && standing.plan === 'free') {
+    return {
+      plan: 'free',
+      basis: standing.basis,
+      admitted: true,
+      pilotEligible: false,
+      endedAt: standing.endedAt,
+      complimentary: false,
+      publicEnrollmentEnabled: false,
+      paymentEnabled: false,
+      included: includedFor('free'),
+    };
+  }
   return {
     plan: 'free',
     basis: 'public_not_launched',
+    admitted: false,
     pilotEligible: false,
     complimentary: false,
     publicEnrollmentEnabled: false,

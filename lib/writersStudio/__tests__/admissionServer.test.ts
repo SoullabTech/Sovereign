@@ -8,7 +8,7 @@ beforeEach(() => jest.resetAllMocks());
 
 test('admits only a server-resolved pilot plan', async () => {
   planForMember.mockResolvedValue({
-    plan: 'pro', basis: 'active_beta_tester', pilotEligible: true,
+    plan: 'pro', basis: 'active_beta_tester', admitted: true, pilotEligible: true,
     complimentary: true, publicEnrollmentEnabled: false, paymentEnabled: false,
     included: {} as never,
   });
@@ -20,13 +20,25 @@ test('admits only a server-resolved pilot plan', async () => {
 
 test('returns an invitation refusal for the informational Free plan', async () => {
   planForMember.mockResolvedValue({
-    plan: 'free', basis: 'public_not_launched', pilotEligible: false,
+    plan: 'free', basis: 'public_not_launched', admitted: false, pilotEligible: false,
     complimentary: false, publicEnrollmentEnabled: false, paymentEnabled: false,
     included: {} as never,
   });
   await expect(writerStudioAdmissionForMember('member-b')).resolves.toMatchObject({
     allowed: false,
     code: 'WRITER_STUDIO_INVITATION_REQUIRED',
+  });
+});
+
+test('⭐ admits a Free plan whose grant ended — admission reads `admitted`, not Pro (design #2263)', async () => {
+  planForMember.mockResolvedValue({
+    plan: 'free', basis: 'grant_lapsed', admitted: true, pilotEligible: false, endedAt: null,
+    complimentary: false, publicEnrollmentEnabled: false, paymentEnabled: false,
+    included: {} as never,
+  });
+  await expect(writerStudioAdmissionForMember('member-c')).resolves.toMatchObject({
+    allowed: true,
+    plan: { plan: 'free', basis: 'grant_lapsed' },
   });
 });
 

@@ -6,9 +6,10 @@ import {
 } from '../planPolicy';
 
 describe('Writer Studio Free/Pro product policy', () => {
-  const outsider = decideWriterStudioPlan({ eligible: false, basis: 'not_in_pilot' });
-  const beta = decideWriterStudioPlan({ eligible: true, basis: 'active_beta_tester' });
-  const founder = decideWriterStudioPlan({ eligible: true, basis: 'founder_witness' });
+  const outsider = decideWriterStudioPlan({ admitted: false, plan: null, basis: 'not_in_pilot' });
+  const beta = decideWriterStudioPlan({ admitted: true, plan: 'pro', basis: 'active_beta_tester' });
+  const founder = decideWriterStudioPlan({ admitted: true, plan: 'pro', basis: 'founder_witness' });
+  const lapsed = decideWriterStudioPlan({ admitted: true, plan: 'free', basis: 'grant_lapsed', endedAt: null });
 
   it('grants the full approved Pro inclusion set to an active pilot at no charge', () => {
     expect(beta).toMatchObject({
@@ -32,6 +33,7 @@ describe('Writer Studio Free/Pro product policy', () => {
     expect(outsider).toMatchObject({
       plan: 'free',
       basis: 'public_not_launched',
+      admitted: false,
       pilotEligible: false,
       complimentary: false,
       paymentEnabled: false,
@@ -41,6 +43,18 @@ describe('Writer Studio Free/Pro product policy', () => {
     expect(outsider.included.basic_develop).toBe(true);
     expect(outsider.included.advanced_develop).toBe(false);
     expect(outsider.included.expanded_maia).toBe(false);
+  });
+
+  it('⭐ a writer whose grant ended is admitted on Free, never Pro (design #2263)', () => {
+    expect(lapsed).toMatchObject({
+      plan: 'free', basis: 'grant_lapsed', admitted: true, pilotEligible: false, complimentary: false,
+    });
+    expect(lapsed.included.advanced_review).toBe(false);
+    expect(lapsed.included.whole_work_continuity).toBe(false);
+  });
+
+  it('⭐ Free never limits Works: multiple active Works are Free (founder ruling 2026-11-13, "meter MAIA instead")', () => {
+    expect(WRITER_STUDIO_FEATURE_INCLUSION.multiple_active_works).toEqual({ free: true, pro: true });
   });
 
   it('protects author rights in both plans', () => {
@@ -62,7 +76,7 @@ describe('Writer Studio Free/Pro product policy', () => {
 
   it('returns fresh inclusion objects so callers cannot mutate policy', () => {
     (beta.included as Record<string, boolean>).advanced_review = false;
-    expect(decideWriterStudioPlan({ eligible: true, basis: 'active_beta_tester' })
+    expect(decideWriterStudioPlan({ admitted: true, plan: 'pro', basis: 'active_beta_tester' })
       .included.advanced_review).toBe(true);
   });
 });

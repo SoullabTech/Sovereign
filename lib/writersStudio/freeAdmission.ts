@@ -21,7 +21,8 @@
 // wholeWorkEntitlement.proGateEnabled by __tests__/freeAdmission.test.ts.
 type Env = Record<string, string | undefined>;
 const freeWorkLimitEnabled = (env: Env) => env.WS_FREE_WORK_LIMIT_ENABLED === 'true';
-const proGateEnabled = (env: Env) => env.WS_PRO_GATE_ENABLED === 'true';
+/** Pure twin of wholeWorkEntitlement.proGateEnabled (kept identical by __tests__/freeAdmission.test.ts); import-free for F7. */
+export const proGateEnabled = (env: Env) => env.WS_PRO_GATE_ENABLED === 'true';
 
 export function freeAdmissionRequested(env: Env = process.env): boolean {
   return env.WS_FREE_ADMISSION_ENABLED === 'true';
