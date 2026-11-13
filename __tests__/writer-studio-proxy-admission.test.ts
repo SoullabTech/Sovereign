@@ -64,7 +64,7 @@ test('an authenticated but excluded member receives a private 403 without identi
   expect(JSON.stringify(body)).not.toContain('11111111-1111-4111-8111-111111111111');
 });
 
-test('an excluded member is redirected from the Studio page to its public threshold', async () => {
+test('an excluded member is told the Studio is not open to them, on their House', async () => {
   admission.mockResolvedValue({
     allowed: false,
     code: 'WRITER_STUDIO_INVITATION_REQUIRED',
@@ -74,11 +74,17 @@ test('an excluded member is redirected from the Studio page to its public thresh
       included: {} as never,
     },
   });
-  const response = await proxy(request('/writers-studio'));
+  // The House Writing card is the usual way in. Sending the refusal to the
+  // public doorway page made a loop: that page ignores the refusal and its only
+  // member path ("Explore Soullab Home") leads back to the same Writing card.
+  const response = await proxy(request('/writers-studio?from=house'));
   expect(response.status).toBe(307);
+  expect(response.headers.get('cache-control')).toBe('private, no-store');
   const location = new URL(response.headers.get('location')!);
-  expect(location.pathname).toBe('/explore/writers-studio');
-  expect(location.searchParams.get('access')).toBe('invitation-required');
+  expect(location.pathname).toBe('/house');
+  expect(location.pathname.startsWith('/explore')).toBe(false);
+  expect(location.searchParams.get('access')).toBe('writers-studio-invitation-required');
+  expect(location.searchParams.get('from')).toBeNull();
 });
 
 test('an unavailable roster authority returns 503 rather than an optimistic grant', async () => {
