@@ -32,6 +32,7 @@ import { type StalenessState, isCurrent, mustNotAssertCurrent } from './stalenes
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 import { explanationInstruction, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
+import { pathFrameFor } from '@/lib/writersStudio/studioPaths';
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { CONVENTION_STANCE_DIRECTIVE, EDITING_NAMES_DIRECTIVE, EDITORIAL_LEVELS_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
 
@@ -217,12 +218,30 @@ Plain text only: no asterisks, underscores, headings, bullets or lists. Be brief
 export interface ArrivalContext {
   kind: 'arrival';
   sanctuary: boolean;
-  /** Omitted or 'spark': the door's Inspiration question. 'first_page': B, reading the writer's first page. */
-  moment?: 'spark' | 'first_page';
+  /**
+   * Omitted or 'spark': the door's Inspiration question. 'first_page': B, reading the writer's first page.
+   * 'path': a Studio path's door (lib/writersStudio/studioPaths.ts); its frame is taken from the registry by `pathId`.
+   */
+  moment?: 'spark' | 'first_page' | 'path';
+  pathId?: string;
 }
 
-export function arrivalAskPromptHash(hasHistory = false, moment: 'spark' | 'first_page' = 'spark'): string {
-  const frame = moment === 'first_page' ? FIRST_PAGE_STANDING : ARRIVAL_STANDING;
+/**
+ * The frame for an arrival turn. A Studio path's frame comes from the registry by id (F20). An id the registry does
+ * not know falls back to the generic door; the route refuses unknown paths before this is reached.
+ */
+export function arrivalFrame(ctx: Pick<ArrivalContext, 'moment' | 'pathId'>): string {
+  if (ctx.moment === 'first_page') return FIRST_PAGE_STANDING;
+  if (ctx.moment === 'path' && ctx.pathId) return pathFrameFor(ctx.pathId) ?? ARRIVAL_STANDING;
+  return ARRIVAL_STANDING;
+}
+
+export function arrivalAskPromptHash(
+  hasHistory = false,
+  moment: 'spark' | 'first_page' | 'path' = 'spark',
+  pathId?: string,
+): string {
+  const frame = arrivalFrame({ moment, pathId });
   return createHash('sha256').update(`${frame}\n${hasHistory ? 'continuing' : 'first'}`).digest('hex');
 }
 
@@ -673,7 +692,7 @@ export async function askMaia(
      absence. */
   /* The Spark door opts in by its own kind, like the Work branch below; nothing reaches it by absence. */
   const system = ctx.kind === 'arrival'
-    ? (ctx.moment === 'first_page' ? FIRST_PAGE_STANDING : ARRIVAL_STANDING)
+    ? arrivalFrame(ctx)
     : ctx.kind === 'work'
     ? [WORK_STANDING, '', WORK_LEVELS_RULES, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '',
        ...(ctx.responseStyle ? [explanationInstruction(ctx.responseStyle), ''] : []),
@@ -735,7 +754,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: ctx.kind === 'arrival' ? arrivalAskPromptHash(history.length > 0, ctx.moment ?? 'spark')
+        promptHash: ctx.kind === 'arrival' ? arrivalAskPromptHash(history.length > 0, ctx.moment ?? 'spark', ctx.pathId)
           : ctx.kind === 'work' ? workAskPromptHash(ctx.responseStyle, ctx.teachingAnchor, history.length > 0) : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
