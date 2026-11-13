@@ -2531,6 +2531,20 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   };
 
+  /* "Talk about it" on a place in MAIA's letter (founder direction 2026-11-12): the same arrival as Develop's Focus handoff. The carried
+     observation is re-verified, its passage is held and the passage desk opens in the centre. Unlike "Show me options", nothing is
+     asked of MAIA: she waits for the writer's words. */
+  const onTalkPassIssue = (target: { sectionId: string; readingId: string; observationKey: string }) => {
+    focusInsightConsumed.current = null;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set(SECTION_PARAM, target.sectionId);
+    next.set(INSIGHT_READING, target.readingId);
+    next.set(INSIGHT_OBSERVATION, target.observationKey);
+    next.set('insightAction', 'focus');
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}`);
+  };
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-p4-opening">
@@ -2579,6 +2593,7 @@ export default function FlagshipWriteEditController() {
             onStudioPlace={onStudioPlace}
             onOpenPassIssue={onOpenPassIssue}
             onShowPassIssue={onShowPassIssue}
+            onTalkPassIssue={onTalkPassIssue}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}

@@ -38,6 +38,18 @@ describe('Writer Studio immediate manuscript-selection support', () => {
     expect(css).toContain("p[data-write-block='subhead']");
   });
 
+  it('⭐ founder direction 2026-11-12: with the conversation in the centre, going to a place brings the manuscript back (an unsent draft is asked about)', () => {
+    const {file,node}=findNode(writeView,n=>ts.isVariableDeclaration(n)&&n.name.getText()==='go');
+    const callback=((node as ts.VariableDeclaration).initializer as ts.CallExpression).arguments[0]!.getText(file);
+    const setWorkConversationOpen=jest.fn(),setWorkConversationStarter=jest.fn(),setRailSelectionId=jest.fn();
+    const props={writing:{activeId:'current',goToSection:jest.fn()},context:{sections:[{draftSectionId:'current'}]},onFocusSection:jest.fn()};
+    let leave=false;
+    const go=evaluateExpression(callback,{props,setRailSelectionId,requestCraftDeparture:jest.fn(),workConversationOpen:true,requestConversationDeparture:()=>leave,setWorkConversationOpen,setWorkConversationStarter});
+    go('current');
+    expect(setWorkConversationOpen).not.toHaveBeenCalled();expect(setRailSelectionId).not.toHaveBeenCalled();
+    leave=true;go('current');
+    expect(setWorkConversationOpen).toHaveBeenCalledWith(false);expect(setRailSelectionId).toHaveBeenCalledWith('current');
+  });
   it('treats a Write rail choice as an attentional act even when it is already open', () => {
     const {file,node}=findNode(writeView,n=>ts.isVariableDeclaration(n)&&n.name.getText()==='go');
     const initializer=(node as ts.VariableDeclaration).initializer as ts.CallExpression;
@@ -46,7 +58,7 @@ describe('Writer Studio immediate manuscript-selection support', () => {
     let deferred:(()=>void)|null=null;
     const requestCraftDeparture=jest.fn((_label:string,act:()=>void)=>{deferred=act;});
     const props={writing:{activeId:'current',goToSection},context:{sections:[{draftSectionId:'current'},{draftSectionId:'next'}]},onFocusSection};
-    const go=evaluateExpression(callback,{props,setRailSelectionId,requestCraftDeparture});
+    const go=evaluateExpression(callback,{props,setRailSelectionId,requestCraftDeparture,workConversationOpen:false,requestConversationDeparture:()=>true,setWorkConversationOpen:jest.fn(),setWorkConversationStarter:jest.fn()});
     go('current');
     expect(setRailSelectionId).toHaveBeenCalledWith('current');expect(requestCraftDeparture).not.toHaveBeenCalled();expect(goToSection).not.toHaveBeenCalled();expect(onFocusSection).not.toHaveBeenCalled();
     go('next');expect(requestCraftDeparture).toHaveBeenCalledTimes(1);expect(goToSection).not.toHaveBeenCalled();
