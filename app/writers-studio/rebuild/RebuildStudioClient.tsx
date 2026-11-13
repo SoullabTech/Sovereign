@@ -1,5 +1,6 @@
  'use client';
 
+import { FREE_WORK_LIMIT_CODE, FREE_WORK_LIMIT_MESSAGE } from '@/lib/writersStudio/workLimitShared';
 import { withKeepPosture } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -560,7 +561,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       const created = await create.json().catch(() => ({}));
       const workId = typeof created?.work?.id === 'string' ? created.work.id : null;
       if (!create.ok || !workId) {
-        setWorkDeclarationMessage('The Work could not be created just now. The manuscript has not changed.');
+        setWorkDeclarationMessage(created?.code === FREE_WORK_LIMIT_CODE ? FREE_WORK_LIMIT_MESSAGE : 'The Work could not be created just now. The manuscript has not changed.');
         return;
       }
       const declare = await apiFetch(`/api/sovereign/living-works/${workId}/expressions`, {

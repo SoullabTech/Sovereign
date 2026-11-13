@@ -1,5 +1,6 @@
 'use client';
 
+import { freeWorkLimitFrom, workLimitMessageOr } from '@/lib/writersStudio/workLimitShared';
 import { readingProgressText } from '@/lib/writersStudio/readingProgress';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -515,14 +516,14 @@ export default function P4R1DevelopController() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ title }),
       });
-      if (!created.ok) throw new Error('create:' + created.status);
+      if (!created.ok) throw (await freeWorkLimitFrom(created)) ?? new Error('create:' + created.status);
       const body = await created.json().catch(() => ({})) as { id?: string; work?: { id?: string }; livingWork?: { id?: string } };
       const workId = body.id ?? body.work?.id ?? body.livingWork?.id;
       if (!workId) throw new Error('create:id');
       await declareManuscript(workId);
       await reloadWorks();
-    } catch {
-      setDeclareError('We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.');
+    } catch (e) {
+      setDeclareError(workLimitMessageOr(e, 'We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.'));
     } finally {
       setDeclaring(false);
     }
