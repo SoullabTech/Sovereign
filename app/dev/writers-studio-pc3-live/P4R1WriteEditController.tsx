@@ -1,5 +1,6 @@
 'use client';
 
+import { revealHeldPassage } from '@/lib/writersStudio/revealHeldPassage';
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
@@ -2346,6 +2347,8 @@ export default function FlagshipWriteEditController() {
     if (focusInsightConsumed.current === showKey) return;
     focusInsightConsumed.current = showKey;
     holdPassage(section, range.start, range.end, exact);
+    /* Bring the held words into view and mark them. Nothing in the text changes; the mark is a CSS highlight. */
+    revealHeldPassage(section.draftSectionId, exact);
   }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage, openWorkspace]);
 
   useEffect(() => {
@@ -2515,6 +2518,19 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   }, [params, pathname, router]);
 
+  /* "Show me where" on a place in MAIA's letter: the same arrival as Develop's "show in the manuscript", without the desk. The carried
+     observation is re-verified against the current draft, its words are held, and they are brought into view and marked. */
+  const onShowPassIssue = (target: { sectionId: string; readingId: string; observationKey: string }) => {
+    focusInsightConsumed.current = null;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set(SECTION_PARAM, target.sectionId);
+    next.set(INSIGHT_READING, target.readingId);
+    next.set(INSIGHT_OBSERVATION, target.observationKey);
+    next.delete('insightAction');
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}`);
+  };
+
   /* "Talk about it" on a place in MAIA's letter (founder direction 2026-11-12): the same arrival as Develop's Focus handoff. The carried
      observation is re-verified, its passage is held and the passage desk opens in the centre. Unlike "Show me options", nothing is
      asked of MAIA: she waits for the writer's words. */
@@ -2576,6 +2592,7 @@ export default function FlagshipWriteEditController() {
             onMode={onMode}
             onStudioPlace={onStudioPlace}
             onOpenPassIssue={onOpenPassIssue}
+            onShowPassIssue={onShowPassIssue}
             onTalkPassIssue={onTalkPassIssue}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}

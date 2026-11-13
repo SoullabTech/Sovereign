@@ -47,6 +47,8 @@ export function EditorialLetterPanel(props: {
   draftRevision: number | null;
   onShowSection: (sectionId: string) => void;
   onEditOptions: (target: PassIssueTarget) => void;
+  /** "Show me where": hold the words this place is about in the centre and mark them (nothing changes). Absent: the section only. */
+  onShowPassage?: (target: PassIssueTarget) => void;
   onTalk: (words: string) => void;
   /** "Talk about it" on a place (founder direction 2026-11-12): the conversation happens in the centre, on that place's passage, the way
    *  "Show me options" opens there, but nothing is asked for: MAIA waits for the writer. Absent: the conversation about the Work. */
@@ -184,13 +186,8 @@ export function EditorialLetterPanel(props: {
     if (!props.onTalkPassage) { props.onTalk(words); return; }
     setResolving(true);
     try {
-      const primary = sectionOf(it)?.draftSectionId ?? null;
-      for (const ev of [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')))) {
-        const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        const verified = insight?.passages.filter((p) => p.verified && p.editable && p.range) ?? [];
-        const passage = verified.find((p) => p.sectionId === primary) ?? verified[0];
-        if (passage) { props.onTalkPassage({ sectionId: passage.sectionId, readingId: ev.readingId, observationKey: ev.observationKey }); return; }
-      }
+      const target = await passageOf(it);
+      if (target) { props.onTalkPassage(target); return; }
       props.onTalk(words);
     } finally { setResolving(false); }
   };
@@ -221,24 +218,41 @@ export function EditorialLetterPanel(props: {
     if (sec) props.onShowSection(sec.draftSectionId);
   };
 
+  /* The verified passage this place is about: in the place's own section first, and among those, one placed by words MAIA quoted that
+     are verbatim in the current draft. Shared by "Show me where" and "Show me options", so both land on the same words. */
+  const passageOf = async (it: AttentionItem): Promise<PassIssueTarget | null> => {
+    const primary = sectionOf(it)?.draftSectionId ?? null;
+    const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
+    const found: { ev: (typeof ordered)[number]; p: InsightPassage }[] = [];
+    for (const ev of ordered) {
+      const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
+      for (const p of insight?.passages ?? []) if (p.verified && p.editable && p.range) found.push({ ev, p });
+    }
+    const pick = pickDeskPassage(found, primary);
+    return pick ? { sectionId: pick.p.sectionId, readingId: pick.ev.readingId, observationKey: pick.ev.observationKey } : null;
+  };
+
   const options = async (it: AttentionItem) => {
     if (resolving) return;
     setResolving(true); setNote(null);
     try {
-      /* Open the desk on the section this place is ABOUT: evidence naming that section first, and a passage in that section first.
-         Opening it elsewhere put MAIA in front of words the place was not about, and the desk rightly refused her edits (2026-11-12). */
-      const primary = sectionOf(it)?.draftSectionId ?? null;
-      const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
-      /* Among the evidence, prefer a passage placed by words MAIA quoted that are verbatim in that section: then the desk holds the very
-         words the place is about, and an edit of them can be admitted. */
-      const found: { ev: (typeof ordered)[number]; p: InsightPassage }[] = [];
-      for (const ev of ordered) {
-        const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        for (const p of insight?.passages ?? []) if (p.verified && p.editable && p.range) found.push({ ev, p });
-      }
-      const pick = pickDeskPassage(found, primary);
-      if (pick) { props.onEditOptions({ sectionId: pick.p.sectionId, readingId: pick.ev.readingId, observationKey: pick.ev.observationKey }); return; }
+      /* Open the desk on the section this place is ABOUT, on the words it is about. Opening it elsewhere put MAIA in front of words the
+         place was not about, and the desk rightly refused her edits (2026-11-12). */
+      const target = await passageOf(it);
+      if (target) { props.onEditOptions(target); return; }
       setNote('I can’t tie this to exact words in your current draft, so I won’t propose a change from here. Open the section and select the words you mean; I’ll work with those.');
+    } finally { setResolving(false); }
+  };
+
+  /* "Show me where" (walk 2026-11-13): it only re-showed the section the place had already opened, so on a long section it landed
+     nowhere. It now holds and marks the words the place is about; with no verified words, the section as before. */
+  const where = async (it: AttentionItem, sectionId: string) => {
+    if (resolving) return;
+    if (!props.onShowPassage) { props.onShowSection(sectionId); return; }
+    setResolving(true);
+    try {
+      const target = await passageOf(it);
+      if (target) props.onShowPassage(target); else props.onShowSection(sectionId);
     } finally { setResolving(false); }
   };
 
@@ -306,7 +320,7 @@ export function EditorialLetterPanel(props: {
         <p style={{ margin: '2px 0 0', fontWeight: 500 }}>Is this intended?</p>
         {d ? <p data-letter-decision={d} role="status" style={{ margin: 0, fontSize: 12 }}>You said: {d === 'intended' ? 'it’s intended.' : 'later.'} <button type="button" onClick={() => void decide(it.id, null)} style={quiet}>Change</button></p> : null}
         <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {sec ? <button type="button" data-letter-act="where" onClick={() => props.onShowSection(sec.draftSectionId)} style={btn}>Show me where</button> : null}
+          {sec ? <button type="button" data-letter-act="where" disabled={resolving} onClick={() => void where(it, sec.draftSectionId)} style={btn}>Show me where</button> : null}
           <button type="button" data-letter-act="options" disabled={resolving} onClick={() => void options(it)} style={btn}>{resolving ? 'Finding the words…' : 'Show me options'}</button>
           <button type="button" data-letter-act="talk" disabled={resolving} onClick={() => void talkAbout(it, `About “${it.label}” in ${labelOf(sec)}: you noticed: ${it.notice} `)} style={btn}>Talk about it</button>
           <button type="button" data-letter-act="intended" onClick={() => void decide(it.id, 'intended')} style={btn}>It’s intended</button>
