@@ -20,14 +20,14 @@ jest.mock('@/lib/writersStudio/studio/passRunClient', () => ({
 jest.mock('@/lib/writersStudio/letter/letterClient', () => ({ fetchLetter: (...a: unknown[]) => fetchLetter(...a), postDecision: (...a: unknown[]) => postDecision(...a) }));
 jest.mock('@/lib/writersStudio/readScopeClient', () => ({ getReadScope: (...a: unknown[]) => scope(...a) }));
 jest.mock('@/lib/sanctuary/currentClientPosture', () => ({ readCurrentSanctuaryPosture: () => posture() }));
-jest.mock('@/lib/writersStudio/insightCanvas', () => ({ loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
+jest.mock('@/lib/writersStudio/insightCanvas', () => ({ ...jest.requireActual('@/lib/writersStudio/insightCanvas'), loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
 jest.mock('@/lib/writersStudio/studio/editorialPassRunner', () => ({
   ...jest.requireActual('@/lib/writersStudio/studio/editorialPassRunner'),
   runEditorialPass: (...a: unknown[]) => runPass(...a),
 }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-import { EditorialLetterPanel } from '@/app/dev/writers-studio-pc3-live/EditorialLetterPanel';
+import { keptDuring, EditorialLetterPanel } from '@/app/dev/writers-studio-pc3-live/EditorialLetterPanel';
 import { savePass, loadPassDecisions } from '@/lib/writersStudio/studio/editorialPassRunner';
 
 const sections = [
@@ -125,10 +125,14 @@ describe('the letter and the walk', () => {
     act(() => q('[data-letter-next]')!.click());
     expect(q('[data-letter-place="2"]')).not.toBeNull();
   });
-  it('"Show me where" and "Talk about it" are the writer\'s calls; nothing else moves', async () => {
+  it('⭐ opening a place brings its passage into the centre (the writer\'s click); Next does the same; "Talk about it" is the writer\'s call', async () => {
     const p = await mount();
-    act(() => q('[data-letter-start]')!.click());
     expect(p.onShowSection).not.toHaveBeenCalled();
+    act(() => q('[data-letter-start]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s1');
+    act(() => q('[data-letter-next]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s2');
+    act(() => q('[data-letter-prev]')!.click());
     act(() => q('[data-letter-act="where"]')!.click());
     expect(p.onShowSection).toHaveBeenCalledWith('s1');
     act(() => q('[data-letter-act="talk"]')!.click());
@@ -140,6 +144,25 @@ describe('the letter and the walk', () => {
     act(() => q('[data-letter-start]')!.click());
     await act(async () => { q('[data-letter-act="options"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
     expect(p.onEditOptions).toHaveBeenCalledWith({ sectionId: 's1', readingId: 'r1', observationKey: 'o-a' });
+  });
+  it('⭐ founder direction 2026-11-12: "Talk about it" opens in the centre on the place\'s words, asking nothing of MAIA', async () => {
+    insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: true, editable: true, range: { start: 0, end: 5 } }] });
+    const onTalkPassage = jest.fn();
+    const p = await mount({ onTalkPassage });
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="talk"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onTalkPassage).toHaveBeenCalledWith({ sectionId: 's1', readingId: 'r1', observationKey: 'o-a' });
+    expect(p.onTalk).not.toHaveBeenCalled();
+    expect(p.onEditOptions).not.toHaveBeenCalled();
+  });
+  it('⭐ MUST FAIL IF a place with no verified words loses its conversation: it opens about the Work, carrying the place', async () => {
+    insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: false, editable: true, range: { start: 0, end: 5 } }] });
+    const onTalkPassage = jest.fn();
+    const p = await mount({ onTalkPassage });
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="talk"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onTalkPassage).not.toHaveBeenCalled();
+    expect(p.onTalk).toHaveBeenCalledWith(expect.stringMatching(/^About “.+” in .+: you noticed: /));
   });
   it('⭐ words she cannot verify are never proposed on: she says so instead', async () => {
     insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: false, editable: true, range: { start: 0, end: 5 } }] });
@@ -205,6 +228,21 @@ describe('step 2: the letter and decisions are kept on the server', () => {
     await mount();
     await act(async () => { q('[data-letter-read]')!.click(); await Promise.resolve(); await Promise.resolve(); });
     expect(runPass.mock.calls[0][0]).toMatchObject({ keepAsLetter: true });
+  });
+  it('⭐ MUST FAIL IF a dropped connection hides a letter the server kept (walk 2026-11-13, net::ERR_NETWORK_CHANGED)', async () => {
+    runPass.mockResolvedValue({ ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now.' });
+    await mount();
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, createdAt: new Date().toISOString() }, decisions: {} });
+    await act(async () => { q('[data-letter-read]')!.click(); for (let i = 0; i < 6; i += 1) await Promise.resolve(); });
+    expect(host.textContent).not.toContain('could not prepare');
+    expect(host.textContent).toContain('I found 2 places');
+  });
+  it('a failure with no letter kept during this attempt still says so', async () => {
+    runPass.mockResolvedValue({ ok: false, stage: 'synthesis', message: 'MAIA finished the readings, but could not prepare the editorial pass just now.' });
+    await mount();
+    fetchLetter.mockResolvedValue({ letter: { ...SERVER, createdAt: '2026-01-01T00:00:00Z' }, decisions: {} });
+    await act(async () => { q('[data-letter-read]')!.click(); for (let i = 0; i < 6; i += 1) await Promise.resolve(); });
+    expect(host.textContent).toContain('could not prepare');
   });
 });
 
@@ -281,5 +319,15 @@ describe('a letter that could not be gathered (EA walk 2026-11-12)', () => {
     expect(host.textContent).toContain('I read all 9 lenses of your book, but I couldn’t gather them into a letter');
     expect(host.textContent).not.toContain('I couldn’t finish the');
     expect(q('[data-letter-continue]')?.textContent).toBe('Try the letter again');
+  });
+});
+
+describe('keptDuring', () => {
+  it('only a letter of this draft, kept after the attempt began', () => {
+    const t = Date.parse('2026-11-13T00:54:00Z');
+    expect(keptDuring({ draftRevision: 5, createdAt: '2026-11-13T00:55:10Z' }, 5, t)).toBe(true);
+    expect(keptDuring({ draftRevision: 4, createdAt: '2026-11-13T00:55:10Z' }, 5, t)).toBe(false);
+    expect(keptDuring({ draftRevision: 5, createdAt: '2026-11-12T23:00:00Z' }, 5, t)).toBe(false);
+    expect(keptDuring({ draftRevision: 5, createdAt: 'now' }, 5, t)).toBe(false);
   });
 });

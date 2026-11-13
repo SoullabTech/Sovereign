@@ -55,6 +55,11 @@ type Props = {
   /** Pause MAIA's revisions for this passage: she keeps talking, offers no new wording. */
   revisionsPaused?: boolean;
   onPauseRevisions?: (paused: boolean) => void;
+  /** The writer's own Work-wide "MAIA asks, never rewrites" (server-enforced). */
+  workRevisionsPaused?: boolean;
+  onPauseWorkRevisions?: (paused: boolean) => void;
+  workPauseSaving?: boolean;
+  workPauseError?: string | null;
   children: ReactNode;
   /** Conversation Stage: one wide conversation; the panel pins the passage itself. */
   stage?: boolean;
@@ -159,6 +164,10 @@ export default function IsolatedEditorialRoom({
   onAskWhereNext,
   revisionsPaused,
   onPauseRevisions,
+  workRevisionsPaused,
+  onPauseWorkRevisions,
+  workPauseSaving,
+  workPauseError,
   children,
   stage = false,
 }: Props) {
@@ -179,6 +188,30 @@ export default function IsolatedEditorialRoom({
     () => passageContext(sectionBody, currentText),
     [sectionBody, currentText],
   );
+
+  /* The More menu is a <details>: close it on Escape or a press outside it, so it
+     never sits over the conversation (live walk, 2026-11-13). */
+  const moreRef = useRef<HTMLDetailsElement | null>(null);
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const closeMore = () => {
+      const more = moreRef.current;
+      if (!more?.open) return;
+      more.querySelectorAll('details[open]').forEach((d) => d.removeAttribute('open'));
+      more.open = false;
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const more = moreRef.current;
+      if (more?.open && event.target instanceof Node && !more.contains(event.target)) closeMore();
+    };
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeMore(); };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -460,6 +493,21 @@ export default function IsolatedEditorialRoom({
                   />
                   <span><b>Allow paragraph-removal proposals</b><small>Separate permission; never implied by the slider.</small></span>
                 </label>
+                {onPauseWorkRevisions ? (
+                  <label className="p4r1-working-style-check" data-pause-work-revisions>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(workRevisionsPaused)}
+                      disabled={busy || workPauseSaving}
+                      onChange={(event) => onPauseWorkRevisions(event.target.checked)}
+                    />
+                    <span>
+                      <b>MAIA asks, never rewrites</b>
+                      <small>For this whole Work: MAIA reflects and asks questions but never offers new wording. Every sentence stays yours. Good for a college essay.</small>
+                      {workPauseError ? <small role="alert">{workPauseError}</small> : null}
+                    </span>
+                  </label>
+                ) : null}
                 {onPauseRevisions ? (
                   <label className="p4r1-working-style-check" data-pause-revisions>
                     <input
@@ -562,7 +610,7 @@ export default function IsolatedEditorialRoom({
             /* Design pass D4 (2026-11-05): during a conversation the top bar is quiet —
                "Back to the page" plus one "More" menu for everything else. */
             return stage ? (
-              <details className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
+              <details ref={moreRef} className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
                 <summary aria-label="More options">More ⋯</summary>
                 <div className="p4r1-isolated-menu-card p4r1-isolated-more-card">{menus}</div>
               </details>

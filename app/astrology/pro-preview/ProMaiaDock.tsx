@@ -21,11 +21,12 @@
  * Ask and Mentor when one is. It sends only the question (ProMaiaHelp.tsx).
  */
 import { ArrowLeft, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 import type { ProAskMode, ProAskSection } from '@/lib/astrology/proAskMaiaSections';
 import { usePanelState } from './panelMemory';
 import { useMaiaDock, type MaiaSubject } from './maiaDock';
 import { ProAskMaiaConversation } from './ProAskMaiaPanel';
-import { ProHelpConversation } from './ProMaiaHelp';
+import { ProHelpConversation, type HelpExchange } from './ProMaiaHelp';
 import styles from './pro-cockpit.module.css';
 
 /** The subject the conversation is on: the one pointed at, else the open view's, else the chart. */
@@ -49,6 +50,8 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
 }) {
   const dock = useMaiaDock();
   const [mode, setMode] = usePanelState<ProAskMode | 'help'>('dock.mode', 'ask');
+  const [helpQuestion, setHelpQuestion] = useState('');
+  const [helpExchanges, setHelpExchanges] = useState<HelpExchange[]>([]);
   if (!dock || !dock.open) return null;
 
   const all = [...dock.subjects.values()];
@@ -79,7 +82,7 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
             Use “Open my chart” beside the wheel, or Saved charts on the rail.
           </p>
           <div className={styles.maiaBody}>
-            <ProHelpConversation />
+            <ProHelpConversation question={helpQuestion} setQuestion={setHelpQuestion} exchanges={helpExchanges} setExchanges={setHelpExchanges} />
           </div>
         </div>
       ) : mode === 'help' ? (
@@ -88,7 +91,7 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
             How do I…? answers questions about the workstation. MAIA is not reading {subject.subjectLabel} or any chart in this mode.
           </p>
           <div className={styles.maiaBody}>
-            <ProHelpConversation />
+            <ProHelpConversation question={helpQuestion} setQuestion={setHelpQuestion} exchanges={helpExchanges} setExchanges={setHelpExchanges} />
           </div>
         </div>
       ) : (

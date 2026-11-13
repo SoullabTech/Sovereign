@@ -5,20 +5,19 @@
  * POST /api/astrology/pro/help
  * body: { question, history? }   — nothing else is accepted.
  *
- * MAIA answers questions about the workstation from the Pro guide
- * (lib/astrology/proGuide.ts) and reads no chart. The body has no field that
- * can carry a chart, a name, birth details or memory: any other key — subject,
- * other, section, personal, view, point, lifeContext, … — is refused with
- * `unexpected_field`, and each earlier turn may carry only `q` and `a`. Nothing
- * is loaded for the member but their Pro access.
+ * MAIA answers questions from the Pro guide and automatically loads no chart
+ * or saved member memory. It refuses all body keys except question/history;
+ * earlier turns may only contain q/a. Typed question/history strings can
+ * contain personal details and are sent to the AI provider as entered.
+ * Only Pro access is read for the member.
  *
  * Same access as Pro Ask (`resolveProOwner`: the verified session member, the
  * founder or an audited grant). A question showing crisis or serious distress
  * gets the fixed reply and MAIA is not asked. Nothing is stored or logged but
  * the fact of an answer.
  *
- * ⚠️ Not yet mapped in config/accessMatrix.ts — that is the separate D-05
- * security lane. Until then the handler's own check is the gate.
+ * The Pro Help path is explicitly mapped in the access matrix (D-05 / #2242).
+ * The server-side Pro owner check remains mandatory.
  */
 export const dynamic = 'force-dynamic';
 

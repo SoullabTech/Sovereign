@@ -17,9 +17,10 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { admittedToStudio, writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { MAX_FIRST_PAGE_CHARS, quotesVerified } from '@/lib/writersStudio/inspirationOpening';
+import { pathFromParam } from '@/lib/writersStudio/studioPaths';
 
 const MAX_ANSWER_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
@@ -49,8 +50,8 @@ export async function POST(req: NextRequest) {
   }
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: privateHeaders });
-  const access = await writersStudioBetaAccess(memberId);
-  if (!access.eligible) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
+  const access = await writersStudioStanding(memberId);
+  if (!admittedToStudio(access)) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
 
   let raw: unknown;
   try {
@@ -62,12 +63,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400, headers: privateHeaders });
   }
   const body = raw as Record<string, unknown>;
-  const allowed = new Set(['answer', 'history', 'sanctuary', 'moment']);
+  const allowed = new Set(['answer', 'history', 'sanctuary', 'moment', 'path']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown field' }, { status: 400, headers: privateHeaders });
   }
   if (body.moment !== undefined && body.moment !== 'spark' && body.moment !== 'first_page') {
     return NextResponse.json({ refusal: 'malformed', detail: 'moment' }, { status: 400, headers: privateHeaders });
+  }
+  // Studio paths (F17/F20): the member's own path, by exact id. Its frame is looked up server-side from the registry;
+  // the request supplies only the id. An unknown path is refused, never quietly treated as the generic door.
+  const studioPath = 'path' in body ? pathFromParam(typeof body.path === 'string' ? body.path : null) : null;
+  if ('path' in body && (!studioPath || body.moment !== undefined)) {
+    return NextResponse.json({ refusal: 'malformed', detail: 'path' }, { status: 400, headers: privateHeaders });
   }
   // B (S3): the writer's first page, shown by their own act. One page, no conversation history.
   const firstPage = body.moment === 'first_page';
@@ -88,7 +95,9 @@ export async function POST(req: NextRequest) {
   const outcome = await askMaia(
     firstPage
       ? { kind: 'arrival', sanctuary: body.sanctuary === true, moment: 'first_page' }
-      : { kind: 'arrival', sanctuary: body.sanctuary === true },
+      : studioPath
+        ? { kind: 'arrival', sanctuary: body.sanctuary === true, moment: 'path', pathId: studioPath.id }
+        : { kind: 'arrival', sanctuary: body.sanctuary === true },
     history,
     body.answer,
   );

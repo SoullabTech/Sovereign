@@ -10,7 +10,7 @@ import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { resolveProOwner } from '@/lib/astrology/proRouteAccess';
 import { PRO_ASK_SAFETY_REPLY } from '@/lib/astrology/proAskMaiaSections';
 import { proGuideInstruction } from '@/lib/astrology/proGuide';
-import { proHelpSystemPrompt } from '@/lib/astrology/proHelp';
+import { proHelpSystemPrompt, helpConversationScope, HelpRequestGate, PRO_HELP_PRIVACY_NOTICE } from '@/lib/astrology/proHelp';
 import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { loadMemberMemoryAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
 import { POST } from '../route';
@@ -181,5 +181,39 @@ describe('the help prompt', () => {
     for (const promise of ['sign up for pro', 'upgrade', 'subscribe', 'coming soon', 'will be available', '$']) {
       expect(prompt).not.toContain(promise);
     }
+  });
+});
+
+
+describe('Help scope and in-flight response regression', () => {
+  const own = { memberId: 'member-one', chartOpen: true, subjectId: null, sourceRevision: 'revision-1', houseSystem: 'porphyry' };
+  it('resets on member change, chart switch, chart close/reopen and house method', () => {
+    const original = helpConversationScope(own);
+    expect(helpConversationScope({ ...own, memberId: 'member-two' })).not.toBe(original);
+    expect(helpConversationScope({ ...own, subjectId: 'client-two' })).not.toBe(original);
+    expect(helpConversationScope({ ...own, sourceRevision: 'revision-2' })).not.toBe(original);
+    expect(helpConversationScope({ ...own, chartOpen: false })).not.toBe(original);
+    expect(helpConversationScope({ ...own, houseSystem: 'whole-sign' })).not.toBe(original);
+    expect(helpConversationScope(own)).toBe(original);
+  });
+  it('invalidates answers after Clear, a newer request and component unmount', () => {
+    const gate = new HelpRequestGate();
+    const first = gate.begin();
+    expect(gate.accepts(first)).toBe(true);
+    gate.invalidate();
+    expect(gate.accepts(first)).toBe(false);
+    const second = gate.begin();
+    expect(gate.accepts(first)).toBe(false);
+    expect(gate.accepts(second)).toBe(true);
+    gate.close();
+    expect(gate.accepts(second)).toBe(false);
+    gate.reset();
+    expect(gate.accepts(second)).toBe(false);
+  });
+  it('does not make absolute promises about typed contents', () => {
+    expect(PRO_HELP_PRIVACY_NOTICE).toMatch(/question.*previous Help exchanges.*AI provider/);
+    expect(PRO_HELP_PRIVACY_NOTICE).toMatch(/including names or birth details/);
+    expect(PRO_HELP_PRIVACY_NOTICE).toMatch(/does not automatically load a chart/);
+    expect(PRO_HELP_PRIVACY_NOTICE).not.toContain('Nothing is kept');
   });
 });

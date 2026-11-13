@@ -8,7 +8,7 @@ import { loadReading } from '@/lib/manuscript/developmentalReading/store';
 import type { DevelopmentalReading } from '@/lib/manuscript/developmentalReading/contract';
 import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import {
   ATTENTION_SYNTHESIS_VERSION,
@@ -20,7 +20,7 @@ import {
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap, type WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
-import { holdsWholeWork } from '@/lib/auth/entitlements';
+import { wholeWorkForManuscript } from '@/lib/writersStudio/proTaste';
 import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 
 const TOOL = 'return_attention_map';
@@ -121,7 +121,8 @@ export async function synthesizeAttentionMap(memberId: string, manuscriptId: str
      whole-book editorial pass and needs `writing.wholeWork`. Here, so the route and the server run are gated by the same check.
      Overview mode serves chapter work and stays open. Refused before any model call; a failed lookup is 503, never "not Pro". */
   if (deepMode) {
-    const entitled = await holdsWholeWork(memberId).catch(() => null);
+    // Pro, or this Free writer's one complimentary pass claimed for THIS manuscript (founder ruling 2026-11-13).
+    const entitled = await wholeWorkForManuscript(memberId, manuscriptId).catch(() => null);
     if (entitled === null) return { ok: false, status: 503, error: 'entitlement_unavailable' };
     if (!entitled) return { ok: false, status: 403, error: WHOLE_WORK_REFUSAL };
   }

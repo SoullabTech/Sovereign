@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { isColabKind } from '@/lib/writersStudio/journey';
 import { shareJourneyAnswer, withdrawJourneyAnswer } from '@/lib/writersStudio/journeyServer';
 
@@ -28,8 +28,8 @@ const SHARE_STATUS: Record<string, number> = {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ answerId: string }> }) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: privateHeaders });
-  const access = await writersStudioBetaAccess(memberId);
-  if (!access.eligible) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
+  const access = await writersStudioStanding(memberId);
+  if (!access.admitted) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
 
   const { answerId } = await params;
   if (!UUID.test(answerId)) return NextResponse.json({ refusal: 'not_found' }, { status: 404, headers: privateHeaders });

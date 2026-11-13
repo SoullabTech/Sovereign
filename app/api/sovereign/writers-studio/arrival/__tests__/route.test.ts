@@ -7,16 +7,20 @@ import fs from 'fs';
 import path from 'path';
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { POST } from '../route';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
-jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn() }));
+jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
+  writersStudioStanding: jest.fn(),
+  // Free admission is closed by default (step B, lib/writersStudio/freeAdmission.ts): admitted = standing.
+  admittedToStudio: (access: { admitted: boolean }) => access.admitted,
+}));
 jest.mock('@/lib/manuscript/ask/askReader', () => ({ askMaia: jest.fn() }));
 
 const auth = getMemberIdFromRequest as jest.Mock;
-const access = writersStudioBetaAccess as jest.Mock;
+const access = writersStudioStanding as jest.Mock;
 const ask = askMaia as jest.Mock;
 const ME = '11111111-1111-4111-8111-111111111111';
 const URL_BASE = 'http://localhost/api/sovereign/writers-studio/arrival';
@@ -27,7 +31,7 @@ const post = (body: unknown) => new NextRequest(URL_BASE, {
 beforeEach(() => {
   jest.clearAllMocks();
   auth.mockResolvedValue(ME);
-  access.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  access.mockResolvedValue({ admitted: true, plan: 'pro', basis: 'active_beta_tester' });
   ask.mockResolvedValue({
     ok: true, answer: 'I hear a garden. Am I hearing that right?', seen: 'x', seenForQuotes: 'x',
     provenance: { provider: 'anthropic', model: 'm', promptHash: 'h', askerVersion: 'v', answeredAt: 't' },
@@ -41,9 +45,15 @@ describe('F10 · pilot-gated and member-scoped', () => {
     expect(ask).not.toHaveBeenCalled();
   });
   it('refuses a member outside the Writer’s Studio pilot without asking MAIA', async () => {
-    access.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+    access.mockResolvedValue({ admitted: false, plan: null, basis: 'not_in_pilot' });
     expect((await POST(post({ answer: 'a garden' }))).status).toBe(403);
     expect(ask).not.toHaveBeenCalled();
+  });
+  it('⭐ keeps the Spark door open for a writer whose beta grant ended (Free standing, design #2263)', async () => {
+    for (const basis of ['grant_lapsed', 'grant_revoked'] as const) {
+      access.mockResolvedValue({ admitted: true, plan: 'free', basis, endedAt: '2027-11-13T00:00:00.000Z' });
+      expect((await POST(post({ answer: 'a garden' }))).status).toBe(200);
+    }
   });
 });
 
@@ -106,6 +116,24 @@ describe('F12/F13 · B: "Show MAIA this page"', () => {
   });
 });
 
+describe('F17/F20 · Studio paths: the member’s own path, framed by the registry, never by the client', () => {
+  it('a known path reflects through askMaia with the path moment and its id; nothing else is taken from the request', async () => {
+    const res = await POST(post({ answer: 'the kitchen at six in the morning', path: 'college-essay' }));
+    expect(res.status).toBe(200);
+    expect(ask.mock.calls[0][0]).toEqual({ kind: 'arrival', sanctuary: false, moment: 'path', pathId: 'college-essay' });
+  });
+  it('an unknown or malformed path is refused without asking MAIA, never quietly treated as the generic door', async () => {
+    for (const p of ['essay', 'College-Essay', '', 7, null]) {
+      expect((await POST(post({ answer: 'x', path: p }))).status).toBe(400);
+    }
+    expect(ask).not.toHaveBeenCalled();
+  });
+  it('a path is a door conversation, not a page reading: path with the first-page moment is refused', async () => {
+    expect((await POST(post({ answer: 'x', path: 'college-essay', moment: 'first_page' }))).status).toBe(400);
+    expect(ask).not.toHaveBeenCalled();
+  });
+});
+
 describe('F7 · the opening conversation is never kept (founder Q1)', () => {
   it('the route cannot write: it imports no database, store, thread, or keep module', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'route.ts'), 'utf8');
@@ -115,6 +143,8 @@ describe('F7 · the opening conversation is never kept (founder Q1)', () => {
       '@/lib/manuscript/ask/askReader',
       '@/lib/writersStudio/betaAccessServer',
       '@/lib/writersStudio/inspirationOpening',
+      // Studio paths (2026-11-13): a pure, import-free registry; it reads and writes nothing.
+      '@/lib/writersStudio/studioPaths',
       'next/server',
     ]);
     expect(src).not.toMatch(/\bquery\s*\(|INSERT|UPDATE|console\.(log|info)\([^)]*answer/);

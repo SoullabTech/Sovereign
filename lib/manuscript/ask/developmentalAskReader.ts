@@ -31,7 +31,7 @@
 
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { createHash } from 'crypto';
-import { runStructured } from '../../ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';

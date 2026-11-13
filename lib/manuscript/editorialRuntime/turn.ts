@@ -44,7 +44,7 @@ import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import { judgeEditorialQuotes, QUOTE_NOT_IN_TEXT_DETAIL } from './editorialQuoteGate';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
@@ -89,6 +89,7 @@ import {
   type ProposalPolicy,
 } from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
+import { workPausesRevisions } from './workRevisionPause';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
 import { detectNoopAdjustment, type NoopAdjustmentReason } from './noopProposal';
 
@@ -404,7 +405,14 @@ export async function runEditorialTurn(
      resolutions could disagree, and the one that governs must be the one she
      was told about. */
   const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
-  const proposalPolicy: ProposalPolicy = input.opening ? 'reply_only' : (input.proposalPolicy ?? 'allow');
+  /* ⭐ WORK-WIDE "MAIA asks, never rewrites" (founder authorization 2026-11-13,
+     ledger #1938). The writer's own durable setting on the Work outranks any
+     per-turn declaration: a client cannot send 'allow' past it. ⛔ Read only when
+     it could change the answer, and it fails closed (see workRevisionPause.ts). */
+  const workPaused = !input.opening && (input.proposalPolicy ?? 'allow') !== 'reply_only'
+    && await workPausesRevisions(memberId, assembly.chainId, assembly.manuscriptId);
+  const proposalPolicy: ProposalPolicy = input.opening || workPaused
+    ? 'reply_only' : (input.proposalPolicy ?? 'allow');
 
   /* ⭐⭐ THE SEQUENCE GATE (founder ruling, 2026-09-20): at latitude 1, and only
      there, MAIA discusses before offering wording — unless the writer has

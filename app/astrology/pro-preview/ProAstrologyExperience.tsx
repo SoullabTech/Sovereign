@@ -21,6 +21,7 @@ import {
   GraduationCap, Info, MapPin, Orbit, Send, Sparkles, Users, X, type LucideIcon,
 } from 'lucide-react';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
+import { helpConversationScope } from '@/lib/astrology/proHelp';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { chartBodies, hasValidChartGeometry, selectedRelationships, geometricHouseFromCusps, type WheelBody } from '@/lib/astrology/proChartGeometry';
 import { CelestialChartWheel } from './CelestialChartWheel';
@@ -980,7 +981,8 @@ function Cockpit() {
             <small>{privateChart ? 'Ask · Mentor · How do I…?' : 'How do I…? · no chart is read'}</small>
           </button>
         )}
-        <ProMaiaStage chartOpen={!!privateChart}
+        <ProMaiaStage key={helpConversationScope({ memberId, chartOpen: !!privateChart, subjectId: savedSubject?.id ?? null, sourceRevision, houseSystem })}
+          chartOpen={!!privateChart}
           whereLabel={leadTab ? (leadTab.label === leadTool?.label ? leadTab.label : `${leadTool?.label} · ${leadTab.label}`) : privateChart ? 'the chart wheel' : null}
           preferSections={leadTab?.prefer ?? []} />
         </div>

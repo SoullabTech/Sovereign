@@ -68,6 +68,14 @@ describe('what MAIA is told', () => {
     expect(text).toContain('You cannot press any control, save a chart, make a link or change a setting for them');
   });
 
+  it('explains Free and Pro as rooms, not priced plans, and never as public', () => {
+    expect(text).toContain('Free Astrology and Astrology Pro are two different rooms');
+    expect(text).toContain('there are no prices or tiers to quote');
+    expect(text).toContain('open at present to invited testers');
+    expect(text).toContain('open by individual invitation');
+    expect(text).toContain('never imply either is publicly available');
+  });
+
   it('carries the declared calculation limits', () => {
     expect(text).toContain('not yet independently certified');
     expect(text).toContain('66° latitude');

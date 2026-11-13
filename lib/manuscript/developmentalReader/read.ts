@@ -23,7 +23,7 @@
  * identity and no row (A1). Minting identity and freezing are BUILD-07C.
  */
 
-import { runStructured } from '../../ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '../../ai/structured/types';
 import { bindEvidence } from '../development/bind';
 import type { NonEmptyArray } from '../development/evidenceRef';

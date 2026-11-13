@@ -3,7 +3,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { DEVELOPMENTAL_LENSES } from '@/lib/manuscript/developmentalReader/contract';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import {
@@ -14,6 +14,7 @@ import {
   type DevelopmentalEvidenceRef,
 } from '@/lib/writersStudio/developmentalOrientation';
 import { DEVELOPMENTAL_MOVEMENTS } from '@/lib/writersStudio/workDevelopment';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,13 +89,14 @@ function inputSchema(evidenceRefs: readonly string[]) {
   } as const;
 }
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   const { id: manuscriptId } = await params;
+  bindMaiaMeter(memberId, { sanctuary: false }); // route has no Sanctuary/posture check
 
   const current = await query<{
     revision_number: number;
@@ -339,3 +341,5 @@ export async function POST(
     },
   });
 }
+
+export const POST = meteredRoute('developmental_orientation', postHandler);

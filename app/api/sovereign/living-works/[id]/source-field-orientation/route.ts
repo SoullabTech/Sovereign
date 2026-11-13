@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runStructured } from '@/lib/writersStudio/meteredStructured'; // the structured seam, unchanged, plus the shadow MAIA meter
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import {
   SOURCE_FIELD_ORIENTATION_SYSTEM,
@@ -9,6 +9,7 @@ import {
   type SourceFieldOrientation,
   type SourceFieldTerrain,
 } from '@/lib/writersStudio/sourceFieldOrientation';
+import { meteredRoute, bindMaiaMeter } from '@/lib/writersStudio/maiaMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,13 +107,14 @@ function schema(handles: readonly string[]) {
   } as const;
 }
 
-export async function POST(
+async function postHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   const { id: workId } = await params;
+  bindMaiaMeter(memberId, { sanctuary: false }); // route has no Sanctuary/posture check
 
   const work = await query<{ id: string; manuscript_state: string | null }>(
     `SELECT id, manuscript_state
@@ -352,3 +354,5 @@ export async function POST(
     },
   });
 }
+
+export const POST = meteredRoute('source_field_orientation', postHandler);
