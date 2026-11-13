@@ -146,6 +146,9 @@ function writeToolsShare(v: number): void {
 }
 const hair = '1px solid color-mix(in srgb, currentColor 16%, transparent)';
 
+/** What the writer is told before a whole-book pass begins from Develop: it is paid and it takes a while. */
+export const PASS_COST_NOTE = 'This asks MAIA to read your whole book: up to nine paid readings and a paid letter (readings she already made of this draft are reused). It takes several minutes.';
+
 export function DevelopStage(props: {
   workTitle: string | null;
   sections: readonly StageSection[];
@@ -198,6 +201,7 @@ export function DevelopStage(props: {
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [passAsk, setPassAsk] = useState(false);
   const [planAsk, setPlanAsk] = useState('');
   const [more, setMore] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
@@ -310,10 +314,22 @@ export function DevelopStage(props: {
                 Whole book · editorial pass ready
               </button>
             ) : (
-              <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={props.onEditorialPass}
+              /* Walk 2026-11-13: one click here began a paid whole-book reading with no word about it. The click now only asks; the
+                 reading begins on the writer's second, informed act. */
+              passAsk ? (
+                <span role="group" aria-label="Read the whole book?" data-develop-pass-confirm="true" style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                  <span>{PASS_COST_NOTE}</span>
+                  <button type="button" data-develop-pass-go="true" onClick={() => { setPassAsk(false); props.onEditorialPass?.(); }}
+                    style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>Read it</button>
+                  <button type="button" data-develop-pass-cancel="true" onClick={() => setPassAsk(false)}
+                    style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: 'none', textDecoration: 'underline', padding: '3px 4px' }}>Not now</button>
+                </span>
+              ) : (
+              <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={() => setPassAsk(true)}
                 style={{ font: 'inherit', fontSize: 12, cursor: props.editorialPass.status === 'running' ? 'default' : 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>
                 Whole book · editorial pass
               </button>
+              )
             )
           ) : null}
         </nav>
