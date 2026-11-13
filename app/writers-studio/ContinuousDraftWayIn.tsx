@@ -31,6 +31,24 @@ export function continuousDraftWayInHrefs(manuscriptId: string | null): {
   };
 }
 
+/**
+ * Where Write sends a manuscript it cannot open, instead of stopping on the way-in.
+ *
+ * Studio Home's Open always lands in Write, and Home does not know whether a
+ * draft has sections. So a member whose whole book is a continuous draft pressed
+ * Open and met this refusal page, which to them read as an empty Work (reported
+ * by a tester, 2026-11-13). The Canvas is the door this component already names;
+ * Write now goes through it on the member's behalf.
+ *
+ * ⛔ Only `continuous`: a draft that exists and holds words. Any other state, or
+ * an unknown manuscript, returns null and the way-in page stands as before.
+ * ⛔ Still no conversion and no write — this is the same link, followed.
+ */
+export function writeForwardFor(state: string, manuscriptId: string | null): string | null {
+  if (state !== 'continuous') return null;
+  return continuousDraftWayInHrefs(manuscriptId).canvas;
+}
+
 export default function ContinuousDraftWayIn({
   manuscriptId,
   room,
