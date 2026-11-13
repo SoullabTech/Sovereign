@@ -20,7 +20,7 @@ jest.mock('@/lib/writersStudio/studio/passRunClient', () => ({
 jest.mock('@/lib/writersStudio/letter/letterClient', () => ({ fetchLetter: (...a: unknown[]) => fetchLetter(...a), postDecision: (...a: unknown[]) => postDecision(...a) }));
 jest.mock('@/lib/writersStudio/readScopeClient', () => ({ getReadScope: (...a: unknown[]) => scope(...a) }));
 jest.mock('@/lib/sanctuary/currentClientPosture', () => ({ readCurrentSanctuaryPosture: () => posture() }));
-jest.mock('@/lib/writersStudio/insightCanvas', () => ({ loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
+jest.mock('@/lib/writersStudio/insightCanvas', () => ({ ...jest.requireActual('@/lib/writersStudio/insightCanvas'), loadCanvasInsight: (...a: unknown[]) => insight(...a) }));
 jest.mock('@/lib/writersStudio/studio/editorialPassRunner', () => ({
   ...jest.requireActual('@/lib/writersStudio/studio/editorialPassRunner'),
   runEditorialPass: (...a: unknown[]) => runPass(...a),
