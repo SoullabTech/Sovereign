@@ -5321,6 +5321,10 @@
 .p4r1-root .p4r1-isolated-more-card > button{ order:2; text-align:left; }
 .p4r1-root .p4r1-isolated-more-card > details:not([data-next-passage-menu]){ order:3; }
 .p4r1-root .p4r1-isolated-more-card details > .p4r1-isolated-menu-card{ position:static; margin-top:6px; box-shadow:none; }
+/* Live walk 2026-11-13: Preferences (360px) overflowed the More card past the window edge at
+   laptop widths. The card now fits the window and scrolls; nested cards fill it. */
+.p4r1-root .p4r1-isolated-more-card{ width:min(380px, calc(100vw - 24px)); max-height:calc(100vh - 120px); overflow-y:auto; overscroll-behavior:contain; }
+.p4r1-root .p4r1-isolated-more-card details > .p4r1-isolated-preferences{ width:auto; max-width:100%; }
 
 /* Develop design pass: MAIA's own observation first, in her voice. */
 .p4r1-root .p4r1-discovery-said{ margin:10px 0 14px; padding:14px 16px; border-left:3px solid rgba(232,190,120,.7);
