@@ -145,6 +145,25 @@ describe('the letter and the walk', () => {
     await act(async () => { q('[data-letter-act="options"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
     expect(p.onEditOptions).toHaveBeenCalledWith({ sectionId: 's1', readingId: 'r1', observationKey: 'o-a' });
   });
+  it('⭐ founder direction 2026-11-12: "Talk about it" opens in the centre on the place\'s words, asking nothing of MAIA', async () => {
+    insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: true, editable: true, range: { start: 0, end: 5 } }] });
+    const onTalkPassage = jest.fn();
+    const p = await mount({ onTalkPassage });
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="talk"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onTalkPassage).toHaveBeenCalledWith({ sectionId: 's1', readingId: 'r1', observationKey: 'o-a' });
+    expect(p.onTalk).not.toHaveBeenCalled();
+    expect(p.onEditOptions).not.toHaveBeenCalled();
+  });
+  it('⭐ MUST FAIL IF a place with no verified words loses its conversation: it opens about the Work, carrying the place', async () => {
+    insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: false, editable: true, range: { start: 0, end: 5 } }] });
+    const onTalkPassage = jest.fn();
+    const p = await mount({ onTalkPassage });
+    act(() => q('[data-letter-start]')!.click());
+    await act(async () => { q('[data-letter-act="talk"]')!.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onTalkPassage).not.toHaveBeenCalled();
+    expect(p.onTalk).toHaveBeenCalledWith(expect.stringMatching(/^About “.+” in .+: you noticed: /));
+  });
   it('⭐ words she cannot verify are never proposed on: she says so instead', async () => {
     insight.mockResolvedValue({ passages: [{ sectionId: 's1', verified: false, editable: true, range: { start: 0, end: 5 } }] });
     const p = await mount();
