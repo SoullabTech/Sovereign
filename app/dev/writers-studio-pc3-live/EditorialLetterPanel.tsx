@@ -28,7 +28,7 @@ import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { WHOLE_WORK_MESSAGE, WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
 import type { AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import {
-  inBookOrder, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
+  inBookOrder, primarySectionId, loadPassDecisions, loadSavedPass, runEditorialPass, savePass, savePassDecisions,
   type PassDecision, type SavedPass,
 } from '@/lib/writersStudio/studio/editorialPassRunner';
 
@@ -187,15 +187,30 @@ export function EditorialLetterPanel(props: {
       return next;
     });
   };
-  const sectionOf = (it: AttentionItem) => sections.find((s) => it.sectionIds.includes(s.draftSectionId));
+  const sectionOf = (it: AttentionItem) => { const id = primarySectionId(it, sections.map((x) => x.draftSectionId)); return sections.find((x) => x.draftSectionId === id); };
+  /* Founder 2026-11-12: "If I click onto an issue … it should bring up the manuscript copy in the center." Opening a place (from the
+     letter, or with Previous / Next) is the writer's own act, so it also brings that place's section into the centre — the same act
+     as "Show me where", which stays for coming back to it. Nothing moves unless the writer clicks. */
+  const openPlace = (i: number) => {
+    const it = places[i];
+    if (!it) return;
+    setCursor(i); setNote(null);
+    const sec = sectionOf(it);
+    if (sec) props.onShowSection(sec.draftSectionId);
+  };
 
   const options = async (it: AttentionItem) => {
     if (resolving) return;
     setResolving(true); setNote(null);
     try {
-      for (const ev of it.evidence) {
+      /* Open the desk on the section this place is ABOUT: evidence naming that section first, and a passage in that section first.
+         Opening it elsewhere put MAIA in front of words the place was not about, and the desk rightly refused her edits (2026-11-12). */
+      const primary = sectionOf(it)?.draftSectionId ?? null;
+      const ordered = [...it.evidence].sort((a, b) => Number(b.sectionIds.includes(primary ?? '')) - Number(a.sectionIds.includes(primary ?? '')));
+      for (const ev of ordered) {
         const insight = await loadCanvasInsight(manuscriptId, ev.readingId, ev.observationKey);
-        const passage = insight?.passages.find((p) => p.verified && p.editable && p.range);
+        const verified = insight?.passages.filter((p) => p.verified && p.editable && p.range) ?? [];
+        const passage = verified.find((p) => p.sectionId === primary) ?? verified[0];
         if (passage?.range) { props.onEditOptions({ sectionId: passage.sectionId, readingId: ev.readingId, observationKey: ev.observationKey }); return; }
       }
       setNote('I can’t tie this to exact words in your current draft, so I won’t propose a change from here. Open the section and select the words you mean; I’ll work with those.');
@@ -223,11 +238,12 @@ export function EditorialLetterPanel(props: {
   }
   const runEnded = run && (run.state === 'failed' || run.state === 'stopped') ? (
     <p role="note" data-letter-run-ended={run.state} style={{ margin: '6px 0 0', fontSize: 12 }}>
-      {run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
+      {run.state === 'failed' && (run.refusal ?? '').startsWith('synthesis') ? `I read all ${run.total} lenses of your book, but I couldn’t gather them into a letter this time. My readings are kept, so trying again only redoes that last step.`
+        : run.state === 'stopped' && run.refusal === 'sanctuary' ? 'I stopped reading because Sanctuary is on.'
         : run.state === 'stopped' && run.refusal === 'permission_withdrawn' ? 'I stopped reading because you withdrew my permission to read the whole book.'
         : run.state === 'stopped' && run.refusal === 'draft_changed' ? 'I stopped because the book changed while I was reading.'
         : `I couldn’t finish the ${run.lens ?? ''} reading (${run.done} of ${run.total} were done; they are kept).`}
-      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>Continue</button>
+      {' '}<button type="button" data-letter-continue="true" onClick={() => void read()} style={quiet}>{run.state === 'failed' && (run.refusal ?? '').startsWith('synthesis') ? 'Try the letter again' : 'Continue'}</button>
     </p>
   ) : null;
   if (!pass) {
@@ -236,7 +252,9 @@ export function EditorialLetterPanel(props: {
         <p style={{ margin: 0 }}>
           {draftRevision === null
             ? 'I can’t establish your current draft safely just now, so I haven’t read it.'
-            : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
+            : run && run.done >= run.total
+              ? 'I’ve read your book. My letter isn’t ready yet.'
+              : 'I haven’t read this book yet. When I have, I’ll bring you a short letter and we can go through it together, one place at a time.'}
         </p>
         {error ? <p role="alert" style={{ margin: '6px 0 0', fontSize: 12 }}>{error}</p> : null}
         {runEnded}
@@ -271,8 +289,8 @@ export function EditorialLetterPanel(props: {
         </div>
         {note ? <p role="note" style={{ margin: 0, fontSize: 12 }}>{note}</p> : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-          <button type="button" data-letter-prev="true" disabled={cursor === 0} onClick={() => { setCursor(cursor - 1); setNote(null); }} style={btn}>‹ Previous</button>
-          <button type="button" data-letter-next="true" disabled={cursor >= places.length - 1} onClick={() => { setCursor(cursor + 1); setNote(null); }} style={btn}>Next place ›</button>
+          <button type="button" data-letter-prev="true" disabled={cursor === 0} onClick={() => openPlace(cursor - 1)} style={btn}>‹ Previous</button>
+          <button type="button" data-letter-next="true" disabled={cursor >= places.length - 1} onClick={() => openPlace(cursor + 1)} style={btn}>Next place ›</button>
         </div>
       </section>
     );
@@ -315,6 +333,11 @@ export function EditorialLetterPanel(props: {
           ) : null}
           {pass.map.opening.divergence ? <p data-letter-divergence="true" style={{ margin: 0, lineHeight: 1.55 }}>{pass.map.opening.divergence}</p> : null}
         </div>
+      ) : pass.map.opening === null ? (
+        /* Founder walk 2026-11-12: the opening was missing and nothing said so. A kept letter without its opening now says it. */
+        <p role="note" data-letter-opening-missing={pass.map.openingRefusal ?? 'unknown'} style={{ margin: 0, fontSize: 12, opacity: .8 }}>
+          I couldn’t keep my opening to this letter, where I say what I think the book is reaching for. The places below stand on their own. When you ask me to read the book again, I’ll try the opening again.
+        </p>
       ) : null}
       {places.length === 0 ? (
         <p style={{ margin: 0 }}>I didn’t find a place I could support with evidence where an edit would clearly help.</p>
@@ -327,12 +350,12 @@ export function EditorialLetterPanel(props: {
           <ol data-letter-places="true" style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {places.map((it, i) => (
               <li key={it.id}>
-                <button type="button" data-letter-open={i + 1} onClick={() => { setCursor(i); setNote(null); }} style={{ ...quiet, textAlign: 'left' }}>{it.label}</button>
+                <button type="button" data-letter-open={i + 1} onClick={() => openPlace(i)} style={{ ...quiet, textAlign: 'left' }}>{it.label}</button>
                 <span style={{ fontSize: 11, opacity: .7 }}> · {labelOf(sectionOf(it))}{decisions[it.id] ? ` · ${decisions[it.id] === 'intended' ? 'intended' : 'later'}` : ''}</span>
               </li>
             ))}
           </ol>
-          <button type="button" data-letter-start="true" className="p4r1-talk" onClick={() => setCursor(0)}>Start with the first</button>
+          <button type="button" data-letter-start="true" className="p4r1-talk" onClick={() => openPlace(0)}>Start with the first</button>
         </>
       )}
     </section>

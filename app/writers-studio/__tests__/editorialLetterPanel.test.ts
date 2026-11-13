@@ -125,10 +125,14 @@ describe('the letter and the walk', () => {
     act(() => q('[data-letter-next]')!.click());
     expect(q('[data-letter-place="2"]')).not.toBeNull();
   });
-  it('"Show me where" and "Talk about it" are the writer\'s calls; nothing else moves', async () => {
+  it('⭐ opening a place brings its passage into the centre (the writer\'s click); Next does the same; "Talk about it" is the writer\'s call', async () => {
     const p = await mount();
-    act(() => q('[data-letter-start]')!.click());
     expect(p.onShowSection).not.toHaveBeenCalled();
+    act(() => q('[data-letter-start]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s1');
+    act(() => q('[data-letter-next]')!.click());
+    expect(p.onShowSection).toHaveBeenLastCalledWith('s2');
+    act(() => q('[data-letter-prev]')!.click());
     act(() => q('[data-letter-act="where"]')!.click());
     expect(p.onShowSection).toHaveBeenCalledWith('s1');
     act(() => q('[data-letter-act="talk"]')!.click());
@@ -269,5 +273,17 @@ describe('step 5: the letter opens with her reading of the book, as a question',
     const p = await mount();
     act(() => q('[data-working-where="0"]')!.click());
     expect(p.onShowSection).toHaveBeenCalledWith('s1');
+  });
+});
+
+
+describe('a letter that could not be gathered (EA walk 2026-11-12)', () => {
+  it('⭐ says she read the book and the letter failed, not that the reading failed; offers to try the letter again', async () => {
+    fetchRun.mockResolvedValue({ id: 'run1', draftRevision: 5, state: 'failed', done: 9, total: 9, lens: null, refusal: 'synthesis:attention_map_unbound_evidence', letterId: null, createdAt: 'now' });
+    await mount();
+    expect(host.textContent).toContain('I’ve read your book. My letter isn’t ready yet.');
+    expect(host.textContent).toContain('I read all 9 lenses of your book, but I couldn’t gather them into a letter');
+    expect(host.textContent).not.toContain('I couldn’t finish the');
+    expect(q('[data-letter-continue]')?.textContent).toBe('Try the letter again');
   });
 });

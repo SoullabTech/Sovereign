@@ -3,7 +3,7 @@ import { saveLetter } from '@/lib/writersStudio/letter/letterStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { synthesizeAttentionMap } from '@/lib/writersStudio/studio/synthesizeAttentionMap';
-import { composeOpening } from '@/lib/writersStudio/studio/letterOpening';
+import { composeOpening, openingFields } from '@/lib/writersStudio/studio/letterOpening';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,8 +47,8 @@ export async function POST(
     if (refused) letterKept = refused.body.refusal;
     else {
       const opening = await composeOpening(memberId, manuscriptId, readingIds);
-      letterId = await saveLetter(memberId, manuscriptId, revisionNumber, { ...map, opening });
-      map.opening = opening;
+      letterId = await saveLetter(memberId, manuscriptId, revisionNumber, { ...map, ...openingFields(opening) });
+      Object.assign(map, openingFields(opening));
       letterKept = 'kept';
     }
   }
