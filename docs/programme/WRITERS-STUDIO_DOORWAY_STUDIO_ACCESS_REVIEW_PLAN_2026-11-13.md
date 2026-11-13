@@ -15,7 +15,7 @@ All three were merged to canonical after the previous deploy (`a67406ff7`). So w
 
 ## Exact target relation
 
-The corrected **code target** is `117532a7cf9ea9d6781aa0aee7ad19e0a06ed395` from PR #2283. It is a descendant of
+The corrected **code target** is `5bf53e0531fa9c0f9069556ff5ed23fed4053993` from PR #2283. It is a descendant of
 the live old reader `faac1d4824cff4504ea814678e5e8270abc60fa6` and of canonical `c9283f4a6813f692e33ea2141c8d8c028b152320`.
 Its reconciliation merge is history-only with respect to the already-present hotfix bytes; the substantive changes are
 the allowlisted College Essay doorway return path and current issuer-authority check at redemption.
@@ -72,10 +72,10 @@ As implemented in `scripts/deploy-production.sh`:
    - Does a refusal abort the sign-up and give the use back?
    - Can anything else, such as another Studio, a member without an invitation, or a different email, obtain
      Writer's Studio access through this path?
-4. **Issuer authority.** In target `scripts/studios/issue-doorway-invitation.ts`: is `--studio-access` limited to
+4. **Issuer authority (both invitation privilege types).** In target `scripts/studios/issue-doorway-invitation.ts`: is `--studio-access` limited to
    Writer's Studio, and does issuance verify founder/CTO authority? In target redemption, is the stored issuer's
    **current** `members.admin_role` re-checked as `founder` or `cto` inside the same transaction, with the issuer row
-   locked so demotion cannot race admission? Confirm a demoted/revoked issuer fails closed and that the transaction
+   locked so demotion cannot race admission? This check must apply to both `grants_writers_studio=true` and `beta_grant_until IS NOT NULL` even when `grants_writers_studio=false`. Confirm a demoted/revoked/missing issuer fails closed and that the transaction
    rolls back member creation, invitation use, roster change and audit. The migration CHECK only enforces row shape
    (`studio='writer'` and non-null issuer); it is **not** an issuer-role authorization check.
 5. **Prefix compatibility.** The single prefix 1 is compatible with the exact old reader still being live.
