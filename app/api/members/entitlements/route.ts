@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { resolveEntitlements } from '@/lib/auth/entitlements';
+import { proTasteEnabled, tasteStanding } from '@/lib/writersStudio/proTaste';
 
 export async function GET() {
   const session = await getCurrentSession();
@@ -21,8 +22,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
   }
   const set = await resolveEntitlements(session.memberId);
+  /* Writer's Studio: whether this Free writer still has their one complimentary whole-book pass (founder ruling
+     2026-11-13). Reported beside the set, never as an entitlement key: it is a one-time gift, not a capacity. A lookup
+     failure reports null (unknown), and the server decides at the pass itself. */
+  let wholeWorkTaste: 'available' | null = null;
+  if (!set.has('writing.wholeWork') && proTasteEnabled()) {
+    wholeWorkTaste = (await tasteStanding(session.memberId, null).catch(() => 'none')) === 'available' ? 'available' : null;
+  }
   return NextResponse.json(
-    { entitlements: [...set] },
+    { entitlements: [...set], wholeWorkTaste },
     { headers: { 'Cache-Control': 'no-store' } },
   );
 }

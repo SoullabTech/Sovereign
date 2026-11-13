@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
+import { admittedToStudio, writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { writerPublicReleaseCapabilities } from '@/lib/writersStudio/releaseAuthority';
 
 export const dynamic = 'force-dynamic';
@@ -18,11 +18,13 @@ export async function GET(req: NextRequest) {
         { status: 401, headers: privateHeaders },
       );
     }
-    // `eligible` means "may be in the Studio" — the journey, feedback and import surfaces read it. A writer whose dated
-    // beta grant ended is still eligible, on `plan: 'free'` (design #2263). Pro is `writing.wholeWork`, read elsewhere.
     const { admitted, ...standing } = await writersStudioStanding(memberId);
     return NextResponse.json(
-      { eligible: admitted, ...standing, capabilities: writerPublicReleaseCapabilities() },
+      // `eligible` = beta cohort standing: current beta Pro, or Free after the member's own dated grant ended (design
+      // #2263; journey and feedback read it). `admitted` = may use the Studio (that, or Free while Free admission is
+      // open). Release capabilities (export, erasure, intake) are author rights, not Pro, so admitted Free writers get
+      // them too (founder principle 2026-11-13: export never depends on Pro).
+      { eligible: admitted, ...standing, admitted: admittedToStudio({ admitted }), capabilities: writerPublicReleaseCapabilities() },
       { headers: privateHeaders },
     );
   } catch {

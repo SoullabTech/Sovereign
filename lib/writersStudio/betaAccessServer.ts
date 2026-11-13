@@ -1,6 +1,6 @@
 import { query } from '@/lib/db/postgres';
-import { proGateEnabled } from '@/lib/auth/wholeWorkEntitlement';
 import { activeBetaGrant, betaGrantMode, type BetaGrantDecision, type BetaGrantMode } from './betaGrants';
+import { freeAdmissionOpen, proGateEnabled } from './freeAdmission';
 
 /**
  * SMALL-BETA-01 / B4 — server-side cohort membership.
@@ -114,3 +114,14 @@ export async function writersStudioStanding(
 export async function writersStudioBetaAccess(memberId: string): Promise<WritersStudioBetaAccess> {
   return betaAccessFromStanding(await writersStudioStanding(memberId));
 }
+
+/**
+ * Is this member admitted to the Studio? Their standing (beta Pro, or Free after their own dated grant ended — design
+ * #2263), or — while Free admission is open (step B, founder ruling 2026-11-02 "ADMIT FREE NOW"; ./freeAdmission.ts) —
+ * any signed-in member on the Free plan. Same decision as admissionServer.writerStudioAdmissionForMember, for routes
+ * that resolve access themselves. Accepts a standing (`admitted`) or a beta access answer (`eligible`).
+ */
+export function admittedToStudio(access: { admitted: boolean } | { eligible: boolean }): boolean {
+  return ('admitted' in access ? access.admitted : access.eligible) || freeAdmissionOpen();
+}
+

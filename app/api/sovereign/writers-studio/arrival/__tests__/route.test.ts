@@ -12,7 +12,11 @@ import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { POST } from '../route';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
-jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioStanding: jest.fn() }));
+jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
+  writersStudioStanding: jest.fn(),
+  // Free admission is closed by default (step B, lib/writersStudio/freeAdmission.ts): admitted = standing.
+  admittedToStudio: (access: { admitted: boolean }) => access.admitted,
+}));
 jest.mock('@/lib/manuscript/ask/askReader', () => ({ askMaia: jest.fn() }));
 
 const auth = getMemberIdFromRequest as jest.Mock;

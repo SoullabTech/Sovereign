@@ -46,6 +46,7 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { getValidMemberId } from '@/lib/http/apiBase';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { useDoorwayHost } from '@/lib/studios/useDoorwayHost';
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
@@ -173,6 +174,11 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
     if (identity) setSessionId(identity.sessionId);
   }, [hasMember]);
 
+  // STUDIO-A-LA-CARTE-01 R1 (founder ruling 2026-11-12): at a Studio's own door
+  // (writer./sound./guide./astrology.soullab.life) MAIA stays off until the
+  // person explicitly connects to Soullab. That connection does not exist yet
+  // (Phase 5), so presence never renders on a doorway host.
+  const doorway = useDoorwayHost();
   const governedRoom = resolveGovernedRoom(pathname);
   const fullSurface = isFullConversationRoute(pathname);
   // Room-registered facts win over registry derivation (richer, same truth class).
@@ -199,7 +205,7 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   // The presence surface renders only for a signed-in member, on a governed
   // room, off the full conversation surfaces. Unauthenticated and public
   // routes get children only — no member state, no handle, nothing.
-  const showPresence = hasMember && !!governedRoom && !fullSurface && !!sessionId;
+  const showPresence = hasMember && !!governedRoom && !fullSurface && !!sessionId && !doorway;
 
   // The handle is offered on a NARROWER set of surfaces than presence can host.
   // A room may be fully MAIA-capable and still not advertise — e.g. an index or

@@ -1,0 +1,7 @@
+-- Rollback for studio_doorway_invitations / studio_doorway_redemptions (STUDIO-A-LA-CARTE-01 Phase 3).
+-- Members created through a doorway are ordinary members rows and are NOT removed by this rollback.
+BEGIN;
+DROP INDEX IF EXISTS idx_studio_doorway_redemptions_invitation;
+DROP TABLE IF EXISTS studio_doorway_redemptions;
+DROP TABLE IF EXISTS studio_doorway_invitations;
+COMMIT;

@@ -184,3 +184,73 @@ describe('the editorial pass runs on the server', () => {
     expect(r.indexOf('await keepGate(memberId, body)')).toBeLessThan(r.indexOf('await startRun('));
   });
 });
+
+describe('the taste of Pro: one complimentary whole-book pass for a Free writer (founder ruling 2026-11-13)', () => {
+  function tasteSeam(initial: 'available' | 'none' | 'claimed_here') {
+    let standing: 'available' | 'none' | 'claimed_here' = initial;
+    const log: string[] = [];
+    return {
+      log,
+      seam: {
+        standing: jest.fn(async () => standing),
+        claim: jest.fn(async () => { log.push('claim'); if (standing === 'available') { standing = 'claimed_here'; return true; } return standing === 'claimed_here'; }),
+        settle: jest.fn(async (_m: string, _ms: string, outcome: 'complete' | 'return') => { log.push(outcome); standing = outcome === 'return' ? 'available' : 'none'; }),
+      },
+    };
+  }
+
+  it('⭐ a Free writer with their taste available starts the pass, and the taste is claimed', async () => {
+    const w = world(); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    expect(await startRun('me', 'm', w.deps)).toMatchObject({ ok: true, resumed: false });
+    expect(t.log).toEqual(['claim']);
+  });
+
+  it('⭐ a refusal for another reason never spends the taste (claimed only after every other check)', async () => {
+    const w = world({ grant: 'chapter' }); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    expect(await startRun('me', 'm', w.deps)).toEqual({ ok: false, refusal: 'not_permitted' });
+    expect(t.seam.claim).not.toHaveBeenCalled();
+  });
+
+  it('a Free writer whose taste is spent (or who was a beta tester) is refused, nothing started', async () => {
+    const w = world(); const t = tasteSeam('none');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    expect(await startRun('me', 'm', w.deps)).toEqual({ ok: false, refusal: 'whole_work_entitlement_required' });
+    expect(w.runs).toHaveLength(0);
+  });
+
+  it('⭐ the letter is kept → the taste is spent (and the letter is the writer\'s)', async () => {
+    const w = world(); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    await startRun('me', 'm', w.deps);
+    expect(await advanceRun('me', 'm', w.deps)).toMatchObject({ state: 'done', letterId: 'letter-1' });
+    expect(t.log).toEqual(['claim', 'complete']);
+  });
+
+  it('⭐ the pass fails → the taste is given back, and the writer can try again', async () => {
+    const w = world({ refuse: { overview: 2 } }); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    await startRun('me', 'm', w.deps);
+    expect(await advanceRun('me', 'm', w.deps)).toMatchObject({ state: 'failed' });
+    expect(t.log).toEqual(['claim', 'return']);
+    expect(await startRun('me', 'm', w.deps)).toMatchObject({ ok: true, resumed: true });
+    expect(t.log).toEqual(['claim', 'return', 'claim']);
+  });
+
+  it('cancelling gives the taste back', async () => {
+    const w = world(); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => false; w.deps.taste = t.seam;
+    await startRun('me', 'm', w.deps);
+    expect(await cancelRun('me', 'm', w.deps)).toBe(true);
+    expect(t.log).toEqual(['claim', 'return']);
+  });
+
+  it('a Pro writer never touches the taste', async () => {
+    const w = world(); const t = tasteSeam('available');
+    w.deps.wholeWork = async () => true; w.deps.taste = t.seam;
+    await startRun('me', 'm', w.deps);
+    expect(t.seam.standing).not.toHaveBeenCalled();
+    expect(t.seam.claim).not.toHaveBeenCalled();
+  });
+});
