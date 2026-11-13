@@ -17,6 +17,12 @@ surfaces:
   # Supporting material belongs to the same Writer's Studio ecology, but it
   # remains source material unless the writer explicitly brings it to a Work.
   - app/writers-studio/canvas/MaterialsDrawer.tsx
+  # Ledger #1938 founder authorization, 2026-11-13. The Work drawer was named by
+  # NO contract. It is where the writer tends their relationship with a Work, and
+  # it now carries the writer's own "MAIA asks, never rewrites" for that Work:
+  # MAIA present at the writer's locus, on the writer's terms. No new visual
+  # language; one checkbox in the drawer's existing register.
+  - app/writers-studio/canvas/WorkDrawer.tsx
   - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
   - app/writers-studio/studio/StudioModeBar.tsx
