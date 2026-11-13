@@ -774,6 +774,36 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     props.onStartFreshConversation?.();
   };
 
+  /* Work-wide "MAIA asks, never rewrites" (ledger #1938, 2026-11-13). The writer's own
+     durable setting on the Work, saved through the member's Work PATCH; the server
+     enforces it on every editorial turn whatever this view sends. Here it only keeps
+     the controls honest: while it is on, every passage behaves as paused. */
+  const [workRevisionsPaused, setWorkRevisionsPaused] = useState(props.work?.maiaRevisionsPaused === true);
+  const [workPauseSaving, setWorkPauseSaving] = useState(false);
+  const [workPauseError, setWorkPauseError] = useState<string | null>(null);
+  useEffect(() => {
+    setWorkRevisionsPaused(props.work?.maiaRevisionsPaused === true);
+    setWorkPauseError(null);
+  }, [props.work?.id, props.work?.maiaRevisionsPaused]);
+  const saveWorkRevisionsPaused = useCallback(async (paused: boolean) => {
+    const workId = props.work?.id;
+    if (!workId) return;
+    setWorkPauseSaving(true);
+    setWorkPauseError(null);
+    try {
+      const res = await apiFetch(`/api/sovereign/living-works/${workId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maiaRevisionsPaused: paused }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setWorkRevisionsPaused(paused);
+    } catch {
+      setWorkPauseError('Could not save that just now. Nothing changed.');
+    } finally {
+      setWorkPauseSaving(false);
+    }
+  }, [props.work?.id]);
   // Every passage action needs a Living Work. Without one the MAIA panel (where
   // refusals are normally shown) is not on screen, so an action used to do
   // nothing at all. Say why, here, where the writer just clicked.
@@ -788,7 +818,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   // One path for every MAIA-backed passage act. If a gate (privacy posture, MAIA
   // relationship) is still open the act is HELD and continues once the writer has
   // answered it, never sent early and never dropped. Under Sanctuary it never runs.
-  const runPassageAct = (act: PassageAct, isolate = false) => {
+  const runPassageAct = (requested: PassageAct, isolate = false) => {
+    // While the Work is "MAIA asks, never rewrites", every passage act, sent now or held
+    // behind a gate, asks for a reply only (the server enforces this regardless).
+    const act: PassageAct = { ...requested, options: pausedSendOptions(requested.options, workRevisionsPaused) };
     if (!requireWork()) return;
     setSelectionMenuOpen(false);
     if (passageGatesOpen()) {
@@ -869,13 +902,17 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           }, true)}>
             What’s happening here?
           </button>
-          <button type="button" role="menuitem" data-passage-choice="revise" onClick={() => runPassageAct({
-            label: 'Show me an edit',
-            prompt: passageActQuestion('revise'),
-            options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' },
-          }, true)}>
-            Show me an edit
-          </button>
+          {workRevisionsPaused ? (
+            <p className="p4r1-selection-or" data-questions-only-note>MAIA asks, never rewrites: on for this Work</p>
+          ) : (
+            <button type="button" role="menuitem" data-passage-choice="revise" onClick={() => runPassageAct({
+              label: 'Show me an edit',
+              prompt: passageActQuestion('revise'),
+              options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' },
+            }, true)}>
+              Show me an edit
+            </button>
+          )}
           {/* The implicit Academy's front door: one step from a selected passage
               (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
           <button type="button" role="menuitem" data-passage-choice="teach" data-teach-me-entry onClick={() => runPassageAct({
@@ -1072,36 +1109,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     ? JSON.stringify([props.held.draftSectionId, props.held.start, props.held.end, props.held.text])
     : null;
   const passageRevisionsPaused = heldKey !== null && pausedPassageKey === heldKey;
-  /* Work-wide "MAIA asks, never rewrites" (ledger #1938, 2026-11-13). The writer's own
-     durable setting on the Work, saved through the member's Work PATCH; the server
-     enforces it on every editorial turn whatever this view sends. Here it only keeps
-     the controls honest: while it is on, every passage behaves as paused. */
-  const [workRevisionsPaused, setWorkRevisionsPaused] = useState(props.work?.maiaRevisionsPaused === true);
-  const [workPauseSaving, setWorkPauseSaving] = useState(false);
-  const [workPauseError, setWorkPauseError] = useState<string | null>(null);
-  useEffect(() => {
-    setWorkRevisionsPaused(props.work?.maiaRevisionsPaused === true);
-    setWorkPauseError(null);
-  }, [props.work?.id, props.work?.maiaRevisionsPaused]);
-  const saveWorkRevisionsPaused = useCallback(async (paused: boolean) => {
-    const workId = props.work?.id;
-    if (!workId) return;
-    setWorkPauseSaving(true);
-    setWorkPauseError(null);
-    try {
-      const res = await apiFetch(`/api/sovereign/living-works/${workId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maiaRevisionsPaused: paused }),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      setWorkRevisionsPaused(paused);
-    } catch {
-      setWorkPauseError('Could not save that just now. Nothing changed.');
-    } finally {
-      setWorkPauseSaving(false);
-    }
-  }, [props.work?.id]);
   const revisionsPaused = passageRevisionsPaused || workRevisionsPaused;
   const focusSend: P4R1Pc3WriteEditViewProps['onSendEditorial'] = (text, options) => {
     props.onSendEditorial(text, pausedSendOptions(options, revisionsPaused));
