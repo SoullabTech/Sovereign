@@ -153,6 +153,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/now-what/home', minTier: 'free', notes: 'Now What? Client Home — the member’s own place between conversations. Auth required: it renders the member’s carried threads and their per-item sharing state, so it must never be reachable unauthenticated. Declared explicitly rather than inheriting the Mode A unmapped-route default.' },
   { exact: '/now-what/practice', minTier: 'free', notes: 'Now What? Practice Workspace — the field holder’s own room. Auth is the door; the field-holder check is enforced separately by GET /api/practitioner/programs (403 “belongs to the field holder”), so a signed-in non-holder reaches the shell and no practice data. Declared explicitly rather than relying on the Mode A unmapped-route default, which would leave a practitioner surface open by omission.' },
   { exact: '/api/now-what/register', public: true, notes: 'Now What? independent signup API — creates member + session; email-uniqueness prevents account forking' },
+  // STUDIO-A-LA-CARTE-01 Phases 3–4 (founder rulings R1/R2 2026-11-12; invitation gate 2026-11-13).
+  { regex: /^\/doorway\/(writer|sound|guide|astrology)$/, public: true, notes: 'Studio doorway invitation sign-up page — 404 unless STUDIO_DOORWAYS_ENABLED; the invitation code is the gate, enforced by the API' },
+  { exact: '/api/doorway/check', methods: ['POST'], public: true, notes: 'Studio doorway invitation pre-check — 404 unless STUDIO_DOORWAYS_ENABLED; reads only, answers { valid } so no account field is shown before eligibility is known' },
+  { exact: '/api/doorway/register', methods: ['POST'], public: true, notes: 'Studio doorway sign-up API — 404 unless STUDIO_DOORWAYS_ENABLED; redeems one studio invitation atomically, creates a normal members row + session; email-uniqueness prevents account forking' },
   { exact: '/library', public: true, notes: 'Public library browse' },
   { exact: '/book-studio', public: true, notes: 'Book Studio — editorial workspace index' },
   { exact: '/book-studio/read', public: true, notes: 'Book Studio — manuscript reader' },

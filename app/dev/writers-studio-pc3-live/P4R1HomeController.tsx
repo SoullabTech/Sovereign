@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { freeWorkLimitFrom, workLimitMessageOr } from '@/lib/writersStudio/workLimitShared';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -75,7 +76,7 @@ export default function P4R1HomeController() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body ?? {}),
     });
-    if (!response.ok) throw new Error(url + ':' + response.status);
+    if (!response.ok) throw (await freeWorkLimitFrom(response)) ?? new Error(url + ':' + response.status);
     return await response.json().catch(() => ({})) as Record<string, unknown>;
   }, []);
 
@@ -248,8 +249,8 @@ export default function P4R1HomeController() {
       createdWorkForGesture.current.delete(gesture);
       await refresh();
       open(manuscriptId);
-    } catch {
-      setError('Could not begin your Work just now. Anything already created remains intact.');
+    } catch (e) {
+      setError(workLimitMessageOr(e, 'Could not begin your Work just now. Anything already created remains intact.'));
     } finally {
       setBusy(false);
     }
@@ -269,8 +270,8 @@ export default function P4R1HomeController() {
       await setPurpose(workId, purpose);
       createdWorkForGesture.current.delete(gesture);
       await refresh();
-    } catch {
-      setError('Your spark could not be kept just now. Anything already created remains intact. Try again.');
+    } catch (e) {
+      setError(workLimitMessageOr(e, 'Your spark could not be kept just now. Anything already created remains intact. Try again.'));
     } finally {
       setBusy(false);
     }
@@ -287,8 +288,8 @@ export default function P4R1HomeController() {
       const manuscriptId = await startWritingInWork(workId);
       await refresh();
       open(manuscriptId);
-    } catch {
-      setError('Could not begin writing for this Work just now. The Work and everything feeding it remain unchanged.');
+    } catch (e) {
+      setError(workLimitMessageOr(e, 'Could not begin writing for this Work just now. The Work and everything feeding it remain unchanged.'));
     } finally {
       setBusy(false);
     }
@@ -307,8 +308,8 @@ export default function P4R1HomeController() {
       await declare(workId, manuscriptId);
       createdWorkForGesture.current.delete(gesture);
       await refresh();
-    } catch {
-      setError('That writing could not be placed in a new Work just now. The writing itself has not changed.');
+    } catch (e) {
+      setError(workLimitMessageOr(e, 'That writing could not be placed in a new Work just now. The writing itself has not changed.'));
     } finally {
       setBusy(false);
     }

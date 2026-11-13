@@ -1,5 +1,6 @@
 'use client';
 
+import { FREE_WORK_LIMIT_CODE, FREE_WORK_LIMIT_MESSAGE } from '@/lib/writersStudio/workLimitShared';
 import { revealHeldPassage } from '@/lib/writersStudio/revealHeldPassage';
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
@@ -2454,7 +2455,7 @@ export default function FlagshipWriteEditController() {
       const created = await create.json().catch(() => null);
       const workId = typeof created?.work?.id === 'string' ? created.work.id : null;
       if (!create.ok || !workId) {
-        setEditorialFailure('The Work could not be created just now. The manuscript has not changed.');
+        setEditorialFailure(created?.code === FREE_WORK_LIMIT_CODE ? FREE_WORK_LIMIT_MESSAGE : 'The Work could not be created just now. The manuscript has not changed.');
         return;
       }
 

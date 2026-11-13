@@ -25,6 +25,7 @@ import { composeOpening, openingFields } from '@/lib/writersStudio/studio/letter
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { holdsWholeWork } from '@/lib/auth/entitlements';
 import { WHOLE_WORK_REFUSAL } from '@/lib/writersStudio/wholeWorkAccess';
+import { claimTaste, completeTaste, returnTaste, tasteStanding, type TasteStanding } from '@/lib/writersStudio/proTaste';
 
 export type RunState = 'queued' | 'reading' | 'lens_done' | 'lens_refused' | 'synthesizing' | 'done' | 'failed' | 'stopped' | 'cancelled';
 const FINAL: ReadonlySet<RunState> = new Set(['done', 'failed', 'stopped', 'cancelled']);
@@ -54,7 +55,20 @@ export interface RunDeps {
   opening: typeof composeOpening;
   /** `writing.wholeWork` (the Free / Pro line). Optional so existing callers keep the default; a test injects its own. */
   wholeWork?: (memberId: string) => Promise<boolean>;
+  /** The one complimentary whole-book pass for a Free writer (step C2, lib/writersStudio/proTaste.ts). Optional seam. */
+  taste?: {
+    standing: (memberId: string, manuscriptId: string) => Promise<TasteStanding>;
+    claim: (memberId: string, manuscriptId: string) => Promise<boolean>;
+    settle: (memberId: string, manuscriptId: string, outcome: 'complete' | 'return') => Promise<void>;
+  };
 }
+
+const defaultTaste: NonNullable<RunDeps['taste']> = {
+  standing: tasteStanding,
+  claim: claimTaste,
+  settle: (memberId, manuscriptId, outcome) =>
+    outcome === 'complete' ? completeTaste(memberId, manuscriptId) : returnTaste(memberId, manuscriptId),
+};
 export const defaultDeps: RunDeps = {
   q: query,
   commission: commissionReading,
@@ -105,7 +119,13 @@ export type StartOutcome =
 export async function startRun(memberId: string, manuscriptId: string, deps: RunDeps = defaultDeps): Promise<StartOutcome> {
   /* Free / Pro line first: nothing is started, and no reading is paid for, when the membership does not include the pass. A failed
      lookup throws (the route answers 500), never reads as "not Pro". The synthesis re-checks before its model call. */
-  if (!(await (deps.wholeWork ?? holdsWholeWork)(memberId))) return { ok: false, refusal: WHOLE_WORK_REFUSAL };
+  const pro = await (deps.wholeWork ?? holdsWholeWork)(memberId);
+  /* A Free writer may run ONE complimentary pass (founder ruling 2026-11-13). Checked here, CLAIMED only once every other
+     check has passed (claimTasteIfFree below), so a refusal for another reason never spends it. */
+  const taste = deps.taste ?? defaultTaste;
+  const standing: TasteStanding = pro ? 'none' : await taste.standing(memberId, manuscriptId);
+  if (!pro && standing === 'none') return { ok: false, refusal: WHOLE_WORK_REFUSAL };
+  const claimTasteIfFree = async () => pro || standing === 'claimed_here' || taste.claim(memberId, manuscriptId);
   if ((await deps.grant(memberId, manuscriptId)) !== 'work') return { ok: false, refusal: 'not_permitted' };
   if ((await deps.sanctuaryDefault(memberId)) !== false) return { ok: false, refusal: 'sanctuary' };
   const draft = (await deps.q<{ id: string; rev: number | null; sections: string[] | null }>(
@@ -117,14 +137,19 @@ export async function startRun(memberId: string, manuscriptId: string, deps: Run
     [manuscriptId, memberId])).rows[0];
   if (!draft || draft.rev === null || !draft.sections?.length) return { ok: false, refusal: 'draft_not_established' };
   const current = await viewRun(memberId, manuscriptId, deps);
-  if (current && !FINAL.has(current.state) && current.draftRevision === Number(draft.rev)) return { ok: true, runId: current.id, resumed: true };
+  if (current && !FINAL.has(current.state) && current.draftRevision === Number(draft.rev)) {
+    if (!(await claimTasteIfFree())) return { ok: false, refusal: WHOLE_WORK_REFUSAL };
+    return { ok: true, runId: current.id, resumed: true };
+  }
   if (current && (current.state === 'failed' || current.state === 'stopped') && current.draftRevision === Number(draft.rev)) {
+    if (!(await claimTasteIfFree())) return { ok: false, refusal: WHOLE_WORK_REFUSAL };
     await record(deps, current.id, 'queued');
     return { ok: true, runId: current.id, resumed: true };
   }
   const today = (await deps.q<{ n: string }>(
     `SELECT count(*)::text AS n FROM editorial_pass_runs WHERE member_id = $1 AND created_at > NOW() - INTERVAL '1 day'`, [memberId])).rows[0];
   if (Number(today?.n ?? 0) >= runsPerDay()) return { ok: false, refusal: 'daily_limit' };
+  if (!(await claimTasteIfFree())) return { ok: false, refusal: WHOLE_WORK_REFUSAL };
   const run = (await deps.q<{ id: string }>(
     `INSERT INTO editorial_pass_runs (member_id, manuscript_id, draft_revision) VALUES ($1, $2, $3) RETURNING id`,
     [memberId, manuscriptId, Number(draft.rev)])).rows[0]!;
@@ -136,6 +161,7 @@ export async function cancelRun(memberId: string, manuscriptId: string, deps: Ru
   const current = await viewRun(memberId, manuscriptId, deps);
   if (!current || FINAL.has(current.state)) return false;
   await record(deps, current.id, 'cancelled');
+  await (deps.taste ?? defaultTaste).settle(memberId, manuscriptId, 'return').catch(() => undefined);
   return true;
 }
 
@@ -144,6 +170,17 @@ const inFlight = new Set<string>();
 
 /** Advance a run to its end. Safe to call again: a run already advancing in this process is not doubled. */
 export async function advanceRun(memberId: string, manuscriptId: string, deps: RunDeps = defaultDeps): Promise<RunView | null> {
+  const view = await advanceRunInner(memberId, manuscriptId, deps);
+  /* Settle a complimentary pass (founder ruling 2026-11-13): spent when the letter is kept; given back when the pass ends
+     without one. Both are no-ops unless that member's taste is claimed for this manuscript and still open. */
+  if (view?.state === 'done') await (deps.taste ?? defaultTaste).settle(memberId, manuscriptId, 'complete').catch(() => undefined);
+  else if (view && (view.state === 'failed' || view.state === 'stopped' || view.state === 'cancelled')) {
+    await (deps.taste ?? defaultTaste).settle(memberId, manuscriptId, 'return').catch(() => undefined);
+  }
+  return view;
+}
+
+async function advanceRunInner(memberId: string, manuscriptId: string, deps: RunDeps): Promise<RunView | null> {
   const key = `${memberId}:${manuscriptId}`;
   if (inFlight.has(key)) return viewRun(memberId, manuscriptId, deps);
   inFlight.add(key);

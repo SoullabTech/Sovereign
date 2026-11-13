@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/postgres';
 import { activeBetaGrant, betaGrantMode } from './betaGrants';
+import { freeAdmissionOpen } from './freeAdmission';
 
 /**
  * SMALL-BETA-01 / B4 — server-side cohort membership.
@@ -56,3 +57,13 @@ export async function writersStudioBetaAccess(memberId: string): Promise<Writers
   if (row?.beta) return { eligible: true, basis: 'active_beta_tester' };
   return { eligible: false, basis: 'not_in_pilot' };
 }
+
+/**
+ * Is this member admitted to the Studio? Beta/Pro standing, or — while Free admission is open (step B, founder ruling
+ * 2026-11-02 "ADMIT FREE NOW"; ./freeAdmission.ts) — any signed-in member on the Free plan. Same decision as
+ * admissionServer.writerStudioAdmissionForMember, for routes that resolve access themselves.
+ */
+export function admittedToStudio(access: { eligible: boolean }): boolean {
+  return access.eligible || freeAdmissionOpen();
+}
+
