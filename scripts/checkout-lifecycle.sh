@@ -20,6 +20,11 @@
 set -uo pipefail
 
 ACTIVE_DAYS="${LIFECYCLE_ACTIVE_DAYS:-2}"
+# Only act on roots living on the volume under pressure. Without this the
+# totals are dominated by external drives: a run on 2026-11-13 reported
+# 238.5G reclaimable while the internal disk it was meant to relieve went
+# 7.6Gi -> 2.7Gi, because almost all of that space was on Lexar and T7.
+ALL_VOLUMES=0
 APPLY=0
 STRIP_ONLY=0
 VERBOSE=0
@@ -32,6 +37,8 @@ usage: checkout-lifecycle.sh [--apply] [--strip-only] [--active-days N] [-v]
   --apply        strip regenerable caches from kept trees, remove reclaimable trees
   --strip-only   with --apply: only strip node_modules/.next, never remove a tree
   --active-days  treat a tree touched within N days as in use (default ${ACTIVE_DAYS})
+  --all-volumes  include external drives (default: only the boot volume,
+                 because space freed on T7 does not relieve a full internal disk)
 USAGE
     exit 2
 }
@@ -39,6 +46,7 @@ USAGE
 while [ $# -gt 0 ]; do
     case "$1" in
         --apply) APPLY=1 ;;
+        --all-volumes) ALL_VOLUMES=1 ;;
         --strip-only) STRIP_ONLY=1 ;;
         --active-days) shift; ACTIVE_DAYS="${1:-2}" ;;
         -v|--verbose) VERBOSE=1 ;;
@@ -49,6 +57,15 @@ while [ $# -gt 0 ]; do
 done
 
 HOME_DIR="${HOME:?}"
+HOME_DEV="$(stat -f %d "$HOME_DIR" 2>/dev/null || stat -c %d "$HOME_DIR" 2>/dev/null)"
+
+# A root reached through a symlink to an external drive is still external.
+on_home_volume() {
+    [ "$ALL_VOLUMES" -eq 1 ] && return 0
+    local dev
+    dev="$(stat -f %d "$1" 2>/dev/null || stat -c %d "$1" 2>/dev/null)"
+    [ -n "$dev" ] && [ "$dev" = "$HOME_DEV" ]
+}
 
 # Prefixes that are never touched, whatever they contain.
 is_protected() {
@@ -148,6 +165,10 @@ echo
 while IFS= read -r root; do
     [ -n "$root" ] || continue
     is_protected "$root" && continue
+    if ! on_home_volume "$root"; then
+        printf '%s\n  (skipped — not on the boot volume; --all-volumes to include)\n\n' "$root"
+        continue
+    fi
     printf '%s\n' "$root"
     found=0
 
