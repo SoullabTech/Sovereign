@@ -94,6 +94,10 @@ export type P4R1Pc3WriteEditViewProps = {
   };
   /** the writer chose "Show me options" on a place in MAIA's letter: open the passage desk on those exact, verified words */
   onOpenPassIssue?: (target: PassIssueTarget) => void;
+  /** "Show me where" on a place in the letter: hold and mark its words in the centre */
+  onShowPassIssue?: (target: PassIssueTarget) => void;
+  /** "Talk about it" on a place in the letter: the centre desk opens on its words; nothing is asked of MAIA until the writer writes */
+  onTalkPassIssue?: (target: PassIssueTarget) => void;
   writing: SectionWriting;
   work: LivingWork | null;
   appearance: Appearance;
@@ -540,6 +544,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const go = useCallback((sectionId: string | null) => {
     if (!sectionId) return;
+    /* With the conversation in the centre, going to a place brings the manuscript back there (the conversation is kept as a thread;
+       only an unsent draft is asked about). */
+    if (workConversationOpen) {
+      if (!requestConversationDeparture()) return;
+      setWorkConversationOpen(false);
+      setWorkConversationStarter('');
+    }
     /* Same section is an attention gesture, not a destructive transition. */
     if (sectionId === props.writing.activeId) { setRailSelectionId(sectionId); return; }
     requestCraftDeparture('Move to another manuscript section', () => {
@@ -549,7 +560,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       props.writing.goToSection(sectionId);
       props.onFocusSection(sectionId);
     });
-  }, [props, craftOpen]);
+  }, [props, craftOpen, workConversationOpen]);
 
   useEffect(() => {
     const inspect = () => {
@@ -1009,6 +1020,20 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+  /* The conversation about the Work, in the centre (founder direction 2026-11-12). The manuscript is one click away. */
+  const workCentre = workConversation ? (
+    <div className="p4r1-work-conversation-centre" data-write-centre-conversation="true" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '18px 24px', height: '100%', overflow: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span className="p4r1-eyebrow">Talking with MAIA · {props.work?.title || 'this Work'}</span>
+        <button type="button" data-write-centre-back="true" onClick={() => { if (!requestConversationDeparture()) return; setWorkConversationOpen(false); setWorkConversationStarter(''); }}
+          style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: '1px solid color-mix(in srgb, currentColor 22%, transparent)', borderRadius: 999, padding: '3px 11px' }}>
+          Back to the page
+        </button>
+      </div>
+      {workConversation}
+    </div>
+  ) : null;
+
   const craftRevision = props.writing.currentRevisionId();
   const craftSection = props.held
     ? props.context.sections.find(section => section.draftSectionId === props.held!.draftSectionId) ?? null
@@ -1262,20 +1287,24 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           sections: props.context.sections.length,
           bodies: props.context.sections.map((section) => props.writing.bodyOf(section.draftSectionId)),
         }) ? (
-          <div hidden={workConversationOpen} data-write-letter="true" style={{ marginBottom: 12 }}>
+          <div data-write-letter="true" style={{ marginBottom: 12 }}>
             <EditorialLetterPanel
               manuscriptId={props.context.manuscriptId}
               sections={props.context.sections}
               draftRevision={props.context.draftRevision ?? null}
               onShowSection={go}
               onEditOptions={(target) => props.onOpenPassIssue?.(target)}
+              onShowPassage={props.onShowPassIssue ? (target) => props.onShowPassIssue!(target) : undefined}
               onTalk={(words) => openWorkConversation(words)}
+              onTalkPassage={props.onTalkPassIssue ? (target) => props.onTalkPassIssue!(target) : undefined}
               onRead={() => setCoverageEpoch((n) => n + 1)}
             />
           </div>
         ) : null}
+        {/* Founder direction 2026-11-12: the conversation is the creative process, so it happens in the centre (workCentre below).
+            This column stays the guide and dashboard: what she has read, the letter and its places, decisions, relationship. */}
         {workConversationOpen ? (
-          workConversation
+          <p className="fr-say" data-write-conversation-in-centre="true" style={{ fontSize: 12, opacity: .8 }}>We’re talking in the middle of the page.</p>
         ) : railSelectionId && railSection ? (
           <div className="p4r1-locus-support" data-write-locus-support={railSection.draftSectionId}>
             <span className="p4r1-eyebrow">You selected</span>
@@ -1793,7 +1822,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               The Work changed. The previous Craft session is closed; unsent wording was not restored.
               Select a passage in your current authorized Work to begin again.
             </div>
-          ) : craftVisible ? craftWork : workSurface}
+          ) : craftVisible ? craftWork : workCentre ?? workSurface}
           maia={craftScopeChanged ? undefined : craftVisible ? craftMaia : writeMaia}
         />
 

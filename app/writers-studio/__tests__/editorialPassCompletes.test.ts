@@ -69,3 +69,18 @@ describe('the editorial pass can finish', () => {
     expect(inBookOrder(items, ['s1', 's2', 's3']).map((x) => x.id)).toEqual(['a', 'b', 'c']);
   });
 });
+
+import { primarySectionId } from '@/lib/writersStudio/studio/editorialPassRunner';
+describe('a place is about the section its evidence names most (founder walk 2026-11-12)', () => {
+  const order = ['toc', 'title', 'ch9', 'ch10'];
+  it('⭐ front matter cited in passing does not win over the chapter the place is about', () => {
+    const item = { sectionIds: ['toc', 'ch9'], evidence: [{ sectionIds: ['toc', 'ch9'] }, { sectionIds: ['ch9'] }, { sectionIds: ['ch9'] }] };
+    expect(primarySectionId(item, order)).toBe('ch9');
+  });
+  it('ties go to the earlier section; places are ordered by the section they are about', () => {
+    expect(primarySectionId({ sectionIds: ['ch10', 'ch9'], evidence: [{ sectionIds: ['ch10'] }, { sectionIds: ['ch9'] }] }, order)).toBe('ch9');
+    const a = { id: 'a', sectionIds: ['toc', 'ch10'], evidence: [{ sectionIds: ['ch10'] }, { sectionIds: ['ch10'] }, { sectionIds: ['toc'] }] };
+    const b = { id: 'b', sectionIds: ['ch9'], evidence: [{ sectionIds: ['ch9'] }] };
+    expect(inBookOrder([a, b], order).map((x) => x.id)).toEqual(['b', 'a']);
+  });
+});

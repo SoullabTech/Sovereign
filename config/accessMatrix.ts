@@ -655,13 +655,23 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/astrology/reflection', minTier: 'free', notes: 'Member-owned chart recognition; independent handler session check' },
   { exact: '/api/astrology/synastry/saved', minTier: 'free', notes: 'Saved synastry; route derives owner from verified session and rejects divergent memberId claim' },
 
-  // Founder-only Pro pilot: these are exact authenticated doors, NOT Pro
-  // entitlement or member-wide chart admission. Both installed page and API
-  // independently recheck actual server session, explicit founder allowlist
-  // and member-owned consent/revision. The entire feature remains disabled
-  // by default pending an independent release decision.
-  { exact: '/astrology/pro-preview', minTier: 'free', notes: 'Founder-only Pro workstation preview; server page checks enabled feature and verified founder session' },
-  { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Founder-only Pro owned chart API; handler rechecks founder allowlist, member session and astrology consent' },
+  // Astrology Pro restricted tester beta (ASTRO_PRO_ACCESS_PHASE=tester-grant:
+  // the founder plus members holding an audited grant in
+  // astro_pro_tester_grant_events). These are exact authenticated doors, NOT
+  // Pro entitlement or member-wide chart admission: this layer only requires a
+  // verified session. The page and every handler independently recheck the
+  // server session and the single access decision in lib/astrology/proAccess.ts
+  // (handlers via resolveProOwner in lib/astrology/proRouteAccess.ts), so a
+  // signed-in member without a grant passes here and is refused there. The
+  // feature stays off unless the phase is set. Every route under
+  // /api/astrology/pro/ must have its own row here; no /api/astrology/pro/
+  // prefix (#1983, founder ruling D-05 option B, 2026-11-12), pinned by
+  // __tests__/astrology-pro-access-matrix.test.ts.
+  { exact: '/astrology/pro-preview', minTier: 'free', notes: 'Pro workstation, restricted tester beta; server page checks enabled feature, verified session and Pro access (founder or audited tester grant)' },
+  { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Pro owned chart API; handler rechecks member session, Pro access (founder or audited tester grant) and astrology consent' },
+  { exact: '/api/astrology/pro/ask', minTier: 'free', notes: 'Ask MAIA about a Pro chart section (POST); chart ids only, birth read server-side, nothing stored but the fact of an answer; Pro access rechecked in handler' },
+  { exact: '/api/astrology/pro/systems', minTier: 'free', notes: 'Pro Vedic, Chinese and Mayan views of a chart (POST); owner-only subject, birth read server-side and never returned; Pro access rechecked in handler' },
+  { exact: '/api/astrology/pro/help', minTier: 'free', notes: 'Reserved for the Pro MAIA help route being built in the ASTRO-PRO-MAIA-GUIDE-01 R2 lane; the handler must resolve its member through resolveProOwner before any work' },
   { exact: '/api/astrology/pro/charts', minTier: 'free', notes: 'Pro saved charts for other people; owner from verified session, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/derived', minTier: 'free', notes: 'Pro progressed and return charts; owner-only subject, birth read server-side, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/ephemeris', minTier: 'free', notes: 'Pro sampled planetary longitudes for a date range; no birth or member data; Pro access rechecked in handler' },

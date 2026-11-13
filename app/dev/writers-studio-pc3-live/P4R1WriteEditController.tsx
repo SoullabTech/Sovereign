@@ -1,5 +1,6 @@
 'use client';
 
+import { revealHeldPassage } from '@/lib/writersStudio/revealHeldPassage';
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
@@ -2305,7 +2306,9 @@ export default function FlagshipWriteEditController() {
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
-    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    /* Hold the anchored passage (words the observation quotes, found verbatim, in whole paragraphs), not the reader's raw offsets,
+       which drift on long sections (founder walk 2026-11-12: the desk held other words and every edit was refused). */
+    const range = passage.holdRange ?? passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
 
     /* A Develop → Write focus handoff is one arrival act. Once the carried
@@ -2319,8 +2322,8 @@ export default function FlagshipWriteEditController() {
         arrivalInsight.readingId,
         arrivalInsight.observation.key,
         section.draftSectionId,
-        passage.range.start,
-        passage.range.end,
+        range.start,
+        range.end,
       ].join(':');
       if (focusInsightConsumed.current === key) return;
       focusInsightConsumed.current = key;
@@ -2344,6 +2347,8 @@ export default function FlagshipWriteEditController() {
     if (focusInsightConsumed.current === showKey) return;
     focusInsightConsumed.current = showKey;
     holdPassage(section, range.start, range.end, exact);
+    /* Bring the held words into view and mark them. Nothing in the text changes; the mark is a CSS highlight. */
+    revealHeldPassage(section.draftSectionId, exact);
   }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage, openWorkspace]);
 
   useEffect(() => {
@@ -2513,6 +2518,33 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   }, [params, pathname, router]);
 
+  /* "Show me where" on a place in MAIA's letter: the same arrival as Develop's "show in the manuscript", without the desk. The carried
+     observation is re-verified against the current draft, its words are held, and they are brought into view and marked. */
+  const onShowPassIssue = (target: { sectionId: string; readingId: string; observationKey: string }) => {
+    focusInsightConsumed.current = null;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set(SECTION_PARAM, target.sectionId);
+    next.set(INSIGHT_READING, target.readingId);
+    next.set(INSIGHT_OBSERVATION, target.observationKey);
+    next.delete('insightAction');
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}`);
+  };
+
+  /* "Talk about it" on a place in MAIA's letter (founder direction 2026-11-12): the same arrival as Develop's Focus handoff. The carried
+     observation is re-verified, its passage is held and the passage desk opens in the centre. Unlike "Show me options", nothing is
+     asked of MAIA: she waits for the writer's words. */
+  const onTalkPassIssue = (target: { sectionId: string; readingId: string; observationKey: string }) => {
+    focusInsightConsumed.current = null;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set(SECTION_PARAM, target.sectionId);
+    next.set(INSIGHT_READING, target.readingId);
+    next.set(INSIGHT_OBSERVATION, target.observationKey);
+    next.set('insightAction', 'focus');
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}`);
+  };
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-p4-opening">
@@ -2560,6 +2592,8 @@ export default function FlagshipWriteEditController() {
             onMode={onMode}
             onStudioPlace={onStudioPlace}
             onOpenPassIssue={onOpenPassIssue}
+            onShowPassIssue={onShowPassIssue}
+            onTalkPassIssue={onTalkPassIssue}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}

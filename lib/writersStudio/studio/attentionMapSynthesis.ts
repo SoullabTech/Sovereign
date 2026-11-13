@@ -120,21 +120,27 @@ export function buildAttentionMap(
   const canonical = new Map(
     commission.observations.map((o) => [o.synthesisRef, o] as const),
   );
-  const reboundItems = result.items.map((item) => ({
-    ...item,
-    evidenceRefs: reboundEvidenceRefs(commission, item),
-  }));
-  for (const item of reboundItems) {
-    if (item.evidenceRefs.length === 0) {
-      throw new Error('attention_synthesis_unbound_evidence');
-    }
-    for (const ref of item.evidenceRefs) {
-      if (!canonical.has(ref)) {
-        throw new Error('attention_synthesis_unbound_evidence');
-      }
-    }
+  /* EA walk 2026-11-12 (production): over nine whole-book readings (hundreds of observations) ONE item citing a handle that was not
+     supplied threw the whole letter away after nine paid readings. The law is unchanged: no item reaches the writer without frozen
+     evidence. What changed is the response: a citation that was not supplied is removed; an item left with no supplied evidence is
+     removed and COUNTED (droppedUnbound); only a synthesis with no evidence-bound item at all is refused. Nothing is invented or
+     re-attributed to fill a gap. */
+  let droppedUnbound = 0;
+  /* Checked as `unknown` so the type of the items is not widened to `any` by the narrowing (CI TypeScript gate, 2026-11-12). */
+  if (!Array.isArray((result as { items?: unknown } | null)?.items as unknown)) throw new Error('attention_synthesis_unreadable');
+  const rawItems: readonly AttentionSynthesisCandidate[] = result.items;
+  const reboundItems = rawItems
+    .map((item) => ({ ...item, evidenceRefs: Array.isArray(item?.evidenceRefs as unknown) ? reboundEvidenceRefs(commission, item).filter((ref) => typeof ref === 'string' && canonical.has(ref)) : [] }))
+    .filter((item) => {
+      if (item.evidenceRefs.length > 0) return true;
+      droppedUnbound += 1;
+      return false;
+    });
+  if (reboundItems.length === 0) {
+    throw new Error('attention_synthesis_unbound_evidence');
   }
   return {
+    ...(droppedUnbound > 0 ? { droppedUnbound } : {}),
     manuscriptId: commission.manuscriptId,
     revisionNumber: commission.revisionNumber,
     commissionedAt: commission.commissionedAt,

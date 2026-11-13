@@ -51,7 +51,7 @@ function world(opts: { grant?: 'work' | 'chapter' | null; sanctuary?: boolean | 
     sanctuaryDefault: async () => sanctuary,
     synthesize: jest.fn(async () => ({ ok: true, map: { items: [] }, deepMode: true, revisionNumber: 5, readingIds: [], provenance: {} })) as any,
     keepLetter: jest.fn(async () => 'letter-1') as any,
-    opening: jest.fn(async () => null) as any,
+    opening: jest.fn(async () => ({ ok: false, refusal: 'no_observations' })) as any,
   };
   return { deps, commission, events, runs, setGrant: (g: typeof grant) => { grant = g; }, setSanctuary: (s: boolean) => { sanctuary = s; } };
 }
