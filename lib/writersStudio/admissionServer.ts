@@ -2,8 +2,10 @@
  * One server-side Writer admission decision.
  *
  * The decision reuses the existing private beta roster and founder witness
- * authority. It does not inspect a query flag, browser state, general member
- * tier, or payment claim.
+ * authority, plus the Free standing a writer keeps when their dated beta grant
+ * ends (design #2263). It reads `admitted`, never Pro: Free is inside.
+ * It does not inspect a query flag, browser state, general member tier, or
+ * payment claim.
  *
  * Free admission (step B, founder ruling 2026-11-02 "ADMIT FREE NOW"; ./freeAdmission.ts): when the door is open AND
  * the Free/Pro boundaries are on, a signed-in member who is not in the pilot is admitted on the Free plan. With it
@@ -14,7 +16,7 @@ import { freeAdmissionOpen } from './freeAdmission';
 
 export async function writerStudioAdmissionForMember(memberId: string) {
   const plan = await writerStudioPlanForMember(memberId);
-  if (plan.pilotEligible) return { allowed: true, plan } as const;
+  if (plan.admitted) return { allowed: true, plan } as const; // beta Pro, or Free after a dated grant ended
   if (freeAdmissionOpen()) return { allowed: true, plan } as const; // plan.plan === 'free'
   return { allowed: false, code: 'WRITER_STUDIO_INVITATION_REQUIRED', plan } as const;
 }
