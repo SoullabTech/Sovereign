@@ -116,6 +116,24 @@ describe('F12/F13 · B: "Show MAIA this page"', () => {
   });
 });
 
+describe('F17/F20 · Studio paths: the member’s own path, framed by the registry, never by the client', () => {
+  it('a known path reflects through askMaia with the path moment and its id; nothing else is taken from the request', async () => {
+    const res = await POST(post({ answer: 'the kitchen at six in the morning', path: 'college-essay' }));
+    expect(res.status).toBe(200);
+    expect(ask.mock.calls[0][0]).toEqual({ kind: 'arrival', sanctuary: false, moment: 'path', pathId: 'college-essay' });
+  });
+  it('an unknown or malformed path is refused without asking MAIA, never quietly treated as the generic door', async () => {
+    for (const p of ['essay', 'College-Essay', '', 7, null]) {
+      expect((await POST(post({ answer: 'x', path: p }))).status).toBe(400);
+    }
+    expect(ask).not.toHaveBeenCalled();
+  });
+  it('a path is a door conversation, not a page reading: path with the first-page moment is refused', async () => {
+    expect((await POST(post({ answer: 'x', path: 'college-essay', moment: 'first_page' }))).status).toBe(400);
+    expect(ask).not.toHaveBeenCalled();
+  });
+});
+
 describe('F7 · the opening conversation is never kept (founder Q1)', () => {
   it('the route cannot write: it imports no database, store, thread, or keep module', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'route.ts'), 'utf8');
@@ -125,6 +143,8 @@ describe('F7 · the opening conversation is never kept (founder Q1)', () => {
       '@/lib/manuscript/ask/askReader',
       '@/lib/writersStudio/betaAccessServer',
       '@/lib/writersStudio/inspirationOpening',
+      // Studio paths (2026-11-13): a pure, import-free registry; it reads and writes nothing.
+      '@/lib/writersStudio/studioPaths',
       'next/server',
     ]);
     expect(src).not.toMatch(/\bquery\s*\(|INSERT|UPDATE|console\.(log|info)\([^)]*answer/);

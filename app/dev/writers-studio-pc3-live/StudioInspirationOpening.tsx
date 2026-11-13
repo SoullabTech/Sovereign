@@ -26,6 +26,7 @@ import {
   type HeardAnswer,
   type HoldChoice,
 } from '@/lib/writersStudio/inspirationOpening';
+import { visibleArc, type StudioPath } from '@/lib/writersStudio/studioPaths';
 // Styles: inspiration-opening.css, imported by the Studio pages beside the other Studio stylesheets.
 
 export type DoorDestination = 'write' | 'import' | 'look';
@@ -54,8 +55,17 @@ export default function StudioInspirationOpening(props: {
   onCarry?: (purpose: string | null) => void;
   onJustWrite?: () => void;
   onHavePages?: () => void;
+  /**
+   * Studio paths: the member's own link chose this environment (`?path=`). Its first prompt, arena and Begin replace the
+   * generic Spark question and destinations. The recommended Work setting is offered pre-ticked and applied only on Begin.
+   */
+  studioPath?: StudioPath | null;
+  onPathBegin?: (choice: { title: string; revisionsPausedConfirmed: boolean; purpose: string | null }) => void;
 }) {
   const carry = props.variant === 'carry';
+  const studioPath = carry ? null : props.studioPath ?? null;
+  const [pathTitle, setPathTitle] = useState(studioPath?.suggestedTitle ?? '');
+  const [pathRevisionsPaused, setPathRevisionsPaused] = useState(studioPath?.recommended.maiaRevisionsPaused === true);
   const [step, setStep] = useState<Step>('door');
   const [answer, setAnswer] = useState('');
   const [unsure, setUnsure] = useState(false);
@@ -95,7 +105,11 @@ export default function StudioInspirationOpening(props: {
       const response = await apiFetch('/api/sovereign/writers-studio/arrival', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ answer: words, history: prior, sanctuary: posture === 'sanctuary' }),
+        body: JSON.stringify({
+          answer: words, history: prior, sanctuary: posture === 'sanctuary',
+          // The path's id only; MAIA's frame for it is looked up on the server (F20).
+          ...(studioPath ? { path: studioPath.id } : {}),
+        }),
       });
       const body = await response.json().catch(() => null) as { reply?: unknown } | null;
       if (!response.ok || typeof body?.reply !== 'string') throw new Error(String(response.status));
@@ -183,9 +197,19 @@ export default function StudioInspirationOpening(props: {
     body = (
       <>
         <div className="wsio-ember" aria-hidden="true" />
+        {studioPath ? (
+          <div className="wsio-path-head" data-studio-path={studioPath.id}>
+            <p className="wsio-path-name">{studioPath.name} · in Writer’s Studio</p>
+            <p className="wsio-note">{studioPath.arena}</p>
+            {/* Claim discipline: only stages that exist in the Studio today are shown. */}
+            <p className="wsio-path-stage">You’re at: {visibleArc(studioPath).join(' · ')}</p>
+          </div>
+        ) : null}
         <p className="wsio-who">MAIA</p>
-        {carry ? <h2 className="wsio-maia wsio-small">{CARRY_COPY.question}</h2> : <h1 className="wsio-maia">{C.question}</h1>}
-        <p className="wsio-note">{carry ? CARRY_COPY.invitation : C.invitation}</p>
+        {carry ? <h2 className="wsio-maia wsio-small">{CARRY_COPY.question}</h2>
+          : studioPath ? <h1 className="wsio-maia wsio-small">{studioPath.firstPrompt}</h1>
+          : <h1 className="wsio-maia">{C.question}</h1>}
+        <p className="wsio-note">{carry ? CARRY_COPY.invitation : studioPath ? studioPath.invitation : C.invitation}</p>
         <label className="wsio-label" htmlFor="wsio-answer">{C.answerLabel}</label>
         <textarea id="wsio-answer" className="wsio-input" rows={3} value={answer} autoFocus
           onChange={(e) => setAnswer(e.target.value)} />
@@ -201,7 +225,8 @@ export default function StudioInspirationOpening(props: {
           </div>
         ) : (
           <div className="wsio-row wsio-ways">
-            <button type="button" className="wsio-link" disabled={props.busy} onClick={props.onJustWrite}>{C.justWrite}</button>
+            <button type="button" className="wsio-link" disabled={props.busy}
+              onClick={studioPath ? () => setStep('begin') : props.onJustWrite}>{C.justWrite}</button>
             <button type="button" className="wsio-link" onClick={props.onHavePages}>{C.havePages}</button>
           </div>
         )}
@@ -274,6 +299,33 @@ export default function StudioInspirationOpening(props: {
         </div>
         <p className="wsio-note">{C.holdScope}</p>
       </>
+    );
+  } else if (step === 'begin' && studioPath) {
+    const setting = studioPath.recommendedCopy.maiaRevisionsPaused;
+    body = (
+      <section className="wsio-stack" data-path-begin={studioPath.id}>
+        <p className="wsio-who">MAIA</p>
+        <p className="wsio-maia wsio-small">Let’s begin your {studioPath.name.toLowerCase()}.</p>
+        <label className="wsio-label" htmlFor="wsio-path-title">Its name, for now. You can change it any time.</label>
+        <input id="wsio-path-title" className="wsio-input" value={pathTitle} onChange={(e) => setPathTitle(e.target.value)} />
+        {setting ? (
+          <label className="wsio-check" htmlFor="wsio-path-revisions">
+            <input id="wsio-path-revisions" type="checkbox" checked={pathRevisionsPaused}
+              onChange={(e) => setPathRevisionsPaused(e.target.checked)} />
+            <span><b>{setting.label}</b><br /><span className="wsio-note">{setting.hint}</span></span>
+          </label>
+        ) : null}
+        <div className="wsio-row">
+          <button type="button" className="fr-home-primary" disabled={props.busy}
+            onClick={() => props.onPathBegin?.({ title: pathTitle, revisionsPausedConfirmed: pathRevisionsPaused, purpose: planNow().purpose })}>
+            {props.busy ? 'Beginning…' : 'Begin'}
+          </button>
+          <button type="button" className="wsio-link" disabled={props.busy} onClick={() => begin('look')}>Look around first</button>
+        </div>
+        {hold === 'own' && posture === 'ordinary' && !unsure ? (
+          <p className="wsio-note wsio-held">Your words will be kept with this Work.</p>
+        ) : null}
+      </section>
     );
   } else if (step === 'begin') {
     body = (
