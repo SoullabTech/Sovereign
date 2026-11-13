@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  MAX_LINES, MAX_MESSAGES, PAUSE_TOKEN, REVIEW_CONSENT_VERSION, REVIEWABLE_WORKS, SUPPORT_MESSAGE,
+  MAX_LINES, MAX_MESSAGES, PAUSE_TOKEN, REVIEW_CONSENT_VERSION, REVIEWABLE_WORKS, SANCTUARY_REVIEW_MESSAGE, SUPPORT_MESSAGE,
   guideSystemPrompt, guideUserInput, isReviewableWork, isUuid, openingQuestion, parseGuideReply, parseSummary,
   summarySystemPrompt, validateLines, validateSaveRequest, validateTranscript,
 } from '../../lib/listening/soundStudioReview.ts';
@@ -142,4 +142,35 @@ test('review API routes are mapped for members only; the panel discloses the mod
   assert.match(ui, /NOT MAIA/);
   assert.match(ui, /sent to Claude \(Anthropic\)/);
   assert.match(ui, /only the summary lines you check and confirm/);
+});
+
+// F4 / F6 (LISTEN-01 migration review, #1979)
+test('F6: consent version bumped and the consent text discloses theme synthesis', () => {
+  assert.notEqual(REVIEW_CONSENT_VERSION, 'sound-studio-review-v1-2026-11-09');
+  assert.match(REVIEW_CONSENT_VERSION, /^sound-studio-review-v2-/);
+  const ui = read('app/listen/SoundStudioReview.tsx');
+  assert.match(ui, /may later be sent to Claude too, under anonymous references[^<]*find themes across reviews/);
+  assert.equal(validateSaveRequest({ workId: 'open-ground-432-v1', lines: [{ kind: 'observation', text: 'x' }], consentVersion: 'sound-studio-review-v1-2026-11-09' }), null, 'v1 consent is no longer accepted');
+});
+
+test('F4: Sanctuary refuses in all three routes before any model call, insert or validation; the panel says so', () => {
+  const helper = code(read('lib/listening/listenReviewPosture.ts'));
+  assert.match(helper, /resolveStudioPosture/);
+  assert.match(helper, /posture\.keep/);
+  const turnLike = ['app/api/listen/review/turn/route.ts', 'app/api/listen/review/summary/route.ts', 'app/api/listen/review/route.ts'];
+  for (const file of turnLike) {
+    const src = code(read(file));
+    const check = src.indexOf('refuseIfNotOrdinary(');
+    assert.ok(check > 0, `${file} checks Sanctuary`);
+    assert.ok(check > src.indexOf('await requireListenReviewer()'), `${file}: after the reviewer gate`);
+    for (const later of ['generateWithClaude(', 'INSERT INTO', 'validateSaveRequest(', 'validateTranscript(']) {
+      const at = src.indexOf(later);
+      if (at >= 0) assert.ok(check < at, `${file}: Sanctuary check before ${later}`);
+    }
+  }
+  const ui = read('app/listen/SoundStudioReview.tsx');
+  assert.match(ui, /declaredSanctuaryPosture\(\)/);
+  assert.match(ui, /stage === 'sanctuary'/);
+  assert.match(SANCTUARY_REVIEW_MESSAGE, /unavailable during Sanctuary/);
+  assert.match(ui, /SANCTUARY_REVIEW_MESSAGE/);
 });

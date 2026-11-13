@@ -21,9 +21,10 @@ export async function wholeWorkAllowed(): Promise<boolean | null> {
   try {
     const res = await apiFetch('/api/members/entitlements', { cache: 'no-store' });
     if (!res.ok) return null;
-    const body = (await res.json().catch(() => null)) as { entitlements?: unknown } | null;
+    const body = (await res.json().catch(() => null)) as { entitlements?: unknown; wholeWorkTaste?: unknown } | null;
     if (!Array.isArray(body?.entitlements)) return null;
-    return body.entitlements.includes('writing.wholeWork');
+    // A Free writer's one complimentary pass (founder ruling 2026-11-13) counts as allowed here; the server decides.
+    return body.entitlements.includes('writing.wholeWork') || body.wholeWorkTaste === 'available';
   } catch {
     return null;
   }

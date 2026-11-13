@@ -132,7 +132,22 @@ export function chapterSections(
 }
 
 const ink = { color: 'inherit' } as const;
+
+/* the share of the stage the All-tools panel takes, in percent; kept on this device only */
+const SHARE_MIN = 15;
+const SHARE_MAX = 80;
+const SHARE_KEY = 'writers-studio:develop-tools-share:v1';
+export const clampShare = (v: number) => Math.min(SHARE_MAX, Math.max(SHARE_MIN, Number.isFinite(v) ? v : 40));
+function readToolsShare(): number {
+  try { const v = Number(window.localStorage.getItem(SHARE_KEY)); return v ? clampShare(v) : 40; } catch { return 40; }
+}
+function writeToolsShare(v: number): void {
+  try { window.localStorage.setItem(SHARE_KEY, String(Math.round(v))); } catch { /* storage blocked: the size still holds this visit */ }
+}
 const hair = '1px solid color-mix(in srgb, currentColor 16%, transparent)';
+
+/** What the writer is told before a whole-book pass begins from Develop: it is paid and it takes a while. */
+export const PASS_COST_NOTE = 'This asks MAIA to read your whole book: up to nine paid readings and a paid letter (readings she already made of this draft are reused). It takes several minutes.';
 
 export function DevelopStage(props: {
   workTitle: string | null;
@@ -186,9 +201,25 @@ export function DevelopStage(props: {
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [passAsk, setPassAsk] = useState(false);
   const [planAsk, setPlanAsk] = useState('');
   const [more, setMore] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
+  /* Founder 2026-11-12: "we need to be able to expand/contract that horizontal field". In All tools the tools sit under the chapter;
+     the writer drags the line between them, or uses the keyboard on it, or folds the tools away. Remembered on this device only. */
+  const [toolsShare, setToolsShare] = useState<number>(() => readToolsShare());
+  const [toolsFolded, setToolsFolded] = useState(false);
+  const setShare = (v: number) => { const n = clampShare(v); setToolsShare(n); writeToolsShare(n); };
+  const startDrag = (e: { clientY: number; preventDefault: () => void }) => {
+    const root = rootRef.current;
+    if (!root) return;
+    e.preventDefault();
+    const rect = root.getBoundingClientRect();
+    const move = (ev: PointerEvent) => setShare(((rect.bottom - ev.clientY) / rect.height) * 100);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
   const current = sections[idx] ?? null;
   /* EA walk 2026-11-11: Develop showed only a chapter's first section (its title and epigraph) while MAIA read the whole chapter.
@@ -283,10 +314,22 @@ export function DevelopStage(props: {
                 Whole book · editorial pass ready
               </button>
             ) : (
-              <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={props.onEditorialPass}
+              /* Walk 2026-11-13: one click here began a paid whole-book reading with no word about it. The click now only asks; the
+                 reading begins on the writer's second, informed act. */
+              passAsk ? (
+                <span role="group" aria-label="Read the whole book?" data-develop-pass-confirm="true" style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                  <span>{PASS_COST_NOTE}</span>
+                  <button type="button" data-develop-pass-go="true" onClick={() => { setPassAsk(false); props.onEditorialPass?.(); }}
+                    style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>Read it</button>
+                  <button type="button" data-develop-pass-cancel="true" onClick={() => setPassAsk(false)}
+                    style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: 'none', textDecoration: 'underline', padding: '3px 4px' }}>Not now</button>
+                </span>
+              ) : (
+              <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={() => setPassAsk(true)}
                 style={{ font: 'inherit', fontSize: 12, cursor: props.editorialPass.status === 'running' ? 'default' : 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>
                 Whole book · editorial pass
               </button>
+              )
             )
           ) : null}
         </nav>
@@ -305,9 +348,29 @@ export function DevelopStage(props: {
         </div>
       ) : null}
 
-      {more || allTools ? (
+      {allTools ? (
+        <div role="separator" aria-orientation="horizontal" aria-label="Resize the tools under your chapter"
+          aria-valuemin={SHARE_MIN} aria-valuemax={SHARE_MAX} aria-valuenow={toolsFolded ? 0 : Math.round(toolsShare)} tabIndex={0}
+          data-develop-tools-splitter="true"
+          onPointerDown={(e) => { if ((e.target as HTMLElement).closest('button')) return; if (toolsFolded) setToolsFolded(false); startDrag(e); }}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') { e.preventDefault(); setToolsFolded(false); setShare(toolsShare + 5); }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); setShare(toolsShare - 5); }
+            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setToolsFolded((v) => !v); }
+          }}
+          style={{ order: 2, flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8, cursor: 'row-resize', padding: '4px 0', userSelect: 'none', touchAction: 'none' }}>
+          <span aria-hidden="true" style={{ flex: 1, height: 3, borderRadius: 2, background: 'color-mix(in srgb, currentColor 22%, transparent)' }} />
+          <button type="button" data-develop-tools-fold="true" aria-expanded={!toolsFolded} onClick={() => setToolsFolded((v) => !v)}
+            style={{ font: 'inherit', fontSize: 11, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '1px 10px', opacity: .85 }}>
+            {toolsFolded ? 'Show tools' : 'Hide tools'}
+          </button>
+          <span aria-hidden="true" style={{ flex: 1, height: 3, borderRadius: 2, background: 'color-mix(in srgb, currentColor 22%, transparent)' }} />
+        </div>
+      ) : null}
+
+      {more || (allTools && !toolsFolded) ? (
         /* behind the one quiet control: the plan, what she read, ways in, and what she holds */
-        <div data-develop-more-panel="true" data-develop-panel-open={allTools ? 'all-tools' : 'more'} style={{ order: allTools ? 2 : 0, flex: allTools ? '0 1 40%' : '1 1 auto', borderTop: allTools ? hair : undefined, paddingTop: allTools ? 10 : undefined, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
+        <div data-develop-more-panel="true" data-develop-panel-open={allTools ? 'all-tools' : 'more'} style={{ order: allTools ? 3 : 0, flex: allTools ? `0 0 ${toolsShare}%` : '1 1 auto', paddingTop: allTools ? 6 : undefined, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18, paddingRight: 4 }}>
           {/* Founder (live, 2026-11-09): the per-chapter strip truncated to "S", "El", "P" in a long book, and the recurring-word counts read
               as noise. Both removed. Chapters are on the left again, in the Studio's own collapsible manuscript rail. */}
           {/* the plan: MAIA's grounded steps, the writer's to edit. It never changes the manuscript; a step is opened in the passage desk. */}

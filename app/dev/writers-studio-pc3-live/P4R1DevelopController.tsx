@@ -1,5 +1,6 @@
 'use client';
 
+import { freeWorkLimitFrom, workLimitMessageOr } from '@/lib/writersStudio/workLimitShared';
 import { readingProgressText } from '@/lib/writersStudio/readingProgress';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -36,6 +37,7 @@ import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import { runEditorialPass, savePass } from '@/lib/writersStudio/studio/editorialPassRunner';
+import { fetchLetter, keptPassFor } from '@/lib/writersStudio/letter/letterClient';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import {
@@ -514,14 +516,14 @@ export default function P4R1DevelopController() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ title }),
       });
-      if (!created.ok) throw new Error('create:' + created.status);
+      if (!created.ok) throw (await freeWorkLimitFrom(created)) ?? new Error('create:' + created.status);
       const body = await created.json().catch(() => ({})) as { id?: string; work?: { id?: string }; livingWork?: { id?: string } };
       const workId = body.id ?? body.work?.id ?? body.livingWork?.id;
       if (!workId) throw new Error('create:id');
       await declareManuscript(workId);
       await reloadWorks();
-    } catch {
-      setDeclareError('We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.');
+    } catch (e) {
+      setDeclareError(workLimitMessageOr(e, 'We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.'));
     } finally {
       setDeclaring(false);
     }
@@ -1105,21 +1107,30 @@ export default function P4R1DevelopController() {
 
   useEffect(() => {
     if (!context || typeof window === 'undefined') return;
-    const key = `writers-studio:editorial-pass:v1:${context.manuscriptId}`;
-    const raw = window.sessionStorage.getItem(key);
-    if (!raw) return;
-    try {
-      const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
-      if (
-        context.draftRevision !== null
-        && cached.draftRevision === context.draftRevision
-        && cached.map?.manuscriptId === context.manuscriptId
-      ) {
-        setAttentionMap(cached.map);
+    let cancelled = false;
+    const workManuscript = context.manuscriptId;
+    const revision = context.draftRevision;
+    const fromThisTab = () => {
+      const key = `writers-studio:editorial-pass:v1:${workManuscript}`;
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) return;
+      try {
+        const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
+        if (revision !== null && cached.draftRevision === revision && cached.map?.manuscriptId === workManuscript) setAttentionMap(cached.map);
+      } catch {
+        window.sessionStorage.removeItem(key);
       }
-    } catch {
-      window.sessionStorage.removeItem(key);
-    }
+    };
+    /* The letter MAIA kept for this Work is the pass for this draft, on any device and after any visit (relational architecture step 2).
+       Founder walk 2026-11-12: Develop looked only in this tab's sessionStorage, so the kept 24-place letter was not there, the lens read
+       "Whole book · editorial pass" instead of "ready", and one click began a new paid reading of the whole book. */
+    void fetchLetter(workManuscript).then((out) => {
+      if (cancelled) return;
+      const kept = keptPassFor(out?.letter ?? null, workManuscript, revision);
+      if (kept) setAttentionMap(kept);
+      else fromThisTab();
+    });
+    return () => { cancelled = true; };
   }, [context?.manuscriptId, context?.draftRevision]);
 
   useEffect(() => {

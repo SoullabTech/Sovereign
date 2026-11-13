@@ -65,7 +65,9 @@ describe('the server gate sits on the whole-book synthesis only', () => {
   /* The one synthesis used by BOTH the attention-map route and the server-side editorial pass run. */
   const src = read('lib/writersStudio/studio/synthesizeAttentionMap.ts');
   it('⭐ checks the entitlement (never tier) inside the deep-mode branch, before any model call', () => {
-    const gate = src.indexOf('holdsWholeWork(memberId)');
+    /* Step C2 (founder ruling 2026-11-13): the check is `writing.wholeWork` OR this Free writer's one complimentary pass
+       claimed for THIS manuscript (lib/writersStudio/proTaste.ts, which calls holdsWholeWork first). Same place, same rules. */
+    const gate = src.indexOf('wholeWorkForManuscript(memberId, manuscriptId)');
     expect(gate).toBeGreaterThan(-1);
     expect(src.lastIndexOf('if (deepMode) {', gate)).toBeGreaterThan(src.indexOf('const deepMode ='));
     expect(gate).toBeLessThan(src.indexOf('runStructured('));

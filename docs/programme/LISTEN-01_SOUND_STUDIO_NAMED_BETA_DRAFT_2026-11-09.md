@@ -120,3 +120,9 @@ To close the beta: unset `SOULLAB_LISTEN_REVIEW_ENABLED` (everything returns to 
 - **Native "Play with your music" mix:** not included.
 - **Rights:** all five works are founder-declared original, and their voices are synthetic. Independent rights
   review and release authority remain open for any release beyond this named beta.
+
+## Operator note — 2026-11-12 (first named reviewer; same-SHA redeploy trap)
+
+- Review fixes F4 (Sanctuary refusal) and F6 (consent v2, theme synthesis) shipped in #2245 and are live on `9d99abf99`.
+- First named reviewer added to `SOULLAB_LISTEN_BETA_MEMBER_IDS` in `.env.production` on minisforum (one member id; no ids are recorded in the repo).
+- ⚠️ The env file is read only when the container is created, so an env-only change needs a cutover. **Do not re-`prepare-maia` the SHA that is already running**: it re-points `maia-sovereign:<sha>` at a new image, and `cutover-maia` then refuses with "Exact rollback artifact … is no longer restorable". Cut over a new SHA instead (any new commit on `clean-main-no-secrets`).

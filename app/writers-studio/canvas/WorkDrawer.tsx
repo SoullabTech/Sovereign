@@ -370,6 +370,29 @@ export default function WorkDrawer({
         )}
       </section>
 
+      {/* ── MAIA's part: the writer's own "asks, never rewrites" for this whole
+          Work (founder authorization 2026-11-13, ledger #1938). Member-declared;
+          the server enforces it on every editorial turn for this Work. ── */}
+      <section>
+        <h3 className="text-[10.5px] tracking-[0.15em] uppercase opacity-35 mb-2">MAIA&rsquo;s part</h3>
+        <label className="flex items-start gap-2.5 text-[13px] leading-relaxed cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-[3px]"
+            checked={work.maiaRevisionsPaused === true}
+            disabled={busy}
+            onChange={(e) => void patch(work.id, { maiaRevisionsPaused: e.target.checked })}
+          />
+          <span>
+            <span className="opacity-85">MAIA asks, never rewrites</span>
+            <span className="block text-[12px] opacity-50">
+              For this whole Work, MAIA reflects and asks questions but never offers new wording.
+              Every sentence stays yours. Good for a college essay or anything that must be all your own.
+            </span>
+          </span>
+        </label>
+      </section>
+
       {failed && <p className="text-[12px] opacity-60">{failed}</p>}
     </div>
   );
