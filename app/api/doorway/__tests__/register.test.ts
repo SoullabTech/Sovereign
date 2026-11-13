@@ -20,6 +20,7 @@ jest.mock('@/lib/security/authAudit', () => ({ logAuthEvent: (...a: unknown[]) =
 import { NextRequest } from 'next/server';
 import { POST as register } from '@/app/api/doorway/register/route';
 import { POST as check } from '@/app/api/doorway/check/route';
+import { hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 
 const post = (url: string, body: unknown) =>
   new NextRequest(`https://writer.soullab.life${url}`, { method: 'POST', body: JSON.stringify(body) });
@@ -62,6 +63,25 @@ it('the claim is scoped to this studio and the hashed code, never the raw code',
   expect(JSON.stringify(txQuery.mock.calls)).not.toContain('7KQ2');
 });
 
+it('⭐ the claim is bound to the invited email (hash only), so a code cannot claim someone else\'s address', async () => {
+  txQuery.mockResolvedValue({ rows: [] });
+  await register(post('/api/doorway/register', { ...good, email: ' Ada@Example.com ' }));
+  const [sql, params] = txQuery.mock.calls[0];
+  expect(String(sql)).toContain('email_sha256 = $3');
+  expect(params[2]).toBe(hashInvitedEmail('ada@example.com'));
+  expect(JSON.stringify(txQuery.mock.calls)).not.toContain('ada@example.com');
+});
+
+it('a code used with a different email is refused, says why, and creates no member', async () => {
+  txQuery.mockImplementation(async (_sql: string, p: unknown[]) =>
+    String(_sql).includes('UPDATE studio_doorway_invitations') && p[2] === hashInvitedEmail('ada@example.com')
+      ? { rows: [{ id: 7 }] } : { rows: [] });
+  const res = await register(post('/api/doorway/register', { ...good, email: 'someone.else@example.com' }));
+  expect(res.status).toBe(403);
+  expect((await res.json()).error).toMatch(/email address your invitation was sent to/);
+  expect(txQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO members'))).toBe(false);
+});
+
 it('an unknown studio is refused before any lookup', async () => {
   const res = await register(post('/api/doorway/register', { ...good, studio: 'maia' }));
   expect(res.status).toBe(403);
@@ -89,7 +109,23 @@ it('a good code creates a normal member, records the door, and sends them to the
   const memberInsert = txQuery.mock.calls.find(([sql]) => String(sql).includes('INSERT INTO members'))!;
   expect(memberInsert[1][0]).toMatch(/^STUDIO-WRITER-[A-Z2-9]{8}$/);
   expect(txQuery.mock.calls.some(([sql, p]) => String(sql).includes('studio_doorway_redemptions') && p[0] === 7 && p[1] === 'm1' && p[2] === 'writer')).toBe(true);
+  expect(body.signedIn).toBe(true);
   expect(logAuthEvent).toHaveBeenCalledWith(expect.objectContaining({ action: 'register_success', memberId: 'm1' }), expect.anything());
+});
+
+it('⭐ account created but session failed: reports signedIn false and sends them to sign in, not to the Studio', async () => {
+  txQuery.mockImplementation(async (sql: string) => {
+    if (sql.includes('UPDATE studio_doorway_invitations')) return { rows: [{ id: 7 }] };
+    if (sql.includes('INSERT INTO members')) return { rows: [{ id: 'm1', username: 'ada', name: 'Ada', tier: 'free', roles: ['member'] }] };
+    return { rows: [] };
+  });
+  createSession.mockRejectedValue(new Error('sessions down'));
+  const res = await register(post('/api/doorway/register', good));
+  expect(res.status).toBe(200);
+  const body = await res.json();
+  expect(body.signedIn).toBe(false);
+  expect(body.session).toBeUndefined();
+  expect(body.next).toBe('/signin?next=%2Fwriters-studio');
 });
 
 it('check answers only { valid } and never takes a use', async () => {

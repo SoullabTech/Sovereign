@@ -44,9 +44,18 @@ Where am I: the Studio's door. What is it for: joining with an invitation. Where
 | Wrong code | "That code doesn't open this door. Check it with the person who invited you." | States the fact, points to the human who can help, reveals nothing about the code |
 | Create account | "Create your Soullab account to use with Writer's Studio." · "Create account" | Honest that this is a Soullab account (one identity), used with this Studio |
 | Existing member | "Already have a Soullab account? Sign in" | An existing member is never forked into a second account |
+| Code used with another email | "This code and email don't match an open invitation. Use the email address your invitation was sent to, or ask the person who invited you." | Each invitation is bound to the address it was sent to, so it cannot claim (and lock out) someone else's email |
+| Account made, session failed | "Your account was created, but we couldn't sign you in just now. Please sign in with your email and password." · "Sign in" | Says what is true instead of sending them to a Studio that would bounce them |
 
 ## Known gap (not hidden)
 
 After joining, a person not yet on that Studio's own roster lands on its public preview with
 `access=invitation-required`, and that preview's header still offers "Sign in" to someone already signed in. Issuing
 an invitation must be paired with the Studio's own admission (roster / allowlist / grant) until a later lane joins them.
+
+## Changes after the walk (2026-11-13, review findings)
+
+Two findings from an external review were fixed after the walk above and are covered by API tests, not re-walked:
+invitations are now bound to the invited email (registration must use it), and a failed session after account
+creation is reported as "created, please sign in" instead of a silent success.
+

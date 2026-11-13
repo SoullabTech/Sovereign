@@ -25,6 +25,7 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
   const [error, setError] = useState<string | null>(null);
   const [signIn, setSignIn] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [createdNotSignedIn, setCreatedNotSignedIn] = useState(false);
   const signInHref = `/signin?next=${encodeURIComponent(studioPath)}`;
 
   async function checkCode(e: React.FormEvent) {
@@ -60,6 +61,11 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
         body: JSON.stringify({ studio, code, name, email, password }),
       });
       const body = await res.json().catch(() => ({}));
+      if (res.ok && body.success && body.signedIn === false) {
+        // The account exists but no session was made: say so, and offer sign-in, rather than bouncing them.
+        setCreatedNotSignedIn(true);
+        return;
+      }
       if (res.ok && body.success) {
         try {
           localStorage.setItem('beta_user', JSON.stringify({ ...body.member, onboarded: true }));
@@ -95,7 +101,14 @@ export function DoorwayJoin({ studio, studioName, studioPath }: { studio: Doorwa
           </p>
         </header>
 
-        {step === 'code' ? (
+        {createdNotSignedIn ? (
+          <div className="relative mt-10 space-y-4 text-center" role="status">
+            <p className="text-slate-300 text-sm font-light leading-relaxed">
+              Your account was created, but we couldn&rsquo;t sign you in just now. Please sign in with your email and password.
+            </p>
+            <a className={button + ' inline-block'} href={signInHref}>Sign in</a>
+          </div>
+        ) : step === 'code' ? (
           <form onSubmit={checkCode} className="relative mt-10 space-y-4">
             <label className="block text-slate-400 text-xs font-light" htmlFor="doorway-code">Invitation code</label>
             <input id="doorway-code" className={field} value={code} onChange={(e) => setCode(e.target.value)}

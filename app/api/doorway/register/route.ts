@@ -4,7 +4,7 @@ import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
-import { CLAIM_INVITATION_SQL, hashInvitationCode } from '@/lib/studios/doorwayInvitations';
+import { CLAIM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 import { randomBytes } from 'crypto';
 
 /**
@@ -16,14 +16,18 @@ import { randomBytes } from 'crypto';
  * detours the person to /begin.
  *
  * The invitation is the gate, enforced here: the use is claimed atomically INSIDE the same transaction as the member
- * insert, so a failed sign-up gives it back and two people cannot both take the last use. The invitation admits no one
- * INTO a Studio; that Studio's own gate still decides.
+ * insert, so a failed sign-up gives it back and two people cannot both take the last use. Each invitation is bound to
+ * the email it was sent to (hash only), so it cannot be used to register — and so lock out — someone else's address.
+ * The invitation admits no one INTO a Studio; that Studio's own gate still decides.
  *
  * 404 unless STUDIO_DOORWAYS_ENABLED === 'true'.
  */
 export const dynamic = 'force-dynamic';
 
 const REFUSED = 'This door opens with an invitation code. Ask the person who invited you to send it again.';
+/** At registration the code AND the email must match one open invitation (an invitation is bound to its address). */
+const REFUSED_AT_REGISTER =
+  'This code and email don’t match an open invitation. Use the email address your invitation was sent to, or ask the person who invited you.';
 
 function passkeyToken(): string {
   const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
     let member: { id: string; username: string; name: string; tier: string | null; roles: string[] | null };
     try {
       member = await transaction(async (tx) => {
-        const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id]);
+        const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id, hashInvitedEmail(email)]);
         if (claimed.rows.length !== 1) throw new InvitationRefused();
         const invitationId = claimed.rows[0].id;
 
@@ -113,31 +117,39 @@ export async function POST(request: NextRequest) {
           { action: 'register_failed', result: 'failure', metadata: { door: 'studio_doorway', studio: doorway.id, reason: 'invitation' } },
           request,
         );
-        return NextResponse.json({ error: REFUSED }, { status: 403 });
+        return NextResponse.json({ error: REFUSED_AT_REGISTER }, { status: 403 });
       }
       throw e;
     }
 
     const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    let session;
+    // The account exists once the transaction commits. If the session then fails, say so plainly: the person is NOT
+    // signed in, and is sent to sign in with the account they just made instead of to a Studio that will bounce them.
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       session = await createSession({ memberId: member.id, ipAddress: clientIP, userAgent });
       await setSessionCookie(session.sessionToken, session.expiresAt);
       await setAccessCookies(member.id, member.tier || 'free', member.roles || ['member'], session.expiresAt);
     } catch {
+      session = undefined;
       console.error('[DoorwayRegister] session creation failed');
     }
+    const signedIn = !!session;
 
     await logAuthEvent(
-      { action: 'register_success', memberId: member.id, result: 'success', metadata: { door: 'studio_doorway', studio: doorway.id } },
+      {
+        action: 'register_success', memberId: member.id, result: 'success',
+        metadata: { door: 'studio_doorway', studio: doorway.id, signedIn },
+      },
       request,
     );
 
     return NextResponse.json({
       success: true,
+      signedIn,
       member: { id: member.id, username: member.username, name: member.name, onboarded: true },
-      next: doorway.studioPath,
+      next: signedIn ? doorway.studioPath : `/signin?next=${encodeURIComponent(doorway.studioPath)}`,
       session: session ? { expiresAt: session.expiresAt.toISOString(), token: session.sessionToken } : undefined,
     });
   } catch {

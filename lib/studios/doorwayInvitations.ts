@@ -26,9 +26,19 @@ export function hashInvitationCode(raw: string): string {
   return createHash('sha256').update(normalizeInvitationCode(raw)).digest('hex');
 }
 
+/** Emails compare trimmed and lower-cased. Only this hash is stored with an invitation, never the address. */
+export function normalizeInvitedEmail(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+export function hashInvitedEmail(raw: string): string {
+  return createHash('sha256').update(normalizeInvitedEmail(raw)).digest('hex');
+}
+
 /**
- * The atomic claim. In one statement it takes a use only if the code exists for THIS studio, is not revoked, not
- * expired and not used up, so two people racing for the last use cannot both get it. Returns the invitation id or null.
+ * The atomic claim. In one statement it takes a use only if the code exists for THIS studio, was sent to THIS email,
+ * is not revoked, not expired and not used up, so two people racing for the last use cannot both get it, and an
+ * invitation cannot be used to register someone else's address. Returns the invitation id or no row.
  * Run inside the same transaction as the member insert so a failed sign-up gives the use back.
  */
 export const CLAIM_INVITATION_SQL = `
@@ -36,6 +46,7 @@ export const CLAIM_INVITATION_SQL = `
      SET uses = uses + 1
    WHERE code_hash = $1
      AND studio = $2
+     AND email_sha256 = $3
      AND revoked_at IS NULL
      AND expires_at > now()
      AND uses < max_uses

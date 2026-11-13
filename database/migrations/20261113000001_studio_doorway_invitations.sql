@@ -8,7 +8,7 @@
 -- Now What? door, where the invitation is the gate. It does NOT admit anyone into a Studio: each Studio's
 -- own gate (beta roster, allowlist, grant log, entitlement) still decides entry, unchanged.
 --
--- Only a SHA-256 hash of each code is stored; the code itself is shown once to the issuer.
+-- Only SHA-256 hashes of each code and of the invited email are stored; the code itself is shown once to the issuer.
 -- Nothing reads or writes these tables unless STUDIO_DOORWAYS_ENABLED = 'true'.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS studio_doorway_invitations (
   id          BIGSERIAL PRIMARY KEY,
   studio      TEXT        NOT NULL CHECK (studio IN ('writer', 'sound', 'guide', 'astrology')),
   code_hash   TEXT        NOT NULL UNIQUE CHECK (code_hash ~ '^[0-9a-f]{64}$'),
+  -- The invitation is bound to the address it was sent to (SHA-256 of the lower-cased email; never the address).
+  -- Registration must use that address, so an invitation cannot be used to claim someone else's email.
+  email_sha256 TEXT       NOT NULL CHECK (email_sha256 ~ '^[0-9a-f]{64}$'),
   max_uses    INTEGER     NOT NULL DEFAULT 1 CHECK (max_uses BETWEEN 1 AND 500),
   uses        INTEGER     NOT NULL DEFAULT 0 CHECK (uses >= 0 AND uses <= max_uses),
   expires_at  TIMESTAMPTZ NOT NULL,
