@@ -37,7 +37,9 @@ describe('mode switch', () => {
 describe('decision', () => {
   it('a grant or extend is active until its expiry; revoke, expired or none are not', () => {
     const f = future();
-    expect(decideBetaGrant({ action: 'grant', expires_at: f })).toEqual({ active: true, expiresAt: f });
+    expect(decideBetaGrant({ action: 'grant', expires_at: f })).toEqual({ active: true, expiresAt: f, hasHistory: true });
+    expect(decideBetaGrant(null)).toEqual({ active: false, hasHistory: false });
+    expect(decideBetaGrant({ action: 'revoke', expires_at: null })).toEqual({ active: false, hasHistory: true });
     expect(decideBetaGrant({ action: 'extend', expires_at: f }).active).toBe(true);
     expect(decideBetaGrant({ action: 'grant', expires_at: past() }).active).toBe(false);
     expect(decideBetaGrant({ action: 'revoke', expires_at: null }).active).toBe(false);
@@ -66,6 +68,14 @@ describe('transition mode', () => {
   it('the legacy boolean still admits, so no current tester loses access mid-switch', async () => {
     db({ beta: true, founder: false }, null);
     expect(await writersStudioBetaAccess('m1')).toEqual({ eligible: true, basis: 'active_beta_tester' });
+  });
+  it('⭐ a revoked grant stands: the legacy boolean cannot re-admit (review on #2261)', async () => {
+    db({ beta: true, founder: false }, { action: 'revoke', expires_at: null });
+    expect(await writersStudioBetaAccess('m1')).toEqual({ eligible: false, basis: 'not_in_pilot' });
+  });
+  it('⭐ an expired grant stands too: the legacy boolean cannot extend it', async () => {
+    db({ beta: true, founder: false }, { action: 'grant', expires_at: past() });
+    expect(await writersStudioBetaAccess('m1')).toEqual({ eligible: false, basis: 'not_in_pilot' });
   });
   it('no grant and no boolean: not in pilot', async () => {
     db({ beta: false, founder: false }, { action: 'grant', expires_at: past() });

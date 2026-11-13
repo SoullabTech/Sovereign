@@ -14,8 +14,8 @@ import { activeBetaGrant, betaGrantMode } from './betaGrants';
  * Dated beta grants (founder rulings 2026-11-13, #1800; lib/writersStudio/betaGrants.ts):
  * WS_BETA_GRANT_MODE chooses the source of beta standing.
  *   'legacy' (default) — the boolean above only. Exactly today's single query; the grant table is never read.
- *   'transition'       — an active dated grant OR the boolean. ⚠️ While here, revoking someone means revoking their
- *                        grant AND clearing their boolean.
+ *   'transition'       — an active dated grant admits; the boolean admits ONLY members with no dated-grant history.
+ *                        Once a member has any grant event, a revoke or expiry stands (the boolean cannot re-admit).
  *   'dated'            — an active dated grant only; the boolean no longer admits.
  * A grant lookup failure throws (callers fail closed), never reads as "no grant".
  */
@@ -48,7 +48,9 @@ export async function writersStudioBetaAccess(memberId: string): Promise<Writers
   if (mode !== 'legacy') {
     const grant = await activeBetaGrant(memberId);
     if (grant.active) return { eligible: true, basis: 'dated_beta_grant', expiresAt: grant.expiresAt.toISOString() };
-    if (mode === 'dated') return { eligible: false, basis: 'not_in_pilot' };
+    // Once a member has any dated-grant history, the grant alone decides: a revoked or expired grant is never
+    // overridden by the legacy boolean, in transition mode too.
+    if (mode === 'dated' || grant.hasHistory) return { eligible: false, basis: 'not_in_pilot' };
   }
 
   if (row?.beta) return { eligible: true, basis: 'active_beta_tester' };

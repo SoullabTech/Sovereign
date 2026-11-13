@@ -12,7 +12,7 @@
  *                  Extends every member whose latest event is an ACTIVE grant/extend in that cohort, in one transaction.
  *   backfill-legacy --cohort <label> --actor <uuid> --until YYYY-MM-DD [--reason text]
  *                  Issues a dated grant to every current legacy tester (ops_contacts writers_studio_beta = true, active)
- *                  who has no active dated grant — the one shared cohort end date (ruling: the year starts when dated
+ *                  who has NEVER had a dated grant (revoked or expired writers are never re-granted by a re-run) — the one shared cohort end date (ruling: the year starts when dated
  *                  grants ship). Run before switching WS_BETA_GRANT_MODE from 'transition' to 'dated'.
  *   status         --member <uuid>
  *
@@ -155,12 +155,10 @@ async function main() {
           AND c.contact_type = 'beta_tester'
           AND c.pipeline_stage = 'active'
           AND c.metadata @> '{"writers_studio_beta": true}'::jsonb
+          -- Only testers who have NEVER had a dated grant. Anyone with history (active, expired or revoked) is
+          -- decided by that history; re-running the backfill can never re-grant a revoked or expired writer.
           AND NOT EXISTS (
-            SELECT 1 FROM (
-              SELECT DISTINCT ON (member_id) member_id, action, expires_at
-                FROM writers_studio_beta_grant_events WHERE member_id = c.member_id ORDER BY member_id, id DESC
-            ) g
-             WHERE g.action <> 'revoke' AND g.expires_at > now()
+            SELECT 1 FROM writers_studio_beta_grant_events g WHERE g.member_id = c.member_id
           )`, []);
     console.log(`${mode}: grant ${r.rows.length} current legacy tester(s) cohort ${cohort} until ${expiresAt.toISOString()}`);
     if (apply && r.rows.length) {

@@ -3,8 +3,9 @@
  *
  * Replaces, in stages, the open-ended boolean `ops_contacts.metadata.writers_studio_beta`:
  *   'legacy'     (default) — today's boolean only; the grant table is never read.
- *   'transition'           — an active dated grant OR the legacy boolean admits. Used while every current tester is
- *                            issued a dated grant, so no one loses access mid-switch.
+ *   'transition'           — an active dated grant admits; the legacy boolean admits only members who have never had a
+ *                            dated grant. Used while every current tester is issued one, so no one loses access
+ *                            mid-switch — and a revoke or expiry, once recorded, always stands.
  *   'dated'                — only an active dated grant admits; the boolean is retired.
  * Any other value of WS_BETA_GRANT_MODE behaves as 'legacy'.
  *
@@ -23,13 +24,25 @@ export function betaGrantMode(env: Record<string, string | undefined> = process.
 
 export type BetaGrantAction = 'grant' | 'extend' | 'revoke';
 
-/** Pure: is the member's latest grant event an active grant at `now`? Returns its expiry when active. */
+/**
+ * Pure: is the member's latest grant event an active grant at `now`? Returns its expiry when active.
+ *
+ * `hasHistory` is true once the member has ANY dated-grant event. From then on the dated grant alone decides for them:
+ * the legacy boolean can never re-admit someone whose grant was revoked or has expired (review on #2261 / #1800).
+ */
+export type BetaGrantDecision =
+  | { active: true; expiresAt: Date; hasHistory: true }
+  | { active: false; hasHistory: boolean };
+
 export function decideBetaGrant(
   latest: { action: BetaGrantAction; expires_at: Date | null } | null,
   now: Date = new Date(),
-): { active: true; expiresAt: Date } | { active: false } {
-  if (!latest || latest.action === 'revoke' || !latest.expires_at) return { active: false };
-  return latest.expires_at.getTime() > now.getTime() ? { active: true, expiresAt: latest.expires_at } : { active: false };
+): BetaGrantDecision {
+  if (!latest) return { active: false, hasHistory: false };
+  if (latest.action === 'revoke' || !latest.expires_at) return { active: false, hasHistory: true };
+  return latest.expires_at.getTime() > now.getTime()
+    ? { active: true, expiresAt: latest.expires_at, hasHistory: true }
+    : { active: false, hasHistory: true };
 }
 
 /** Server read of the latest event. Throws on failure (the caller fails closed); never reads "no grant" from an outage. */
