@@ -89,6 +89,20 @@ export async function POST(request: NextRequest) {
         const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id, hashInvitedEmail(email)]);
         if (claimed.rows.length !== 1) throw new InvitationRefused();
         const invitationId = claimed.rows[0].id;
+        // Invitation-carried Writer privileges require current issuer authority
+        // at redemption, including when the invitation carries only a dated beta grant.
+        // Lock the issuer until transaction commit so demotion cannot race admission.
+        if (doorway.id === 'writer' &&
+            (claimed.rows[0].grants_writers_studio === true || claimed.rows[0].beta_grant_until != null)) {
+          const issuer: string | null = claimed.rows[0].issuer_member_id ?? null;
+          if (!issuer) throw new InvitationRefused();
+          const authority = await tx.query<{ admin_role: string | null }>(
+            `SELECT admin_role FROM members WHERE id = $1 FOR UPDATE`,
+            [issuer],
+          );
+          const role = authority.rows[0]?.admin_role;
+          if (role !== 'founder' && role !== 'cto') throw new InvitationRefused();
+        }
         const carried: { until: Date; cohort: string | null; issuer: string } | null =
           claimed.rows[0].beta_grant_until && doorway.id === 'writer'
             ? { until: claimed.rows[0].beta_grant_until, cohort: claimed.rows[0].beta_grant_cohort ?? null, issuer: claimed.rows[0].issuer_member_id }
@@ -134,16 +148,6 @@ export async function POST(request: NextRequest) {
         if (claimed.rows[0].grants_writers_studio === true && doorway.id === 'writer') {
           const issuer: string | null = claimed.rows[0].issuer_member_id ?? null;
           if (!issuer) throw new InvitationRefused();
-
-          // Re-check authority at redemption, not only when the invitation was issued.
-          // Locking the issuer row keeps a concurrent demotion from racing the grant.
-          // Refusal happens inside this transaction, so the account and invitation use roll back together.
-          const issuerAuthority = await tx.query<{ admin_role: string | null }>(
-            `SELECT admin_role FROM members WHERE id = $1 FOR UPDATE`,
-            [issuer],
-          );
-          const issuerRole = issuerAuthority.rows[0]?.admin_role ?? null;
-          if (issuerRole !== 'founder' && issuerRole !== 'cto') throw new InvitationRefused();
 
           const change = { permission: 'writers_studio' as const, grant: true };
           const applied = await applyChange(tx, issuer, created.id, change);
