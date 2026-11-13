@@ -1,0 +1,7 @@
+-- Rollback for studio_doorway_invitations.grants_writers_studio.
+-- Roll back the code first: the target's invitation claim returns this column.
+-- Roster rows already granted through invitations are ordinary roster rows and stay.
+BEGIN;
+ALTER TABLE studio_doorway_invitations DROP CONSTRAINT IF EXISTS studio_doorway_invitation_studio_access_shape;
+ALTER TABLE studio_doorway_invitations DROP COLUMN IF EXISTS grants_writers_studio;
+COMMIT;

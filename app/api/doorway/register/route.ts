@@ -6,6 +6,7 @@ import { logAuthEvent } from '@/lib/security/authAudit';
 import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
 import { CLAIM_INVITATION_SQL, GRANT_FROM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 import { randomBytes } from 'crypto';
+import { applyChange, writeAudit } from '@/lib/admin/memberPermissions';
 
 /**
  * POST /api/doorway/register — a Studio's own front door (STUDIO-A-LA-CARTE-01 Phase 3).
@@ -121,6 +122,18 @@ export async function POST(request: NextRequest) {
           await tx.query(GRANT_FROM_INVITATION_SQL, [
             created.id, carried.until, carried.cohort, carried.issuer, `Studio doorway invitation #${invitationId}`,
           ]);
+        }
+        // Writer's Studio access the invitation itself carries (ledger #1938, 2026-11-13): exactly the owner act an
+        // owner would make at /studio/settings, the legacy roster row plus its audit record, with the invitation's
+        // founder/CTO issuer as the actor, in this same transaction. A refusal aborts the whole sign-up and gives
+        // the use back.
+        if (claimed.rows[0].grants_writers_studio === true && doorway.id === 'writer') {
+          const issuer: string | null = claimed.rows[0].issuer_member_id ?? null;
+          if (!issuer) throw new Error('studio-access invitation without an issuer');
+          const change = { permission: 'writers_studio' as const, grant: true };
+          const applied = await applyChange(tx, issuer, created.id, change);
+          if (applied.status !== 200) throw new Error(`studio access not applied: ${applied.error}`);
+          await writeAudit(tx, request, issuer, created.id, change, applied.before, applied.after);
         }
         return { ...created, betaGrantUntil: carried ? new Date(carried.until).toISOString() : null };
       });

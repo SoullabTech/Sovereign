@@ -70,3 +70,55 @@ describe('the live view wires it to the member’s own Work setting', () => {
     expect(view).toMatch(/useState\(props\.work\?\.maiaRevisionsPaused === true\)/);
   });
 });
+
+describe('the selection menu honours the Work-wide setting (live walk finding, 2026-11-13)', () => {
+  const view = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
+  it('NEGATIVE: "Show me an edit" is not offered while the Work is questions-only; a plain note is', () => {
+    const menu = view.slice(view.indexOf('or let MAIA offer'), view.indexOf('Teach me the craft'));
+    expect(menu).toMatch(/\{workRevisionsPaused \? \(\s*<p[^>]*data-questions-only-note>MAIA asks, never rewrites: on for this Work<\/p>\s*\) : \(\s*<button[^>]*data-passage-choice="revise"/);
+  });
+  it('every passage act, sent now or held behind a gate, goes through the Work pause', () => {
+    const run = view.slice(view.indexOf('const runPassageAct = '), view.indexOf('const runPassageAct = ') + 900);
+    expect(run).toMatch(/options: pausedSendOptions\(requested\.options, workRevisionsPaused\)/);
+    expect(run).toMatch(/props\.onSendEditorial\(act\.prompt, act\.options\)/);
+    expect(run).toMatch(/setRequestedPassageAct\(\{ key: Date\.now\(\), \.\.\.act \}\)/);
+  });
+  it('the Work setting is declared before the passage actions that read it', () => {
+    expect(view.indexOf('const [workRevisionsPaused')).toBeLessThan(view.indexOf('const runPassageAct = '));
+    expect(view.indexOf('const [workRevisionsPaused')).toBeLessThan(view.indexOf('const contextualActions = '));
+  });
+});
+
+describe('Focus "More" menu closes and fits the window (live walk, 2026-11-13)', () => {
+  function stageRoom() {
+    act(() => root.render(React.createElement(IsolatedEditorialRoom, {
+      appearance: 'evening', title: 'Fire', currentText: 'x', sectionBody: 'x', busy: false,
+      editingLatitude: 2, onEditingLatitude: jest.fn(), mayRemoveParagraphs: false, onMayRemoveParagraphs: jest.fn(),
+      mayProposeImmediately: false, onMayProposeImmediately: jest.fn(), onClose: jest.fn(), stage: true,
+      workRevisionsPaused: false, onPauseWorkRevisions: jest.fn(),
+      children: React.createElement('div'),
+    } as any)));
+    return host.querySelector<HTMLDetailsElement>('[data-stage-more]')!;
+  }
+  it('Escape closes the open More menu and any open sub-menu', () => {
+    const more = stageRoom();
+    more.open = true;
+    more.querySelectorAll('details').forEach(d => { d.open = true; });
+    act(() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
+    expect(more.open).toBe(false);
+    expect(Array.from(more.querySelectorAll('details')).some(d => d.open)).toBe(false);
+  });
+  it('a press outside closes it; NEGATIVE: a press inside does not', () => {
+    const more = stageRoom();
+    more.open = true;
+    const inside = more.querySelector('.p4r1-isolated-more-card')!;
+    act(() => { inside.dispatchEvent(new Event('pointerdown', { bubbles: true })); });
+    expect(more.open).toBe(true);
+    act(() => { document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })); });
+    expect(more.open).toBe(false);
+  });
+  it('the More card fits the window and scrolls', () => {
+    const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
+    expect(css).toMatch(/\.p4r1-isolated-more-card\{ width:min\(380px, calc\(100vw - 24px\)\); max-height:calc\(100vh - 120px\); overflow-y:auto;/);
+  });
+});

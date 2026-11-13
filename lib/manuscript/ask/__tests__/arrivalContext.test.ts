@@ -9,6 +9,7 @@ jest.mock('@/lib/writersStudio/workSituation', () => ({
 }));
 import { runStructured } from '../../../ai/structured/router';
 import { askMaia, ARRIVAL_STANDING, FIRST_PAGE_STANDING, arrivalAskPromptHash } from '../askReader';
+import { pathFrameFor } from '@/lib/writersStudio/studioPaths';
 
 const mockRun = runStructured as jest.MockedFunction<typeof runStructured>;
 
@@ -53,6 +54,14 @@ it('B · a first page is read with its own frame: one exact line, one question, 
     expect(FIRST_PAGE_STANDING).toContain(phrase);
   }
   expect(arrivalAskPromptHash(false, 'first_page')).not.toBe(arrivalAskPromptHash(false));
+});
+
+it('F20 · a Studio path’s door is framed from the registry by id, through askMaia, never by the request', async () => {
+  await askMaia({ kind: 'arrival', sanctuary: false, moment: 'path', pathId: 'college-essay' }, [], 'the kitchen at six');
+  const req = mockRun.mock.calls[0][0] as { system: string };
+  expect(req.system).toBe(pathFrameFor('college-essay'));
+  expect(req.system).not.toContain(ARRIVAL_STANDING);
+  expect(arrivalAskPromptHash(false, 'path', 'college-essay')).not.toBe(arrivalAskPromptHash(false));
 });
 
 it('a later turn in the opening is grounded in the history and gets a different hash than a first turn', async () => {

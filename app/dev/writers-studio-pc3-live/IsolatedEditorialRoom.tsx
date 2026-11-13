@@ -189,6 +189,30 @@ export default function IsolatedEditorialRoom({
     [sectionBody, currentText],
   );
 
+  /* The More menu is a <details>: close it on Escape or a press outside it, so it
+     never sits over the conversation (live walk, 2026-11-13). */
+  const moreRef = useRef<HTMLDetailsElement | null>(null);
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const closeMore = () => {
+      const more = moreRef.current;
+      if (!more?.open) return;
+      more.querySelectorAll('details[open]').forEach((d) => d.removeAttribute('open'));
+      more.open = false;
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const more = moreRef.current;
+      if (more?.open && event.target instanceof Node && !more.contains(event.target)) closeMore();
+    };
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeMore(); };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = parseSessionPrefs(window.sessionStorage.getItem(SESSION_PREF_KEY));
@@ -586,7 +610,7 @@ export default function IsolatedEditorialRoom({
             /* Design pass D4 (2026-11-05): during a conversation the top bar is quiet —
                "Back to the page" plus one "More" menu for everything else. */
             return stage ? (
-              <details className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
+              <details ref={moreRef} className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
                 <summary aria-label="More options">More ⋯</summary>
                 <div className="p4r1-isolated-menu-card p4r1-isolated-more-card">{menus}</div>
               </details>
