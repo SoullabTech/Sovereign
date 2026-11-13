@@ -40,6 +40,7 @@ import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 import { reserveManagedAuthSend } from './senderCapacity';
+import { reserveManagedPortraitSend, PORTRAIT_MAIL_PURPOSE, type PortraitDeliveryProof } from './portraitCapacity';
 import { notifyMailTransportDown } from '@/lib/ops/mailTransportAlert.server';
 
 // ============================================================================
@@ -126,6 +127,8 @@ export interface SendEmailOptions {
   campaignRef?: string;
   /** Member id, when the recipient is a known member. Stored as memberRef(). */
   memberId?: string;
+  /** Server-only, authenticated portrait send proof for the separate P2 SMTP budget. */
+  portraitDelivery?: PortraitDeliveryProof;
 }
 
 export interface SendEmailResult {
@@ -357,8 +360,8 @@ function logSend(
     ...(trace?.correlationId ? { correlationId: trace.correlationId } : {}),
     ...(trace?.idempotencyKey ? { idempotencyKey: trace.idempotencyKey } : {}),
     from,
-    toRef: memberRef(to),
-    domain,
+    toRef: purpose === PORTRAIT_MAIL_PURPOSE ? 'private-portrait-recipient' : memberRef(to),
+    domain: purpose === PORTRAIT_MAIL_PURPOSE ? 'private' : domain,
     status: result.status,
     ...(result.id ? { id: result.id } : {}),
     // REDACTED, not dropped. The provider echoes back the address it rejected
@@ -435,10 +438,16 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   }
 
   if (provider.name === 'smtp') {
-    const admission = await reserveManagedAuthSend({
-      purpose: opts.purpose, from, to: opts.to,
-      correlationId: opts.correlationId, idempotencyKey: opts.idempotencyKey,
-    });
+    // Managed SMTP admits only named purposes. The P0 email-code reservation
+    // remains unchanged; private portraits use an independent P2 DB budget.
+    const admission = opts.purpose === PORTRAIT_MAIL_PURPOSE
+      ? await reserveManagedPortraitSend({
+          purpose: opts.purpose, from, to: opts.to, proof: opts.portraitDelivery,
+        })
+      : await reserveManagedAuthSend({
+          purpose: opts.purpose, from, to: opts.to,
+          correlationId: opts.correlationId, idempotencyKey: opts.idempotencyKey,
+        });
     if (!admission.admitted) {
       const result = failure(admission.kind, admission.detail, admission.code, ctx);
       logSend(opts.purpose, from, toLog, domain, result, trace);
