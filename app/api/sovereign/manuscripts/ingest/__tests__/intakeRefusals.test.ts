@@ -29,7 +29,7 @@ jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   getMemberIdFromRequest: jest.fn(async () => '11111111-1111-4111-8111-111111111111'),
 }));
 jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
-  writersStudioBetaAccess: jest.fn(async () => ({ eligible: true, basis: 'active_beta_tester' })),
+  writersStudioStanding: jest.fn(async () => ({ admitted: true, plan: 'pro', basis: 'active_beta_tester' })),
 }));
 jest.mock('@/lib/manuscript/ingest/parseUpload', () => {
   const actual = jest.requireActual('@/lib/manuscript/ingest/parseUpload');
@@ -45,7 +45,7 @@ jest.mock('@/lib/manuscript/source/duplicateImport', () => ({
 
 import { POST } from '../route';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import { parseUpload } from '@/lib/manuscript/ingest/parseUpload';
@@ -53,7 +53,7 @@ import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 
 const parse = parseUpload as jest.Mock;
 const record = recordArtifactArrival as jest.Mock;
-const beta = writersStudioBetaAccess as jest.Mock;
+const beta = writersStudioStanding as jest.Mock;
 const memberOf = getMemberIdFromRequest as jest.Mock;
 const access = deriveVerifiedAccess as jest.Mock;
 
@@ -81,7 +81,7 @@ beforeEach(() => {
   envRef.WRITER_SOURCE_KEY_PROVIDER = 'local-test';
   memberSeq += 1;
   actAs(`aaaaaaaa-aaaa-4aaa-8aaa-${String(memberSeq).padStart(12, '0')}`);
-  beta.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  beta.mockResolvedValue({ admitted: true, plan: 'pro', basis: 'active_beta_tester' });
   parse.mockResolvedValue({ text: 'Fictional readable text.', format: 'text', warnings: [], fidelity: null });
   record.mockResolvedValue({ id: 'arrival-fictional-1' });
   jest.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -137,7 +137,7 @@ describe('D-01 — a released route with no key provider configured refuses hone
 
   it('tells a member nothing about the configuration until they have passed the audience gate: a non-roster member still gets 403', async () => {
     unconfigure();
-    beta.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+    beta.mockResolvedValue({ admitted: false, plan: null, basis: 'not_in_pilot' });
     const res = await POST(request());
     expect(res.status).toBe(403);
     expect((await res.json()).code).toBeUndefined();
@@ -167,7 +167,7 @@ describe('D-01 — a released route with no key provider configured refuses hone
 
 describe('D1 — audience', () => {
   it('refuses a signed-in member who is not in the Writer pilot, before the body is read or anything is stored', async () => {
-    beta.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+    beta.mockResolvedValue({ admitted: false, plan: null, basis: 'not_in_pilot' });
     const res = await POST(request());
     expect(res.status).toBe(403);
     expect(parse).not.toHaveBeenCalled();

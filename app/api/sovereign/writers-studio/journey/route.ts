@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import {
   addJourneyAnswer,
   colabShareAvailability,
@@ -29,8 +29,8 @@ function missingTable(error: unknown): boolean {
 export async function GET(req: NextRequest) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: privateHeaders });
-  const access = await writersStudioBetaAccess(memberId);
-  if (!access.eligible) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
+  const access = await writersStudioStanding(memberId);
+  if (!access.admitted) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
 
   try {
     if (req.nextUrl.searchParams.get('scope') === 'all') {
@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: privateHeaders });
-  const access = await writersStudioBetaAccess(memberId);
-  if (!access.eligible) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
+  const access = await writersStudioStanding(memberId);
+  if (!access.admitted) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403, headers: privateHeaders });
 
   const raw = await req.json().catch(() => null);
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {

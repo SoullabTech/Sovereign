@@ -52,7 +52,7 @@ import { SourceLandingIncompleteError } from '@/lib/manuscript/source/encryptedL
 import { writerSourceKeyProviderConfigured } from '@/lib/manuscript/source/sourceKeyAuthority';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
 import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 import { createRateLimiter } from '@/lib/http/rateLimit';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
@@ -290,8 +290,8 @@ export async function POST(request: NextRequest) {
     // The page that hosts the Import room is roster-gated, but this endpoint is excluded from the proxy and from the
     // Writer corridor, so on its own it would admit ANY signed-in member the moment the release flips. It asks the same
     // question the page asks, through the same predicate, so the two cannot drift.
-    const access = await writersStudioBetaAccess(memberId);
-    if (!access.eligible) {
+    const access = await writersStudioStanding(memberId);
+    if (!access.admitted) {
       return NextResponse.json(
         { error: 'Original manuscript intake is not available to your account during this beta.' },
         { status: 403, headers: { 'Cache-Control': 'no-store' } },
