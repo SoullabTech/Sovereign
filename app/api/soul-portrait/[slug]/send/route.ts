@@ -21,7 +21,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getOwnedPortraitBySlug, publishOwnedPortrait } from '@/lib/soulPortrait/portraitStore';
 import { recordPortraitConsent } from '@/lib/soulPortrait/consentRecord';
 import { isPortraitConsentLive } from '@/lib/soulPortrait/consentAccess';
-import { EmailRouter } from '@/lib/comms/emailRouter';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
 
@@ -49,7 +49,42 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
+  // F4: an established portrait's consent to be read is not blanket consent
+  // to forward its private link to arbitrary new addresses. The recipient
+  // must be explicitly named and freshly attested on EVERY email crossing.
+  // Do this before publication or any new consent ledger writes.
+  const recipientEmail = typeof body.recipientEmail === 'string'
+    ? body.recipientEmail.trim().toLowerCase() : '';
+  if (recipientEmail) {
+    if (!/^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/.test(recipientEmail)) {
+      return NextResponse.json({ error: 'invalid_recipient_email' }, { status: 400 });
+    }
+    if (body.recipientConsentAttested !== true) {
+      return NextResponse.json(
+        { error: 'recipient_consent_attestation_required',
+          message: 'Confirm that this exact recipient agreed to receive the private link.' },
+        { status: 400 }
+      );
+    }
+    if (body.subjectShareAttested !== true) {
+      return NextResponse.json(
+        { error: 'subject_sharing_attestation_required',
+          message: 'Confirm the portrait subject authorized sharing with this exact recipient.' },
+        { status: 400 }
+      );
+    }
+
+  }
+
   const alreadyLive = await isPortraitConsentLive(portrait.id);
+  // Published portrait consent cannot be resurrected by a new send gesture.
+  // Fresh consent after revocation requires its own governed subject flow.
+  if (!alreadyLive && portrait.publishedAt) {
+    return NextResponse.json({
+      error: 'subject_consent_not_live',
+      message: "The portrait subject’s governing consent is not live.",
+    }, { status: 409 });
+  }
 
   if (!alreadyLive) {
     // First send requires the attestation; a re-send of a live portrait does not.
@@ -73,56 +108,64 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
+  // The SMTP reservation records recipient-specific attestation atomically,
+  // immediately before contacting the provider. No separate speculative audit.
   const published = await publishOwnedPortrait(portrait.id, memberId);
   if (!published) return NextResponse.json({ error: 'publish_failed' }, { status: 500 });
 
   const path = `/soul-portrait/view/${published.slug}`;
   const url = `${BASE_URL}${path}`;
-  const subjectName: string = (published.immutableText as any)?.person?.name || 'Soul Portrait';
+  // No newline/header control characters from authored portrait fields.
+  const subjectName: string = String(
+    (published.immutableText as any)?.person?.name || 'Soul Portrait'
+  ).replace(/[\r\n]/g, ' ').slice(0, 160);
 
   let emailed = false;
   let emailError: string | undefined;
-  const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : '';
   if (recipientEmail) {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
-      return NextResponse.json({ error: 'invalid_recipient_email' }, { status: 400 });
-    }
     const personalNote = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
-    const router = new EmailRouter(memberId);
-    const result = await router.send(
-      {
-        to: recipientEmail,
-        toName: typeof body.recipientName === 'string' ? body.recipientName.trim() || undefined : undefined,
-        subject: `A Soul Portrait for ${subjectName}`,
-        bodyText: [
-          `A Soul Portrait has been prepared for ${subjectName}.`,
-          `This portrait was created as a reflection and offering for you. There is no right way to engage it.`,
-          personalNote ? `\n${personalNote}\n` : '',
-          `Read it here, in your own time:\n${url}`,
-          `\nThis link is private and unlisted — it was made for you.`,
-        ].join('\n'),
-        bodyHtml: `
-          <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; color: #2a2a2a; line-height: 1.6;">
-            <p>A Soul Portrait has been prepared for <strong>${escapeHtml(subjectName)}</strong>.</p>
-            <p>This portrait was created as a reflection and offering for you. There is no right way to engage it.</p>
-            ${personalNote ? `<blockquote style="border-left: 3px solid #C9A227; margin: 16px 0; padding: 4px 16px; color: #444;">${escapeHtml(personalNote)}</blockquote>` : ''}
-            <p style="margin: 28px 0;">
-              <a href="${url}" style="background: #1A2F24; color: #EAF2EC; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Read your Soul Portrait</a>
-            </p>
-            <p style="font-size: 13px; color: #777;">This link is private and unlisted — it was made for you.</p>
-          </div>`,
+    const result = await sendEmail({
+      purpose: 'soul-portrait:delivery',
+      from: SENDERS.noreply,
+      to: recipientEmail, // raw single mailbox, never a display-name wrapper
+      subject: `A Soul Portrait for ${subjectName}`,
+      text: [
+        `A Soul Portrait has been prepared for ${subjectName}.`,
+        'This portrait was created as a reflection and offering for you.',
+        personalNote ? `\n${personalNote}\n` : '',
+        `Read it here, in your own time:\n${url}`,
+        '\nThis private link was made for you.',
+      ].join('\n'),
+      html: `
+        <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; color: #2a2a2a;">
+          <p>A Soul Portrait has been prepared for <strong>${escapeHtml(subjectName)}</strong>.</p>
+          ${personalNote ? `<blockquote>${escapeHtml(personalNote)}</blockquote>` : ''}
+          <p><a href="${url}">Read your Soul Portrait</a></p>
+          <p>This link is private and unlisted — it was made for you.</p>
+        </div>`,
+      triggerType: 'route',
+      triggerRef: 'app/api/soul-portrait/[slug]/send',
+      memberId,
+      portraitDelivery: {
+        portraitId: portrait.id,
+        ownerMemberId: memberId,
+        recipientConsentAttested: true,
+        subjectShareAttested: true,
+        consentSource: body.recipientConsentSource === 'written' ? 'written' : 'verbal',
       },
-      { fromEmail: 'noreply@soullab.life', fromName: 'Soullab' },
-    );
+    });
     emailed = result.success;
-    if (!result.success) emailError = result.error;
-    // Provider evidence trail: "accepted" = Resend returned a message id; delivery
-    // status lives in Resend's event log, retrievable by this id.
-    console.log('[soul-portrait/send] email', {
+    if (!result.success) {
+      emailError = result.failureKind === 'exception'
+        ? 'Delivery could not be confirmed. Please verify before attempting to send again.'
+        : 'Automatic email could not be sent. The private portrait link is available to copy.';
+    }
+    // Acceptance from SMTP does not prove delivery into the recipient inbox.
+    console.log('[soul-portrait/send] mail result', {
       accepted: result.success,
-      id: result.id ?? null,
-      provider: result.provider,
-      ...(result.error ? { error: result.error } : {}),
+      provider: result.provider ?? null,
+      failureKind: result.failureKind ?? null,
+      id: result.success ? result.id ?? null : null,
     });
   }
 

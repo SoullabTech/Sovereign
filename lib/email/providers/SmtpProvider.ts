@@ -9,6 +9,7 @@
 import type { EmailProvider, ProviderEmailMessage, ProviderSendResult } from './types';
 import { resolveManagedSmtpConfig } from '../protonTransport';
 import { MANAGED_AUTH_MAILBOX, MANAGED_AUTH_PURPOSE, senderMatchesMailbox } from '../senderCapacity';
+import { PORTRAIT_MAIL_PURPOSE } from '../portraitCapacity';
 
 type Transporter = {
   sendMail(opts: Record<string, unknown>): Promise<{
@@ -120,7 +121,14 @@ export class SmtpProvider implements EmailProvider {
       return { accepted: false, rawError };
     }
 
-    if (message.purpose !== MANAGED_AUTH_PURPOSE ||
+    if (message.purpose === PORTRAIT_MAIL_PURPOSE &&
+        process.env.SOUL_PORTRAIT_SMTP_ENABLED !== 'true') {
+      return { accepted: false, rawError: {
+        name: 'portrait_mail_disabled', message: 'Soul Portrait SMTP is not enabled',
+      } };
+    }
+
+    if ((message.purpose !== MANAGED_AUTH_PURPOSE && message.purpose !== PORTRAIT_MAIL_PURPOSE) ||
         !senderMatchesMailbox(message.from, config.managedMailbox)) {
       return {
         accepted: false,
