@@ -7,6 +7,7 @@ import { doorwayById, doorwaysEnabled } from '@/lib/studios/doorways';
 import { CLAIM_INVITATION_SQL, GRANT_FROM_INVITATION_SQL, hashInvitationCode, hashInvitedEmail } from '@/lib/studios/doorwayInvitations';
 import { randomBytes } from 'crypto';
 import { applyChange, writeAudit } from '@/lib/admin/memberPermissions';
+import { doorwayReturnPath } from '@/lib/studios/doorwayReturnPath';
 
 /**
  * POST /api/doorway/register — a Studio's own front door (STUDIO-A-LA-CARTE-01 Phase 3).
@@ -52,10 +53,13 @@ export async function POST(request: NextRequest) {
     const name = (typeof body.name === 'string' ? body.name : '').trim();
     const email = (typeof body.email === 'string' ? body.email : '').trim().toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
+    const selectedPath = typeof body.path === 'string' ? body.path : null;
 
     if (!doorway || code.trim().length < 6 || code.length > 64) {
       return NextResponse.json({ error: REFUSED }, { status: 403 });
     }
+    const returnPath = doorwayReturnPath(doorway.id, doorway.studioPath, selectedPath);
+
     if (!name || name.length < 2 || name.length > 120) {
       return NextResponse.json({ error: 'Please tell us your name.' }, { status: 400 });
     }
@@ -85,6 +89,20 @@ export async function POST(request: NextRequest) {
         const claimed = await tx.query(CLAIM_INVITATION_SQL, [codeHash, doorway.id, hashInvitedEmail(email)]);
         if (claimed.rows.length !== 1) throw new InvitationRefused();
         const invitationId = claimed.rows[0].id;
+        // Invitation-carried Writer privileges require current issuer authority
+        // at redemption, including when the invitation carries only a dated beta grant.
+        // Lock the issuer until transaction commit so demotion cannot race admission.
+        if (doorway.id === 'writer' &&
+            (claimed.rows[0].grants_writers_studio === true || claimed.rows[0].beta_grant_until != null)) {
+          const issuer: string | null = claimed.rows[0].issuer_member_id ?? null;
+          if (!issuer) throw new InvitationRefused();
+          const authority = await tx.query<{ admin_role: string | null }>(
+            `SELECT admin_role FROM members WHERE id = $1 FOR UPDATE`,
+            [issuer],
+          );
+          const role = authority.rows[0]?.admin_role;
+          if (role !== 'founder' && role !== 'cto') throw new InvitationRefused();
+        }
         const carried: { until: Date; cohort: string | null; issuer: string } | null =
           claimed.rows[0].beta_grant_until && doorway.id === 'writer'
             ? { until: claimed.rows[0].beta_grant_until, cohort: claimed.rows[0].beta_grant_cohort ?? null, issuer: claimed.rows[0].issuer_member_id }
@@ -129,7 +147,8 @@ export async function POST(request: NextRequest) {
         // the use back.
         if (claimed.rows[0].grants_writers_studio === true && doorway.id === 'writer') {
           const issuer: string | null = claimed.rows[0].issuer_member_id ?? null;
-          if (!issuer) throw new Error('studio-access invitation without an issuer');
+          if (!issuer) throw new InvitationRefused();
+
           const change = { permission: 'writers_studio' as const, grant: true };
           const applied = await applyChange(tx, issuer, created.id, change);
           if (applied.status !== 200) throw new Error(`studio access not applied: ${applied.error}`);
@@ -176,7 +195,7 @@ export async function POST(request: NextRequest) {
       signedIn,
       betaGrantUntil: member.betaGrantUntil,
       member: { id: member.id, username: member.username, name: member.name, onboarded: true },
-      next: signedIn ? doorway.studioPath : `/signin?next=${encodeURIComponent(doorway.studioPath)}`,
+      next: signedIn ? returnPath : `/signin?next=${encodeURIComponent(returnPath)}`,
       session: session ? { expiresAt: session.expiresAt.toISOString(), token: session.sessionToken } : undefined,
     });
   } catch {
