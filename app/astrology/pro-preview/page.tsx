@@ -33,6 +33,6 @@ export default async function AstrologyProPreviewPage() {
   } catch {
     notFound();
   }
-  if (!(await proMemberAllowed(memberId, process.env))) notFound();
-  return <ProAstrologyExperience />;
+  if (!memberId || !(await proMemberAllowed(memberId, process.env))) notFound();
+  return <ProAstrologyExperience verifiedSessionMemberId={memberId} />;
 }
