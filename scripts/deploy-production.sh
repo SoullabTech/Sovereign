@@ -172,6 +172,67 @@ collect_pending_production_migrations() {
     printf '%s\n' "$raw" | grep -E '^database/migrations/[^/]+\.sql$' || true
 }
 
+# FOUNDER-BETA-MIGRATION-01: one-time exact-byte exception (not a security verdict).
+# Preserve pending-set recheck, migration fail-stop, old reader, rollback and image stamps.
+founder_college_essay_beta_migration_or_abort() {
+    local target="$1" pending="$2" context="$3"
+    local expected_path="database/migrations/20261113000010_studio_doorway_invitation_studio_access.sql"
+    local expected_hash="1bb1aabd9ee36a34a8028abe658efc4608c6c5088cebe82a090a30022acc9062"
+    local base="352a6e410ac6212601ec642a58c940bdcca9965b"
+    local old="faac1d4824cff4504ea814678e5e8270abc60fa6"
+    local old_image="sha256:a9317ce76e58a34bfa83d80dbc68d4d66020959dafa64bd4c95ba06d017fad97"
+    local rollback_image="sha256:ba28b98a3adc73a4962efac222ffcf8e7d87c7b961ea8da35940387dac9e61db"
+    local name hash live_stamp live_sha state
+
+    if [ "$pending" != "$expected_path" ] ||
+       ! git -C "$PROJECT_DIR" merge-base --is-ancestor "$base" "$target"; then
+        log_error "FOUNDER-BETA: unexpected pending set or source ancestry."
+        return 1
+    fi
+    # No application, invitation-auth, or data-model changes after the frozen candidate.
+    while IFS= read -r name; do
+        case "$name" in
+            scripts/deploy-production.sh|scripts/verify-college-essay-beta-migration-exception.sh) ;;
+            *) log_error "FOUNDER-BETA: changed source not covered: $name"; return 1 ;;
+        esac
+    done < <(git -C "$PROJECT_DIR" diff --name-only "$base" "$target")
+    if [ ! -f "$context/$expected_path" ]; then
+        log_error "FOUNDER-BETA: immutable migration missing."
+        return 1
+    fi
+    if command -v sha256sum >/dev/null 2>&1; then
+        hash="$(sha256sum "$context/$expected_path" | awk '{print $1}')"
+    elif command -v shasum >/dev/null 2>&1; then
+        hash="$(shasum -a 256 "$context/$expected_path" | awk '{print $1}')"
+    else
+        log_error "FOUNDER-BETA: no SHA-256 tool."; return 1
+    fi
+    if [ "$hash" != "$expected_hash" ]; then
+        log_error "FOUNDER-BETA: migration byte hash mismatch."; return 1
+    fi
+    live_stamp="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null)" || return 1
+    live_sha="$(git -C "$PROJECT_DIR" rev-parse "$live_stamp^{commit}" 2>/dev/null)" || return 1
+    if [ "$live_sha" != "$old" ] ||
+       [ "$(docker inspect maia-sovereign -f '{{.Image}}' 2>/dev/null)" != "$old_image" ] ||
+       [ "$(docker image inspect maia-sovereign:previous -f '{{.Id}}' 2>/dev/null)" != "$rollback_image" ]; then
+        log_error "FOUNDER-BETA: old reader, running image, or rollback image changed."
+        return 1
+    fi
+    state="$(docker exec maia-postgres psql -U soullab -d maia_consciousness -Atqc \
+        "SELECT CASE WHEN to_regclass('public.studio_doorway_invitations') IS NOT NULL \
+         AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='studio_doorway_invitations' AND column_name='issuer_member_id') \
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='studio_doorway_invitations' AND column_name='grants_writers_studio') \
+         THEN 'ready' ELSE 'refuse' END" 2>/dev/null)" || return 1
+    if [ "$state" != "ready" ]; then
+        log_error "FOUNDER-BETA: schema is not the expected pre-migration shape."
+        return 1
+    fi
+    MIGRATION_COMPAT_EXPECTED_OLD_READER="$live_sha"
+    log_warn "FOUNDER-BETA: exact single-migration documentary-review exception admitted."
+    log_warn "FOUNDER-BETA: not independently security-reviewed. All mutation/rollback gates remain."
+    return 0
+}
+
 review_migration_custody_or_abort() {
     local phase="$1"
 
@@ -197,6 +258,19 @@ review_migration_custody_or_abort() {
     MIGRATION_COMPAT_EXPECTED_PENDING="$pending"
     if [ -z "$pending" ]; then
         log_info "REVIEW-CUSTODY: no production-pending migrations; no migration review required."
+        return 0
+    fi
+
+    # Founder-authorized opt-in exception for ONE additive College Essay beta migration.
+    if [ -n "${SOULLAB_BETA_MIGRATION_POLICY:-}" ]; then
+        if [ "$SOULLAB_BETA_MIGRATION_POLICY" != "college-essay-20261113-single-additive" ]; then
+            log_error "FOUNDER-BETA: unknown migration exception; refusing."
+            return 1
+        fi
+        if ! founder_college_essay_beta_migration_or_abort "$target" "$pending" "${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}"; then
+            log_error "FOUNDER-BETA: preflight refused; no schema mutation."
+            return 1
+        fi
         return 0
     fi
 
