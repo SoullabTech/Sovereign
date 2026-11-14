@@ -1,0 +1,10 @@
+-- Rollback for studio_holding_events (STUDIO-A-LA-CARTE-01 Phase 1).
+-- Safe while nothing writes the table (Phase 2 not shipped). After Phase 2, export the rows first: they are purchase history.
+BEGIN;
+DROP TRIGGER IF EXISTS studio_holding_events_no_truncate ON studio_holding_events;
+DROP TRIGGER IF EXISTS studio_holding_events_guard ON studio_holding_events;
+DROP INDEX IF EXISTS idx_studio_holding_events_member_product_latest;
+DROP TABLE IF EXISTS studio_holding_events;
+DROP FUNCTION IF EXISTS studio_holding_events_no_truncate();
+DROP FUNCTION IF EXISTS studio_holding_events_guard();
+COMMIT;

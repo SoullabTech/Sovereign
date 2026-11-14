@@ -10,7 +10,10 @@
  *   2. The Writer's Studio pilot (active, marked beta testers) and founder/CTO witnesses, always. A beta tester keeps full
  *      access through the pilot flag, never by being recorded as Pro, so billing records stay true and the exemption ends
  *      cleanly when the flag is turned off.
- *   3. Otherwise, members whose `members.tier` is 'pro'.
+ *   3. Otherwise, members whose `members.tier` is 'pro' (Soullab Pro keeps including Writer's Studio Pro).
+ *   4. Otherwise, members holding the standalone Writer's Studio Pro product ('studio.writer.pro', lib/auth/studioHoldings),
+ *      read ONLY while STUDIO_HOLDINGS_ENABLED is exactly "true" (STUDIO-A-LA-CARTE-01 Phase 1, founder go-ahead
+ *      2026-11-12). With that switch off nothing extra is read and this resolver behaves exactly as before.
  *
  * NOT what this is:
  *   - Not billing. It reads the tier Stripe or an owner recorded; it never sets one.
@@ -19,11 +22,13 @@
  */
 import { query } from '@/lib/db/postgres';
 import { writersStudioBetaAccess, type WritersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { holdingsEnabled, holdsStudioProduct } from '@/lib/auth/studioHoldings';
 
 export type WholeWorkBasis =
   | 'gate_off'
   | WritersStudioBetaAccess['basis']
   | 'pro_tier'
+  | 'studio_holding'
   | 'not_pro';
 
 export interface WholeWorkDecision {
@@ -41,10 +46,13 @@ export function decideWholeWork(input: {
   gateOn: boolean;
   pilot: WritersStudioBetaAccess | null;
   tier: string | null;
+  /** Holds 'studio.writer.pro'. Omitted/undefined = not read (holdings switch off). */
+  holding?: boolean;
 }): WholeWorkDecision {
   if (!input.gateOn) return { entitled: true, basis: 'gate_off' };
   if (input.pilot?.eligible) return { entitled: true, basis: input.pilot.basis };
   if (input.tier === 'pro') return { entitled: true, basis: 'pro_tier' };
+  if (input.holding === true) return { entitled: true, basis: 'studio_holding' };
   return { entitled: false, basis: 'not_pro' };
 }
 
@@ -61,5 +69,8 @@ export async function resolveWholeWork(
   const pilot = await writersStudioBetaAccess(memberId);
   if (pilot.eligible) return decideWholeWork({ gateOn, pilot, tier: null });
   const row = await query<{ tier: string | null }>('SELECT tier FROM members WHERE id = $1', [memberId]);
-  return decideWholeWork({ gateOn, pilot, tier: row.rows[0]?.tier ?? null });
+  const tier = row.rows[0]?.tier ?? null;
+  if (tier === 'pro' || !holdingsEnabled(env)) return decideWholeWork({ gateOn, pilot, tier });
+  const holding = await holdsStudioProduct(memberId, 'studio.writer.pro');
+  return decideWholeWork({ gateOn, pilot, tier, holding });
 }
