@@ -27,6 +27,7 @@ import {
   type HoldChoice,
 } from '@/lib/writersStudio/inspirationOpening';
 import { builtStages, type StudioPath } from '@/lib/writersStudio/studioPaths';
+import { FORM_CHOICES, FORM_MAX_CHARS, FORM_OWN_WORD_LABEL, FORM_QUESTION, formToSave, formVocabulary, type FormChoice } from '@/lib/writersStudio/formVocabulary';
 // Styles: inspiration-opening.css, imported by the Studio pages beside the other Studio stylesheets.
 
 export type DoorDestination = 'write' | 'import' | 'look';
@@ -49,8 +50,9 @@ export default function StudioInspirationOpening(props: {
    * asked inside import before anyone reads a word, ending by handing back what may be kept instead of asking where to begin.
    */
   variant?: 'door' | 'carry';
-  /** The writer chose where to begin. `purpose` is exactly what `sparkCommitPlan` allows, or null. */
-  onBegin?: (destination: DoorDestination, purpose: string | null) => void;
+  /** The writer chose where to begin. `purpose` is exactly what `sparkCommitPlan` allows, or null. `form` is what the writer said
+   *  it is becoming (founder 2026-11-20), or null if they did not say: never inferred. */
+  onBegin?: (destination: DoorDestination, purpose: string | null, form: string | null) => void;
   /** 'carry' only: the import's question is finished. `purpose` is exactly what `sparkCommitPlan` allows, or null. */
   onCarry?: (purpose: string | null) => void;
   onJustWrite?: () => void;
@@ -77,6 +79,11 @@ export default function StudioInspirationOpening(props: {
   const [hold, setHold] = useState<HoldChoice | null>(null);
   const [facet, setFacet] = useState<FacetChoice | null>(null);
   const [talkDraft, setTalkDraft] = useState('');
+  /* "What is it becoming?" (founder 2026-11-20): the writer's own choice, optional. Nothing is guessed from the spark. */
+  const [formChoice, setFormChoice] = useState<FormChoice | null>(null);
+  const [formOwn, setFormOwn] = useState('');
+  const [formOwnOpen, setFormOwnOpen] = useState(false);
+  const chosenForm = formToSave(formChoice, formOwnOpen ? formOwn : '');
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
   const [posture, setPosture] = useState<Posture>('unknown');
@@ -196,7 +203,7 @@ export default function StudioInspirationOpening(props: {
   });
 
   const begin = (destination: DoorDestination) => {
-    props.onBegin?.(destination, planNow().purpose);
+    props.onBegin?.(destination, planNow().purpose, chosenForm);
   };
 
   /* The hold answer. On the door it leads to "Where would you like to begin?"; inside import (C) it finishes. */
@@ -369,13 +376,26 @@ export default function StudioInspirationOpening(props: {
     body = (
       <>
         <p className="wsio-who">MAIA</p>
+        <p className="wsio-maia wsio-small">{FORM_QUESTION}</p>
+        <div className="wsio-posture" role="group" aria-label={FORM_QUESTION} data-form-choices>
+          {FORM_CHOICES.map((f) => (
+            <button key={f.id} type="button" aria-pressed={formChoice === f.id}
+              onClick={() => { setFormChoice((v) => (v === f.id ? null : f.id)); setFormOwnOpen(false); }}>{f.label}</button>
+          ))}
+          <button type="button" aria-pressed={formOwnOpen} onClick={() => { setFormOwnOpen((v) => !v); setFormChoice(null); }}>{FORM_OWN_WORD_LABEL}</button>
+        </div>
+        {formOwnOpen ? (
+          <input className="wsio-input" aria-label="What it is becoming, in your own word" maxLength={FORM_MAX_CHARS}
+            value={formOwn} onChange={(e) => setFormOwn(e.target.value)} placeholder="A letter, a liturgy, a blog series…" />
+        ) : null}
+        <p className="wsio-note">You can skip this, or change it any time.</p>
         <p className="wsio-maia wsio-small">{C.beginQuestion}</p>
         <div className="wsio-choices">
           <button type="button" className="wsio-choice" disabled={props.busy} onClick={() => begin('write')}>
             <b>Write the first page</b><span>I’ll be here when you want me</span>
           </button>
           <button type="button" className="wsio-choice" disabled={props.busy} onClick={() => begin('import')}>
-            <b>Bring what I’ve written</b><span>A chapter, a draft, a whole book</span>
+            <b>Bring what I’ve written</b><span>{formVocabulary(chosenForm).bringHint}</span>
           </button>
           <button type="button" className="wsio-choice" disabled={props.busy} onClick={() => setStep('talk')}>
             <b>Keep talking</b><span>We can stay with this a while</span>

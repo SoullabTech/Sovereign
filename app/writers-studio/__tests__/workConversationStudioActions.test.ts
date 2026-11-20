@@ -166,7 +166,7 @@ describe('G4: Read this chapter from the conversation', () => {
     expect(b.textContent).toBe('Read this chapter');
     await act(async () => { b.click(); await flush(); });
     expect(onReadChapter).toHaveBeenCalledWith('arc');
-    expect(host.querySelector('[data-chapter-reading="running"]')?.textContent).toContain('MAIA is reading the chapter');
+    expect(host.querySelector('[data-chapter-reading="running"]')?.textContent).toContain('MAIA is reading the part'); // no form named: neutral words (founder 2026-11-20)
     expect(b.disabled).toBe(true);
     await act(async () => { d.resolve({ ok: true, label: 'Return' }); await flush(); });
     expect(host.querySelector('[data-chapter-reading="done"]')?.textContent).toContain('MAIA has read Return. Ask her what she noticed.');

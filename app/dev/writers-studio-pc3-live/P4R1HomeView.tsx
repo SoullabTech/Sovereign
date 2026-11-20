@@ -53,7 +53,8 @@ export function workKind(work: Pick<LivingWork, 'form' | 'studioPath' | 'studioS
   const program = studioPathById(work.studioPath ?? null);
   // A program Work also says where the writer has put it in the arc (founder 2026-11-16), e.g. "College essay · Meaning".
   if (program) return `${program.name} · ${currentStage(program, work.studioStage).stage}`;
-  return work.form?.trim() || 'Work';
+  const form = work.form?.trim();
+  return form ? form.charAt(0).toUpperCase() + form.slice(1) : 'Work';
 }
 
 function workFacts(work: LivingWork, manuscripts: readonly CurrentManuscript[]): { extent: string; written: string } {
@@ -376,9 +377,9 @@ export interface P4R1HomeViewProps {
   /** JARVIS-WRITERS-STUDIO-INSPIRATION-OPENING-01: a first visit (no Works, no writing) opens on the Spark door. */
   inspirationDoor?: boolean;
   /** The writer chose where to begin from the door. `purpose` is exactly what sparkCommitPlan allowed, or null. */
-  onDoorBegin?: (destination: 'write' | 'import', purpose: string | null) => void;
+  onDoorBegin?: (destination: 'write' | 'import', purpose: string | null, form?: string | null) => void;
   /** "I don't know yet — look around" WITH a held spark: the Work is begun so the spark has somewhere to live. */
-  onDoorLookWithSpark?: (purpose: string) => void;
+  onDoorLookWithSpark?: (purpose: string, form?: string | null) => void;
   /** Studio paths: the environment the member's own link chose (`?path=`), shown at the door instead of the Spark question. */
   studioPath?: StudioPath | null;
   /** The member's Begin on a path: their title, their confirmation of each recommended setting, and any spark they held. */
@@ -817,9 +818,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           <StudioInspirationOpening
             busy={props.busy}
             error={props.error}
-            onBegin={(_destination, purpose) => {
+            onBegin={(_destination, purpose, form) => {
               // "Look around first": a spark the writer chose to hold is never dropped (the same rule as the first-visit door).
-              if (purpose !== null && props.onDoorLookWithSpark) props.onDoorLookWithSpark(purpose);
+              if (purpose !== null && props.onDoorLookWithSpark) props.onDoorLookWithSpark(purpose, form);
               else props.onLeavePath?.();
             }}
             onJustWrite={() => props.onBegin('')}
@@ -845,9 +846,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           <StudioInspirationOpening
             busy={props.busy}
             error={props.error}
-            onBegin={(destination, purpose) => {
-              if (destination !== 'look') onDoorBegin(destination, purpose);
-              else if (purpose !== null && props.onDoorLookWithSpark) props.onDoorLookWithSpark(purpose);
+            onBegin={(destination, purpose, form) => {
+              if (destination !== 'look') onDoorBegin(destination, purpose, form);
+              else if (purpose !== null && props.onDoorLookWithSpark) props.onDoorLookWithSpark(purpose, form);
               else setDoorSetAside(true);
             }}
             onJustWrite={() => props.onBegin('')}

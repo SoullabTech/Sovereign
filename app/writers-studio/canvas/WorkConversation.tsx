@@ -38,6 +38,7 @@ import { setStudioReadingSize } from '@/lib/writersStudio/readingSizePreference'
 import { CONVERSATION_DEPARTURE_EVENT, requestConversationDeparture } from '@/lib/writersStudio/conversationDeparture';
 import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrectionKind } from '@/lib/writersStudio/writerCorrections';
 import { studioPathById } from '@/lib/writersStudio/studioPaths';
+import { formVocabulary } from '@/lib/writersStudio/formVocabulary';
 
 /**
  * MAIA-CONVERGENCE-01 · CANVAS — MAIA's ordinary conversation about the Work,
@@ -148,7 +149,7 @@ const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
   /* WS-ASK-ANSWER-TRUNCATION: she ran out of room before finishing, so the cut answer was not kept or shown. */
-  answer_incomplete: 'MAIA ran out of room before she finished, so that answer wasn’t kept. Nothing you wrote was lost — ask again, or ask about a narrower part of the book.',
+  answer_incomplete: 'MAIA ran out of room before she finished, so that answer wasn’t kept. Nothing you wrote was lost — ask again, or ask about a narrower part of your work.',
   question_too_long: 'That is longer than a question this room can carry.',
   unauthenticated: 'You are signed out. Sign in and your question will go through.',
   not_found: 'This Work could not be opened for conversation.',
@@ -234,7 +235,10 @@ function ScopedWorkConversation({
   work, manuscriptId, sectionId, initialDraft = '', placeDraft, onClose, onStudioPlace, hideHoldings = false, quiet = false, onRead, onReadChapter, onStudioAct, chapterLabel, identity, startFresh: freshForNewTopic = false,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   /* A program Work (e.g. a college essay) names its whole-Work scope in its own words; an ordinary Work keeps "the whole book". */
-  const wholeScope = studioPathById(work.studioPath ?? null)?.studioCopy.wholeScope ?? 'the whole book';
+  /* The words for THIS Work (founder rulings 2026-11-20): a program's own, else the form the writer gave it, else neutral. */
+  const workProgram = studioPathById(work.studioPath ?? null);
+  const vocab = formVocabulary(workProgram ? workProgram.name : work.form ?? null);
+  const wholeScope = workProgram?.studioCopy.wholeScope ?? vocab.whole;
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -263,7 +267,7 @@ function ScopedWorkConversation({
     // Readings are kept (they are how MAIA remembers having read), so Sanctuary — which keeps nothing — never starts one.
     const posture = readCurrentSanctuaryPosture();
     if (posture.resolved && posture.sanctuary) {
-      setChapterReading({ phase: 'refused', text: 'Sanctuary is on, and a reading is kept, so MAIA will not read the chapter now. Turn Sanctuary off if you want her to. Nothing was read.' });
+      setChapterReading({ phase: 'refused', text: `Sanctuary is on, and a reading is kept, so MAIA will not read this ${vocab.unit} now. Turn Sanctuary off if you want her to. Nothing was read.` });
       return;
     }
     const startedAt = Date.now();
@@ -795,7 +799,7 @@ function ScopedWorkConversation({
                     cursor: enabled ? 'pointer' : 'default', color: INK.secondary, opacity: enabled ? 1 : 0.5,
                   }}
                 >
-                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? 'Let MAIA read this saved chapter' : offered.id === 'show' && (SHOW_PLACES as readonly string[]).includes(parsed.target ?? '') ? showLabel(parsed.target as ShowPlace) : offered.id === 'go-chapter' ? `Go to ${chapterName}` : offered.label}</StudioText>
+                  <StudioText role="metadata" as="span">{offered.id === 'grant-reading' && parsed.level === 'work' ? 'Let MAIA read my whole saved work' : offered.id === 'grant-reading' ? `Let MAIA read this saved ${vocab.unit}` : offered.id === 'show' && (SHOW_PLACES as readonly string[]).includes(parsed.target ?? '') ? showLabel(parsed.target as ShowPlace) : offered.id === 'go-chapter' ? `Go to ${chapterName}` : offered.label}</StudioText>
                 </button>
               );
             })()}
@@ -889,7 +893,7 @@ function ScopedWorkConversation({
           <div data-chapter-reading={chapterReading.phase} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
             <StudioText role="metadata" tone="secondary">
               {chapterReading.phase === 'running'
-                ? readingProgressText('MAIA is reading the chapter', chapterReading.now - chapterReading.startedAt)
+                ? readingProgressText(`MAIA is reading the ${vocab.unit}`, chapterReading.now - chapterReading.startedAt)
                 : chapterReading.text}
             </StudioText>
           </div>
@@ -898,7 +902,7 @@ function ScopedWorkConversation({
         {noteDraft !== null ? (
           /* A settled decision is the writer's own words: prefilled from what they said, editable, recorded only on "Note it". */
           <div data-note-settled="true" style={{ marginTop: SPACE.tight, display: 'flex', flexDirection: 'column', gap: SPACE.tight }}>
-            <label htmlFor="ws-note-settled"><StudioText role="metadata" as="span">In your words, what have you settled about the book?</StudioText></label>
+            <label htmlFor="ws-note-settled"><StudioText role="metadata" as="span">In your words, what have you settled about your {vocab.noun}?</StudioText></label>
             <textarea id="ws-note-settled" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={3} maxLength={1000}
               style={{ font: 'inherit', fontSize: 14, padding: 8, borderRadius: RADIUS.sm, border: `1px solid ${RULE.soft}`, background: 'transparent', color: INK.primary }} />
             <div style={{ display: 'flex', gap: SPACE.tight }}>

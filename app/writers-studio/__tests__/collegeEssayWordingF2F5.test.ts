@@ -27,8 +27,10 @@ describe('F2 · the conversation names the whole Work in the program’s words',
   test('a college essay’s whole-Work scope is "the whole essay"', () => {
     expect(studioPathById('college-essay')!.studioCopy.wholeScope).toBe('the whole essay');
   });
-  test('the chip, the on-notice and the offer all use the same program-aware phrase; an ordinary Work keeps "the whole book"', () => {
-    expect(src).toContain("studioPathById(work.studioPath ?? null)?.studioCopy.wholeScope ?? 'the whole book'");
+  test('the chip, the on-notice and the offer all use the same program-aware phrase; an ordinary Work speaks of its own form', () => {
+    // Superseded 2026-11-20: an ordinary Work no longer keeps "the whole book"; it speaks of the form the writer named, or neutrally.
+    expect(src).toContain('const wholeScope = workProgram?.studioCopy.wholeScope ?? vocab.whole;');
+    expect(src).toContain("const vocab = formVocabulary(workProgram ? workProgram.name : work.form ?? null);");
     expect(src).toContain("{s === 'here' ? 'where I am' : wholeScope}");
     expect(src).toContain('Every question here is about {wholeScope} until you choose “where I am”.');
     expect(src).toContain('Ask about {wholeScope}?');

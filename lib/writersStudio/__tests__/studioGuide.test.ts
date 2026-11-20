@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { formVocabulary } from '../formVocabulary';
 import fs from 'fs';
 import path from 'path';
 import {
@@ -41,7 +42,11 @@ function uiSource(): string {
   return out.join('\n').replace(/&amp;/g, '&');
 }
 
-const UI = uiSource();
+/* Founder 2026-11-20: the Studio draws its labels in the Work's own words. MAIA's guide names them as a book shows them
+   ("Your book", "Read this chapter with MAIA"), and her form instruction tells her how they read for THIS Work, so the
+   source is read here as it renders for a book. */
+const BOOK = formVocabulary('book');
+const UI = uiSource().replace(/\$?\{v\.(unit|units|noun|railHeading|whole)\}/g, (_m, k: 'unit' | 'units' | 'noun' | 'railHeading' | 'whole') => BOOK[k]);
 const shown = (label: string) => UI.includes(label);
 
 describe('MAIA is told only about controls the Studio actually has (founder ruling 2026-11-02, Design 1A)', () => {

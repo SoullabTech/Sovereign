@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { MaiaNotYetNote } from './MaiaQuestionsOnlyCopy';
+import { formStudioCopy, formVocabulary } from '@/lib/writersStudio/formVocabulary';
 import { studioPathById, unheadedPlaceName } from '@/lib/writersStudio/studioPaths';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { capturePagePlace, restorePagePlace, type PagePlace } from '@/lib/writersStudio/pageReturn';
@@ -470,9 +471,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     props.held?.text,
   ]);
 
-  /* A Studio program Work (e.g. a college essay) speaks in its own words; an ordinary Work keeps "Manuscript" / "Section n". */
+  /* A Studio program Work (e.g. a college essay) speaks in its own words; an ordinary Work speaks in the words of the form the
+     writer gave it, or neutrally when they gave none (founder rulings 2026-11-20). Never "book" and "chapter" by default. */
   const stageProgram = studioPathById(props.work?.studioPath ?? null);
-  const programCopy = stageProgram?.studioCopy ?? null;
+  const programCopy = stageProgram?.studioCopy ?? (props.work ? formStudioCopy(props.work.form ?? null) : null);
+  const writeWords = formVocabulary(stageProgram ? stageProgram.name : props.work?.form ?? null);
   const editableCount = props.context.sections.filter((section) => section.editable).length;
   const placeName = (position: number) => unheadedPlaceName(programCopy, position, editableCount);
   const projection = projectPc3LiveWrite({
@@ -1404,6 +1407,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       bodies: props.context.sections.map((section) => props.writing.bodyOf(section.draftSectionId)),
     }),
     talkWholeLabel: workStudioCopy ? workStudioCopy.whole : 'Talk about the whole Work',
+    units: writeWords.units,
   });
   const writeMaia = props.work ? (
     <div className="fr-maia-inner p4r1-write-maia">
@@ -1516,7 +1520,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               <p>
                 {workStudioCopy
                   ? workStudioCopy.orient
-                  : 'Choose a chapter or section at left and I’ll orient to that place immediately. Or select exact words in the manuscript for passage-level work.'}
+                  : 'Choose a part at left and I’ll orient to that place immediately. Or select exact words in your draft for passage-level work.'}
               </p>
             </div>
             {/* Named for what it opens (the conversation about the whole Work), so it is never confused with the passage door's

@@ -111,6 +111,16 @@ export default function P4R1HomeController() {
     if (!response.ok) throw new Error('purpose:' + response.status);
   }, []);
 
+  /* "What is it becoming?" (founder 2026-11-20): the writer's own answer at the door, through the same member-act PATCH. */
+  const setForm = useCallback(async (workId: string, form: string) => {
+    const response = await apiFetch('/api/sovereign/living-works/' + workId, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ form }),
+    });
+    if (!response.ok) throw new Error('form:' + response.status);
+  }, []);
+
   // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
   const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts, reloadHistory]), [reloadWorks, reloadManuscripts, reloadHistory]);
 
@@ -161,6 +171,8 @@ export default function P4R1HomeController() {
 
   /* A spark held at the door and carried into "Bring what I've written". Held in this view only; a reload forgets it. */
   const pendingSpark = useRef<string | null>(null);
+  /* What the writer said the Work is becoming, carried into "Bring what I've written" the same way. */
+  const pendingForm = useRef<string | null>(null);
   const [sparkCarryFailed, setSparkCarryFailed] = useState<string | null>(null);
   /* C · Bring What You Carry (S4): the import asks MAIA's question before anyone reads a word. Optional, skippable. */
   const [carryStep, setCarryStep] = useState<'invite' | 'asking' | 'held' | 'not_held' | 'skipped'>('invite');
@@ -171,13 +183,15 @@ export default function P4R1HomeController() {
     // created manuscript, so identity navigation remains the final authority.
     await refresh().catch(() => undefined);
     const spark = pendingSpark.current;
-    if (spark !== null) {
+    const form = pendingForm.current;
+    if (spark !== null || form !== null) {
       try {
         const listing = await apiFetch('/api/sovereign/living-works');
         const body = await listing.json().catch(() => null) as { works?: { id: string; expressions?: { expressionId: string }[] }[] } | null;
         const work = body?.works?.find((w) => (w.expressions ?? []).some((e) => e.expressionId === manuscriptId));
         if (!work) throw new Error('work for import');
-        await setPurpose(work.id, spark);
+        if (form !== null) { await setForm(work.id, form); pendingForm.current = null; }
+        if (spark !== null) await setPurpose(work.id, spark);
         pendingSpark.current = null;
       } catch {
         // Told plainly, never silently dropped: the manuscript is saved; the spark is not yet.
@@ -186,7 +200,7 @@ export default function P4R1HomeController() {
       }
     }
     open(manuscriptId, undefined, true);
-  }, [refresh, open, setPurpose]);
+  }, [refresh, open, setPurpose, setForm]);
 
   /* H1-R2 — a mode request with no Work carried. A single manuscript (in the
      Continue Work, or in the whole Studio when there is none) is a place to go;
@@ -238,7 +252,7 @@ export default function P4R1HomeController() {
     navigateMode(mode, manuscriptId);
   }, [navigateMode]);
 
-  const onBegin = useCallback(async (title: string, spark: string | null = null) => {
+  const onBegin = useCallback(async (title: string, spark: string | null = null, form: string | null = null) => {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -248,6 +262,7 @@ export default function P4R1HomeController() {
         ?? idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
       createdWorkForGesture.current.set(gesture, workId);
+      if (form !== null) await setForm(workId, form);
       if (spark !== null) await setPurpose(workId, spark);
       const manuscriptId = await startWritingInWork(workId);
       createdWorkForGesture.current.delete(gesture);
@@ -258,11 +273,11 @@ export default function P4R1HomeController() {
     } finally {
       setBusy(false);
     }
-  }, [busy, post, setPurpose, startWritingInWork, refresh, open]);
+  }, [busy, post, setPurpose, setForm, startWritingInWork, refresh, open]);
 
   /* "I don't know yet — let me look around" with a held spark: the Work is begun (unnamed) so the spark the writer chose
      to hold has somewhere to live. Without a held spark nothing is created (HomeView sets the door aside instead). */
-  const onDoorLookWithSpark = useCallback(async (purpose: string) => {
+  const onDoorLookWithSpark = useCallback(async (purpose: string, form: string | null = null) => {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -271,6 +286,7 @@ export default function P4R1HomeController() {
       const workId = createdWorkForGesture.current.get(gesture) ?? idFrom(await post('/api/sovereign/living-works', {}));
       if (!workId) throw new Error('work id');
       createdWorkForGesture.current.set(gesture, workId);
+      if (form !== null) await setForm(workId, form);
       await setPurpose(workId, purpose);
       createdWorkForGesture.current.delete(gesture);
       await refresh();
@@ -279,7 +295,7 @@ export default function P4R1HomeController() {
     } finally {
       setBusy(false);
     }
-  }, [busy, post, setPurpose, refresh]);
+  }, [busy, post, setPurpose, setForm, refresh]);
 
   /* Studio paths: the member's Begin on the path their own link chose. One gesture: the Work is declared with the
      member's title, then their held spark and each recommended setting THEY kept ticked go through the existing
@@ -541,12 +557,13 @@ export default function P4R1HomeController() {
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
       inspirationDoor={inspirationDoor}
-      onDoorBegin={(destination, purpose) => {
-        if (destination === 'write') { void onBegin('', purpose); return; }
+      onDoorBegin={(destination, purpose, form = null) => {
+        if (destination === 'write') { void onBegin('', purpose, form); return; }
         pendingSpark.current = purpose;
+        pendingForm.current = form;
         openImport();
       }}
-      onDoorLookWithSpark={(purpose) => void onDoorLookWithSpark(purpose)}
+      onDoorLookWithSpark={(purpose, form) => void onDoorLookWithSpark(purpose, form ?? null)}
       studioPath={studioPath}
       onPathBegin={(choice) => void onPathBegin(choice)}
       // A member who already has Works starts a program from Home, or arrives on a program link: the same door opens.

@@ -107,7 +107,8 @@ import { whatNextInDevelop, type DevelopScreen } from '../whatNext';
 const STAGE = 'app/dev/writers-studio-pc3-live/DevelopStage.tsx';
 const DEVELOP_VIEW = 'app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx';
 const DEVELOP_UI = [STAGE, DEVELOP_VIEW].map(read).join('\n');
-const D_BASE: DevelopScreen = { chapterLabel: 'Chapter 2', reading: 'idle', noticed: 0, pass: 'none', posture: 'ordinary' };
+/* A Work the writer called a book (founder 2026-11-20: the Studio's words follow the form the writer gave it). */
+const D_BASE: DevelopScreen = { chapterLabel: 'Chapter 2', reading: 'idle', noticed: 0, pass: 'none', posture: 'ordinary', unit: 'chapter', noun: 'book' };
 const dtext = (s: Partial<DevelopScreen>) => whatNextInDevelop({ ...D_BASE, ...s }).say.join(' ');
 const READINGS: DevelopScreen['reading'][] = ['idle', 'reading', 'ready', 'error'];
 const PASSES: DevelopScreen['pass'][] = ['none', 'running', 'ready', 'error', 'absent'];
@@ -119,7 +120,7 @@ describe('What do I do next? in Develop', () => {
   test('in Sanctuary, or when Sanctuary cannot be read, no reading is ever suggested', () => {
     for (const s of ALL_D.filter((x) => x.posture !== 'ordinary')) {
       const t = whatNextInDevelop(s).say.join(' ');
-      expect(t).not.toMatch(/Read this chapter with MAIA|editorial pass|Go through what she noticed/);
+      expect(t).not.toMatch(/Read this \w+ with MAIA|editorial pass|Go through what she noticed/);
       expect(t).toMatch(/“Edit in Write”/);
     }
     expect(dtext({ posture: 'unresolved' })).toMatch(/won’t read anything until you’ve chosen/);
@@ -153,8 +154,22 @@ describe('What do I do next? in Develop', () => {
   test('every control she names in Develop is text the live Develop stage shows', () => {
     for (const s of ALL_D) {
       const labels = [...whatNextInDevelop(s).say.join(' ').matchAll(/“([^”]+)”/g)].map((m) => m[1]).filter((l) => l !== s.chapterLabel);
-      for (const label of labels) expect(DEVELOP_UI).toContain(label);
+      // The stage draws its labels in the Work's own words; read the source as it renders for this Work.
+      const ui = DEVELOP_UI.replace(/\$?\{v\.unit\}/g, s.unit ?? 'part').replace(/\$?\{v\.noun\}/g, s.noun ?? 'piece');
+      for (const label of labels) expect(ui).toContain(label);
     }
+  });
+
+  test('the words follow the Work: a poem’s stanzas, and neutral words when the writer has not said', () => {
+    const poem = whatNextInDevelop({ ...D_BASE, unit: 'stanza', noun: 'poem', chapterLabel: null }).say.join(' ');
+    expect(poem).toContain('press “Read this stanza with MAIA” at the top');
+    expect(poem).toContain('“Whole poem · editorial pass”');
+    expect(poem).not.toMatch(/chapter|\bbook\b/i);
+    const { unit: _u, noun: _n, ...unnamed } = D_BASE;
+    const neutral = whatNextInDevelop({ ...unnamed, chapterLabel: null }).say.join(' ');
+    expect(neutral).toContain('“Read this part with MAIA”');
+    expect(neutral).toContain('“Whole piece · editorial pass”');
+    expect(neutral).not.toMatch(/chapter|\bbook\b/i);
   });
 
   test('her own words say Work, not book (quoted Studio labels aside)', () => {

@@ -12,6 +12,7 @@
  * ⛔ Member-scoped in every predicate: another member's Work can never affect this.
  */
 import { query } from '@/lib/db/postgres';
+import { formVocabulary } from '@/lib/writersStudio/formVocabulary';
 
 export const WORK_REVISION_PAUSE_SQL = `SELECT EXISTS (
     SELECT 1
@@ -149,9 +150,14 @@ export const CONVERSATION_PROGRAM_SQL = `SELECT DISTINCT lw.studio_path AS studi
    LIMIT 2`;
 
 /** `stage`: THIS Work's declared stage in its program (null = not declared: the program's first stage applies). */
-export type ConversationProgram = { questionsOnly: boolean; program: WorkProgram; stage?: string | null };
+export type ConversationProgram = {
+  questionsOnly: boolean; program: WorkProgram; stage?: string | null;
+  /** The writer's own word for what an ordinary Work is (living_works.form), read only when there is no program. Founder 2026-11-20. */
+  form?: string | null;
+};
 
 export const CONVERSATION_STAGE_SQL = `SELECT studio_stage FROM living_works WHERE id = $2::uuid AND member_id = $1`;
+export const CONVERSATION_FORM_SQL = `SELECT form FROM living_works WHERE id = $2::uuid AND member_id = $1`;
 
 export async function conversationProgram(
   memberId: string, workId: string, manuscriptId: string | null,
@@ -186,12 +192,22 @@ export async function conversationProgram(
       console.error('[ask] work stage unreadable; no stage posture', error);
     }
   }
-  return { questionsOnly, program, stage };
+  /* An ordinary Work's form, as the writer named it (founder 2026-11-20). Unreadable ⇒ unknown, which is spoken of neutrally. */
+  let form: string | null = null;
+  if (program.kind === 'none') {
+    try {
+      const r = await query<{ form: string | null }>(CONVERSATION_FORM_SQL, [memberId, workId]);
+      form = typeof r.rows[0]?.form === 'string' ? r.rows[0]!.form : null;
+    } catch (error) {
+      console.error('[ask] work form unreadable; speaking of it neutrally', error);
+    }
+  }
+  return { questionsOnly, program, stage, ...(program.kind === 'none' ? { form } : {}) };
 }
 
 /**
  * The instructions MAIA is given in the Work conversation, in order: questions-only (if on), then the program's posture
- * (or the conservative one when the program is uncertain or not registered). Empty for an ordinary, unpaused Work.
+ * (or the conservative one when the program is uncertain or not registered), or for an ordinary Work its form (formVocabulary).
  */
 export function conversationProgramInstructions(
   c: ConversationProgram,
@@ -209,5 +225,8 @@ export function conversationProgramInstructions(
     if (stagePosture) out.push(stagePosture);
   }
   else if (c.program.kind === 'ambiguous' || c.program.kind === 'unknown') out.push(workProgramUncertainInstruction());
+  /* An ordinary Work: MAIA speaks of it as the writer named it, or neutrally when they have not (founder rulings 2026-11-20).
+     A program's own posture outranks this, so it is never added to a program Work or an uncertain one. */
+  else if (c.program.kind === 'none') out.push(formVocabulary(c.form ?? null).maiaFrame);
   return out;
 }

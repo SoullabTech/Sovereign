@@ -29,6 +29,9 @@ export type WriteScreen = {
   readonly isBook: boolean;
   /** The label on this column's whole-Work button, as rendered (a program Work may name it differently). */
   readonly talkWholeLabel: string;
+  /** The Work's own words (formVocabulary, founder 2026-11-20): its parts ("stanza") and the Work ("poem"). Absent → neutral. */
+  readonly unit?: string;
+  readonly units?: string;
 };
 
 export type WhatNext = {
@@ -61,7 +64,7 @@ export function whatNextInWrite(s: WriteScreen): WhatNext {
     say.push(`To talk about your Work as a whole, press “${s.talkWholeLabel}” here in this column.`);
   }
   if (s.isBook && !s.pageEmpty && !s.firstPage) {
-    say.push('When you want to look at how the chapters fit together, choose “Develop” in the top bar.');
+    say.push(`When you want to look at how the ${s.units ?? 'parts'} fit together, choose “Develop” in the top bar.`);
   }
   return {
     say,
@@ -86,35 +89,40 @@ export type DevelopScreen = {
   readonly pass: 'none' | 'running' | 'ready' | 'error' | 'absent';
   /** Read at the moment of asking: 'unresolved' when the posture cannot be read on this device. */
   readonly posture: 'ordinary' | 'sanctuary' | 'unresolved';
+  /** The Work's own words (formVocabulary, founder 2026-11-20). Absent → neutral ("part", "piece"). They also name the buttons. */
+  readonly unit?: string;
+  readonly noun?: string;
 };
 
 export function whatNextInDevelop(s: DevelopScreen): WhatNext {
   const say: string[] = [];
-  const here = s.chapterLabel ? `“${s.chapterLabel}”` : 'this chapter';
+  const unit = s.unit ?? 'part';
+  const wholeButton = `Whole ${s.noun ?? 'piece'} · editorial pass`;
+  const here = s.chapterLabel ? `“${s.chapterLabel}”` : `this ${unit}`;
   if (s.posture !== 'ordinary') {
     say.push(s.posture === 'sanctuary'
       ? 'This is a Sanctuary session, so I don’t read or keep anything here.'
       : 'I can’t tell yet whether this session is Ordinary or Sanctuary, so I won’t read anything until you’ve chosen.');
-    say.push('You can still read your chapter here. To go back to writing, press “Edit in Write” at the top.');
+    say.push(`You can still read your ${unit} here. To go back to writing, press “Edit in Write” at the top.`);
   } else if (s.reading === 'reading') {
     say.push(`I’m reading ${here} now. Keep writing or talking; I won’t interrupt.`);
   } else if (s.reading === 'ready') {
     say.push(s.noticed > 0
       ? `I’ve read ${here}. To walk through it with me, press “Go through what she noticed” in my reading, here in this column.`
       : `I’ve read ${here}.`);
-    say.push('To talk about exact words, select them in the chapter and press “Ask MAIA about this”.');
+    say.push(`To talk about exact words, select them in the ${unit} and press “Ask MAIA about this”.`);
   } else if (s.reading === 'error') {
     say.push(`My reading of ${here} didn’t finish. Nothing in your writing changed.`);
-    say.push('To try again, press “Read this chapter with MAIA” at the top.');
+    say.push(`To try again, press “Read this ${unit} with MAIA” at the top.`);
   } else {
-    say.push(`You’re looking at ${here}. To hear what I notice in it, press “Read this chapter with MAIA” at the top.`);
-    say.push('To look at a different chapter, choose it from the chapter menu at the top.');
+    say.push(`You’re looking at ${here}. To hear what I notice in it, press “Read this ${unit} with MAIA” at the top.`);
+    say.push(`To look at a different ${unit}, choose it from the menu at the top.`);
   }
   if (s.posture === 'ordinary') {
     if (s.pass === 'running') say.push('I’m also reading your whole Work. Keep this page open until I finish.');
-    else if (s.pass === 'ready') say.push('My letter about your whole Work is ready: press “Whole book · editorial pass ready”.');
+    else if (s.pass === 'ready') say.push(`My letter about your whole Work is ready: press “${wholeButton} ready”.`);
     else if (s.pass === 'none' && s.reading !== 'reading') {
-      say.push('When you want me to read your whole Work, press “Whole book · editorial pass” at the end of the row of ways to explore. You’ll see what it uses before anything starts.');
+      say.push(`When you want me to read your whole Work, press “${wholeButton}” at the end of the row of ways to explore. You’ll see what it uses before anything starts.`);
     }
     say.push('To change the words themselves, press “Edit in Write” at the top.');
   }

@@ -1,4 +1,7 @@
 'use client';
+import { StudioVocabularyProvider } from '@/lib/writersStudio/StudioVocabularyContext';
+import { formVocabulary, readingFrame } from '@/lib/writersStudio/formVocabulary';
+import { studioPathById } from '@/lib/writersStudio/studioPaths';
 
 import { freeWorkLimitFrom, workLimitMessageOr } from '@/lib/writersStudio/workLimitShared';
 import { readingProgressText } from '@/lib/writersStudio/readingProgress';
@@ -480,6 +483,15 @@ export default function P4R1DevelopController() {
     worksPhase, works, context?.manuscriptId ?? manuscriptId, carriedWorkId,
   );
   const work = currentWork(workContext);
+  /* Develop speaks in the words of what this Work is (founder rulings 2026-11-20): a program's own, else the writer's form, else neutral. */
+  const developProgram = studioPathById(work?.studioPath ?? null);
+  const developVocabulary = useMemo(() => formVocabulary(developProgram ? developProgram.name : work?.form ?? null),
+    [developProgram, work?.form]);
+  /* Develop's reading instructions are written in book words; MAIA is told first what this Work is (founder 2026-11-20). */
+  const developVocabularyRef = useRef(developVocabulary);
+  developVocabularyRef.current = developVocabulary;
+  const requestAttentionMapForThisWork = (...[manuscriptId, readingIds, request, opts]: Parameters<typeof requestAttentionMap>) =>
+    requestAttentionMap(manuscriptId, readingIds, readingFrame(developVocabularyRef.current) + request, opts);
 
   // The author's own declaration that this writing belongs to a Work (the same routes the Studio Home uses). The Studio
   // never infers it; after it lands the Works are re-read, the context resolves to that Work, and Talk becomes available.
@@ -1192,7 +1204,7 @@ export default function P4R1DevelopController() {
       }
 
       setReadProgress('MAIA has finished reading. Gathering her impressions…');
-      const synthesized = await requestAttentionMap(
+      const synthesized = await requestAttentionMapForThisWork(
         context.manuscriptId,
         [overviewReadingId],
         [
@@ -1336,7 +1348,7 @@ export default function P4R1DevelopController() {
         await loadSummaries();
       }
 
-      const out = await requestAttentionMap(
+      const out = await requestAttentionMapForThisWork(
         context.manuscriptId,
         [wholeReadingId],
         [
@@ -1365,7 +1377,7 @@ export default function P4R1DevelopController() {
     setChapterMovementBusy(true);
     setChapterMovementError(null);
     try {
-      const out = await requestAttentionMap(
+      const out = await requestAttentionMapForThisWork(
         context.manuscriptId,
         chapterReview.readingIds,
         [
@@ -1394,7 +1406,7 @@ export default function P4R1DevelopController() {
     setChapterScoreBusy(true);
     setChapterScoreError(null);
     try {
-      const out = await requestAttentionMap(
+      const out = await requestAttentionMapForThisWork(
         context.manuscriptId,
         chapterReview.readingIds,
         [
@@ -1429,7 +1441,7 @@ export default function P4R1DevelopController() {
       const scoreSnapshot = chapterScorecard
         ? chapterScorecard.items.map((item) => `${item.label}: ${item.notice}`).join('\n')
         : 'No scorecard requested. Work directly from the frozen chapter reading.';
-      const out = await requestAttentionMap(
+      const out = await requestAttentionMapForThisWork(
         context.manuscriptId,
         chapterReview.readingIds,
         [
@@ -1717,6 +1729,7 @@ export default function P4R1DevelopController() {
   }
 
   return (
+    <StudioVocabularyProvider value={developVocabulary}>
     <P4R1DevelopView
       manuscriptId={context.manuscriptId}
       work={work}
@@ -1820,5 +1833,6 @@ export default function P4R1DevelopController() {
       onWorkWithObservation={onWorkWithObservation}
       onThemeMutation={(mutation) => void onThemeMutation(mutation)}
     />
+    </StudioVocabularyProvider>
   );
 }

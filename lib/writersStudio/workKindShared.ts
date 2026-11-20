@@ -12,6 +12,6 @@ export function startersFor(kind: WorkKind | null, label: string, nextLabel: str
     case 'fiction': return [`What is ${label} doing in the story?`, `Where does ${label} lose you?`, end];
     case 'nonfiction': return [`What is ${label} claiming?`, `Where does the argument in ${label} lose you?`, end];
     case 'practitioner': return [`Which idea is ${label} teaching?`, `Where would a reader need more before ${label}?`, `Which story in ${label} earns its point?`];
-    default: return [`What is ${label} doing in the book?`, `Where does ${label} lose you?`, end];
+    default: return [`What is ${label} doing in your work?`, `Where does ${label} lose you?`, end];
   }
 }

@@ -9,6 +9,7 @@ jest.mock('@/lib/writersStudio/workSituation', () => ({ formatWorkSituationForPr
 const query = jest.fn();
 jest.mock('@/lib/db/postgres', () => ({ query: (...a: unknown[]) => query(...a) }));
 
+import { formVocabulary } from '@/lib/writersStudio/formVocabulary';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runStructured } from '../../../ai/structured/router';
@@ -57,9 +58,41 @@ describe('what the server computes for a Work', () => {
     expect(conversationProgramInstructions(c, postureOf)).toEqual([workQuestionsOnlyInstruction(), ESSAY]);
   });
 
-  test('an ordinary, unpaused Work gets nothing added: the conversation is exactly as before', async () => {
-    query.mockResolvedValueOnce({ rows: [{ paused: false }] }).mockResolvedValueOnce({ rows: [{ studio_path: null }] });
-    expect(conversationProgramInstructions(await conversationProgram('m1', 'w1', 'ms1'), postureOf)).toEqual([]);
+  /* Superseded 2026-11-20 (founder rulings: the writer names the form; unknown is spoken of neutrally). An ordinary Work used to
+     get nothing added, which left MAIA's book-shaped defaults ("this chapter") speaking to essays and poems. */
+  test('an ordinary Work with no form: MAIA is told not to assume a book, and nothing else is added', async () => {
+    query.mockResolvedValueOnce({ rows: [{ paused: false }] }).mockResolvedValueOnce({ rows: [{ studio_path: null }] })
+      .mockResolvedValueOnce({ rows: [{ form: null }] });
+    const c = await conversationProgram('m1', 'w1', 'ms1');
+    expect(c).toEqual({ questionsOnly: false, program: { kind: 'none' }, stage: null, form: null });
+    const out = conversationProgramInstructions(c, postureOf);
+    expect(out).toEqual([formVocabulary(null).maiaFrame]);
+    expect(out[0]).toMatch(/Do not assume it is a book or speak of chapters/);
+  });
+
+  test('an ordinary Work the writer called a poem: MAIA speaks of stanzas, never chapters; the form is read for THIS member', async () => {
+    query.mockResolvedValueOnce({ rows: [{ paused: false }] }).mockResolvedValueOnce({ rows: [{ studio_path: null }] })
+      .mockResolvedValueOnce({ rows: [{ form: 'poem' }] });
+    const c = await conversationProgram('m1', 'w1', 'ms1');
+    const [sql, params] = query.mock.calls[query.mock.calls.length - 1]!;
+    expect(String(sql)).toMatch(/SELECT form FROM living_works WHERE id = \$2::uuid AND member_id = \$1/);
+    expect(params).toEqual(['m1', 'w1']);
+    const [frame] = conversationProgramInstructions(c, postureOf);
+    expect(frame).toMatch(/a poem/);
+    expect(frame).toMatch(/its parts are stanzas/);
+    expect(frame).toMatch(/Never call it a book or its parts chapters/);
+  });
+
+  test('an unreadable form is spoken of neutrally, never as a book', async () => {
+    query.mockResolvedValueOnce({ rows: [{ paused: false }] }).mockResolvedValueOnce({ rows: [{ studio_path: null }] })
+      .mockRejectedValueOnce(new Error('db down'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    expect(conversationProgramInstructions(await conversationProgram('m1', 'w1', 'ms1'), postureOf)).toEqual([formVocabulary(null).maiaFrame]);
+  });
+
+  test('a program Work never gets the form frame: its own posture outranks it', () => {
+    const out = conversationProgramInstructions({ questionsOnly: false, program: { kind: 'one', id: 'college-essay' }, form: 'poem' }, postureOf);
+    expect(out).toEqual([ESSAY]);
   });
 
   test('an unreadable setting fails CLOSED: questions-only on, conservative posture', async () => {

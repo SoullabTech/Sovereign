@@ -27,7 +27,7 @@ const btn = () => host.querySelector<HTMLButtonElement>('[data-develop-maia-read
 test('unread chapter: MAIA\'s column offers the reading, and rendering alone reads nothing', () => {
   const h = mount(reading());
   expect(host.textContent).toContain('MAIA does not have a completed reading of Section 1 here yet. Would you like her to read it?');
-  expect(btn()!.textContent).toBe('Read this chapter with MAIA');
+  expect(btn()!.textContent).toBe('Read this part with MAIA'); // no form named: neutral words (founder 2026-11-20)
   expect(h.onRead).not.toHaveBeenCalled(); expect(h.onCheckpointAndRead).not.toHaveBeenCalled();
   act(() => btn()!.click());
   expect(h.onRead).toHaveBeenCalledTimes(1); expect(h.onCheckpointAndRead).not.toHaveBeenCalled();

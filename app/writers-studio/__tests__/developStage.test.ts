@@ -2,6 +2,8 @@
  * The Develop stage: the work is present and central. Real component; no network. Not a browser run.
  * @jest-environment jsdom
  */
+import { StudioVocabularyProvider } from '@/lib/writersStudio/StudioVocabularyContext';
+import { formVocabulary } from '@/lib/writersStudio/formVocabulary';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
@@ -18,12 +20,15 @@ const sections = [
   { draftSectionId: 's3', heading: 'Return', body: 'Return\n\nShe lost the key near the water. ' + 'She walked back slowly. '.repeat(30), position: 2 },
 ];
 let root: Root; let host: HTMLDivElement;
+/* These checks describe a Work the writer called a book (founder 2026-11-20: Develop's words follow the Work's form;
+   formVocabulary.test.ts covers other forms and the neutral default). */
+const asBook = (el: React.ReactElement) => React.createElement(StudioVocabularyProvider, { value: formVocabulary('book') }, el);
 beforeEach(() => { host = document.createElement('div'); document.body.append(host); root = createRoot(host); });
 afterEach(() => { act(() => root.unmount()); host.remove(); });
 
 function mount(over: Record<string, unknown> = {}) {
   const props = { workTitle: 'The Long Harbour', sections, currentId: 's1', onSelect: jest.fn(), starters: ['What is Harbour doing in the book?'], onStarter: jest.fn(), onOpenWrite: jest.fn(), onMoreWays: jest.fn(), lastRead: null, plan: null, planBusy: false, planNote: null, onMakePlan: jest.fn(), onEditPlan: jest.fn(), onWorkOnStep: jest.fn(), onAskAbout: jest.fn(), ...over };
-  act(() => root.render(React.createElement(DevelopStage, props as any)));
+  act(() => root.render(asBook(React.createElement(DevelopStage, props as any))));
   // Everything that is not the chapter lives behind the one quiet "More" control; most tests below are about what is behind it.
   if (!(over as any).closed) act(() => q('[data-develop-more]')!.click());
   return props as any;
@@ -110,16 +115,16 @@ test('no chapters read yet: no excerpt section; the work is still the centre', (
 
 test('beside the conversation, what she read stays visible (L8), and says so honestly before the first answer', () => {
   const convo = React.createElement('div', { 'data-fake-convo': true }, 'convo');
-  act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: null } as any)));
+  act(() => root.render(asBook(React.createElement(DevelopCompanion, { conversation: convo, lastRead: null } as any))));
   expect(q('[data-develop-conversation] [data-fake-convo]')).not.toBeNull();
   expect(q('[data-develop-she-read]')!.textContent).toContain('After her next answer');
   expect(q('[data-develop-she-read]')!.textContent).not.toMatch(/Nothing read/);   // a reloaded conversation must not be told she read nothing
-  act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: [{ sectionId: 's1', label: 'Harbour' }, { sectionId: 's3', label: 'Return' }] } as any)));
+  act(() => root.render(asBook(React.createElement(DevelopCompanion, { conversation: convo, lastRead: [{ sectionId: 's1', label: 'Harbour' }, { sectionId: 's3', label: 'Return' }] } as any))));
   expect(q('[data-develop-she-read]')!.textContent).toContain('Harbour · Return');
 });
 
 test('behind More: the book’s kind is asked, never guessed', () => {
-  act(() => root.render(React.createElement(DevelopHoldings, { manuscriptId: 'm', workId: 'w', kind: null, onKind: jest.fn() } as any)));
+  act(() => root.render(asBook(React.createElement(DevelopHoldings, { manuscriptId: 'm', workId: 'w', kind: null, onKind: jest.fn() } as any))));
   expect(q('[data-develop-kind]')!.textContent).toContain('What kind of book is this?');
 });
 
@@ -212,7 +217,7 @@ test('a plan that read every chapter shows no coverage note', () => {
 test('MAIA’s “show” offer, clicked, opens More at that place', () => {
   const p = mount({ closed: true });
   expect(q('[data-develop-more-panel]')).toBeNull();
-  act(() => root.render(React.createElement(DevelopStage, { ...p, openAt: { place: 'plan', n: 1 } } as any)));
+  act(() => root.render(asBook(React.createElement(DevelopStage, { ...p, openAt: { place: 'plan', n: 1 } } as any))));
   expect(q('[data-develop-more-panel]')).not.toBeNull();
   expect(q('[data-develop-place="plan"]')).not.toBeNull();
 });

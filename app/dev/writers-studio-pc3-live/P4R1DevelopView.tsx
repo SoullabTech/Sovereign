@@ -1,5 +1,6 @@
 'use client';
 
+import { useStudioVocabulary } from '@/lib/writersStudio/StudioVocabularyContext';
 import SessionPostureChoice from '@/app/writers-studio/canvas/SessionPostureChoice';
 import { keepRefusalCopy } from '@/lib/writersStudio/keepPosture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -2093,6 +2094,8 @@ function revealStudioPlace(target: string): () => void {
 }
 
 export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
+  /* The Work's own words (founder rulings 2026-11-20), provided by the Develop controller. */
+  const studioWords = useStudioVocabulary();
   const [whatNextOpen, setWhatNextOpen] = useState(false);
   const livePathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const liveSearchParams = useSearchParams();
@@ -3512,6 +3515,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               noticed: stageReading.items.length,
               pass: stagePass.status,
               posture: !posture.resolved ? 'unresolved' : posture.sanctuary ? 'sanctuary' : 'ordinary',
+              unit: studioWords.unit,
+              noun: studioWords.noun,
             });
             return (
               <div role="status" data-develop-what-next-answer="true" style={{ marginTop: 10, fontSize: 15, lineHeight: 1.5 }}>

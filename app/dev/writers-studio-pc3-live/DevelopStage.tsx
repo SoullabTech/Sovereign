@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import { excerptOf, markTerm } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKindShared';
+import { useStudioVocabulary } from '@/lib/writersStudio/StudioVocabularyContext';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 import { STUDIO_DEPTHS, STUDIO_DEPTH_HINT, STUDIO_DEPTH_LABEL, isStudioDepth, type StudioDepth } from '@/lib/writersStudio/presentationRequests';
@@ -147,7 +148,7 @@ function writeToolsShare(v: number): void {
 const hair = '1px solid color-mix(in srgb, currentColor 16%, transparent)';
 
 /** What the writer is told before a whole-book pass begins from Develop: it is paid and it takes a while. */
-export const PASS_COST_NOTE = 'This asks MAIA to read your whole book: up to nine paid readings and a paid letter (readings she already made of this draft are reused). It takes several minutes.';
+export const passCostNote = (whole: string) => `This asks MAIA to read ${whole}: up to nine paid readings and a paid letter (readings she already made of this draft are reused). It takes several minutes.`;
 
 export function DevelopStage(props: {
   workTitle: string | null;
@@ -196,6 +197,7 @@ export function DevelopStage(props: {
    *  whole chapter is shown: every section in the span, in order. Absent (no confirmed chapter structure): the one section. */
   chapterRange?: { fromSectionId: string; toSectionId: string } | null;
 }) {
+  const v = useStudioVocabulary();
   const { sections } = props;
   const allTools = props.view === 'full';
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
@@ -293,7 +295,7 @@ export function DevelopStage(props: {
         {allTools ? null : (
           <button type="button" data-develop-more="true" aria-expanded={more} onClick={() => setMore((v) => !v)}
             style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: more ? 'color-mix(in srgb, currentColor 10%, transparent)' : 'none', border: hair, borderRadius: 999, padding: '3px 12px' }}>
-            {more ? 'Back to the chapter' : 'More'}
+            {more ? `Back to the ${v.unit}` : 'More'}
           </button>
         )}
       </header>
@@ -311,14 +313,14 @@ export function DevelopStage(props: {
             props.editorialPass.status === 'ready' ? (
               <button type="button" data-develop-way="editorial-pass" data-develop-pass="ready" onClick={props.onOpenEditorialPass}
                 style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'color-mix(in srgb, currentColor 10%, transparent)', border: hair, borderRadius: 999, padding: '3px 11px' }}>
-                Whole book · editorial pass ready
+                Whole {v.noun} · editorial pass ready
               </button>
             ) : (
               /* Walk 2026-11-13: one click here began a paid whole-book reading with no word about it. The click now only asks; the
                  reading begins on the writer's second, informed act. */
               passAsk ? (
-                <span role="group" aria-label="Read the whole book?" data-develop-pass-confirm="true" style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                  <span>{PASS_COST_NOTE}</span>
+                <span role="group" aria-label={`Read ${v.whole}?`} data-develop-pass-confirm="true" style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                  <span>{passCostNote(v.whole)}</span>
                   <button type="button" data-develop-pass-go="true" onClick={() => { setPassAsk(false); props.onEditorialPass?.(); }}
                     style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>Read it</button>
                   <button type="button" data-develop-pass-cancel="true" onClick={() => setPassAsk(false)}
@@ -327,7 +329,7 @@ export function DevelopStage(props: {
               ) : (
               <button type="button" data-develop-way="editorial-pass" data-develop-pass={props.editorialPass.status} disabled={props.editorialPass.status === 'running'} onClick={() => setPassAsk(true)}
                 style={{ font: 'inherit', fontSize: 12, cursor: props.editorialPass.status === 'running' ? 'default' : 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '3px 11px' }}>
-                Whole book · editorial pass
+                Whole {v.noun} · editorial pass
               </button>
               )
             )
@@ -342,14 +344,14 @@ export function DevelopStage(props: {
           style={{ flex: '0 0 auto', fontSize: 12, opacity: .85, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {props.reading?.status === 'reading' ? <span>MAIA is reading {props.reading.chapterLabel}. Keep writing or talking; she won’t interrupt.{props.reading.progress ? ` ${props.reading.progress}` : ''}</span> : null}
           {props.reading?.status === 'ready' ? <span>MAIA has a reading of {props.reading.chapterLabel} · {props.reading.items.length} thing{props.reading.items.length === 1 ? '' : 's'} noticed{spans.length > 0 ? '; the words she quotes are marked in your text' : ''}.</span> : null}
-          {props.reading?.status === 'error' ? <span>{props.reading.error ?? 'MAIA could not finish reading this chapter. Nothing in your writing changed.'}</span> : null}
-          {props.editorialPass?.status === 'running' ? <span data-develop-pass-progress="true">Editorial pass of the whole book: {props.editorialPass.progress ?? 'MAIA is reading…'} Keep this page open until she finishes.</span> : null}
+          {props.reading?.status === 'error' ? <span>{props.reading.error ?? `MAIA could not finish reading this ${v.unit}. Nothing in your writing changed.`}</span> : null}
+          {props.editorialPass?.status === 'running' ? <span data-develop-pass-progress="true">Editorial pass of {v.whole}: {props.editorialPass.progress ?? 'MAIA is reading…'} Keep this page open until she finishes.</span> : null}
           {props.editorialPass?.status === 'error' ? <span>{props.editorialPass.error}</span> : null}
         </div>
       ) : null}
 
       {allTools ? (
-        <div role="separator" aria-orientation="horizontal" aria-label="Resize the tools under your chapter"
+        <div role="separator" aria-orientation="horizontal" aria-label={`Resize the tools under your ${v.unit}`}
           aria-valuemin={SHARE_MIN} aria-valuemax={SHARE_MAX} aria-valuenow={toolsFolded ? 0 : Math.round(toolsShare)} tabIndex={0}
           data-develop-tools-splitter="true"
           onPointerDown={(e) => { if ((e.target as HTMLElement).closest('button')) return; if (toolsFolded) setToolsFolded(false); startDrag(e); }}
@@ -380,7 +382,7 @@ export function DevelopStage(props: {
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <label htmlFor="develop-plan-ask" style={{ fontSize: 12, opacity: .8, width: '100%' }}>In your words, what do you want a plan for?</label>
                   <input id="develop-plan-ask" value={planAsk} onChange={(e) => setPlanAsk(e.target.value)} maxLength={1000}
-                    placeholder="e.g. help me connect Chapter 7 to what I set up earlier" style={{ flex: '1 1 260px', font: 'inherit', padding: '6px 10px', borderRadius: 8, border: hair, background: 'none', color: 'inherit' }} />
+                    placeholder={`e.g. help me connect one ${v.unit} to what I set up earlier`} style={{ flex: '1 1 260px', font: 'inherit', padding: '6px 10px', borderRadius: 8, border: hair, background: 'none', color: 'inherit' }} />
                   <button type="button" disabled={props.planBusy || planAsk.trim().length === 0} onClick={() => props.onMakePlan(planAsk.trim())}
                     style={{ font: 'inherit', cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '5px 14px' }}>{props.planBusy ? 'Making a plan…' : 'Make a plan'}</button>
                   <button type="button" onClick={() => setAsking(false)} style={{ font: 'inherit', cursor: 'pointer', color: 'inherit', background: 'none', border: 'none', textDecoration: 'underline', fontSize: 12 }}>Not now</button>
@@ -399,8 +401,8 @@ export function DevelopStage(props: {
                   {' '}Removing a step takes it out of the plan; earlier versions of the plan keep it until you{' '}
                   {props.onDeletePlan ? <button type="button" data-develop-plan-delete="true" onClick={() => { if (typeof window === 'undefined' || window.confirm('Delete this plan, its earlier versions and its record of changes you applied from it? Your manuscript is not touched.')) props.onDeletePlan!(); }}
                     style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}>delete the plan</button> : 'delete the plan'}.</p>
-                {props.plan.coverage && props.plan.coverage.notRead.length > 0 ? <p role="note" data-develop-plan-coverage="true" style={{ margin: '0 0 8px', fontSize: 12 }}>MAIA made this plan from {props.plan.coverage.read} of your {props.plan.coverage.total} chapters; the book is longer than one reading. Not read for this plan: {props.plan.coverage.notRead.slice(0, 6).join('; ')}{props.plan.coverage.notRead.length > 6 ? `, and ${props.plan.coverage.notRead.length - 6} more` : ''}.</p> : null}
-                {props.plan.decisionsChanged === true ? <p role="status" data-develop-plan-decisions-changed="true" style={{ margin: '0 0 8px', fontSize: 12 }}>What you have settled about this book has changed since this plan was made. The steps may not fit your decisions now; ask MAIA for a fresh plan when you are ready.</p> : null}
+                {props.plan.coverage && props.plan.coverage.notRead.length > 0 ? <p role="note" data-develop-plan-coverage="true" style={{ margin: '0 0 8px', fontSize: 12 }}>MAIA made this plan from {props.plan.coverage.read} of your {props.plan.coverage.total} {v.units}; your {v.noun} is longer than one reading. Not read for this plan: {props.plan.coverage.notRead.slice(0, 6).join('; ')}{props.plan.coverage.notRead.length > 6 ? `, and ${props.plan.coverage.notRead.length - 6} more` : ''}.</p> : null}
+                {props.plan.decisionsChanged === true ? <p role="status" data-develop-plan-decisions-changed="true" style={{ margin: '0 0 8px', fontSize: 12 }}>What you have settled about your {v.noun} has changed since this plan was made. The steps may not fit your decisions now; ask MAIA for a fresh plan when you are ready.</p> : null}
                 {props.plan.plan.steps.length === 0 ? <p style={{ margin: 0, opacity: .8 }}>MAIA could not ground a step in your text this time.</p> : null}
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {props.plan.plan.steps.map((st, i) => {
@@ -409,7 +411,7 @@ export function DevelopStage(props: {
                     return (
                       <li key={st.id} data-develop-plan-step={st.id} style={{ borderTop: i === 0 ? 'none' : hair, paddingTop: i === 0 ? 0 : 10, opacity: st.status === 'dropped' ? .55 : 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
-                          <strong style={{ fontWeight: 500 }}>{i + 1}. {sec ? labelOf(sec) : 'A chapter'}</strong>
+                          <strong style={{ fontWeight: 500 }}>{i + 1}. {sec ? labelOf(sec) : `A ${v.unit}`}</strong>
                           <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                             <select aria-label={`Status of step ${i + 1}`} value={st.status} onChange={(e) => props.onEditPlan([{ id: st.id, status: e.target.value as StepStatus }])}
                               style={{ font: 'inherit', fontSize: 12, background: 'none', color: 'inherit', border: hair, borderRadius: 6 }}>
@@ -431,8 +433,8 @@ export function DevelopStage(props: {
                             return <span data-develop-plan-event={ev.state} style={{ opacity: .85 }}>{ev.state === 'applied'
                               ? `You applied a change here in the passage desk (${when}).${st.status !== 'done' ? ' Whether that resolves the step is yours to say.' : ''}`
                               : `You applied a change here and then undid it (${when}).`}</span>; })()}
-                          {!stale && props.plan!.unverifiedStepIds?.includes(st.id) ? <span role="status" style={{ opacity: .85 }}>I can’t confirm this chapter is the one MAIA read for the plan; check the step still fits.</span> : null}
-                          {stale ? <span role="status" style={{ opacity: .85 }}>This chapter has changed since the plan was made; check the step still fits.</span> : null}
+                          {!stale && props.plan!.unverifiedStepIds?.includes(st.id) ? <span role="status" style={{ opacity: .85 }}>I can’t confirm this {v.unit} is the one MAIA read for the plan; check the step still fits.</span> : null}
+                          {stale ? <span role="status" style={{ opacity: .85 }}>This {v.unit} has changed since the plan was made; check the step still fits.</span> : null}
                         </div>
                       </li>
                     );
@@ -447,7 +449,7 @@ export function DevelopStage(props: {
 
           {/* the chapters she read for her last answer, in place — from the writer's own copy; nothing is sent to show it */}
           {props.lastRead && props.lastRead.length > 0 ? (
-            <section data-develop-excerpts="true" data-develop-place="read" aria-label="The chapters MAIA read for her last answer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <section data-develop-excerpts="true" data-develop-place="read" aria-label={`The ${v.units} MAIA read for her last answer`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7 }}>What she read for that answer</div>
               {props.lastRead.map((r) => {
                 const sec = sections.find((x) => x.draftSectionId === r.sectionId);
@@ -456,7 +458,7 @@ export function DevelopStage(props: {
                 return (
                   <div key={r.sectionId} data-develop-excerpt={r.sectionId} style={{ border: hair, borderRadius: 10, padding: '10px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13 }}>
-                      <strong style={{ fontWeight: 500 }}>{labelOf(sec)}{sec.draftSectionId === current?.draftSectionId ? ' · this chapter' : ''}</strong>
+                      <strong style={{ fontWeight: 500 }}>{labelOf(sec)}{sec.draftSectionId === current?.draftSectionId ? ` · this ${v.unit}` : ''}</strong>
                       <span style={{ display: 'flex', gap: 10 }}>
                         {sec.draftSectionId !== current?.draftSectionId ? (
                           <button type="button" onClick={() => props.onSelect(sec.draftSectionId)} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>Go there</button>
@@ -491,7 +493,7 @@ export function DevelopStage(props: {
       ) : null}
 
       {/* the chapter, in the writer's own words: the whole of it, filling the centre */}
-      <article aria-label={current ? `${labelOf(current)}, as you wrote it` : 'Your chapter'} data-develop-chapter={current?.draftSectionId}
+      <article aria-label={current ? `${labelOf(current)}, as you wrote it` : `Your ${v.unit}`} data-develop-chapter={current?.draftSectionId}
         hidden={more && !allTools}
         onMouseUp={(e) => notePick(e.currentTarget)} onKeyUp={(e) => notePick(e.currentTarget)}
         style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '18px 8px 40px', display: more && !allTools ? 'none' : 'block', order: 1 }}>
@@ -521,8 +523,8 @@ export function DevelopStage(props: {
               ))}
             </section>
           ))}
-          {current && !anyText ? <p style={{ opacity: .75, margin: 0 }}>This chapter has no text yet.</p> : null}
-          {!current ? <p style={{ opacity: .75, margin: 0 }}>Choose a chapter above.</p> : null}
+          {current && !anyText ? <p style={{ opacity: .75, margin: 0 }}>This {v.unit} has no text yet.</p> : null}
+          {!current ? <p style={{ opacity: .75, margin: 0 }}>Choose a {v.unit} above.</p> : null}
         </div>
       </article>
 
@@ -543,6 +545,7 @@ export function DevelopStage(props: {
 
 /** MAIA beside the work: one conversation, and — always visible, never behind a menu (L8) — which chapters she was handed for her last answer. */
 export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null; reading?: ReactNode; coverage?: ReactNode }) {
+  const v = useStudioVocabulary();
   /* At the top, not the bottom: the floating "Report a bug" control covered it there (founder screenshot 2026-11-09). */
   return (
     <div data-develop-companion="true" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 8, ...ink }}>
@@ -550,13 +553,13 @@ export function DevelopCompanion(props: { conversation: ReactNode; lastRead: rea
       <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderBottom: hair, paddingBottom: 6 }}>
         {props.lastRead === null
           /* Before an answer in this visit we do not know what she was handed earlier, so we do not claim "nothing". */
-          ? 'MAIA reads the chapter you open only if you have let her read your saved work; otherwise she reads what you ask. After her next answer, this line shows exactly what she read for it.'
+          ? `MAIA reads the ${v.unit} you open only if you have let her read your saved work; otherwise she reads what you ask. After her next answer, this line shows exactly what she read for it.`
           : props.lastRead.length === 0
-            ? 'Read for her last answer: only the chapter you were on.'
+            ? `Read for her last answer: only the ${v.unit} you were on.`
             : `Read for her last answer: ${props.lastRead.map((r) => r.label ?? 'a section').join(' · ')}`}
       </p>
       {props.reading ?? null}
-      <section aria-label="Talk with MAIA about this chapter" data-develop-conversation="true" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <section aria-label={`Talk with MAIA about this ${v.unit}`} data-develop-conversation="true" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {props.conversation}
       </section>
     </div>
@@ -567,6 +570,7 @@ const KIND_LABEL: Record<WorkKind, string> = { fiction: 'Fiction', nonfiction: '
 
 /** The writer says what kind of book this is. One quiet line; "Not now" is always there; nothing is guessed from the text. */
 function KindControl(props: { workId: string; kind: WorkKind | null | undefined; onKind: (k: WorkKind | null) => void }) {
+  const v = useStudioVocabulary();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const choose = async (k: WorkKind | null) => {
@@ -586,7 +590,7 @@ function KindControl(props: { workId: string; kind: WorkKind | null | undefined;
         </>
       ) : (
         <>
-          <span style={{ width: '100%', opacity: .8 }}>What kind of book is this? It shapes the questions MAIA asks.</span>
+          <span style={{ width: '100%', opacity: .8 }}>What kind of {v.noun} is this? It shapes the questions MAIA asks.</span>
           {(['fiction', 'nonfiction', 'practitioner'] as const).map((k) => (
             <button key={k} type="button" disabled={busy} style={btn} onClick={() => void choose(k)}>{KIND_LABEL[k]}</button>
           ))}
@@ -603,10 +607,11 @@ export function DevelopHoldings(props: {
   manuscriptId: string; workId: string;
   kind: WorkKind | null | undefined; onKind: (k: WorkKind | null) => void;
 }) {
+  const v = useStudioVocabulary();
   return (
     <div data-develop-holdings="true" style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '4px 2px', fontSize: 13 }}>
       <div data-develop-place="kind">
-        <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>Your book</div>
+        <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7, marginBottom: 6 }}>{v.railHeading}</div>
         <KindControl workId={props.workId} kind={props.kind} onKind={props.onKind} />
       </div>
       <div data-develop-place="reading">
@@ -632,6 +637,7 @@ export function StageReadingInvitation(props: {
   onRead: () => void;
   onCheckpointAndRead: () => void;
 }) {
+  const v = useStudioVocabulary();
   const [asked, setAsked] = useState(false);
   /* state alone is stale until the next render, so two clicks in one batch would both pass; the ref latches synchronously */
   const askedNow = useRef(false);
@@ -669,7 +675,7 @@ export function StageReadingInvitation(props: {
             style={{ font: 'inherit', fontSize: 13, color: 'inherit', cursor: asked ? 'default' : 'pointer', opacity: asked ? 0.6 : 1,
               background: 'color-mix(in srgb, currentColor 10%, transparent)', border: '1px solid color-mix(in srgb, currentColor 25%, transparent)',
               borderRadius: 8, padding: '8px 12px', textAlign: 'left' }}>
-            {props.needsCheckpoint ? 'Save checkpoint and read with MAIA' : 'Read this chapter with MAIA'}
+            {props.needsCheckpoint ? 'Save checkpoint and read with MAIA' : `Read this ${v.unit} with MAIA`}
           </button>
         </>
       )}
@@ -685,6 +691,7 @@ export function StageReadingCard(props: {
   /** the writer chose to work toward a revision: their own sentence goes into the composer, unsent */
   onWorkTowardRevision?: () => void;
 }) {
+  const v = useStudioVocabulary();
   const [open, setOpen] = useState(true);
   const [list, setList] = useState(false);
   const [hint, setHint] = useState(false);
@@ -720,7 +727,7 @@ export function StageReadingCard(props: {
       <div role="group" aria-label="What would you like to do?" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <button type="button" data-develop-choice="noticed" aria-expanded={list} onClick={() => setList((v) => !v)} style={btn}>{list ? 'Hide what she noticed' : 'Go through what she noticed'}</button>
         <button type="button" data-develop-choice="passage" onClick={() => setHint(true)} style={btn}>Talk about one passage</button>
-        {hint ? <p role="note" style={{ margin: '0 2px', fontSize: 12, opacity: .85 }}>Select the words in your chapter, then choose “Ask MAIA about this”.</p> : null}
+        {hint ? <p role="note" style={{ margin: '0 2px', fontSize: 12, opacity: .85 }}>Select the words in your {v.unit}, then choose “Ask MAIA about this”.</p> : null}
         {props.onWorkTowardRevision ? <button type="button" data-develop-choice="revise" onClick={props.onWorkTowardRevision} style={btn}>Work toward a revision</button> : null}
         <button type="button" data-develop-choice="rest" onClick={() => setOpen(false)} style={btn}>Leave it for now</button>
       </div>
@@ -736,6 +743,7 @@ export function ChapterReadingPane(props: {
   sections?: readonly StageSection[];
   chapterRange?: { fromSectionId: string; toSectionId: string } | null;
 }) {
+  const v = useStudioVocabulary();
   const shown = props.sections ? chapterSections(props.sections, props.section, props.chapterRange ?? null) : [props.section];
   const blocks = shown.map((s) => ({ section: s, paragraphs: stripHeading(s).split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean) }));
   const serif = "'Iowan Old Style','Charter',Georgia,serif";
@@ -756,7 +764,7 @@ export function ChapterReadingPane(props: {
               {paragraphs.map((p, i) => <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, fontSize: 18, fontFamily: serif }}>{p}</p>)}
             </section>
           ))}
-          {blocks.every((b) => b.paragraphs.length === 0) ? <p style={{ opacity: .75, margin: 0 }}>This chapter has no text yet.</p> : null}
+          {blocks.every((b) => b.paragraphs.length === 0) ? <p style={{ opacity: .75, margin: 0 }}>This {v.unit} has no text yet.</p> : null}
         </div>
       </article>
     </div>
