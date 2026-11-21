@@ -1,6 +1,7 @@
 'use client';
 
 import { MaiaRelationshipPromise } from './MaiaQuestionsOnlyCopy';
+import { relationshipGateCopy } from '@/lib/writersStudio/relationshipGateCopy';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { chooseReplyLength } from '@/lib/writersStudio/replyLengthPreference';
 import { parseAnswerChoices } from '@/lib/writersStudio/answerChoices';
@@ -590,6 +591,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const keepWriting = props.onBackToPage ? (
     <button type="button" data-gate-keep-writing onClick={() => { setHeldAct(null); props.onBackToPage?.(); }}>Just keep writing</button>
   ) : null;
+  const gateCopy = relationshipGateCopy(props.maiaRelationship?.choices ?? []);
   const relationshipGate = relationshipBlocks && !postureBlocksEditorial && props.maiaRelationship ? (
     <div
       ref={relationshipRef}
@@ -599,25 +601,32 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       data-relationship-gate
     >
       <div>
-        <b>{props.notYetCopy ?? 'I haven’t read this Work with you yet.'}</b>
+        {/* F1: the gate is about a kept conversation, not about reading; it never claims what MAIA has or hasn't read. */}
+        <b>{props.notYetCopy ?? gateCopy.heading}</b>
         <MaiaRelationshipPromise paused={Boolean(props.revisionsPaused)} />
         {relationshipNudge ? (
-          <span role="status" data-relationship-nudge>Start with me first, and I’ll pick this up. I haven’t sent anything.</span>
+          <span role="status" data-relationship-nudge>{gateCopy.nudge}</span>
         ) : null}
         {props.maiaRelationship.message ? <span role="status">{props.maiaRelationship.message}</span> : null}
       </div>
       <div className="p4r1-dance-posture-actions">
+        {gateCopy.primary.kind === 'continue' ? (
+          <button type="button" data-relationship-continue disabled={props.maiaRelationship.busy}
+            onClick={() => props.maiaRelationship!.onChoose((gateCopy.primary as { id: string }).id)}>
+            {gateCopy.primary.label}
+          </button>
+        ) : null}
         <button type="button" disabled={props.maiaRelationship.busy} onClick={props.maiaRelationship.onBegin}>
-          {props.maiaRelationship.busy ? 'Starting…' : 'Start with MAIA'}
+          {props.maiaRelationship.busy ? 'Starting…' : gateCopy.beginInstead ?? gateCopy.primary.label}
         </button>
-        {props.maiaRelationship.choices.map((choice) => (
+        {gateCopy.older.map((choice) => (
           <button
             key={choice.id}
             type="button"
             disabled={props.maiaRelationship!.busy}
             onClick={() => props.maiaRelationship!.onChoose(choice.id)}
           >
-            Continue · {new Date(choice.createdAt).toLocaleDateString()}
+            {choice.label}
           </button>
         ))}
         {/* Conversation-stage step 1 (founder decision 2026-11-04): Keep this private turns Sanctuary on and drops any held act;
