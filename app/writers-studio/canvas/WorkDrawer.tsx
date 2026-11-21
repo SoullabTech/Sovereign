@@ -7,6 +7,7 @@ import { PRESS, SERIF } from '../pressTheme';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import type { LivingWork } from '../useLivingWorks';
 import { declarationState, worksDeclaring } from '@/lib/writersStudio/workDeclarations';
+import { nameEditKeyAction } from '@/lib/writersStudio/workNameEdit';
 
 /**
  * The Work drawer — the anchor of the Study Wall (Work Continuity Layer,
@@ -75,6 +76,14 @@ export default function WorkDrawer({
     } finally {
       setBusy(false);
     }
+  };
+
+  const saveName = async (workId: string) => {
+    if (busy) return;
+    const ok = await patch(workId, {
+      title: nameDraft.trim().length === 0 ? null : nameDraft,
+    });
+    if (ok) setEditingName(false);
   };
 
   const declare = async (workId: string) => {
@@ -223,33 +232,46 @@ export default function WorkDrawer({
       {/* ── Identity: "What is this?" — tended here, in the member's words. ── */}
       <section>
         {editingName ? (
-          <div className="flex items-center gap-2">
+          /* Writer walk 2026-11-21 (lib/writersStudio/workNameEdit.ts): the old
+             name is selected on open so typing replaces it, Enter keeps and
+             Escape leaves, and the buttons sit BELOW the box — in this narrow
+             drawer a single row pushed "keep" out of view. */
+          <div className="flex flex-col gap-2">
             <input
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              onKeyDown={(e) => {
+                const action = nameEditKeyAction(e.key, e.nativeEvent.isComposing);
+                if (action === 'save') {
+                  e.preventDefault();
+                  void saveName(work.id);
+                } else if (action === 'cancel') {
+                  e.preventDefault();
+                  setEditingName(false);
+                }
+              }}
               placeholder="Its name, when you know it"
+              aria-label="Name of this work"
               autoFocus
-              className="press-field flex-1 bg-transparent border-b py-1 text-[15px] outline-none placeholder:opacity-40"
+              className="press-field w-full min-w-0 bg-transparent border-b py-1 text-[15px] outline-none placeholder:opacity-40"
               style={{ fontFamily: SERIF, borderColor: PRESS.ruleSoft }}
             />
-            <button
-              disabled={busy}
-              onClick={async () => {
-                const ok = await patch(work.id, {
-                  title: nameDraft.trim().length === 0 ? null : nameDraft,
-                });
-                if (ok) setEditingName(false);
-              }}
-              className="text-[12px] opacity-60 hover:opacity-90 underline underline-offset-4"
-            >
-              keep
-            </button>
-            <button
-              onClick={() => setEditingName(false)}
-              className="text-[12px] opacity-40 hover:opacity-70"
-            >
-              leave it
-            </button>
+            <div className="flex items-baseline gap-3">
+              <button
+                disabled={busy}
+                onClick={() => void saveName(work.id)}
+                className="text-[12px] opacity-60 hover:opacity-90 underline underline-offset-4"
+              >
+                keep
+              </button>
+              <button
+                onClick={() => setEditingName(false)}
+                className="text-[12px] opacity-40 hover:opacity-70"
+              >
+                leave it
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex items-baseline gap-2.5">
