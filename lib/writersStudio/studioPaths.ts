@@ -196,6 +196,102 @@ export const STUDIO_PATHS: readonly StudioPath[] = [
   },
 ];
 
+/**
+ * ⛔ DRAFT PATHS: NOT REACHABLE. Studio Academy slice 3 (founder 2026-11-19: "You draft, I approve").
+ *
+ * Craft content is the founder's to author (Writers Academy roadmap, ACAD-1 §11 ruling 4). These entries are DRAFTS for the
+ * founder to edit and approve. Nothing in the Studio reads this list: `pathFromParam`, `studioPathById`, `pathFrameFor` and
+ * Home's offers all read STUDIO_PATHS only, so a draft has no door, its `?path=` link opens nothing, it can never be written to
+ * a Work, and MAIA never receives its words.
+ *
+ * Going live is three deliberate acts, after the founder approves the words: move the entry into STUDIO_PATHS, add its seed
+ * row to `studio_programs` in a reviewed migration (F1, 20261115000001), and deploy through the full lane that runs migrations.
+ */
+export const DRAFT_STUDIO_PATHS: readonly StudioPath[] = [
+  {
+    id: 'nonfiction',
+    name: 'Nonfiction book',
+    startLabel: 'Start a nonfiction book',
+    arena: 'For a book that teaches, guides or explains: written from what you know and have lived, for a reader you want to help.',
+    arc: [
+      { id: 'reader', stage: 'Reader', built: true,
+        lead: 'Start with the person you’re writing for.',
+        guidance: 'A nonfiction book is a promise to a particular reader. The clearer you see them, the easier every later choice becomes.',
+        prompt: 'The reader I most want to help',
+        question: 'Who is the one reader you most want to help, and what are they struggling with when they pick up your book?',
+        notesLabel: 'About my reader',
+        posture: 'STAGE: READER. Help the writer describe one specific reader and that reader’s real situation, in the writer’s own words. Do not invent a market, an audience segment or a persona for them.' },
+      { id: 'promise', stage: 'Promise', built: true,
+        lead: 'What will change for them?',
+        guidance: 'Say plainly what your reader will understand, feel or be able to do by the end. This is the book’s promise, not its sales line.',
+        prompt: 'What my reader will be able to do',
+        question: 'When your reader finishes, what will they understand or be able to do that they couldn’t before?',
+        notesLabel: 'My book’s promise',
+        posture: 'STAGE: PROMISE. Ask what will change for the reader and help the writer say it plainly. Never write the promise for them, never make it bigger than they can honestly offer, and never turn it into a guarantee of results.' },
+      { id: 'outline', stage: 'Outline', built: true,
+        lead: 'A map, not a cage.',
+        guidance: 'Write one or two sentences for each chapter: what it gives your reader. You can change the map at any time.',
+        prompt: 'What each chapter gives my reader',
+        question: 'What does each chapter give your reader, in a sentence or two, and in what order do they need it?',
+        info: 'You don’t need every chapter before you start writing. A rough map is enough.',
+        notesLabel: 'My chapter map',
+        posture: 'STAGE: OUTLINE. Help the writer order what the reader needs first, next and last, asking about gaps and repeats. Do not write the outline or chapter summaries for them.' },
+      { id: 'draft', stage: 'Draft', built: true,
+        lead: 'Write it the way you’d teach it.',
+        guidance: 'Write a chapter the way you would explain it to one person in front of you. Only you can add, delete or change your words.',
+        info: 'If you use stories from people you have worked with, change details so no one can be recognised, or ask their permission first.',
+        notesLabel: 'My notes while drafting',
+        tools: ['keep'],
+        posture: 'STAGE: DRAFT. Ask what the reader needs at this point and where an example from the writer’s own experience would help. Never draft their chapters. If they include stories about other people, remind them gently to protect those people’s privacy.' },
+      { id: 'revise', stage: 'Revise', built: true,
+        lead: 'Make it clear for your reader.',
+        guidance: 'Read as your reader would. Where would they get lost, doubt you, or want an example?',
+        prompt: 'What I want to make clearer',
+        question: 'Where might your reader get lost, or want an example, in this chapter?',
+        notesLabel: 'My revision intention',
+        tools: ['keep', 'mirror'],
+        posture: 'STAGE: REVISE. Point to places in their own words where a reader might get lost or need an example, and ask. When asked, explain a technique in general terms. Help them tell experience from evidence: where a claim rests on their own practice, help them say so plainly rather than overstate it. Never write the revision.' },
+      { id: 'ready', stage: 'Ready', built: true,
+        lead: 'Readiness belongs to the writer.',
+        guidance: 'These reminders help you review your book. They are not a certification or an endorsement.',
+        notesLabel: 'My own readiness notes',
+        info: 'This checklist cannot check facts, give legal advice or approve your book. It is yours.',
+        checklist: [
+          { id: 'wrote-myself', label: 'The book is in my own words, and I made the final decisions myself.' },
+          { id: 'promise-kept', label: 'Each chapter gives my reader something the book promised.' },
+          { id: 'people-protected', label: 'Anyone in my stories cannot be recognised, or has given permission.' },
+          { id: 'claims-honest', label: 'Where I describe results, I have said what comes from my experience and what comes from evidence.' },
+          { id: 'sources-checked', label: 'I have checked the quotations and sources I use.' },
+        ],
+        posture: 'STAGE: READY. The writer decides when the book is ready. Never certify it, judge its market or predict its success; help them check it is in their own voice, keeps its promise and protects the people in it.' },
+    ],
+    firstPrompt: 'Who do you most want this book to help, and what are they struggling with?',
+    invitation: 'You don’t need a title or an outline yet. Start with the person you’re writing for.',
+    suggestedTitle: 'My nonfiction book',
+    recommended: {},
+    recommendedCopy: {},
+    reflectionGuide: 'They are beginning a nonfiction book that teaches or guides. Reflect back the reader they describe and that reader’s struggle, in their words. Do not name a market, a genre, a title or a promise for them, and do not suggest what the book should be.',
+    studioCopy: {
+      orient: 'Pick a chapter at left, or select exact words, and I’ll look at it with you.',
+      whole: 'Talk about the whole book',
+      notYet: 'I haven’t read your book with you yet.',
+      railHeading: 'Your book',
+      onlyPlace: 'Your draft',
+      part: 'Chapter',
+      foot: 'Your book comes first. I follow where you put your attention.',
+      wholeScope: 'the whole book',
+    },
+    studioPosture: [
+      'PROGRAM: NONFICTION BOOK. This Work is a nonfiction book that teaches, guides or explains, written from the writer’s own knowledge and experience.',
+      'Keep their reader at the centre: ask who the passage is for and what that reader needs here.',
+      'Never write their chapters, examples or claims. Quote only their words.',
+      'Where they describe results of a practice or method, help them say plainly what is their experience and what is evidence; never add claims, and never present the method as a cure or a guarantee.',
+      'If they write about people they have worked with, gently remind them to protect those people’s privacy.',
+      'Keep it warm, plain and brief: one or two observations and one question.',
+    ].join('\n'),
+  },
+];
+
 /** The arc stages a member may see: built ones only (claim discipline). */
 export function visibleArc(path: StudioPath): string[] {
   return path.arc.filter((s) => s.built).map((s) => s.stage);
