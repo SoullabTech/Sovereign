@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { LISTEN_INTERVAL_MS, mayListen, newSince, newestFirst } from '@/lib/writersStudio/listening';
 import {
   COLAB_KINDS,
   COLAB_KIND_LABEL,
@@ -162,14 +163,34 @@ function PromptCard({
   );
 }
 
-function FounderView({ answers }: { answers: readonly JourneyAnswerForFounder[] }) {
+function FounderView({ answers, fresh, listening, checkedAt, onRefresh, onListening }: {
+  answers: readonly JourneyAnswerForFounder[];
+  /** Answers that arrived since the founder opened this view. */
+  fresh: ReadonlySet<string>;
+  listening: boolean;
+  checkedAt: string | null;
+  onRefresh: () => void;
+  onListening: (on: boolean) => void;
+}) {
   const byPrompt = useMemo(() => {
     const map = new Map<string, JourneyAnswerForFounder[]>();
-    for (const a of answers) map.set(a.promptKey, [...(map.get(a.promptKey) ?? []), a]);
+    for (const a of newestFirst(answers)) map.set(a.promptKey, [...(map.get(a.promptKey) ?? []), a]);
     return map;
   }, [answers]);
   return (
     <div className="p4r1-journey-founder" data-journey-founder>
+      {/* Listening (founder 2026-11-19): see answers as they arrive. Founder side only; writers' screens send nothing new. */}
+      <div data-journey-listening style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, margin: '4px 0 10px' }}>
+        <button type="button" data-journey-refresh onClick={onRefresh}>Refresh</button>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <input type="checkbox" checked={listening} onChange={(e) => onListening(e.target.checked)} data-journey-listen />
+          Keep listening (checks once a minute while this is open)
+        </label>
+        <small role="status">
+          {fresh.size > 0 ? `${fresh.size} new since you opened this. ` : ''}
+          {checkedAt ? `Last checked ${new Date(checkedAt).toLocaleTimeString()}.` : ''}
+        </small>
+      </div>
       {JOURNEY_PROMPTS.map((prompt) => {
         const list = byPrompt.get(prompt.key) ?? [];
         return (
@@ -177,8 +198,9 @@ function FounderView({ answers }: { answers: readonly JourneyAnswerForFounder[] 
             <p className="p4r1-journey-question">{prompt.text}</p>
             <small>{list.length} {list.length === 1 ? 'answer' : 'answers'}</small>
             {list.map((a) => (
-              <div key={a.id} className="p4r1-journey-answer">
-                <b>{a.memberName}{a.choice ? ` · ${prompt.choices?.find((c) => c.key === a.choice)?.label ?? a.choice}` : ''}</b>
+              <div key={a.id} className="p4r1-journey-answer" data-journey-new={fresh.has(a.id) ? 'true' : undefined}>
+                <b>{fresh.has(a.id) ? 'New · ' : ''}{a.memberName}{a.choice ? ` · ${prompt.choices?.find((c) => c.key === a.choice)?.label ?? a.choice}` : ''}</b>
+                <small style={{ display: 'block', opacity: .75 }}>{new Date(a.createdAt).toLocaleString()}</small>
                 <p>{a.answer}</p>
               </div>
             ))}
@@ -198,6 +220,9 @@ export default function P4R1BetaJourney() {
   const [founderView, setFounderView] = useState<JourneyAnswerForFounder[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
+  const [seenAtOpen, setSeenAtOpen] = useState<ReadonlySet<string>>(new Set());
+  const [checkedAt, setCheckedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -269,11 +294,29 @@ export default function P4R1BetaJourney() {
   };
 
   const showFounder = async () => {
-    if (founderView) { setFounderView(null); return; }
+    if (founderView) { setFounderView(null); setListening(false); return; }
     const r = await readFounderJourney();
-    if (r.ok) setFounderView(r.answers);
-    else setStatus('All answers couldn’t be loaded just now.');
+    if (r.ok) {
+      setFounderView(r.answers);
+      setSeenAtOpen(new Set(r.answers.map((a) => a.id)));
+      setCheckedAt(new Date().toISOString());
+    } else setStatus('All answers couldn’t be loaded just now.');
   };
+
+  const refreshFounder = useCallback(async () => {
+    const r = await readFounderJourney();
+    if (r.ok) { setFounderView(r.answers); setCheckedAt(new Date().toISOString()); }
+    else setStatus('All answers couldn’t be loaded just now. Nothing changed.');
+  }, []);
+
+  // Low-rate listening: only while switched on, the founder view is open and the page is visible.
+  useEffect(() => {
+    if (!listening || !founderView) return;
+    const id = window.setInterval(() => {
+      if (mayListen({ on: true, viewOpen: true, visible: document.visibilityState === 'visible' })) void refreshFounder();
+    }, LISTEN_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [listening, founderView, refreshFounder]);
 
   if (!eligible) return null;
 
@@ -293,7 +336,10 @@ export default function P4R1BetaJourney() {
               {founderView ? 'Back to my answers' : 'All writers’ answers'}
             </button>
           ) : null}
-          {founderView ? <FounderView answers={founderView} /> : prompts.map((prompt) => (
+          {founderView ? (
+            <FounderView answers={founderView} fresh={newSince(seenAtOpen, founderView)} listening={listening}
+              checkedAt={checkedAt} onRefresh={() => void refreshFounder()} onListening={setListening} />
+          ) : prompts.map((prompt) => (
             <PromptCard
               key={prompt.key}
               prompt={prompt}
