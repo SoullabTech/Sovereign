@@ -92,7 +92,7 @@ describe('2 · reading status', () => {
 
   test('with no reading at all, she says she has not read it', async () => {
     fetchCoverage.mockResolvedValue(coverage(0));
-    expect(await renderLine({})).toContain('No saved reading of this draft yet.');
+    expect(await renderLine({})).toContain('I haven’t kept a reading of this draft yet.');
   });
 
   test('after an authorized first-page reading this visit, she says so — and that it isn’t kept', async () => {

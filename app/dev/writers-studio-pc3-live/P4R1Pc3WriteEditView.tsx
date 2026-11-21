@@ -50,6 +50,8 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import { passagePlaceLabel } from '@/lib/writersStudio/passagePlace';
+import { DESK_SELECTION_NOTICE, unheldSelectionNotice } from '@/lib/writersStudio/selectionNotice';
+import { locateUniquePresentationPassage } from '@/lib/writersStudio/presentationPassageLocator';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -256,6 +258,17 @@ function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRec
   return { sectionId, text, rect: range.getBoundingClientRect() };
 }
 
+/** True when the writer has highlighted words in the passage desk itself (not in a box they are typing in). */
+function selectionInPassageDesk(): boolean {
+  if (typeof window === 'undefined') return false;
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed || !selection.toString().trim()) return false;
+  const node = selection.getRangeAt(0).commonAncestorContainer;
+  const element = node instanceof Element ? node : node.parentElement;
+  if (!element || element.closest('textarea, input, [contenteditable="true"]')) return false;
+  return Boolean(element.closest('[data-isolated-editorial]'));
+}
+
 function cleanProseBlockText(block: WriteBlock): string {
   const text = block.text.trim();
   const wrapped = /^(\*|_)([\s\S]+)\1$/.exec(text);
@@ -336,6 +349,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [passageNotice, setPassageNotice] = useState<string | null>(null);
+  /** Highlighted words that could not be held, and why (rect null = inside the passage desk). */
+  const [selectionProblem, setSelectionProblem] = useState<{ rect: DOMRect | null; message: string } | null>(null);
   const [requestedPassageAct, setRequestedPassageAct] = useState<(PassageAct & { key: number }) | null>(null);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   // Craftsman's Table is entered only by an author's explicit passage action.
@@ -651,17 +666,23 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       if (!picked) {
         setSelectionRect(null);
         setSelectionMenuOpen(false);
+        setSelectionProblem(selectionInPassageDesk() ? { rect: null, message: DESK_SELECTION_NOTICE } : null);
         return;
       }
       const section = props.context.sections.find((candidate) => candidate.draftSectionId === picked.sectionId);
       const live = section ? props.writing.bodyOf(section.draftSectionId) : '';
-      const located = locateUniquePassage(live, picked.text);
+      // Exact first; then whitespace-only normalization (a highlight across a paragraph break reads one
+      // line break where the text holds two). The held words are always the exact Source slice.
+      const located = locateUniquePassage(live, picked.text) ?? locateUniquePresentationPassage(live, picked.text);
       if (!section || !located) {
         setSelectionRect(null);
         setSelectionMenuOpen(false);
+        // Never drop the writer's highlight in silence: say why it can't be held (beta 2026-11-17).
+        setSelectionProblem({ rect: picked.rect, message: unheldSelectionNotice(live, picked.text) });
         return;
       }
-      props.onHoldPassage(section, located.start, located.end, picked.text);
+      setSelectionProblem(null);
+      props.onHoldPassage(section, located.start, located.end, Array.from(live).slice(located.start, located.end).join(''));
       setSelectionRect(picked.rect);
     };
 
@@ -1982,6 +2003,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </section>
       ) : null}
 
+      {selectionProblem && selectionProblem.rect === null ? (
+        <p role="status" className="p4r1-selection-notice" data-desk-selection-notice style={{ margin: '0 0 10px', fontSize: '0.88em', lineHeight: 1.4 }}>
+          {selectionProblem.message}
+        </p>
+      ) : null}
+
       <P4R1FocusMaterials
         work={props.work}
         onUseWithMaia={(context) => props.onSendEditorial(context)}
@@ -2103,6 +2130,20 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
+          {selectionProblem?.rect && !craftVisible ? (
+            <div
+              className="p4r1-selection-affordance"
+              role="status"
+              data-unheld-selection-notice
+              style={{
+                ...appearanceVars(props.appearance),
+                left: Math.max(14, Math.min(selectionProblem.rect.right - 150, window.innerWidth - Math.min(310, window.innerWidth - 28) - 14)),
+                top: selectionMenuTop(selectionProblem.rect),
+              } as CSSProperties}
+            >
+              <p className="p4r1-selection-notice" style={{ margin: '8px 12px', fontSize: '0.88em', lineHeight: 1.4 }}>{selectionProblem.message}</p>
+            </div>
+          ) : null}
           {editorial}
         </div>
       ) : null}

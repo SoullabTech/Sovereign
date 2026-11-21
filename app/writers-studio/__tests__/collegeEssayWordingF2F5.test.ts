@@ -71,7 +71,7 @@ describe('F5 · no "Which ones?" on a one-part draft', () => {
   }
   test('one part, unread: the sentence alone, no toggle', async () => {
     const { toggle, text } = await line(1, 0);
-    expect(text).toBe('No saved reading of this draft yet.');
+    expect(text).toBe('I haven’t kept a reading of this draft yet.');
     expect(toggle).toBeNull();
   });
   test('several parts, some unread: "Which ones?" is still offered', async () => {

@@ -11,9 +11,10 @@ import { fetchCoverage } from '@/lib/writersStudio/coverageClient';
 export function coverageSentence(c: CoverageMap): string {
   const { read, changed, notRead, positionOnly, total } = c.whole;
   if (total === 0) return 'This draft has no sections yet.';
+  /* Beta 2026-11-17: a writer read "No saved reading" as being about whether the draft changed. It is about keeping: say so. */
   /* Beta 2026-11-16: this counts saved readings only. "I haven't read" sat above MAIA quoting the page (her first-page
      reading is unkept by design) and saying she had its text in conversation. Claim only what is counted. */
-  if (read === 0 && changed === 0) return 'No saved reading of this draft yet.';
+  if (read === 0 && changed === 0) return 'I haven’t kept a reading of this draft yet.';
   /* Walk 2026-11-15: a one-section draft (most college essays) read as "I've read all 1 sections". Say it of the draft instead. */
   if (total === 1) return read === 1 ? 'I’ve read this draft.' : 'This draft has changed since I read it.';
   const parts = [read === total ? `I’ve read all ${total} sections of this draft` : `I’ve read ${read} of ${total} sections of this draft`];
