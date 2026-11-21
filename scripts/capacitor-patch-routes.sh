@@ -321,7 +321,7 @@ hide_incompatible_pages() {
         case "$rel_path" in
             *\[*\]*)
                 # Already has generateStaticParams (and no force-dynamic)? Compatible.
-                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                if grep -qE "^export (async )?(function|const) generateStaticParams" "$file" 2>/dev/null; then
                     continue
                 fi
 
@@ -414,7 +414,7 @@ patch_remaining_dynamic_pages() {
         case "$rel_path" in
             *\[*\]*)
                 # Already has generateStaticParams? Skip
-                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                if grep -qE "^export (async )?(function|const) generateStaticParams" "$file" 2>/dev/null; then
                     continue
                 fi
 
@@ -484,6 +484,12 @@ MOBILE_EXCLUDED_DIRS=(
     "app/founder/constellation"
     # LISTEN-01: gated Sound Studio audio route (server session + flag); web-only.
     "app/media"
+    # Developer review pages (never member-facing); several read searchParams or import excluded rooms.
+    "app/dev"
+    # Press manuscript editor imports app/writers-studio (excluded as dynamic); Studio rooms are web bridges on native.
+    "app/press/manuscript"
+    # Empty generateStaticParams (no step pages were ever exported); Next 16 refuses it under export.
+    "app/practitioners/onboarding/step"
     # Studio web-only sections
     "app/studio/marketing"
     "app/studio/media"
