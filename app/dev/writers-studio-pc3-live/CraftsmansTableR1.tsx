@@ -44,6 +44,35 @@ const STRENGTH_CHOICES: ReadonlyArray<{ value: 1 | 2 | 3 | 4 | 5; label: string 
   { value: 5, label: 'Rewrite fully if it helps' },
 ];
 
+/** What "Suggest an edit" asks for at each strength, so the button follows the picker. */
+const SUGGEST_ASK: Record<1 | 2 | 3 | 4 | 5, { ask: string; keep: string; shown: string }> = {
+  1: {
+    ask: 'Show one small, useful edit to this exact focused passage directly in the marked copy.',
+    keep: 'Preserve the writer’s voice, meaning, imagery, cadence and settled choices.',
+    shown: 'Suggest one small edit to this focused passage.',
+  },
+  2: {
+    ask: 'Show a useful edit that recasts a sentence or two of this exact focused passage directly in the marked copy.',
+    keep: 'Keep the writer’s voice, meaning and imagery; the rest of the passage stays as written.',
+    shown: 'Suggest an edit that recasts a sentence or two of this focused passage.',
+  },
+  3: {
+    ask: 'Show an edit that reworks this exact focused passage directly in the marked copy, as much as it needs.',
+    keep: 'Keep the writer’s meaning and voice; sentences may be restructured.',
+    shown: 'Suggest a reworking of this focused passage.',
+  },
+  4: {
+    ask: 'Show an edit that reshapes this exact focused passage directly in the marked copy, reordering or recombining as it helps.',
+    keep: 'Keep the writer’s material and meaning; the shape may change.',
+    shown: 'Suggest a reshaping of this focused passage, keeping my material.',
+  },
+  5: {
+    ask: 'Show a full rewrite of this exact focused passage directly in the marked copy, if that serves it best.',
+    keep: 'Keep the writer’s meaning and intent; wording and structure may change freely.',
+    shown: 'Suggest a full rewrite of this focused passage if it helps.',
+  },
+};
+
 export type CraftsmansTableR1Props = {
   /** Conversation-first step 5: shown inside Passage Focus as its change-by-change mode.
    *  Keeps the safeguard line, the per-change choices, Write here, Save and Apply;
@@ -814,11 +843,14 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                         ) : null}
                         <div role="group" aria-label="Work with the focused passage">
                           {props.compact ? null : (<>
-                          <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend([
-                            'Use our carried conversation and the writer-owned current working copy.',
-                            'Show one small, useful edit to this exact focused passage directly in the marked copy.',
-                            'Preserve the writer’s voice, meaning, imagery, cadence and settled choices. Explain the move briefly. Do not apply anything.',
-                          ].join('\n'), { proposalPolicy: 'require', proposalRequested: true, displayText: 'Suggest one small edit to this focused passage.' })}>Suggest an edit</button>
+                          <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => {
+                            const ask = SUGGEST_ASK[props.editLatitude ?? 1];
+                            props.onSend([
+                              'Use our carried conversation and the writer-owned current working copy.',
+                              ask.ask,
+                              `${ask.keep} Explain the move briefly. Do not apply anything.`,
+                            ].join('\n'), { proposalPolicy: 'require', proposalRequested: true, displayText: ask.shown });
+                          }}>Suggest an edit</button>
                           <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend(
                             'Discuss this exact focused passage in light of our conversation. What is it doing, and what is the most useful question to consider? Do not draft or change any wording.',
                             { proposalPolicy: 'reply_only', displayText: 'Discuss this focused passage without changing the wording.' },

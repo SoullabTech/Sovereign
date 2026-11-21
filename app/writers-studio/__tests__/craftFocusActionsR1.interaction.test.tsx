@@ -109,6 +109,7 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     window.sessionStorage.clear();
     currentRevision = 1;
     switchWork = null;
+    testLatitude = 1;
     node = document.createElement('div');
     document.body.appendChild(node);
     root = createRoot(node);
@@ -126,6 +127,7 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     window.getSelection()?.removeAllRanges();
   });
 
+  let testLatitude: 1 | 2 | 3 | 4 | 5 = 1;
   function Fixture() {
     const [held, setHeld] = useState<Pc3HeldPassage | null>(null);
     const [workspaceOpen, setWorkspaceOpen] = useState(false);
@@ -162,7 +164,7 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
       maiaRelationshipMessage: null, carrySourceAvailable: false,
       carryChooser: { kind: 'closed' }, selectedCarrySource: null,
       suggestedVersion: visibleVersion, appliedVersionId: appliedId, editorialDraft: '',
-      editorialDepth: 'direct', editLatitude: 1,
+      editorialDepth: 'direct', editLatitude: testLatitude,
       mayRemoveParagraphs: false, mayProposeImmediately: false,
       voiceNotice: null, sessionPosture: { resolved: true, sanctuary: false },
       onChooseSessionPosture: jest.fn(), editorialBusy: false,
@@ -239,6 +241,26 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     expect(onSend.mock.calls[0][1]).toMatchObject({ proposalPolicy: 'allow' });
     expect(onApply).not.toHaveBeenCalled();
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('Suggest an edit follows the strength picker: wider strengths ask for wider edits', () => {
+    const asks: string[] = [];
+    for (const level of [1, 2, 3, 4, 5] as const) {
+      onSend.mockClear();
+      testLatitude = level;
+      enterCraft();
+      act(() => focusButton('Suggest an edit')!.click());
+      asks.push(String(onSend.mock.calls[0][0]));
+      act(() => root.unmount());
+      root = createRoot(node);
+    }
+    expect(new Set(asks).size).toBe(5);
+    expect(asks[0]).toContain('one small, useful edit');
+    expect(asks[1]).toContain('recasts a sentence or two');
+    expect(asks[2]).toContain('reworks this exact focused passage');
+    expect(asks[3]).toContain('reshapes this exact focused passage');
+    expect(asks[4]).toContain('full rewrite');
+    for (const a of asks) expect(a).toContain('Do not apply anything');
   });
 
   it('Discuss: is reachable and sends a reply-only request', () => {
