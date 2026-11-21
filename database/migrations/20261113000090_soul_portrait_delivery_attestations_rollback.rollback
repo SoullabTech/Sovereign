@@ -1,0 +1,17 @@
+-- Destructive rollback permitted only before ANY real recipient attestation.
+-- After a real send, retain this additive table and disable SOUL_PORTRAIT_SMTP_ENABLED.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+DO $$
+DECLARE has_rows boolean := false;
+BEGIN
+  IF to_regclass('public.soul_portrait_delivery_attestations') IS NOT NULL THEN
+    EXECUTE 'SELECT EXISTS (SELECT 1 FROM public.soul_portrait_delivery_attestations)'
+      INTO has_rows;
+    IF has_rows THEN
+      RAISE EXCEPTION 'Refusing to drop Soul Portrait delivery evidence; leave table intact';
+    END IF;
+  END IF;
+END $$;
+DROP TABLE IF EXISTS public.soul_portrait_delivery_attestations;
+COMMIT;

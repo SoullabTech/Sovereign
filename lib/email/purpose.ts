@@ -80,6 +80,7 @@ export const EMAIL_PURPOSE_LANES = {
   'portal:portal-claim-invite': 'P2',
   'feedback:submission': 'P2',
   'build:alert': 'P2',
+  'soul-portrait:delivery': 'P2',
   'practitioner:scheduled-send': 'P2',
   'practitioner:session-followup': 'P2',
 
