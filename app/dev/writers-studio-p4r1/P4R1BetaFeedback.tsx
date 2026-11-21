@@ -55,11 +55,10 @@ export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) 
     const result = await sendBetaFeedback({
       ...(params?.get('m') ? { manuscriptId: params.get('m')! } : {}),
       signal,
-      // The existing beta-evidence schema predates Listen and constrains
-      // studio_mode to Home/Write/Develop/Review. Do not mislabel a Listen
-      // observation; keep the legacy mode null until that schema is deliberately
-      // widened in its own migration.
-      studioMode: mode === 'listen' ? undefined : mode,
+      // The room is always named. The route stores Publish and Listen with the
+      // legacy studio_mode NULL and the room in orientation_context.studioRoom,
+      // because the table's check predates those rooms (2026-11-19).
+      studioMode: mode,
       orientationContext: context,
       ...(note.trim() ? { note: note.trim() } : {}),
     });

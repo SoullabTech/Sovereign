@@ -7,6 +7,10 @@ import { writersStudioStanding } from '@/lib/writersStudio/betaAccessServer';
 export const dynamic = 'force-dynamic';
 
 const MODES = new Set(['home', 'write', 'develop', 'review', 'publish', 'listen']);
+/* The table's studio_mode CHECK (migration 20260929000005) predates Publish and Listen. Feedback from those rooms was accepted
+   here and then refused by the database, so it was lost (found 2026-11-19). Those rooms are kept with studio_mode NULL and the
+   room in orientation_context.studioRoom, set here from the validated mode only, never from the client's context. */
+const STORED_MODES = new Set(['home', 'write', 'develop', 'review']);
 const CONTEXT_KEYS = new Set([
   'developField', 'developmentalMovement', 'sectionId',
   'attentionReturn', 'reviewFinding', 'lineageCandidate',
@@ -27,8 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const manuscriptId = typeof body.manuscriptId === 'string' ? body.manuscriptId : null;
-  const studioMode = typeof body.studioMode === 'string' && MODES.has(body.studioMode)
-    ? body.studioMode : null;
+  const room = typeof body.studioMode === 'string' && MODES.has(body.studioMode) ? body.studioMode : null;
+  const studioMode = room && STORED_MODES.has(room) ? room : null;
   const note = typeof body.note === 'string' ? body.note.trim() : '';
   if (note.length > 2000) return NextResponse.json({ refusal: 'note_too_long' }, { status: 413 });
 
@@ -43,6 +47,7 @@ export async function POST(req: NextRequest) {
     }
     if (value) context[key] = value;
   }
+  if (room && !studioMode) context.studioRoom = room;
 
   if (manuscriptId) {
     const owned = await query(
