@@ -1,0 +1,21 @@
+{"type":"object","additionalProperties":false,
+ "required":["verdict","plan_sha256","trace_id","reviewer","summary","findings","coverage","limitations","migration_compatibility"],
+ "properties":{
+  "verdict":{"enum":["APPROVED","REVISE","BLOCKED"]},
+  "plan_sha256":{"type":"string"},"trace_id":{"type":"string"},"reviewer":{"type":"string"},"summary":{"type":"string"},
+  "findings":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","severity","path","evidence","fix"],
+     "properties":{"id":{"type":"string"},"severity":{"enum":["high","medium","low"]},"path":{"type":"string"},"evidence":{"type":"string"},"fix":{"type":"string"}}}},
+  "coverage":{"type":"object","additionalProperties":false,"required":["files"],"properties":{"files":{"type":"array","items":{"type":"string"}}}},
+  "limitations":{"type":"array","items":{"type":"string"}},
+  "migration_compatibility":{"type":"object","additionalProperties":false,
+   "required":["instrument","verdict","old_reader_commit","target_reader_commit","pending","old_reader_evidence","rationale","limitations","failure_prefix_compatibility"],
+   "properties":{
+    "instrument":{"const":"migration-compatibility/v1"},"verdict":{"enum":["COMPATIBLE","INCOMPATIBLE"]},
+    "old_reader_commit":{"type":"string"},"target_reader_commit":{"type":"string"},
+    "pending":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["path","sha256"],"properties":{"path":{"type":"string"},"sha256":{"type":"string"}}}},
+    "old_reader_evidence":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["repo_path","sha256","trace_path"],"properties":{"repo_path":{"type":"string"},"sha256":{"type":"string"},"trace_path":{"type":"string"}}}},
+    "rationale":{"type":"string"},"limitations":{"type":"array","items":{"type":"string"}},
+    "failure_prefix_compatibility":{"type":"object","additionalProperties":false,"required":["instrument","verdict","prefixes"],
+     "properties":{"instrument":{"const":"migration-prefix-compatibility/v1"},"verdict":{"enum":["ALL_PREFIXES_COMPATIBLE","NOT_ALL_PREFIXES_COMPATIBLE"]},
+      "prefixes":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["through_path","through_sha256","rationale","limitations"],
+        "properties":{"through_path":{"type":"string"},"through_sha256":{"type":"string"},"rationale":{"type":"string"},"limitations":{"type":"array","items":{"type":"string"}}}}}}}}}}}

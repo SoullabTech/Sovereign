@@ -1,0 +1,151 @@
+{
+  "verdict": "APPROVED",
+  "plan_sha256": "e5c948eb629e0d21332a91f4fc0d200d57599d949b66cdebdbe27dfa41774517",
+  "trace_id": "484b84b7-def8-45a0-b3dd-92f0224ee925",
+  "reviewer": "Claude Fable 5 (claude-fable-5-2), independent migration reviewer",
+  "summary": "Approved for the migrate-before-swap sequence on this exact one-migration pending set, with eight low findings and no high or medium. This rests on a read of the bytes plus PostgreSQL semantics; nothing was executed, and I could not recompute any SHA-256 or verify the target's git relation to 3c59f1bf7.\n\nQ1 Additive: established. The migration creates one new table, one index, two functions, two triggers and a comment. It contains no ALTER, DROP, UPDATE, DELETE or backfill on any existing object. The only effect on `members` is the system RI triggers of the new foreign key; no rewrite and no scan of the 97 rows.\n\nQ2 Lock: `SET LOCAL lock_timeout = '5s'` precedes all DDL. The runner's own outer `BEGIN` only produces a harmless nested-BEGIN warning, and the file's `COMMIT` commits. The foreign key takes SHARE ROW EXCLUSIVE on `members`, which blocks INSERT/UPDATE/DELETE on `members` but not SELECT or row-level FOR UPDATE / FOR KEY SHARE. Once granted it is held for milliseconds, since everything else is DDL on a new empty table. Worst case is a stall of up to 5 seconds for writes to `members` if a long transaction already holds a write lock; the migration then fails atomically, the deploy aborts before the swap, and a retry is safe because the file is idempotent.\n\nQ3 Cascade versus guard: member erasure succeeds. `ON DELETE CASCADE` runs as an AFTER ROW trigger on `members`, as a later command in the same transaction than the member delete. The guard is a volatile plpgsql function, so its `EXISTS (SELECT 1 FROM members ...)` sees the transaction's own earlier delete at every isolation level. `EXISTS` is false and the row goes. A direct DELETE while the member exists, any UPDATE, and TRUNCATE are refused. The proof script's check 6 exercises exactly this path; PR #2309 reports it passing on 14.19 and 16.15, but I did not run it.\n\nQ4 Old reader in the window: unaffected. The three old-reader files I read never name the table, and a search of the whole bundled old-reader tree for `member_age_attestations` returned no hits. Old delete-account ends in `DELETE FROM members WHERE id = $1`, which now also cascades into an empty table.\n\nQ5 Prefix: the single committed prefix (after migration 1) is the final schema, so it is compatible with old reader 4134cf2b for the reasons in Q1\u2013Q4. On failure nothing is committed.\n\nQ6 Target reader: consistent with the schema.\n- The INSERT supplies `(member_id, age_band, supervision_attested = (band === 'minor'), studio_path)`, which satisfies both CHECKs; `'college-essay'` matches the slug pattern.\n- `parseAttestation` accepts only adult, or minor with `supervised === true`, so there is no under-13 row shape in code or in the database.\n- The only writer is the authenticated member's own POST.\n- An unreadable record returns `'unknown'` and never admits: 403 on the arrival route and the PATCH, 503 on GET.\n- No target statement issues UPDATE or DELETE on the table.\n- Target delete-account read as textually identical to the old reader's and erases through the cascade.\n\nQ7 Rollback: the image rollback leaves the table in place.\n- The old reader never reads the rows, so College Essay is ungated again while rolled back; that is the loss, and it is the plan's expected outcome.\n- Attestations are preserved, and old-reader account deletion still succeeds because cascade and guard are database-side.\n- No rollback data guard is named for 4134cf2b, and none is needed.\n- The `.rollback` file refuses while any row exists. Neither the runner nor the pending-set collector executes it, since both glob `*.sql` only.\n- What is blocked: destructive schema removal after any use, and deleting a single attestation without erasing the member.\n\nQ8 Member-visible change and consent: at the College Essay door and at Begin, a member must say 18+, or 13\u201317 with the supervision tick, before MAIA replies or a Work joins the program. No row can be created without that member's own authenticated POST. The Class A concerns are in the findings for the founder; they do not bear on the migration act.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "low",
+      "path": "database/migrations/20261116000001_member_age_attestations_rollback.rollback",
+      "evidence": "The destructive rollback drops the table, triggers and functions but does not remove the `20261116000001_member_age_attestations.sql` row from `schema_migrations`. The runner (scripts/run-sql-migrations.sh:72) skips by filename, so a later deploy of the target would not recreate the table. The target reader would then fail closed for everyone: 403 `age_attestation_required` at the door and 503 on attest. Separately, the row count and the DROP are not protected by a lock taken first, so an attestation committed between them by a live target reader would be dropped.",
+      "fix": "In the .rollback file, take `LOCK TABLE member_age_attestations IN ACCESS EXCLUSIVE MODE` before counting, and delete the ledger row in the same transaction (or document that the operator must). Not required before this deploy; the supported rollback is image-only."
+    },
+    {
+      "id": "F2",
+      "severity": "low",
+      "path": "database/migrations/20261116000001_member_age_attestations.sql",
+      "evidence": "Lines 34-45: the guard refuses every DELETE while the member exists and every UPDATE. A single attestation therefore cannot be erased or rectified on request (for example by a guardian) without erasing the whole account or having a superuser disable the trigger. A correction is possible only by appending a newer row; the mistaken row persists.",
+      "fix": "Founder to rule whether attestation-only erasure is owed under R20. If so, add a governed, audited erasure path in a later migration. No change is needed for this migration to be compatible."
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "path": "database/migrations/20261116000001_member_age_attestations.sql",
+      "evidence": "Line 40: the guard resolves `members` unqualified through the caller's `search_path`, and the function has no `SET search_path`. A session whose path does not resolve `members` to `public.members` would make the guard error and refuse member erasure, or check the wrong relation. The app's default path is fine.",
+      "fix": "In a follow-up, qualify it as `public.members` and add `SET search_path = pg_catalog, public` to both functions."
+    },
+    {
+      "id": "F4",
+      "severity": "low",
+      "path": "database/migrations/20261116000001_member_age_attestations.sql",
+      "evidence": "Lines 59-62: the BEFORE TRUNCATE trigger means any `TRUNCATE members CASCADE` (test harnesses, reconstruction or reset scripts) will now fail. No production code path in the files read truncates `members`. A search of both trees for such a statement (alongside FK-enumeration patterns) matched only four witness/test scripts per tree, none of which I opened.",
+      "fix": "Tell the owners of the test and reconstruction harnesses. Where a reset is legitimate, drop the table or disable the trigger explicitly."
+    },
+    {
+      "id": "F5",
+      "severity": "low",
+      "path": "app/api/sovereign/writers-studio/age-attestation/route.ts",
+      "evidence": "The POST is authenticated but, unlike the arrival route, is not pilot-gated with `admittedToStudio`, and no rate limit is visible. Any signed-in member can append unlimited rows to an append-only table that cannot be pruned. Rows are still written only by the member's own act.",
+      "fix": "Skip the insert when the latest row already matches the submitted band, or add a per-member cap or rate limit. Consider pilot-gating it like the door."
+    },
+    {
+      "id": "F6",
+      "severity": "low",
+      "path": "app/api/sovereign/living-works/[id]/route.ts",
+      "evidence": "The age gate fires only when `path` is in the arrival body (arrival/route.ts:82) or `studioPath` is in the PATCH body (living-works route:268). Works already declared `college-essay` under the old reader (the path shipped 2026-11-15), and the Work conversation routes, were not shown to be gated; I did not read those routes. The under-13 turn-away is client-side only: the server cannot tell an under-13 from someone who then answers adult.",
+      "fix": "Founder and Class A owner to confirm whether existing college-essay Works and the Work conversation surface must also require the attestation. If so, add the same read-only check there. Out of scope for the migration act."
+    },
+    {
+      "id": "F7",
+      "severity": "low",
+      "path": "app/api/members/delete-account/route.ts",
+      "evidence": "Line 316: the success response lists `removed: ['account','settings','sessions','credentials']`. After this migration the cascade also removes the member's age attestations, which are not named. The route's own comment says the response states what was actually removed. This is an understatement, not a false promise of completeness.",
+      "fix": "Add a member-legible entry such as 'age attestation' to the removed list in a follow-up."
+    },
+    {
+      "id": "F8",
+      "severity": "low",
+      "path": "scripts/run-sql-migrations.sh",
+      "evidence": "Lines 79-88: the migration commit and the ledger INSERT are separate psql invocations. If the ledger insert fails after the commit, the table exists unrecorded and the migration stays pending. A re-run is safe (IF NOT EXISTS, CREATE OR REPLACE, DROP TRIGGER IF EXISTS), but the trigger drop-and-recreate takes a brief ACCESS EXCLUSIVE lock on `member_age_attestations`, bounded by the 5-second lock_timeout. This is pre-existing runner behaviour.",
+      "fix": "None required for this deploy. If the run reports failure, inspect the ledger before retrying, as the deploy script already instructs."
+    }
+  ],
+  "coverage": {
+    "files": [
+      "docs/programme/COLLEGE-ESSAY_AGE_ATTESTATION_MIGRATION_REVIEW_PLAN_2026-11-16.md",
+      "MIGRATION_COMPATIBILITY_CONTEXT.json",
+      "database/migrations/20261116000001_member_age_attestations.sql",
+      "database/migrations/20261116000001_member_age_attestations_rollback.rollback",
+      "scripts/deploy-production.sh",
+      "scripts/run-sql-migrations.sh",
+      "scripts/qa/prove-age-attestation-migration.sh",
+      "lib/studios/ageAttestation.ts",
+      "lib/studios/ageAttestationRead.ts",
+      "app/api/sovereign/writers-studio/age-attestation/route.ts",
+      "app/api/sovereign/writers-studio/arrival/route.ts",
+      "app/api/sovereign/living-works/[id]/route.ts",
+      "app/api/members/delete-account/route.ts",
+      "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/members/delete-account/route.ts",
+      "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/sovereign/living-works/[id]/route.ts",
+      "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/sovereign/writers-studio/arrival/route.ts",
+      "lib/writersStudio/studioPaths.ts"
+    ]
+  },
+  "limitations": [
+    "No live database: nothing was executed. The cascade-through-guard result, lock behaviour and idempotence are established from the SQL bytes and PostgreSQL semantics, not from a runtime trace.",
+    "The proof script was read, not run. Its reported 10/10 on PostgreSQL 14.19 and 16.15 is PR #2309's claim; production is 16.13.",
+    "No hashing tool was available: I could not recompute the SHA-256 of the plan, the migration, the rollback file or the old-reader files. All hashes in this output are the supplied identifiers.",
+    "The bundle is not a git repository: I could not verify that target 5f3733cb differs from 3c59f1bf7 only by the plan document, nor that the old-reader tree is byte-exact for 4134cf2b.",
+    "The production facts (table absent, members.id uuid, 97 rows, ledger state, PostgreSQL 16.13) are as supplied by the plan and were not witnessed.",
+    "Only three old-reader files were Read. That no other old-reader path names the table rests on a search of the bundled old-reader tree, which is evidence about the search, not coverage.",
+    "The search for FK-enumeration and `TRUNCATE members` patterns matched four witness/test scripts in each tree; none was opened, so whether any of them is affected by the new triggers is not established.",
+    "Not read: lib/db/postgres.ts (transaction and isolation settings), lib/auth/getMemberFromRequest.ts, the Work conversation and ask routes, the client door UI, the review-custody gate script, deploy-context.sh, deploy-tag.sh, the compose files and the existing rollback-guard files.",
+    "Whether production roles, `search_path`, or other triggers and foreign keys on `members` (including ON DELETE RESTRICT ones) differ from what the code assumes was not established. Existing governed-content refusals in delete-account are unchanged by this migration.",
+    "Long-running or idle-in-transaction writers on `members` at migration time are unknown; if present, the migration fails after 5 seconds and the deploy aborts before the swap.",
+    "The Class A product decision (minors, supervision, self-attestation as sufficient) is the founder's ruling and was not reviewed. Member-facing copy and the under-13 turn-away UI were not read."
+  ],
+  "migration_compatibility": {
+    "instrument": "migration-compatibility/v1",
+    "verdict": "COMPATIBLE",
+    "old_reader_commit": "4134cf2b284871eb0162153a7253aa3878eef477",
+    "target_reader_commit": "5f3733cb8065d82f74a4a65db181dc314ebcc233",
+    "pending": [
+      {
+        "path": "database/migrations/20261116000001_member_age_attestations.sql",
+        "sha256": "8b56b4753436db074fce78738da205a74f36a55e0080404b6910071feea1a9b9"
+      }
+    ],
+    "old_reader_evidence": [
+      {
+        "repo_path": "app/api/members/delete-account/route.ts",
+        "sha256": "2b88f1e37a6629a95e9fb5bdc33340a802e2be3bedcdac3268a89be66913ec50",
+        "trace_path": "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/members/delete-account/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/living-works/[id]/route.ts",
+        "sha256": "fc6b8bdb08caf8d009ec5ba1a68d1eb6440caf5aa5d57880a00e9382947a0b3d",
+        "trace_path": "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/sovereign/living-works/[id]/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/writers-studio/arrival/route.ts",
+        "sha256": "902cbc2e8dbc1b3dfca0e50a9a0402adeb065b8c70b65eaf4af00341e7aefe77",
+        "trace_path": "old-reader/4134cf2b284871eb0162153a7253aa3878eef477/app/api/sovereign/writers-studio/arrival/route.ts"
+      }
+    ],
+    "rationale": "The migration is purely additive: one new empty table with its index, functions, triggers and comment. It alters no existing table, column, constraint or row. Its only contact with existing schema is a new foreign key that references `members(id)`, which adds system RI triggers on `members` without a rewrite or scan.\n\nThe old reader at 4134cf2b never names `member_age_attestations` in the three files read, and a search of the bundled old-reader tree found no reference. Its arrival route and living-works PATCH have no age check and issue no statement against the new table.\n\nIts account deletion ends in `DELETE FROM members WHERE id = $1` inside a transaction. With the new foreign key this cascades to the member's attestations. The BEFORE DELETE guard's `EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id)` runs in a later command of the same transaction and sees the member row as already deleted, so the cascade proceeds and erasure succeeds. This holds both in the window (empty table) and after an image rollback (rows written by the target).\n\nLock exposure is one SHARE ROW EXCLUSIVE lock on `members`, bounded by a 5-second lock_timeout set before any DDL. It blocks writes to `members` only, for milliseconds once granted. A timeout fails the whole transaction atomically, and the deploy script aborts before the swap with the old reader still live.\n\nThe target reader's statements match the columns and CHECKs, write only on the member's own POST, have no under-13 row shape, and fail closed on an unreadable record.",
+    "limitations": [
+      "Established by reading the bytes and by PostgreSQL semantics; no statement was executed against any database.",
+      "SHA-256 values are the supplied identifiers; I could not recompute them.",
+      "Old-reader coverage by Read is three files; absence of other references rests on a search of the bundled tree.",
+      "Target-versus-3c59f1bf7 ancestry and the production schema facts were not independently verified."
+    ],
+    "failure_prefix_compatibility": {
+      "instrument": "migration-prefix-compatibility/v1",
+      "verdict": "ALL_PREFIXES_COMPATIBLE",
+      "prefixes": [
+        {
+          "through_path": "database/migrations/20261116000001_member_age_attestations.sql",
+          "through_sha256": "8b56b4753436db074fce78738da205a74f36a55e0080404b6910071feea1a9b9",
+          "rationale": "There is exactly one pending migration and it runs in a single transaction: the runner's `BEGIN`, then the file's own `BEGIN` (a warning only), `SET LOCAL lock_timeout`, the DDL, and the file's `COMMIT`. With `ON_ERROR_STOP=1`, any error ends psql and the transaction rolls back, so the only committed states are the unchanged schema or the full final schema.\n\nThe prefix after migration 1 is therefore the final schema: a new empty table that old reader 4134cf2b never references, plus a cascading foreign key through which the old reader's `DELETE FROM members` still succeeds, because the guard sees the member as already gone. If the ledger insert fails after the commit, the migration stays pending and a re-run is idempotent.",
+          "limitations": [
+            "Atomicity and cascade-through-guard behaviour are derived from the bytes and PostgreSQL semantics, not witnessed at runtime.",
+            "The proof script covering this path was read but not run.",
+            "The migration's byte hash was not recomputed by me."
+          ]
+        }
+      ]
+    }
+  }
+}

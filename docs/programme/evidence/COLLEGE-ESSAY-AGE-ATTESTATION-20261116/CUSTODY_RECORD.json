@@ -1,0 +1,32 @@
+{
+  "instrument": "review-custody/v1",
+  "bound_at": "2026-11-16T14:23:55.863Z",
+  "repo_head": "5f3733cb8065d82f74a4a65db181dc314ebcc233",
+  "plan": {
+    "path": "docs/programme/COLLEGE-ESSAY_AGE_ATTESTATION_MIGRATION_REVIEW_PLAN_2026-11-16.md",
+    "sha256": "e5c948eb629e0d21332a91f4fc0d200d57599d949b66cdebdbe27dfa41774517",
+    "bytes": 9624
+  },
+  "base": {
+    "ref": "HEAD",
+    "commit": "5f3733cb8065d82f74a4a65db181dc314ebcc233"
+  },
+  "tree": {
+    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "paths": 0
+  },
+  "approval": {
+    "admitted_at": "2026-11-16T15:45:20.750Z",
+    "verdict": "APPROVED",
+    "reviewer": "Claude Fable 5 (claude-fable-5-2), independent migration reviewer",
+    "plan_sha256": "e5c948eb629e0d21332a91f4fc0d200d57599d949b66cdebdbe27dfa41774517",
+    "review_sha256": "bf79e24a8c320f889f3eadcd85fec2fc76c8c4ada779521e56bb8b5e26ae2ca1",
+    "findings": {
+      "high": 0,
+      "medium": 0,
+      "low": 8
+    },
+    "coverage_files": 17,
+    "limitations": 11
+  }
+}
