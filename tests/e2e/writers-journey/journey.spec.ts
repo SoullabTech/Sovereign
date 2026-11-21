@@ -5,6 +5,9 @@
  * It is a regression instrument for the writer's core path; it is NOT the retired 56-step journey and is not
  * comparable to its result. Scope and limits: see README.md.
  *
+ * Re-greened 2026-11-17 against canonical ddf584b28 (the journey-ledger stack, tests/e2e/journey-ledger/run.sh --wj1): the first screen is now the
+ * Inspiration Opening (S02, S03, S15) and original-file import is offered rather than held (S10). The product changed; the expectations were stale.
+ *
  * Defeat modes (WJ_DEFEAT) exist so the journey can be proven to FAIL when the product is broken:
  *   no_roster       Alice is removed from the beta roster            -> the studio must NOT open (S02 fails)
  *   no_marker       Alice stays an active beta tester but loses the Writer pilot marker -> the studio must NOT open (S02 fails)
@@ -18,6 +21,11 @@ const ALICE = { username: 'journey_alice', password: 'journey-alice-pass-1' };
 const BOB = { username: 'journey_bob', password: 'journey-bob-pass-1' };
 const CAROL = { username: 'journey_carol', password: 'journey-carol-pass-1' };
 const DAVE = { username: 'journey_dave', password: 'journey-dave-pass-1' };
+
+// What a first-time visitor to /writers-studio (no Works, no manuscripts) is shown at this tip (lib/writersStudio/inspirationOpening.ts,
+// INSPIRATION_COPY.question; shown when P4R1HomeController's inspirationDoor is true): the Inspiration Opening. The older first screen,
+// "What are you beginning?", is no longer what a first-time visitor sees.
+const OPENING = 'Before anything else: what’s calling you to write?';
 
 const PROSE = 'The orchard behind the old house was made entirely of glass. Every morning the light came through the trees and the whole garden rang softly.';
 const PASTED = `# The Salt Road
@@ -61,19 +69,28 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
       expect((await r.json()).success).toBe(true);
     });
 
-    await test.step('S02 the studio opens for a rostered writer and offers a first beginning', async () => {
+    await test.step('S02 the studio opens for a rostered writer and offers a first beginning (the Inspiration Opening)', async () => {
       await page.goto('/writers-studio');
-      await expect(page.getByText('What are you beginning?')).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(OPENING)).toBeVisible({ timeout: 120_000 });   // generous: the first request compiles the route under `next dev`
+      await expect(page.getByRole('button', { name: 'Just let me write' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'I already have pages' })).toBeVisible();
       await expect(page).toHaveURL(/\/writers-studio/);
     });
 
-    await test.step('S03 Alice names and begins a new Work', async () => {
-      await page.getByRole('button', { name: 'Start writing' }).first().click();
-      await page.getByRole('textbox').first().fill('The Glass Orchard');
-      await page.getByRole('button', { name: 'Start writing' }).last().click();
-      await page.waitForURL(/mode=write&m=[0-9a-f-]{36}/, { timeout: 30_000 });
+    await test.step('S03 Alice begins a first Work, then starts a second one with a name of her own', async () => {
+      // "Just let me write" makes an untitled Work and opens it in Write. A named Work is then begun from Home > New Work;
+      // the form has two text boxes: the first is the optional "what's calling this one", the second is the name.
+      await page.getByRole('button', { name: 'Just let me write' }).click();
+      await page.waitForURL(/mode=write&m=[0-9a-f-]{36}/, { timeout: 90_000 });    // first compile of Write is slow under `next dev`
+      const firstWorkId = new URL(page.url()).searchParams.get('m') || '';
+      await page.getByRole('button', { name: 'Home', exact: true }).click();
+      await page.getByRole('button', { name: 'New Work' }).click();
+      await page.getByRole('textbox').nth(1).fill('The Glass Orchard');
+      await page.getByRole('button', { name: 'Start writing' }).click();
+      await page.waitForURL(/mode=write&m=[0-9a-f-]{36}/, { timeout: 90_000 });
       aliceWorkId = new URL(page.url()).searchParams.get('m') || '';
       expect(aliceWorkId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(aliceWorkId, 'the named Work is a new Work, not the untitled one').not.toBe(firstWorkId);
     });
 
     await test.step('S04 the Work opens in Write under its own name', async () => {
@@ -126,10 +143,14 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
       await ctx2.close();
     });
 
-    await test.step('S10 Alice imports a manuscript by pasting it (original-file import is held on this image)', async () => {
+    await test.step('S10 Alice imports a manuscript by pasting it (original-file import is offered at this tip)', async () => {
       await page.goto('/writers-studio');
       await page.getByRole('button', { name: 'Import writing' }).click();
-      await expect(page.getByText('Original-file import is held on this Writer image.').first()).toBeVisible();
+      // At this tip the release manifest releases source intake, so the import room OFFERS a file ("Choose file") and no longer
+      // shows the "Original-file import is held on this Writer image." banner (P4R1ImportManuscript.tsx shows it only when
+      // intake is unreleased). The paste path below is unchanged and is what this journey drives.
+      await expect(page.getByRole('button', { name: 'Choose file' })).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText('Original-file import is held on this Writer image.')).toHaveCount(0);
       await page.getByPlaceholder('Title of the Work').fill('Salt and Lanterns');
       await page.getByPlaceholder('Paste your manuscript here…').fill(PASTED);
       await page.getByRole('button', { name: 'Review structure' }).click();
@@ -207,7 +228,7 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
       const ctx = await browser.newContext({ baseURL }); const page = await ctx.newPage(); watch(page);
       expect((await signIn(ctx.request, BOB)).status()).toBe(200);
       await page.goto('/writers-studio');
-      await expect(page.getByText('What are you beginning?')).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(OPENING)).toBeVisible({ timeout: 120_000 });
 
       await test.step('S16 Bob cannot read Alice’s draft by id (API)', async () => {
         for (const id of [aliceWorkId, importedWorkId]) {

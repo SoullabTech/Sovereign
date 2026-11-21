@@ -167,6 +167,8 @@
     "test:watch": "jest --config jest.config.js --watch",
     "test:coverage": "jest --config jest.config.js --coverage",
     "test:canon": "jest --config jest.config.js lib/sovereign/__tests__/presenceMode.test.ts lib/sovereign/__tests__/canonDrift.test.ts",
+    "test:journey-ledger": "node --test tests/e2e/journey-ledger/lib/*.test.mjs",
+    "journey:ledger": "bash tests/e2e/journey-ledger/run.sh",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",

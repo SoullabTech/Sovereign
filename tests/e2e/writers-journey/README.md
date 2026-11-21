@@ -2,10 +2,12 @@
 
 Drives a real browser through a built copy of the app against a throwaway, local-only database seeded with fictional writers (journey_alice and journey_bob on the beta roster and marked for the Writer pilot; journey_carol off the roster; journey_dave an active beta tester NOT marked for the pilot). No production data, no real credentials, no network beyond localhost.
 
-Run: `bash tests/e2e/writers-journey/run-journey.sh [--build] [--defeat MODE] [--keep]`
+Run: `bash tests/e2e/writers-journey/run-journey.sh [--build] [--defeat MODE] [--keep]` (Docker + a production build).
+
+Or, without Docker, against a `next dev` stack with a PostgreSQL 16 shadow: `bash tests/e2e/journey-ledger/run.sh --wj1-only` (and `--defeat MODE` for the four modes below). That runner is described in `tests/e2e/journey-ledger/README.md`. Re-greened there on 2026-11-17 against canonical `ddf584b28`: the expectations in S02, S03, S10 and S15 were stale (the product changed), not the product. No CI workflow runs this spec.
 
 ## What it checks
-- S01-S09 Alice signs in, begins a Work, writes, sees it saved on the server, returns and finds it, imports by paste.
+- S01-S12 Alice signs in, is shown the Inspiration Opening on her first visit (S02), begins a first Work with "Just let me write", then starts a Work of her own name from Home > New Work (S03), writes, sees it saved on the server, returns and finds it, imports by paste (S10: the import room now offers a file and no longer shows the "held" banner).
 - S13-S18 Bob and Carol, Dave (a beta tester without the Writer marker) and signed-out visitors cannot reach Alice's words; Carol and Dave are refused the studio, and Carol the Writer corridor's API.
 - S19 no uncaught page errors during the journey.
 
