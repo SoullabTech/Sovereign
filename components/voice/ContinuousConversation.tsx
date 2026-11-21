@@ -5,11 +5,13 @@ import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "luci
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
 import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, hasSpeechRecognitionAPI, isDesktopShell, selectVoiceTransport, type PlatformInfo } from "@/lib/utils/platformDetection";
 import { DESKTOP_MAX_UTTERANCE_MS } from "@/lib/voice/desktopUtteranceLimits";
+import { decideEcho, ECHO_DECISION } from "@/lib/voice/echoGuard";
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
+import { mergeNativePartial } from '@/lib/voice/nativePartialContinuity';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
@@ -198,6 +200,13 @@ export interface ContinuousConversationProps {
   onAudioLevelChange?: (amplitude: number, isSpeaking: boolean) => void; // Audio amplitude callback for visualization
   isProcessing?: boolean;
   isSpeaking?: boolean; // When Maya is speaking
+  /** What MAIA actually last spoke. The echo guard compares against this real
+   *  utterance rather than a static word list, so members may use ordinary
+   *  English ("I closed my eyes") without losing their turn. */
+  maiaLastUtterance?: string | null;
+  /** Epoch ms when MAIA's speech ended. Bounds the tail-echo window; when
+   *  absent the guard sends rather than risk deleting member speech. */
+  maiaSpeechEndedAt?: number | null;
   autoStart?: boolean; // Start listening immediately
   silenceThreshold?: number; // Baseline silence threshold; TURN-01 may lengthen, never shorten
   /** Member-owned turn-taking policy (TURN-01). */
@@ -310,6 +319,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     onAudioLevelChange,
     isProcessing = false,
     isSpeaking = false,
+    maiaLastUtterance = null,
+    maiaSpeechEndedAt = null,
     autoStart = false, // Disabled to prevent infinite restart loops
     silenceThreshold = 3500, // TURN-01 Natural baseline; parent may raise for Care/Scribe
     turnTakingPreferences = DEFAULT_TURN_TAKING_PREFERENCES,
@@ -375,6 +386,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const accumulatedTranscript = useRef<string>("");
   const isProcessingRef = useRef(false);
   const isSpeakingRef = useRef(false); // Track isSpeaking via ref to avoid stale closures
+  // Mirrored for the echo guard, which runs inside callbacks that would
+  // otherwise close over stale props.
+  const maiaLastUtteranceRef = useRef<string | null>(null);
+  maiaLastUtteranceRef.current = maiaLastUtterance;
+  const maiaSpeechEndedAtRef = useRef<number | null>(null);
+  maiaSpeechEndedAtRef.current = maiaSpeechEndedAt;
   const isListeningRef = useRef(false); // Track isListening via ref to avoid stale closures
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
   const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
@@ -2390,21 +2407,46 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
     }
 
-    // Check 3: Echo/Feedback Prevention - Block MAIA's own voice patterns
-    // Common MAIA response patterns that indicate echo/feedback loop
-    const maiaPatterns = [
-      'mmm', 'yes', 'there\'s something', 'i can feel', 'what\'s alive',
-      'i notice', 'i\'m curious', 'what does', 'how does that feel',
-      'where do you feel', 'in your body', 'that sensation', 'pause',
-      'what\'s it like', 'like...', 'suspension', 'quality of'
-    ];
+    // Check 3: Echo/Feedback Prevention — compare against WHAT MAIA ACTUALLY
+    // SAID, within a bounded window after her speech ended. Same shape as the
+    // dedup checks above, which compare against what was actually last sent.
+    //
+    // This replaced a static list of 17 English phrases ('yes', 'pause',
+    // 'i notice', 'quality of', …) substring-matched against any transcript
+    // under 15 words. It deleted the member's speech and sent no turn at all,
+    // so MAIA answered with bare presence — reported by a beta tester as
+    // "text of what I say is transcribing but then it's gone and she says
+    // — I am here —" (2026-11-18). 'yes' matched inside "eyes": a member
+    // saying "I closed my eyes" had their turn discarded. Measured against
+    // ordinary speech it lost 10 of 12 member turns while still missing real
+    // echo, because MAIA's own sentences usually exceed 15 words.
+    //
+    // Echo is already dropped at the recognition handler while MAIA speaks
+    // (two isSpeakingRef guards), so anything reaching here was captured while
+    // she was SILENT. The only echo left to catch is the tail as speech ends.
+    //
+    // The asymmetry governs the bias: a false block silently deletes a person's
+    // speech; a false pass sends MAIA a fragment of her own sentence, which she
+    // can handle and the member can see. Unknown timing therefore sends.
+    const echo = decideEcho({
+      transcript,
+      maiaLastUtterance: maiaLastUtteranceRef.current,
+      msSinceMaiaSpokeEnded: maiaSpeechEndedAtRef.current
+        ? now - maiaSpeechEndedAtRef.current
+        : null,
+    });
 
-    const looksLikeMaiaVoice = maiaPatterns.some(pattern =>
-      normalizedTranscript.includes(pattern.toLowerCase())
-    );
-
-    if (looksLikeMaiaVoice && normalizedTranscript.split(' ').length < 15) {
-      console.log('🔇 [ECHO BLOCK] Transcript looks like MAIA\'s voice:', transcript);
+    if (echo.decision === ECHO_DECISION.BLOCK_AS_ECHO) {
+      console.log('🔇 [ECHO BLOCK]', echo.reason);
+      // Observable like its sibling dedup checks. Without an event, a guard
+      // that fired and a guard that never ran produce the same empty log.
+      logVoiceEvent('voice_echo_blocked', {
+        charCount: transcript.length,
+        similarity: echo.similarity,
+        msSinceMaiaSpokeEnded: maiaSpeechEndedAtRef.current ? now - maiaSpeechEndedAtRef.current : null,
+        epoch: recognitionEpochRef.current,
+        turnCommitId: turnCommitIdRef.current,
+      });
       accumulatedTranscript.current = ""; // Clear echo
       explicitTurnPrefixRef.current = "";
       isCallingProcessRef.current = false;
@@ -3163,11 +3205,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // 🔥 FIX: Reset restart counter when user actually speaks - prevents stopping during valid conversation
             consecutiveRestartCount.current = 0;
 
-            // Accumulate the live native segment. Explicit-floor turns survive
-            // native recognizer restarts by prepending segments already witnessed
-            // before the internal stop.
-            const heldPrefix = explicitTurnPrefixRef.current.trim();
-            accumulatedTranscript.current = heldPrefix ? `${heldPrefix} ${transcript}`.trim() : transcript;
+            // Accumulate the live native segment. Earlier segments survive both
+            // an internal recognizer stop and an iOS restart that reports no stop.
+            const mergedPartial = mergeNativePartial({
+              heldPrefix: explicitTurnPrefixRef.current,
+              accumulated: accumulatedTranscript.current,
+              incoming: transcript,
+            });
+            explicitTurnPrefixRef.current = mergedPartial.heldPrefix;
+            accumulatedTranscript.current = mergedPartial.accumulated;
+            if (mergedPartial.segmentReset) {
+              logVoiceEvent('ios_voice_segment_reset_preserved', {
+                previousSegmentLength: mergedPartial.previousSegmentLength,
+                incomingLength: transcript.length,
+                preservedLength: mergedPartial.heldPrefix.length,
+              });
+            }
 
             // Send the whole member-owned turn for live feedback, not just the
             // latest plugin segment.

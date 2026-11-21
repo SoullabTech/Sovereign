@@ -20,6 +20,12 @@ export function isProbablyOnline(): boolean {
 }
 
 /**
+ * Founder ruling, 2026-11-18: a turn that did not reach MAIA is labelled plainly. The
+ * conversation keeps the member's words and does not answer in MAIA's voice.
+ */
+export const UNDELIVERED_NOTICE = "MAIA couldn't receive this. Your words are still here.";
+
+/**
  * Context for generating presence responses
  */
 export interface PresenceContext {

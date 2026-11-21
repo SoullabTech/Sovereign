@@ -10,6 +10,9 @@ import {
   clearDelivery,
   isRetryInFlight,
   stripDelivery,
+  persistableDelivery,
+  excludeUndelivered,
+  mergeUndeliveredIntoServerHistory,
   type HasDelivery,
 } from '../deliveryStatus';
 
@@ -87,14 +90,100 @@ describe('deliveryStatus helpers', () => {
     });
   });
 
-  describe('stripDelivery (persistence guard)', () => {
-    it('removes both markers so nothing delivery-related is persisted', () => {
-      const failed = markFailed(base(), 'c', 'network');
-      const stripped = stripDelivery(failed);
+  // Founder ruling 2026-11-19 (replaces 2026-07-24 live-only rule): the failed label
+  // survives reopening on this device. "Sending…" is never stored.
+  describe('persistableDelivery (device persistence)', () => {
+    it('keeps a failed marker and its reason', () => {
+      const out = persistableDelivery(markFailed(base(), 'c', 'network'));
+      expect(out.find((m) => m.id === 'c')).toMatchObject({
+        deliveryStatus: 'failed',
+        failureReason: 'network',
+        text: 'are you there?',
+      });
+    });
+
+    it('never stores "Sending…": an unconfirmed retry is stored as failed', () => {
+      // The app may close mid-resend. Showing that turn as delivered would be untrue;
+      // resend is safe because it reuses the turn's exchange id.
+      const out = persistableDelivery(markRetrying(base(), 'c'));
+      const c = out.find((m) => m.id === 'c')!;
+      expect(c.deliveryStatus).toBe('failed');
+      expect(c.failureReason).toBe('error');
+    });
+
+    it('leaves delivered turns without any marker fields', () => {
+      const out = persistableDelivery(base());
+      expect('deliveryStatus' in out[0]).toBe(false);
+      expect('failureReason' in out[0]).toBe(false);
+    });
+  });
+
+  describe('stripDelivery', () => {
+    it('removes both markers', () => {
+      const stripped = stripDelivery(markFailed(base(), 'c', 'network'));
       const c = stripped.find((m) => m.id === 'c')!;
       expect('deliveryStatus' in c).toBe(false);
       expect('failureReason' in c).toBe(false);
-      expect(c.text).toBe('are you there?'); // payload itself is untouched
+      expect(c.text).toBe('are you there?');
+    });
+  });
+
+  describe('excludeUndelivered (MAIA context)', () => {
+    it('drops failed turns so MAIA is never told she heard them', () => {
+      const current = markFailed(base(), 'c', 'network');
+      const out = excludeUndelivered([], current);
+      expect(out.current.map((m) => m.id)).toEqual(['a', 'b']);
+    });
+
+    it('uses the current status over a stale restored copy', () => {
+      // Restored history says failed; the member just resent it, so it is in flight.
+      const historical = markFailed(base(), 'c', 'network');
+      const current = markRetrying(base(), 'c');
+      const out = excludeUndelivered(historical, current);
+      expect(out.historical.map((m) => m.id)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('drops a restored failed turn the member has not resent', () => {
+      const historical = markFailed(base(), 'c', 'auth');
+      const out = excludeUndelivered(historical, []);
+      expect(out.historical.map((m) => m.id)).toEqual(['a', 'b']);
+    });
+  });
+
+  describe('mergeUndeliveredIntoServerHistory', () => {
+    type T = Msg & { timestamp: string | Date };
+    const server: T[] = [
+      { id: 'pg1', role: 'user', text: 'hello', timestamp: '2026-11-19T10:00:00Z' },
+      { id: 'pg2', role: 'oracle', text: 'hi there', timestamp: '2026-11-19T10:00:05Z' },
+      { id: 'pg3', role: 'user', text: 'later', timestamp: '2026-11-19T10:10:00Z' },
+    ];
+
+    it('keeps a local failed turn in time order when server history replaces local', () => {
+      const local: T[] = [
+        { id: 'm1', role: 'user', text: 'lost words', timestamp: '2026-11-19T10:05:00Z', deliveryStatus: 'failed', failureReason: 'network' },
+      ];
+      const out = mergeUndeliveredIntoServerHistory(server, local);
+      expect(out.map((m) => m.id)).toEqual(['pg1', 'pg2', 'm1', 'pg3']);
+      expect(out[2].deliveryStatus).toBe('failed');
+    });
+
+    it('ignores delivered local turns', () => {
+      const local: T[] = [{ id: 'm1', role: 'user', text: 'x', timestamp: '2026-11-19T10:05:00Z' }];
+      expect(mergeUndeliveredIntoServerHistory(server, local)).toEqual(server);
+    });
+
+    it('does not show a turn twice when the server did receive it', () => {
+      const local: T[] = [
+        { id: 'm1', role: 'user', text: ' later ', timestamp: '2026-11-19T10:09:59Z', deliveryStatus: 'failed', failureReason: 'server' },
+      ];
+      expect(mergeUndeliveredIntoServerHistory(server, local)).toEqual(server);
+    });
+
+    it('keeps a network failure even if an older turn had the same words', () => {
+      const local: T[] = [
+        { id: 'm1', role: 'user', text: 'hello', timestamp: '2026-11-19T10:20:00Z', deliveryStatus: 'failed', failureReason: 'network' },
+      ];
+      expect(mergeUndeliveredIntoServerHistory(server, local).map((m) => m.id)).toEqual(['pg1', 'pg2', 'pg3', 'm1']);
     });
   });
 

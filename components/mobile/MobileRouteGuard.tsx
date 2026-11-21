@@ -104,7 +104,47 @@ export function resetMobileEntitlementsCache() {
 
 // ─── Sub-screens ──────────────────────────────────────────────────────────────
 
+/** Soullab Home is server-rendered and cannot ship in the native bundle. */
+export function isNativeUnavailableHome(pathname: string): boolean {
+  return pathname === '/home' || pathname === '/house';
+}
+
+/**
+ * Where Home would be in the iPhone app. Sign-in and the app's own entry both
+ * land on Home, so this is a threshold a member meets often. Platform identity
+ * canon (2026-09-28): Home is the entrance and MAIA is entered deliberately, so
+ * this screen offers MAIA as a choice and never opens her on its own.
+ */
+function HomeUnavailableScreen({ pathname }: { pathname: string }) {
+  const router = useRouter();
+  const webUrl = `${WEB_STUDIO_BASE_URL}${pathname}`;
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-amber-100 px-8 text-center gap-6">
+      <h1 className="text-xl font-semibold text-amber-200">Soullab Home is on the web for now</h1>
+      <p className="text-sm text-zinc-400 max-w-xs">
+        Home doesn&apos;t open inside the app yet. You can talk with MAIA here, or open Home in your browser.
+      </p>
+      <button
+        onClick={() => router.push('/maia/encounter')}
+        className="mt-2 px-6 py-3 rounded-xl bg-amber-500/20 border border-amber-500/40
+                   text-amber-200 text-sm font-medium hover:bg-amber-500/30 transition-colors"
+      >
+        Continue to MAIA
+      </button>
+      <a
+        href={webUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-zinc-400 underline decoration-dotted hover:text-zinc-300 transition-colors"
+      >
+        Open Home in your browser
+      </a>
+    </div>
+  );
+}
+
 function OpenInWebScreen({ pathname }: { pathname: string }) {
+  if (isNativeUnavailableHome(pathname)) return <HomeUnavailableScreen pathname={pathname} />;
   const webUrl = `${WEB_STUDIO_BASE_URL}${pathname}`;
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-amber-100 px-8 text-center gap-6">

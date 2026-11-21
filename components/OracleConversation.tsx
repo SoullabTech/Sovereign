@@ -23,7 +23,7 @@ import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { canProgrammaticallyFocus } from '@/lib/ui/programmaticFocus';
 // 🔁 Recovery seam (Pattern A) — honest delivery state for member turns.
-import { markFailed, markRetrying, clearDelivery, stripDelivery, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
+import { markFailed, markRetrying, clearDelivery, persistableDelivery, excludeUndelivered, mergeUndeliveredIntoServerHistory, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
@@ -159,7 +159,7 @@ async function withTimeout<T>(
   }
 }
 
-import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
+import { isProbablyOnline, UNDELIVERED_NOTICE } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getAudioContext as getSharedAudioContext, ensureAudioReady } from '@/lib/voice/ios-audio-session';
@@ -410,6 +410,11 @@ function truncateHistoryForAPI(
   const seenIds = new Set<string>();
   const allMessages: ConversationMessage[] = [];
 
+  // 🔁 A turn MAIA never received must not reach her as history she heard.
+  const delivered = excludeUndelivered(historicalMessages, currentMessages);
+  historicalMessages = delivered.historical;
+  currentMessages = delivered.current;
+
   // Add historical messages first
   for (const msg of historicalMessages) {
     if (msg.id && !seenIds.has(msg.id)) {
@@ -588,9 +593,9 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
-  // 🔁 Recovery seam (Pattern A) — delivery state of a member turn. LIVE state only;
-  // stripped before persistence (see lib/maia/deliveryStatus.ts). The bubble already
-  // represents authorship; this records whether delivery completed.
+  // 🔁 Recovery seam (Pattern A) — delivery state of a member turn. 'failed' is kept
+  // on this device across reopening; 'retrying' never is (see lib/maia/deliveryStatus.ts).
+  // The bubble already represents authorship; this records whether delivery completed.
   deliveryStatus?: DeliveryStatus;
   failureReason?: DeliveryFailureReason;
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
@@ -1003,6 +1008,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
   const [interimTranscript, setInterimTranscript] = useState('');
+  // 🔇 ECHO GUARD INPUTS. The capture component compares a member transcript
+  // against what MAIA ACTUALLY said, inside a bounded window after her speech
+  // ends — replacing a static English word list that deleted ordinary member
+  // speech ("I closed my eyes" matched 'yes' inside "eyes").
+  const maiaLastUtteranceRef = useRef<string | null>(null);
+  const [maiaSpeechEndedAt, setMaiaSpeechEndedAt] = useState<number | null>(null);
 
   // Sync local state with parent when prop changes
   useEffect(() => {
@@ -2011,7 +2022,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setVoiceAmplitude(0);
   }, []);
 
+  // One transition watcher rather than a timestamp at each of the eight
+  // places playback can stop; a missed site would silently widen the window.
+  const wasAudioPlayingRef = useRef(false);
+  useEffect(() => {
+    if (wasAudioPlayingRef.current && !isAudioPlaying) setMaiaSpeechEndedAt(Date.now());
+    wasAudioPlayingRef.current = isAudioPlaying;
+  }, [isAudioPlaying]);
+
   const maiaSpeak = useCallback(async (text: string, elementHint?: Element, ttsInstructions?: string) => {
+    maiaLastUtteranceRef.current = text;
     if (!text || typeof window === 'undefined') return;
 
     // Check if we need to show audio permission prompt
@@ -3263,12 +3283,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               source: 'restored'
             }));
 
-            // Use PostgreSQL if it has more messages
+            // Use PostgreSQL if it has more messages. 🔁 Turns that never reached
+            // the server exist only on this device; keep them, labelled, in time order.
             if (pgMessages.length > loadedMessages.length) {
-              loadedMessages = pgMessages;
+              const merged = mergeUndeliveredIntoServerHistory(pgMessages, loadedMessages);
+              loadedMessages = merged;
               console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
               // Sync to localStorage for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
+              localStorage.setItem(storageKey, JSON.stringify(merged.slice(-50)));
             }
           }
         }
@@ -3320,10 +3342,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const storageKey = `maia_conversation_${sessionId}`;
 
     // Keep only the most recent 50 messages to avoid localStorage bloat.
-    // 🔁 Recovery seam: strip delivery markers — they are live UI state only
-    // (Kelly ruling 2026-07-24: preserved "as long as conversation state remains
-    // mounted"), so a reload can't resurrect a stuck "Sending…" or stale marker.
-    const messagesToStore = stripDelivery(messages.slice(-50));
+    // 🔁 Recovery seam (Kelly ruling 2026-11-19, replacing 2026-07-24): the failed
+    // label survives reopening on this device; "Sending…" is never stored.
+    const messagesToStore = persistableDelivery(messages.slice(-50));
 
     // STEP 1: Save to localStorage immediately (sync, instant)
     try {
@@ -5680,33 +5701,12 @@ I'm not sure what I'm feeling yet.`;
         origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
       });
 
-      // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
+      // Offline: keep the member's turn and say plainly that MAIA did not receive it.
       if (!isProbablyOnline()) {
-        console.log('[OracleConversation] Offline detected - using presence fallback');
-        const fallbackText = generatePresenceFallback({
-          userText: cleanedText,
-          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
-          preferredName: userName || undefined,
-        });
-
-        // Add the fallback response as an oracle message
-        const fallbackMessage: ConversationMessage = {
-          id: `fallback-${Date.now()}`,
-          role: 'oracle',
-          text: fallbackText,
-          timestamp: new Date().toISOString(),
-          element: 'aether',
-          metadata: { isFallback: true, reason: 'offline' },
-        };
-
-        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        console.log('[OracleConversation] Offline detected - turn not delivered');
+        setInputSubmitError(`You're offline. ${UNDELIVERED_NOTICE}`);
+        setMessages(prev => markFailed(prev, targetMessageId, 'network'));
         setIsResponding(false);
-        setMaiaResponseText(fallbackText);
-
-        // Speak the fallback if voice is enabled
-        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
-          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
-        }
         return;
       }
 
@@ -5837,39 +5837,12 @@ I'm not sure what I'm feeling yet.`;
         signal: controller.signal
       });
       } catch (fetchError) {
-        // Network-level errors (CORS, network unreachable, etc.)
-        // NETWORK ERROR FALLBACK: Use presence mode instead of failing
-        console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
-        // Surface a small banner above the input so the user isn't left with
-        // a cleared input and a presence-fallback reply that visually mimics MAIA.
-        setInputSubmitError("Network unreachable — replying in presence mode. Try again when back online.");
-        // 🔁 Recovery seam: the turn didn't reach MAIA — mark it not-delivered so the
-        // member can Resend. (C1 presence-mode fallback below is intentionally untouched.)
+        // Network-level errors (CORS, network unreachable, etc.). The turn did not reach
+        // MAIA, so keep it available to Resend and do not answer in her voice.
+        console.log('[OracleConversation] Network error - turn not delivered:', fetchError);
+        setInputSubmitError(`Connection lost. ${UNDELIVERED_NOTICE}`);
         setMessages(prev => markFailed(prev, targetMessageId, 'network'));
-        const fallbackText = generatePresenceFallback({
-          userText: cleanedText,
-          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
-          preferredName: userName || undefined,
-        });
-
-        // Add the fallback response as an oracle message
-        const fallbackMessage: ConversationMessage = {
-          id: `fallback-${Date.now()}`,
-          role: 'oracle',
-          text: fallbackText,
-          timestamp: new Date().toISOString(),
-          element: 'aether',
-          metadata: { isFallback: true, reason: 'network_error' },
-        };
-
-        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
         setIsResponding(false);
-        setMaiaResponseText(fallbackText);
-
-        // Speak the fallback if voice is enabled
-        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
-          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
-        }
         return;
       }
 
@@ -5928,37 +5901,15 @@ I'm not sure what I'm feeling yet.`;
         const errorText = await response.text().catch(() => '(no body)');
         console.error('[fetch] non-OK response:', response.status, errorText);
 
-        // SERVER ERROR FALLBACK: Use presence mode instead of showing error
-        console.log('[OracleConversation] Server error - using presence fallback');
-        setInputSubmitError(`Server returned ${response.status}. Replying in presence mode — try again.`);
-        // 🔁 Recovery seam: not delivered — mark for Resend, or 'auth' for a real 401
-        // response so the bubble offers "Sign in to continue" instead of a bare Resend
-        // (a resend without signing in would just 401 again). Response.ok being false
-        // for a 401 never throws, so the outer catch's message-string 401 check never
-        // sees this case — it has to be tagged here. (C1 fallback below untouched.)
-        setMessages(prev => markFailed(prev, targetMessageId, response.status === 401 ? 'auth' : 'server'));
-        const fallbackText = generatePresenceFallback({
-          userText: cleanedText,
-          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
-          preferredName: userName || undefined,
-        });
-
-        const fallbackMessage: ConversationMessage = {
-          id: `fallback-${Date.now()}`,
-          role: 'oracle',
-          text: fallbackText,
-          timestamp: new Date().toISOString(),
-          element: 'aether',
-          metadata: { isFallback: true, reason: 'server_error', status: response.status },
-        };
-
-        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        // The server refused or failed this turn. Offer sign-in for a 401 and Resend for
+        // anything else. Response.ok being false never throws, so it is tagged here.
+        const isSignedOut = response.status === 401;
+        setInputSubmitError(
+          isSignedOut ? 'Please sign in so MAIA can receive your message.' : UNDELIVERED_NOTICE,
+        );
+        setMessages(prev => markFailed(prev, targetMessageId, isSignedOut ? 'auth' : 'server'));
+        setIsProcessing(false);
         setIsResponding(false);
-        setMaiaResponseText(fallbackText);
-
-        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
-          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
-        }
         return;
       }
 
@@ -6977,33 +6928,23 @@ I'm not sure what I'm feeling yet.`;
       console.log('🔇 [ERROR RECOVERY] Reset voice state after API error');
 
       // Provide specific error messages based on error type
-      let errorText = 'I apologize, I\'m having trouble connecting right now. Could you say that again?';
+      let errorText = UNDELIVERED_NOTICE;
       if (error.name === 'AbortError') {
         console.error('🚨 API request timed out - connection may be slow');
-        errorText = 'I\'m having trouble responding - your connection might be slow. Try asking again in a moment.';
+        errorText = "MAIA didn't respond in time. Your words are still here.";
       } else if (error.message?.includes('fetch')) {
         console.error('🚨 Network error - cannot reach server');
-        errorText = 'I can\'t connect right now. Check your internet connection and try again.';
+        errorText = `Connection lost. ${UNDELIVERED_NOTICE}`;
       } else if (error.message?.includes('401')) {
         console.error('🚨 Authentication required - user not signed in');
-        errorText = 'You need to sign in to continue our conversation.';
+        errorText = 'Please sign in so MAIA can receive your message.';
       }
 
       // 🔁 Recovery seam: the turn didn't reach MAIA. Mark it not-delivered; a 401
       // gets an honest "Sign in to continue" path in the bubble footer, everything
       // else gets Resend. The member's words stay exactly where they authored them.
       setMessages(prev => markFailed(prev, targetMessageId, error?.message?.includes('401') ? 'auth' : 'error'));
-
-      const errorMessage: ConversationMessage = {
-        id: `msg-${Date.now()}-error`,
-        role: 'oracle',
-        text: errorText,
-        timestamp: new Date(),
-        motionState: 'idle',
-        source: 'system'
-      };
-      setMessages(prev => appendMessageCapped(prev, errorMessage));
-      onMessageAddedRef.current?.(errorMessage);
+      setInputSubmitError(errorText);
     } finally {
       // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
       // For VOICE mode, isResponding is managed by StreamingAudioQueue.onComplete
@@ -10051,26 +9992,35 @@ I'm not sure what I'm feeling yet.`;
                       )}
                       {message.role === 'user' && message.deliveryStatus === 'failed' && (
                         <div className="mt-2 flex items-center gap-2 text-xs text-dune-sand/70">
-                          <span className="text-amber-500/70">Not delivered</span>
+                          <span className="text-amber-500/70">Not delivered to MAIA</span>
                           <span aria-hidden className="text-dune-sand/30">·</span>
                           {message.failureReason === 'auth' ? (
                             <a
                               href="/signin"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                router.push('/signin');
+                              }}
                               className="underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
                             >
                               Sign in to continue
                             </a>
-                          ) : (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleResend(message.id); }}
-                              className="inline-flex items-center gap-1 underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
-                              aria-label="Resend this message"
-                            >
-                              <CornerUpLeft className="w-3 h-3" />
-                              Resend
-                            </button>
+                          ) : null}
+                          {/* Resend stays available after a sign-in failure: the saved
+                              label outlives the sign-in, and the member must still be
+                              able to deliver these exact words afterwards. */}
+                          {message.failureReason === 'auth' && (
+                            <span aria-hidden className="text-dune-sand/30">·</span>
                           )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleResend(message.id); }}
+                            className="inline-flex items-center gap-1 underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
+                            aria-label="Resend this message"
+                          >
+                            <CornerUpLeft className="w-3 h-3" />
+                            Resend
+                          </button>
                         </div>
                       )}
 
@@ -10782,6 +10732,8 @@ I'm not sure what I'm feeling yet.`;
             ref={voiceMicRef}
             onTranscript={handleVoiceTranscript}
             onInterimTranscript={(t) => setInterimTranscript(t)}
+            maiaLastUtterance={maiaLastUtteranceRef.current}
+            maiaSpeechEndedAt={maiaSpeechEndedAt}
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
             onInterrupt={handleVoiceInterrupt}

@@ -186,11 +186,11 @@ describe('ACCEPTANCE 5: an empty 200 is a protocol failure, not a MAIA sentence 
     expect(oracleSource).toMatch(/Your message was received, but no response came back/);
   });
 
-  it('the ruled network-mode presence fallback is left untouched', () => {
-    // Narrowness guard: generatePresenceFallback is a separate, documented,
-    // banner-mitigated design (it flags isFallback). This repair must not have
-    // quietly removed it while removing the unflagged placeholder.
-    expect(oracleCode).toMatch(/generatePresenceFallback\(/);
-    expect(oracleCode).toMatch(/isFallback: true/);
+  it('an undelivered turn is labelled instead of answered in MAIA\'s voice', () => {
+    // Founder ruling, 2026-11-18: this supersedes the earlier network-mode presence
+    // reply. The conversation must not generate a canned MAIA turn on failure.
+    expect(oracleCode).not.toMatch(/generatePresenceFallback\(/);
+    expect(oracleCode).not.toMatch(/isFallback: true/);
+    expect(oracleCode).toMatch(/UNDELIVERED_NOTICE/);
   });
 });

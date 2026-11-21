@@ -606,6 +606,19 @@ MOBILE_EXCLUDED_DIRS=(
     "app/research"
     "app/ain-evolution"
     "app/ain-demo"
+    # Developer-only review pages. They are absent from the mobile route list, and
+    # some depend on web-only code or request data that static export cannot use.
+    "app/dev"
+    # Press manuscript editor. It also imports app/writers-studio, is absent from
+    # the mobile route list, and has no links from native surfaces. Web is unchanged.
+    "app/press/manuscript"
+    # Reflections is web-only in lib/mobile/mobileAllowlist.ts. List it here because
+    # the automatic scan mistakes the word generateStaticParams in the detail page's
+    # comment for a real export, then leaves that page in the native build.
+    "app/reflections"
+    # Practitioner onboarding is absent from the mobile route list, and its step page
+    # returns no static params, which static export rejects.
+    "app/practitioners/onboarding"
 )
 
 MOBILE_EXCLUDED_DIRS_BACKUP="$PROJECT_ROOT/.capacitor-mobile-excluded-backup"

@@ -46,6 +46,7 @@ const ALLOWED_EVENTS = new Set([
   'ios_voice_permission_denied',
   'ios_voice_listening_started',
   'ios_voice_partial_result_received',
+  'ios_voice_segment_reset_preserved',
   'ios_voice_final_result_received',
   'ios_voice_result_empty',
   'ios_voice_error',
@@ -94,6 +95,7 @@ const ALLOWED_EVENTS = new Set([
   // only 1 behind the guards. Metadata is counts/booleans only.
   'voice_dedup_blocked',
   'voice_transcript_dispatched',
+  'voice_echo_blocked',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;

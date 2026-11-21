@@ -132,6 +132,7 @@ export type VoiceDiagEvent =
   | 'ios_voice_permission_denied'
   | 'ios_voice_listening_started'
   | 'ios_voice_partial_result_received'
+  | 'ios_voice_segment_reset_preserved'
   | 'ios_voice_final_result_received'
   | 'ios_voice_result_empty'
   | 'ios_voice_error'
@@ -152,7 +153,15 @@ export type VoiceDiagEvent =
   // competing paths each dispatched. Observational only — nothing branches
   // on `sameAsPrevious`. Counts and booleans; no transcript text.
   | 'voice_dedup_blocked'
-  | 'voice_transcript_dispatched';
+  | 'voice_transcript_dispatched'
+  // Echo suppression, now comparable to its dedup siblings above. Fires when a
+  // transcript matched WHAT MAIA ACTUALLY SAID inside the tail window after her
+  // speech ended. The guard it replaced matched a static list of English
+  // phrases and emitted nothing, so a guard that deleted a member's turn and a
+  // guard that never ran produced the same empty log — which is why the 2026-11
+  // "she says I am here" reports could not be attributed from telemetry alone.
+  // Counts, a similarity ratio and an elapsed time; no transcript text.
+  | 'voice_echo_blocked';
 
 type Meta = Record<string, string | number | boolean | null>;
 
